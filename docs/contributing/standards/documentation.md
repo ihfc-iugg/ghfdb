@@ -250,6 +250,10 @@ before it is written down.
 <!-- Rules that apply to this repository only, such as a Guides table or a Topics section. Leave
 empty when there are none. -->
 
+- **Every process has a diagram.** Each check, rule, decision and scoring process the
+  documentation describes is also drawn as a simplified Mermaid diagram that a reader who does
+  not write code can follow. The diagram sits next to the text it illustrates and leaves out
+  implementation detail.
 - **The specification is user documentation.** The pages that state the validation rules and the
   quality scheme are reference pages, and the reasoning behind them is explanation.
 

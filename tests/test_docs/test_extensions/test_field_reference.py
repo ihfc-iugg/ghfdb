@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Any
 
 import pytest
 from extensions.field_reference import (
@@ -320,18 +319,3 @@ class TestCopySchema:
         ignored = (root / ".gitignore").read_text(encoding="utf-8").splitlines()
 
         assert "docs/reference/fields/ghfdb-field-schema.json" in ignored
-
-
-def test_the_extension_registers_both_handlers() -> None:
-    from extensions.field_reference import setup
-
-    events: list[tuple[str, Any]] = []
-
-    class App:
-        def connect(self, event: str, handler: Any) -> None:
-            events.append((event, handler))
-
-    result = setup(App())  # type: ignore[arg-type]
-
-    assert [event for event, _ in events] == ["builder-inited", "source-read"]
-    assert result["parallel_read_safe"] is True

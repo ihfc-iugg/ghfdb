@@ -54,3 +54,60 @@
   it does.
 - Very long vocabularies cannot be written into a choice list inline. The choice list then reads
   its terms from the `controlled vocabulary` sheet, which the layout already provides.
+
+## Made while planning
+
+### D-9 — A choice list goes on every field with a fixed list of allowed values
+
+The specification offers a choice list on every vocabulary field and none on any other
+(FR-004, FR-005). The field reference (FS-001, D-5) gives P9 and C9 a fixed set of values from
+Fuchs et al. (2023) and no vocabulary. **Chosen:** the line falls between a field with a fixed
+list of allowed values and one without, so P9 and C9 get a choice list of their fixed set, as
+the hand-maintained template gives them. C20, C25 and C26 have no list in the field reference
+and get none, and the differences page shows that they lost one.
+
+**ADR:** none — a reading of FS-001 for two fields, which nothing else inherits
+
+### D-10 — openpyxl becomes a runtime dependency
+
+**Chosen:** openpyxl writes the workbook. It writes list validations that reference another
+sheet and accept any value, is typed, and is the reader checking (R3) will need. XlsxWriter only
+writes, and hand-written SpreadsheetML would be several hundred lines. `ghfdb.fields` still
+needs only the standard library, because the template is a module of its own.
+
+**ADR:** pending — decided at convergence
+
+### D-11 — Every choice list reads its terms from the `controlled vocabulary` sheet
+
+**Chosen:** one mechanism for every field. An inline list is limited to 255 characters, which
+C46 alone exceeds, and referencing the sheet makes the list and the sheet agree by construction.
+The columns of `controlled vocabulary` sit under the same letters as on `data list`, which the
+hand-maintained template intended and lost from P10 onwards.
+
+**ADR:** none — a layout choice inside the template
+
+### D-12 — "Identical content" means sheets, cells and choice lists
+
+openpyxl stamps the time in the file's document properties and archive entries. **Chosen:** two
+generations are compared by what a contributor or the portal reads: sheet names, cell values and
+choice lists. Making the bytes identical would mean rewriting the archive after openpyxl saves
+it, for a guarantee no reader of the workbook can see.
+
+**ADR:** none — local to this feature
+
+### D-13 — The differences page is computed from the two workbooks
+
+**Chosen:** the documentation build compares the generated template with the stored
+hand-maintained one (`tests/sources/upload-template.xlsx`) and renders the differences. Written
+by hand, the list would type some sixty vocabulary terms into a page and could be wrong on the
+day it merged. The hand-maintained `controlled vocabulary` columns are matched to fields by their
+label, and the one label that names no field, "TC averaging method", is mapped to C48.
+
+**ADR:** none — local to this feature
+
+### D-14 — `-` stands for "none" in every description row
+
+**Chosen:** the marker the hand-maintained template uses, so the portal's import reads what it
+expects. A field with allowed values shows `-` in the range row: its values are its choice list.
+
+**ADR:** none — follows the hand-maintained template

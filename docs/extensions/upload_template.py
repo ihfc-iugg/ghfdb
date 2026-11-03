@@ -2,6 +2,7 @@
 
 import re
 import warnings
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -75,7 +76,7 @@ class TemplateChanges:
         """
         sheet = workbook["data list"]
         return {
-            cell.value: cell.column
+            str(cell.value): cell.column
             for cell in sheet[1][1:]
             if cell.value not in (None, "")
         }
@@ -158,9 +159,9 @@ class TemplateChanges:
         vocabulary = self.generated["controlled vocabulary"]
         terms: dict[str, list[str]] = {}
         for column in vocabulary.iter_cols(min_col=2, min_row=1):
-            code = column[0].value
-            if code is None:
+            if column[0].value is None:
                 continue
+            code = str(column[0].value)
             values = [collapse(cell.value) for cell in column[FIRST_TERM_ROW - 1 :]]
             terms[code] = [value for value in values if value]
         return terms
@@ -237,7 +238,7 @@ class TemplateChanges:
 
     @staticmethod
     def section(
-        heading: str, titles: tuple[str, ...], rows: list[tuple[str, ...]]
+        heading: str, titles: tuple[str, ...], rows: Sequence[tuple[str, ...]]
     ) -> str:
         """Write one heading and its table, or ``None.`` when there are no rows.
 

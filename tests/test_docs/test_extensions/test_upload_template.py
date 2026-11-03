@@ -103,6 +103,7 @@ def build_workbook(
     """
     workbook = Workbook()
     data_list = workbook.active
+    assert data_list is not None
     data_list.title = "data list"
     vocabulary = workbook.create_sheet("controlled vocabulary")
     data_list["A1"] = "ID"

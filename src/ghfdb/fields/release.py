@@ -173,6 +173,22 @@ class FieldChange:
     removed: tuple[AllowedValue, ...]
     relabelled: tuple[tuple[AllowedValue, AllowedValue], ...]
 
+    def describe(self) -> str:
+        """Write this field's change as a line of the report.
+
+        Returns:
+            ``<code>: unchanged``, or the added, removed and relabelled terms.
+        """
+        parts = []
+        if self.added:
+            parts.append("added " + ", ".join(value.term for value in self.added))
+        if self.removed:
+            parts.append("removed " + ", ".join(value.term for value in self.removed))
+        if self.relabelled:
+            pairs = (f"{old.term} -> {new.term}" for old, new in self.relabelled)
+            parts.append("relabelled " + ", ".join(pairs))
+        return f"{self.code}: " + ("; ".join(parts) or "unchanged")
+
 
 class ReleaseMove:
     """Regenerate the allowed values of a field schema file from a release."""
@@ -311,26 +327,6 @@ class ReleaseMove:
         field.setdefault("constraints", {})["enum"] = [value.term for value in values]
 
 
-def describe(change: FieldChange) -> str:
-    """Write one field's change as a line of the report.
-
-    Args:
-        change: The field's change.
-
-    Returns:
-        ``<code>: unchanged``, or the added, removed and relabelled terms.
-    """
-    parts = []
-    if change.added:
-        parts.append("added " + ", ".join(value.term for value in change.added))
-    if change.removed:
-        parts.append("removed " + ", ".join(value.term for value in change.removed))
-    if change.relabelled:
-        pairs = (f"{old.term} -> {new.term}" for old, new in change.relabelled)
-        parts.append("relabelled " + ", ".join(pairs))
-    return f"{change.code}: " + ("; ".join(parts) or "unchanged")
-
-
 def add_changed_line(text: str, line: str) -> str:
     """Add a bullet under ``### Changed`` of the Unreleased changelog section.
 
@@ -407,7 +403,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(error, file=sys.stderr)
         return 1
     for change in changes:
-        print(describe(change))
+        print(change.describe())
     args.changelog.write_text(changelog)
     return 0
 

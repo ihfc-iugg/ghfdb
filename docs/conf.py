@@ -18,6 +18,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinxcontrib.mermaid",
     "extensions.field_reference",
+    "extensions.upload_template",
 ]
 source_suffix = {".md": "markdown"}
 # docs/agents/ is guidance for automated contributors, and ROADMAP.md is read on GitHub;

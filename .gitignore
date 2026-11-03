@@ -36,3 +36,6 @@ docs/_build/
 
 # The schema copy the documentation build makes for download
 docs/reference/fields/ghfdb-field-schema.json
+
+# The upload template the documentation build writes for download
+docs/upload-template/*.xlsx

@@ -65,9 +65,8 @@ Fuchs et al. (2023) and no vocabulary. **Chosen:** the line falls between a fiel
 list of allowed values and one without, so P9 and C9 get a choice list of their fixed set, as
 the hand-maintained template gives them. C20 has no list in the field reference and gets none,
 and the differences page shows that it lost one. Read literally, FR-005 and AS 1.5 say otherwise
-for P9 and C9, and the design review asked for this reading to be put to the maintainer. The
-instruction for this build is to record such a change and carry on, so it is recorded here and
-named when the pull request is handed over for review.
+for P9 and C9. The reading is named in the pull request for the maintainer to confirm or
+reverse; reversing it is one condition in the generator.
 
 **ADR:** none — a reading of FS-001 for two fields, which nothing else inherits
 

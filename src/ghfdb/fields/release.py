@@ -4,9 +4,11 @@ This is the only module that imports rdflib, which is the optional ``vocabularie
 extra. Importing ``ghfdb.fields`` never reaches it.
 """
 
+import json
 from dataclasses import replace
 from functools import cached_property
 from pathlib import Path
+from typing import Any
 
 from rdflib import RDF, Graph, Literal, URIRef
 from rdflib.namespace import DCTERMS, SKOS
@@ -149,3 +151,57 @@ class ReleaseFiles:
         notation = notations[0] if notations else None
         shown = notation if term_form == "notation" and notation else labels[0]
         return AllowedValue(f"[{shown}]", labels[0], str(concept), notation)
+
+
+class ReleaseMove:
+    """Regenerate the allowed values of a field schema file from a release."""
+
+    def __init__(self, schema_path: Path, release: ReleaseFiles) -> None:
+        """Pair a field schema file with the release to move it onto.
+
+        Args:
+            schema_path: The field schema JSON file to rewrite.
+            release: The vocabulary release whose facts the file takes.
+        """
+        self.schema_path = schema_path
+        self.release = release
+
+    def apply(self) -> None:
+        """Write the release's facts into the schema file.
+
+        Only the generated facts change: ``vocabulary.scheme``,
+        ``vocabulary.collection``, ``allowedValues`` and ``constraints.enum`` of every
+        field with a vocabulary, and ``vocabularyRelease``.
+        """
+        data: dict[str, Any] = json.loads(self.schema_path.read_text())
+        for field in data["fields"]:
+            if field.get("vocabulary") is not None:
+                self.move_field(field)
+        release = self.release.release
+        data["vocabularyRelease"] = {"version": release.version, "doi": release.doi}
+        text = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+        self.schema_path.write_text(text)
+
+    def move_field(self, field: dict[str, Any]) -> None:
+        """Rewrite the generated facts of one vocabulary field in place.
+
+        Args:
+            field: The parsed field, with a vocabulary binding given by name.
+        """
+        vocabulary = field["vocabulary"]
+        binding = VocabularyBinding(
+            vocabulary["schemeName"],
+            vocabulary["collectionName"],
+            "",
+            None,
+            vocabulary["termForm"],
+        )
+        resolved = self.release.resolve(binding)
+        values = self.release.allowed_values(resolved)
+        vocabulary["scheme"] = resolved.scheme
+        vocabulary["collection"] = resolved.collection
+        field["allowedValues"] = [
+            {key: getattr(value, key) for key in ("term", "uri", "label", "notation")}
+            for value in values
+        ]
+        field.setdefault("constraints", {})["enum"] = [value.term for value in values]

@@ -1,9 +1,11 @@
+import json
+from copy import deepcopy
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import pytest
 
-from ghfdb.fields.release import MissingSchemeError, ReleaseFiles
+from ghfdb.fields.release import MissingSchemeError, ReleaseFiles, ReleaseMove
 from ghfdb.fields.schema import AllowedValue, VocabularyBinding, VocabularyRelease
 
 RELEASES = Path(__file__).parent / "releases"
@@ -125,3 +127,132 @@ class TestReleaseFiles:
 
         with pytest.raises(MissingSchemeError, match="cool"):
             files.allowed_values(binding("colours", "cool"))
+
+
+def stale_schema() -> dict[str, Any]:
+    return {
+        "missingValues": [""],
+        "vocabularyRelease": {"version": "0000.0", "doi": "10.0000/old.0"},
+        "fields": [
+            {
+                "name": "X1",
+                "title": "Température",
+                "constraints": {"maxLength": 255, "enum": ["[Stale]"]},
+                "vocabulary": {
+                    "schemeName": "colours",
+                    "collectionName": "warm",
+                    "scheme": "https://old.test/colours",
+                    "collection": "https://old.test/colours/warm",
+                    "termForm": "notation",
+                },
+                "allowedValues": [
+                    {
+                        "term": "[Stale]",
+                        "uri": "u:s",
+                        "label": "Stale",
+                        "notation": None,
+                    }
+                ],
+                "sources": {"vocabulary": "vocabulary-release"},
+            },
+            {
+                "name": "X2",
+                "title": "Fixed",
+                "constraints": {"enum": ["[Yes]"]},
+                "vocabulary": None,
+                "allowedValues": [
+                    {"term": "[Yes]", "uri": None, "label": "Yes", "notation": None}
+                ],
+            },
+            {"name": "X3", "title": "Plain", "constraints": {"minimum": 0}},
+        ],
+    }
+
+
+def write(path: Path, data: dict[str, Any]) -> None:
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+
+
+class TestReleaseMove:
+    def test_a_vocabulary_field_takes_the_release_generated_facts(
+        self, tmp_path: Path
+    ) -> None:
+        path = tmp_path / "schema.json"
+        write(path, stale_schema())
+        files = ReleaseFiles(RELEASES / "9999.1", "9999.1")
+
+        ReleaseMove(path, files).apply()
+
+        field = json.loads(path.read_text())["fields"][0]
+        assert field["vocabulary"] == {
+            "schemeName": "colours",
+            "collectionName": "warm",
+            "scheme": COLOURS,
+            "collection": f"{COLOURS}/warm",
+            "termForm": "notation",
+        }
+        assert [value["term"] for value in field["allowedValues"]] == ["[or]", "[rd]"]
+        assert field["constraints"]["enum"] == ["[or]", "[rd]"]
+
+    def test_an_allowed_value_is_written_with_all_four_properties(
+        self, tmp_path: Path
+    ) -> None:
+        path = tmp_path / "schema.json"
+        write(path, stale_schema())
+        files = ReleaseFiles(RELEASES / "9999.1", "9999.1")
+
+        ReleaseMove(path, files).apply()
+
+        written = json.loads(path.read_text())["fields"][0]["allowedValues"][1]
+        assert written == {
+            "term": "[rd]",
+            "uri": f"{COLOURS}/red",
+            "label": "red",
+            "notation": "rd",
+        }
+
+    def test_the_schema_takes_the_release_version_and_doi(self, tmp_path: Path) -> None:
+        path = tmp_path / "schema.json"
+        write(path, stale_schema())
+        files = ReleaseFiles(RELEASES / "9999.1", "9999.1")
+
+        ReleaseMove(path, files).apply()
+
+        assert json.loads(path.read_text())["vocabularyRelease"] == {
+            "version": "9999.1",
+            "doi": "10.0000/test.1",
+        }
+
+    def test_every_other_property_of_every_field_is_unchanged(
+        self, tmp_path: Path
+    ) -> None:
+        path = tmp_path / "schema.json"
+        before = stale_schema()
+        write(path, before)
+        files = ReleaseFiles(RELEASES / "9999.1", "9999.1")
+
+        ReleaseMove(path, files).apply()
+
+        after = json.loads(path.read_text())
+        expected = deepcopy(before)
+        expected["vocabularyRelease"] = after["vocabularyRelease"]
+        for key in ("vocabulary", "allowedValues"):
+            expected["fields"][0][key] = after["fields"][0][key]
+        expected["fields"][0]["constraints"]["enum"] = after["fields"][0][
+            "constraints"
+        ]["enum"]
+        assert after == expected
+        assert list(after["fields"][0]["constraints"]) == ["maxLength", "enum"]
+
+    def test_the_file_is_written_in_the_single_serializer_form(
+        self, tmp_path: Path
+    ) -> None:
+        path = tmp_path / "schema.json"
+        write(path, stale_schema())
+        files = ReleaseFiles(RELEASES / "9999.1", "9999.1")
+
+        ReleaseMove(path, files).apply()
+
+        text = path.read_text()
+        assert text == json.dumps(json.loads(text), indent=2, ensure_ascii=False) + "\n"
+        assert "Température" in text

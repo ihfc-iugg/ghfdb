@@ -247,3 +247,56 @@ class TestReadme:
 
     def test_exposes_the_version_it_states(self) -> None:
         assert UploadTemplate().version == ghfdb.__version__
+
+
+class TestWrite:
+    def test_writes_the_template_to_a_new_path(
+        self, tmp_path: Path, schema: FieldSchema
+    ) -> None:
+        path = tmp_path / "template.xlsx"
+
+        UploadTemplate(schema).write(path)
+
+        written = load_workbook(path)
+        assert written.sheetnames == ["readme", "data list", "controlled vocabulary"]
+        assert written["data list"]["B1"].value == next(iter(schema)).code
+
+    def test_refuses_an_existing_file_naming_the_path_and_leaves_it_untouched(
+        self, tmp_path: Path, schema: FieldSchema
+    ) -> None:
+        path = tmp_path / "template.xlsx"
+        path.write_bytes(b"not a template")
+
+        with pytest.raises(FileExistsError, match="replace=True") as raised:
+            UploadTemplate(schema).write(path)
+
+        assert str(path) in str(raised.value)
+        assert path.read_bytes() == b"not a template"
+
+    def test_replaces_an_existing_file_when_asked(
+        self, tmp_path: Path, schema: FieldSchema
+    ) -> None:
+        path = tmp_path / "template.xlsx"
+        path.write_bytes(b"not a template")
+
+        UploadTemplate(schema).write(path, replace=True)
+
+        assert load_workbook(path).sheetnames == [
+            "readme",
+            "data list",
+            "controlled vocabulary",
+        ]
+
+    def test_does_not_create_a_file_when_the_workbook_cannot_be_built(
+        self, tmp_path: Path, schema: FieldSchema
+    ) -> None:
+        bound = first_field(schema, lambda f: f.vocabulary is not None)
+        broken = replace(bound, allowed_values=())
+        fields = tuple(broken if f is bound else f for f in schema)
+        template = UploadTemplate(FieldSchema(schema.path, schema.release, fields))
+        path = tmp_path / "template.xlsx"
+
+        with pytest.raises(TemplateError):
+            template.write(path)
+
+        assert not path.exists()

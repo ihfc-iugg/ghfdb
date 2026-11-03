@@ -1,5 +1,7 @@
 """The upload template: the workbook a contributor fills in, built from the schema."""
 
+from pathlib import Path
+
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
@@ -64,6 +66,31 @@ class UploadTemplate:
         self.fill_data_list(data_list)
         self.fill_vocabulary(vocabulary, data_list)
         return workbook
+
+    def write(self, path: Path, replace: bool = False) -> None:
+        """Write the template to a file.
+
+        The workbook is built before the file is opened, so a failure to build it
+        leaves no file behind.
+
+        Args:
+            path: Where to write the template.
+            replace: Replace the file when it exists. Without it, an existing file
+                is left untouched.
+
+        Raises:
+            FileExistsError: The file exists and ``replace`` is false.
+            TemplateError: A field names a controlled vocabulary but has no
+                allowed values.
+        """
+        workbook = self.workbook()
+        try:
+            with open(path, "wb" if replace else "xb") as file:
+                workbook.save(file)
+        except FileExistsError:
+            raise FileExistsError(
+                f"{path} already exists; pass replace=True to replace it"
+            ) from None
 
     def fill_readme(self, sheet: Worksheet) -> None:
         """Write what the workbook is, where it came from and how to fill it in.

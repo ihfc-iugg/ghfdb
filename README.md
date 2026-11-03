@@ -36,9 +36,9 @@ against agreed worked examples.
 **What it is**
 
 - An offline tool for data assessors working on their own workbooks.
-- The documented, tested statement of the GHFDB validation rules and quality scheme,
-  developed in the open in this repository's issues.
-- The source of the GHFDB data template, generated from a machine-readable field
+- The reference for the GHFDB validation rules and quality scheme, developed in the
+  open in this repository's issues.
+- The source of the GHFDB upload template, generated from a machine-readable field
   schema.
 
 **What it deliberately is not**
@@ -55,6 +55,10 @@ against agreed worked examples.
   not written down is a defect.
 - A problem is reported exactly as it is: an invalid value is never reported as a
   missing one, and nothing is corrected silently.
+- A preview score that disagrees with the GHFDB portal is a defect. It is investigated
+  and fixed in whichever codebase is wrong.
+- The documentation is written for someone who does not read code. Every process is
+  also shown as a simple diagram.
 
 ## Contributing
 

@@ -4,7 +4,10 @@ This is the only module that imports rdflib, which is the optional ``vocabularie
 extra. Importing ``ghfdb.fields`` never reaches it.
 """
 
+import argparse
 import json
+import sys
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from functools import cached_property
 from pathlib import Path
@@ -306,3 +309,108 @@ class ReleaseMove:
             for value in values
         ]
         field.setdefault("constraints", {})["enum"] = [value.term for value in values]
+
+
+def describe(change: FieldChange) -> str:
+    """Write one field's change as a line of the report.
+
+    Args:
+        change: The field's change.
+
+    Returns:
+        ``<code>: unchanged``, or the added, removed and relabelled terms.
+    """
+    parts = []
+    if change.added:
+        parts.append("added " + ", ".join(value.term for value in change.added))
+    if change.removed:
+        parts.append("removed " + ", ".join(value.term for value in change.removed))
+    if change.relabelled:
+        pairs = (f"{old.term} -> {new.term}" for old, new in change.relabelled)
+        parts.append("relabelled " + ", ".join(pairs))
+    return f"{change.code}: " + ("; ".join(parts) or "unchanged")
+
+
+def add_changed_line(text: str, line: str) -> str:
+    """Add a bullet under ``### Changed`` of the Unreleased changelog section.
+
+    Args:
+        text: The changelog.
+        line: The bullet to add, without its dash.
+
+    Returns:
+        The changelog with the bullet last under ``### Changed`` of
+        ``## [Unreleased]``, the heading created at the end of that section when it
+        is absent.
+    """
+    lines = text.splitlines()
+    start = lines.index("## [Unreleased]")
+    end = next(
+        (i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
+        len(lines),
+    )
+    changed = next(
+        (i for i in range(start + 1, end) if lines[i] == "### Changed"), None
+    )
+    if changed is None:
+        body = ["", "### Changed", "", f"- {line}"]
+        at = end
+    else:
+        body = [f"- {line}"]
+        at = next(
+            (i for i in range(changed + 1, end) if lines[i].startswith("### ")), end
+        )
+    while lines[at - 1] == "":
+        at -= 1
+    return "\n".join([*lines[:at], *body, *lines[at:]]) + "\n"
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Move the field schema onto a release, report it and note it in the changelog.
+
+    Args:
+        argv: The command line without the program name; ``sys.argv`` when None.
+
+    Returns:
+        0 on success; 1 when the release lacks a scheme or collection a field
+        names, in which case neither file is changed.
+    """
+    parser = argparse.ArgumentParser(
+        prog="python -m ghfdb.fields.release", description=__doc__
+    )
+    parser.add_argument("version", help="the release version, such as 2026.1")
+    parser.add_argument("directory", type=Path, help="the release's Turtle files")
+    parser.add_argument(
+        "--schema",
+        type=Path,
+        default=Path(__file__).with_name("schema.json"),
+        help="the field schema file; the packaged one by default",
+    )
+    parser.add_argument(
+        "--changelog",
+        type=Path,
+        default=Path("CHANGELOG.md"),
+        help="the changelog; CHANGELOG.md in the current directory by default",
+    )
+    args = parser.parse_args(argv)
+    files = ReleaseFiles(args.directory, args.version)
+    old = json.loads(args.schema.read_text())["vocabularyRelease"]
+    new = files.release
+    line = (
+        f"Vocabulary release moved from {old['version']} (DOI {old['doi']}) "
+        f"to {new.version} (DOI {new.doi})."
+    )
+    changelog = add_changed_line(args.changelog.read_text(), line)
+    try:
+        changes = ReleaseMove(args.schema, files).apply()
+    except MissingSchemeError as error:
+        print(error, file=sys.stderr)
+        return 1
+    for change in changes:
+        print(describe(change))
+    args.changelog.write_text(changelog)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -10,6 +10,7 @@ from ghfdb.fields.release import (
     MissingSchemeError,
     ReleaseFiles,
     ReleaseMove,
+    main,
 )
 from ghfdb.fields.schema import AllowedValue, VocabularyBinding, VocabularyRelease
 
@@ -401,3 +402,107 @@ class TestReleaseMoveAtomic:
             "version": "9999.2",
             "doi": "10.0000/test.2",
         }
+
+
+CHANGELOG = """# Changelog
+
+## [Unreleased]
+
+### Added
+
+- Something.
+
+## [1.0.0] - 2026-01-01
+
+### Changed
+
+- Older.
+"""
+
+
+def run_main(
+    tmp_path: Path, version: str, changelog_text: str = CHANGELOG
+) -> tuple[int, Path, Path]:
+    schema = moved_to_a(tmp_path)
+    changelog = tmp_path / "CHANGELOG.md"
+    changelog.write_text(changelog_text)
+    code = main(
+        [
+            version,
+            str(RELEASES / version),
+            "--schema",
+            str(schema),
+            "--changelog",
+            str(changelog),
+        ]
+    )
+    return code, schema, changelog
+
+
+class TestMain:
+    def test_it_prints_one_line_per_vocabulary_field(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        code, _, _ = run_main(tmp_path, "9999.2")
+
+        lines = capsys.readouterr().out.splitlines()
+        assert code == 0
+        assert [line.split(":")[0] for line in lines] == ["X1", "X2"]
+        assert lines[1] == "X2: unchanged"
+        assert all(term in lines[0] for term in ("[purple]", "[green]", "[Indigo]"))
+
+    def test_it_writes_the_new_release_into_the_schema(self, tmp_path: Path) -> None:
+        _, schema, _ = run_main(tmp_path, "9999.2")
+
+        assert json.loads(schema.read_text())["vocabularyRelease"]["version"] == (
+            "9999.2"
+        )
+
+    def test_it_adds_a_line_naming_both_releases_under_changed(
+        self, tmp_path: Path
+    ) -> None:
+        _, _, changelog = run_main(tmp_path, "9999.2")
+
+        text = changelog.read_text()
+        unreleased = text.split("## [1.0.0]")[0]
+        added = unreleased.split("### Changed")[1]
+        assert "9999.1" in added
+        assert "10.0000/test.1" in added
+        assert "9999.2" in added
+        assert "10.0000/test.2" in added
+        assert text.endswith("- Older.\n")
+
+    def test_it_creates_the_changed_heading_when_it_is_absent(
+        self, tmp_path: Path
+    ) -> None:
+        bare = "# Changelog\n\n## [Unreleased]\n\n### Added\n\n- Something.\n"
+
+        _, _, changelog = run_main(tmp_path, "9999.2", bare)
+
+        lines = changelog.read_text().splitlines()
+        heading = lines.index("### Changed")
+        assert lines[heading - 2 : heading] == ["- Something.", ""]
+        assert "9999.2" in lines[heading + 2]
+
+    def test_a_missing_scheme_exits_one_and_changes_neither_file(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        schema = moved_to_a(tmp_path)
+        changelog = tmp_path / "CHANGELOG.md"
+        changelog.write_text(CHANGELOG)
+        before = (schema.read_bytes(), changelog.read_bytes())
+
+        code = main(
+            [
+                "9999.3",
+                str(RELEASES / "9999.3"),
+                "--schema",
+                str(schema),
+                "--changelog",
+                str(changelog),
+            ]
+        )
+
+        assert code == 1
+        assert (schema.read_bytes(), changelog.read_bytes()) == before
+        assert "X2" in capsys.readouterr().err

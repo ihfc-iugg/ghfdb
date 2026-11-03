@@ -3,11 +3,20 @@
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.worksheet import Worksheet
 
 from ghfdb.fields import Field, FieldSchema
 
 NONE = "-"
+LAST_ROW = 1048576
+FIRST_DATA_ROW = 9
+FIRST_TERM_ROW = 3
+
+
+class TemplateError(ValueError):
+    """A field the template cannot be written for, named in the message."""
+
 
 ROW_LABELS = (
     "Obligation",
@@ -46,8 +55,9 @@ class UploadTemplate:
         assert readme is not None
         readme.title = "readme"
         data_list = workbook.create_sheet("data list")
-        workbook.create_sheet("controlled vocabulary")
+        vocabulary = workbook.create_sheet("controlled vocabulary")
         self.fill_data_list(data_list)
+        self.fill_vocabulary(vocabulary, data_list)
         return workbook
 
     def fill_data_list(self, sheet: Worksheet) -> None:
@@ -66,6 +76,47 @@ class UploadTemplate:
         for cell in sheet[1]:
             cell.font = Font(bold=True)
         sheet.freeze_panes = "B9"
+
+    def fill_vocabulary(self, vocabulary: Worksheet, data_list: Worksheet) -> None:
+        """Write the terms of every field with allowed values, and a choice list each.
+
+        Each field's terms sit in the column its field has on ``data list``. The
+        choice list accepts any value, so a contributor can type a term that is
+        not offered.
+
+        Args:
+            vocabulary: The ``controlled vocabulary`` sheet to write to.
+            data_list: The ``data list`` sheet to add the choice lists to.
+
+        Raises:
+            TemplateError: A field names a controlled vocabulary but has no
+                allowed values.
+        """
+        vocabulary["A1"] = "Field code"
+        vocabulary["A2"] = "Name"
+        for index, field in enumerate(self.schema):
+            if not field.allowed_values:
+                if field.vocabulary is not None:
+                    raise TemplateError(
+                        f"Field {field.code} names a controlled vocabulary "
+                        "but has no allowed values"
+                    )
+                continue
+            letter = self.column_letter(index)
+            vocabulary[f"{letter}1"] = field.code
+            vocabulary[f"{letter}2"] = field.name
+            for row, value in enumerate(field.allowed_values, start=FIRST_TERM_ROW):
+                vocabulary[f"{letter}{row}"] = value.term
+            last = FIRST_TERM_ROW + len(field.allowed_values) - 1
+            terms = f"${letter}${FIRST_TERM_ROW}:${letter}${last}"
+            choices = DataValidation(
+                type="list",
+                formula1=f"'controlled vocabulary'!{terms}",
+                allow_blank=True,
+                showErrorMessage=False,
+            )
+            choices.add(f"{letter}{FIRST_DATA_ROW}:{letter}{LAST_ROW}")
+            data_list.add_data_validation(choices)
 
     @staticmethod
     def describe(field: Field) -> tuple[str, ...]:

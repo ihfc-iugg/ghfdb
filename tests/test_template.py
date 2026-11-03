@@ -1,12 +1,16 @@
+import re
 import warnings
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 from openpyxl import Workbook, load_workbook
+from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.datavalidation import DataValidation
 
 from ghfdb.fields import Field, FieldSchema
-from ghfdb.template import UploadTemplate
+from ghfdb.template import TemplateError, UploadTemplate
 
 SOURCE = Path(__file__).parent / "sources" / "upload-template.xlsx"
 
@@ -141,3 +145,88 @@ class TestDescriptionRows:
         shown = workbook["data list"].cell(8, column_of(schema, field)).value
 
         assert shown == "-"
+
+
+class TestChoiceLists:
+    def validations(self, workbook: Workbook) -> dict[str, DataValidation]:
+        sheet = workbook["data list"]
+        found: dict[str, DataValidation] = {}
+        for validation in sheet.data_validations.dataValidation:
+            for cells in validation.sqref.ranges:
+                assert cells.min_col == cells.max_col
+                letter = get_column_letter(cells.min_col)
+                assert letter not in found
+                found[letter] = validation
+        return found
+
+    def test_exactly_the_fields_with_allowed_values_have_a_list(
+        self, workbook: Workbook, schema: FieldSchema
+    ) -> None:
+        expected = {
+            get_column_letter(column_of(schema, field))
+            for field in schema
+            if field.allowed_values
+        }
+
+        assert set(self.validations(workbook)) == expected
+
+    def test_a_list_runs_from_row_9_to_the_last_row_and_never_rejects(
+        self, workbook: Workbook
+    ) -> None:
+        for letter, validation in self.validations(workbook).items():
+            assert validation.type == "list"
+            assert str(validation.sqref) == f"{letter}9:{letter}1048576"
+            assert validation.showErrorMessage is False
+            assert validation.allow_blank is True
+
+    def test_a_list_points_at_the_terms_of_its_field(
+        self, workbook: Workbook, schema: FieldSchema
+    ) -> None:
+        vocabulary = workbook["controlled vocabulary"]
+        validations = self.validations(workbook)
+
+        for field in schema:
+            if not field.allowed_values:
+                continue
+            letter = get_column_letter(column_of(schema, field))
+            formula = validations[letter].formula1
+            assert formula is not None
+            match = re.fullmatch(
+                r"'controlled vocabulary'!\$([A-Z]+)\$(\d+):\$([A-Z]+)\$(\d+)",
+                formula,
+            )
+            assert match is not None
+            first, start, last, end = match.groups()
+            assert first == last == letter
+            terms = [
+                vocabulary[f"{letter}{row}"].value
+                for row in range(int(start), int(end) + 1)
+            ]
+            assert terms == [value.term for value in field.allowed_values]
+
+    def test_the_vocabulary_sheet_names_each_field_above_its_terms(
+        self, workbook: Workbook, schema: FieldSchema
+    ) -> None:
+        vocabulary = workbook["controlled vocabulary"]
+
+        assert vocabulary["A1"].value == "Field code"
+        assert vocabulary["A2"].value == "Name"
+        for field in schema:
+            letter = get_column_letter(column_of(schema, field))
+            if field.allowed_values:
+                assert vocabulary[f"{letter}1"].value == field.code
+                assert vocabulary[f"{letter}2"].value == field.name
+                assert vocabulary[f"{letter}3"].value == field.allowed_values[0].term
+            else:
+                assert vocabulary[f"{letter}1"].value is None
+
+    def test_a_vocabulary_field_without_allowed_values_raises_naming_it(
+        self, schema: FieldSchema
+    ) -> None:
+        bound = first_field(schema, lambda f: f.vocabulary is not None)
+        broken = replace(bound, allowed_values=())
+        fields = tuple(broken if f is bound else f for f in schema)
+        template = UploadTemplate(FieldSchema(schema.path, schema.release, fields))
+
+        with pytest.raises(TemplateError, match=bound.code):
+            template.workbook()

@@ -9,6 +9,20 @@ It is in development and does not yet check or score anything.
 
 ```{toctree}
 :maxdepth: 1
+:caption: Developer guide
+
+developer/field-definitions
+```
+
+```{toctree}
+:maxdepth: 1
+:caption: Reference
+
+reference/index
+```
+
+```{toctree}
+:maxdepth: 1
 :caption: Maintainers
 
 developer/brainstorm

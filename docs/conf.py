@@ -8,7 +8,12 @@ copyright = "2026, International Heat Flow Commission"
 release = _version("ghfdb")
 version = release
 
-extensions = ["myst_parser"]
+extensions = [
+    "myst_parser",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinxcontrib.mermaid",
+]
 source_suffix = {".md": "markdown"}
 # docs/agents/ is guidance for automated contributors, and ROADMAP.md is read on GitHub;
 # neither is part of the site.

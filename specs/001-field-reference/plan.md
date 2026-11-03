@@ -9,7 +9,7 @@
 
 A new subpackage, `ghfdb.fields`, ships the field schema as one Frictionless Table Schema file and
 loads it into frozen dataclasses with the standard library. Every fact in the file is written by
-hand with its source, except the allowed values of the 26 vocabulary fields and the stated
+hand with its source, except the allowed values of the 25 vocabulary fields and the stated
 release, which only the step that adopts a vocabulary release writes. That step reads the
 release's Turtle files with `rdflib`, an optional dependency, from a copy of the release kept in
 the repository, and reports per field what changed. A Sphinx extension renders the field reference
@@ -82,7 +82,7 @@ src/ghfdb/fields/
 vocabularies/2026.1/   # the 15 Turtle files of v2026.1 and LICENSE-CC-BY-4.0
 
 docs/
-├── _ext/field_reference.py
+├── extensions/field_reference.py
 ├── reference/
 │   ├── index.md
 │   ├── python-api.md
@@ -91,6 +91,7 @@ docs/
 │       ├── parent.md
 │       ├── child.md
 │       └── assessment.md
+├── developer/field-definitions.md       # guide: loading and looking up the field definitions
 └── contributing/vocabulary-release.md   # adopting a newer vocabulary release
 
 tests/
@@ -101,11 +102,14 @@ tests/
 │   └── test_release.py
 └── test_docs/
     ├── __init__.py
-    └── test_field_reference.py
+    └── test_extensions/
+        ├── __init__.py
+        └── test_field_reference.py
 ```
 
-`tests/test_docs/` mirrors `docs/_ext/field_reference.py`, which is not under `src/`. It is
-declared under `[tool.forge.conformance] non-mirror-paths` in `pyproject.toml`.
+`tests/test_docs/test_extensions/test_field_reference.py` mirrors
+`docs/extensions/field_reference.py`. pytest's `pythonpath` gains `docs`, so the test imports
+`extensions.field_reference`.
 
 ## Design
 
@@ -130,6 +134,8 @@ A Frictionless Table Schema (research.md, "Frictionless Table Schema shape"):
       "domain": ["B", "S"],
       "qualityRelevance": "M-score",
       "vocabulary": {
+        "schemeName": "conductivity-methods",
+        "collectionName": null,
         "scheme": "https://portal.heatflow.world/vocabularies/conductivity-methods",
         "collection": null,
         "termForm": "label"
@@ -152,20 +158,40 @@ A Frictionless Table Schema (research.md, "Frictionless Table Schema shape"):
 
 - **Field properties**, all present on every field, `null` or `[]` where they do not apply:
   `name` (field code), `columnName`, `earlierColumnNames` (D-2), `group` (`parent`, `child`,
-  `assessment`), `title`, `description`, `type`, `decimalPlaces`, `unit`, `format` (C38, A3:
-  `YYYY-MM`), `obligation` (`M`, `R`, `O` or `null`, D-14), `domain` (`B`, `S`), `qualityRelevance`
+  `assessment`), `title`, `description`, `type`, `decimalPlaces`, `unit`, `valueFormat` (C38, A3:
+  `YYYY-MM`; `format` is a reserved Table Schema property and is never used), `obligation` (`M`, `R`, `O` or `null`, D-14), `domain` (`B`, `S`), `qualityRelevance`
   (`U-score`, `M-score`, `perturbation flags` or `null`, D-16), `constraints`, `vocabulary`,
   `allowedValues`, `separator` (D-23), `guidance` (D-5, D-22), `sources`.
 - **`constraints`** holds `minimum`/`maximum` from the template's range (D-17), `maxLength: 255`
   for `Char (255)` fields, `pattern` for a format, and `enum` for a single-valued field with
   allowed values (the vocabulary fields and P9, C9). For C38, `pattern` accepts `YYYY-MM` or
   `[Unspecified]` (D-18).
-- **`sources`** has one key per fact the field records, each a source code: `upload-template`,
+- **`sources`** has exactly one key per fact, every field, each a source code: `upload-template`,
   `fuchs-2023-appendix-a`, `vocabulary-release`, or `decision:D-<n>`. A fact the field does not
-  record (`unit: null`) still names where its absence comes from.
+  record (`unit: null`) still names where its absence comes from. The keys, one per `Field`
+  attribute other than `sources`, are fixed by this table, which the source test iterates:
+
+  | `Field` attribute | `sources` key |
+  |---|---|
+  | `code` | `code` |
+  | `column_name`, `earlier_column_names` | `columnName`, `earlierColumnNames` |
+  | `group` | `group` |
+  | `name`, `meaning` | `name`, `meaning` |
+  | `type`, `decimal_places`, `max_length` | `type`, `decimalPlaces`, `maxLength` |
+  | `unit`, `value_format` | `unit`, `valueFormat` |
+  | `obligation`, `domain`, `quality_relevance` | `obligation`, `domain`, `qualityRelevance` |
+  | `minimum`, `maximum` | `range` |
+  | `vocabulary` | `vocabulary` (the binding) and `termForm` |
+  | `allowed_values` | `allowedValues` |
+  | `separator`, `guidance` | `separator`, `guidance` |
 - **Fixed allowed values** (P9, C9) are `{"term": "[Yes]", "uri": null, "label": "Yes",
   "notation": null}` and the field's `vocabulary` is `null`; their source is
   `fuchs-2023-appendix-a` (D-5).
+- **The vocabulary binding is written by hand by name**: `schemeName` (the last segment of the
+  scheme URI, such as `conductivity-methods`) and `collectionName` (such as `insitu`, or `null`).
+  The full `scheme` and `collection` URIs are generated, like the allowed values, so a release
+  that moves its URIs (the vocabularies' main branch has moved to `w3id.org`) is adopted without a
+  hand edit. A release with no scheme or collection of that name stops the move (FR-016).
 - **Allowed values of a vocabulary field** are the concepts of the scheme, or of the collection
   where the field names one (C11: `…/heat-flow-corrections/insitu`, C12: `…/temperature`,
   C13–C19: `…/generic`), sorted by term ignoring case (D-21). The term is `[<notation>]` where
@@ -183,6 +209,8 @@ class VocabularyRelease:
 
 @dataclass(frozen=True)
 class VocabularyBinding:
+    scheme_name: str
+    collection_name: str | None
     scheme: str
     collection: str | None
     term_form: Literal["label", "notation"]
@@ -205,7 +233,7 @@ class Field:
     type: str
     decimal_places: int | None
     unit: str | None
-    format: str | None
+    value_format: str | None
     obligation: Literal["M", "R", "O"] | None
     domain: tuple[str, ...]
     quality_relevance: str | None
@@ -270,9 +298,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     """python -m ghfdb.fields.release <version> <directory> [--schema PATH] [--changelog PATH]"""
 ```
 
-- `ReleaseMove.apply` edits only `allowedValues`, `constraints.enum` of vocabulary fields, and
-  `vocabularyRelease`, on the parsed JSON, and writes it back with the same indentation, so every
-  other byte of the file is unchanged (FR-015, SC-005). Every field is resolved before anything is
+- `ReleaseMove.apply` edits only the generated facts, on the parsed JSON: `vocabulary.scheme`,
+  `vocabulary.collection`, `allowedValues` and `constraints.enum` of vocabulary fields, and
+  `vocabularyRelease`. The file has one serializer, `json.dumps(..., indent=2,
+  ensure_ascii=False)` plus a trailing newline, and the shipped file is in that form, so nothing
+  but those facts differs after a move (FR-015, SC-005). Every field is resolved before anything is
   written, so a missing scheme leaves the file untouched (FR-016).
 - `main` prints one line per vocabulary field, `C43: unchanged` or the concepts added, removed
   and relabelled, and adds a line under `## [Unreleased]` → `### Changed` in the changelog naming
@@ -282,17 +312,21 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 ### The drift check (FR-017)
 
-A test builds `ReleaseFiles(vocabularies/<stated version>/, version)` and compares its
-`allowed_values` with every vocabulary field's in the shipped schema, failing with the codes of the
-fields that differ. A hand edit to an allowed value, or a release directory that does not match
+A test builds `ReleaseFiles(vocabularies/<stated version>/, version)` and compares, for every
+vocabulary field of the shipped schema, its scheme and collection URIs, its `allowed_values` and
+its `constraints.enum` (which must equal the allowed terms, for P9 and C9 too) with what the
+release gives, and the release's DOI with the stated one, failing with the codes of the fields
+that differ. A hand edit to an allowed value, or a release directory that does not match
 the stated release, fails it.
 
 ### The documentation
 
-- `docs/_ext/field_reference.py`, registered in `docs/conf.py`, connects to `source-read` and
+- `docs/conf.py` puts `docs` on `sys.path` and lists `extensions.field_reference`,
+  `sphinx.ext.autodoc` and `sphinxcontrib.mermaid`.
+- `docs/extensions/field_reference.py` connects to `source-read` and
   replaces a marker line in a page (`{field-index}`, `{field-entries} parent`) with Markdown
   generated from `FieldSchema.load()`. On `builder-inited` it copies `schema.json` into the
-  documentation source as a download (`ghfdb-field-schema.json`, git-ignored), and the opening
+  documentation source as a download (`docs/reference/fields/ghfdb-field-schema.json`, listed in `.gitignore`), and the opening
   page links to it with `{download}`.
 - **Each entry** is a section headed with the field code, column name and name, preceded by two
   MyST targets, `(field-<code>)=` and `(field-<column name>)=` (lower case), so an entry is
@@ -309,7 +343,11 @@ the stated release, fails it.
   away (SC-004), explains where the facts and allowed values come from with a Mermaid diagram, and
   how a newer release is adopted with a second (FR-014), and links the schema download.
 - **The Python API page** (`reference/python-api.md`) is `automodule` on `ghfdb.fields` and
-  `ghfdb.fields.release`.
+  `ghfdb.fields.release`, the second introduced as the maintainer's tooling for adopting a release.
+- **The developer guide** (`developer/field-definitions.md`) is the task of loading the field
+  definitions and looking a field up, linking to the API page and the field reference. The
+  explanation of where facts come from stays on the field reference's opening page, where FR-014
+  puts it.
 - **`contributing/vocabulary-release.md`** is the maintainer's how-to: download the release's
   Turtle files into `vocabularies/<version>/`, run the step, read the report, remove the old
   directory, open the pull request.
@@ -323,7 +361,7 @@ the stated release, fails it.
   to the reference.
 - `CHANGELOG.md`: under Unreleased → Added.
 - `pyproject.toml`: the optional extra, the development and documentation dependencies,
-  `/vocabularies` in the sdist, `docs/_ext` in mypy's files, the conformance declaration.
+  `/vocabularies` in the sdist, `docs` in mypy's files and pytest's `pythonpath`, `types-openpyxl`.
 
 ## Complexity Tracking
 

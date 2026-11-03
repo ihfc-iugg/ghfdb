@@ -15,7 +15,7 @@ The investigation behind `plan.md`. Every answer below was read from the source 
 
 - **Which schemes serve which fields is stated in the release.** Every scheme's `skos:scopeNote`
   reads "Lists the values allowed in the field(s) … of the Global Heat Flow Database", naming the
-  published column names. All 26 vocabulary fields are named, and every scheme serves at least one:
+  published column names. All 25 vocabulary fields are named, and every scheme serves at least one:
 
   | Scheme | Fields |
   |---|---|
@@ -135,7 +135,7 @@ development environment. A user loading the field definitions never installs it.
 ### The stored release
 
 The Turtle files of the stated release are kept in the repository under `vocabularies/<version>/`
-with the release's licence (CC BY 4.0), so the checks compare against it without the network. They
+with the release's `LICENSE` (CC BY 4.0), so the checks compare against it without the network. They
 are not part of the installed package: the allowed values the package needs are already in the
 field schema.
 
@@ -148,7 +148,7 @@ publisher's supplementary material. Facts sourced to it are checked in review.
 
 ### The field reference in the documentation
 
-A Sphinx extension in `docs/_ext/` renders the field entries from the loaded field schema while the
+A Sphinx extension in `docs/extensions/` renders the field entries from the loaded field schema while the
 documentation builds, so the reference cannot disagree with the schema (FR-013). It also copies
 the schema file into the built site, so the page links to the exact file it documents. Diagrams
 use `sphinxcontrib-mermaid`. The Python API page is generated from docstrings with

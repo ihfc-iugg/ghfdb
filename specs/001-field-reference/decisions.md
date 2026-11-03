@@ -186,3 +186,30 @@ Lithology and stratigraphic age (C25, C26) take several values separated by semi
 Appendix A says the same of the IGSNs in C49. **Chosen:** these three fields record the semicolon
 as their separator. No vocabulary field is recorded as taking several values: neither the template
 nor Appendix A says one does.
+
+## Made at the design review
+
+### D-24 — Vocabulary bindings are written by scheme name
+
+**Chosen:** a vocabulary field names its scheme and collection by the last segment of their URI
+(`conductivity-methods`, `insitu`), and the step that adopts a release writes the full URIs with
+the allowed values. The vocabularies' main branch has already moved its URIs to `w3id.org`, so a
+binding written as a full URI would need a hand edit at the first move, which FR-015 rules out.
+
+### D-25 — The value format is not called `format`
+
+`format` is a reserved Table Schema property, and a `YYYY-MM` there makes the schema invalid.
+**Chosen:** C38 and A3 record it as `valueFormat`, checked by `constraints.pattern`.
+
+### D-26 — The explanation stays on the field reference, and the developer gets a guide
+
+FR-014 puts the explanation of where facts come from, and of adopting a release, on the field
+reference. **Chosen:** it stays there, as the specification says, and the developer's task of
+loading the field definitions gets a short guide page of its own, as the documentation standard
+asks of every feature.
+
+### D-27 — The release step ships in the package
+
+**Chosen:** `ghfdb.fields.release` is part of the package, behind the optional `vocabularies`
+extra, and the Python API page introduces it as maintainer tooling. Keeping it outside the package
+would leave it untyped and uncovered by the checks every other module passes.

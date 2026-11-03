@@ -79,7 +79,7 @@ src/ghfdb/fields/
 ├── schema.json        # the field schema
 └── release.py         # ReleaseFiles, ReleaseMove, FieldChange, command-line entry point
 
-vocabularies/2026.1/   # the 15 Turtle files of v2026.1 and LICENSE-CC-BY-4.0
+vocabularies/2026.1/   # the 15 Turtle files of v2026.1 and its LICENSE
 
 docs/
 ├── extensions/field_reference.py

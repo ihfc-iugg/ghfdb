@@ -38,13 +38,14 @@ openpyxl `Workbook`.
    template.write(Path("out") / "ghfdb-upload-template.xlsx")
    ```
 
-2. To generate from a different set of fields, pass a
-   {py:class}`~ghfdb.fields.FieldSchema` when you create the template.
+2. To generate from a different set of fields, load their schema file with
+   {py:class}`~ghfdb.fields.FieldSchema` and pass it when you create the template.
 
    ```python
    from ghfdb.fields import FieldSchema
 
-   UploadTemplate(FieldSchema.load()).write(path)
+   schema = FieldSchema.load(Path("my-field-schema.json"))
+   UploadTemplate(schema).write(Path("my-upload-template.xlsx"))
    ```
 
 ## Replace an existing file

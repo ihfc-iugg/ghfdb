@@ -1,0 +1,16 @@
+PREFIX : <https://example.test/vocabularies/solids/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX ex: <https://example.test/vocabularies/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+ex:solids
+    a skos:ConceptScheme ;
+    dcterms:isPartOf <https://doi.org/10.0000/other.9> ;
+    skos:prefLabel "Solids"@en ;
+.
+
+:round
+    a skos:Concept ;
+    skos:inScheme ex:solids ;
+    skos:prefLabel "Round"@en ;
+.

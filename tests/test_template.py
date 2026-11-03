@@ -12,7 +12,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 import ghfdb
 from ghfdb.fields import Field, FieldSchema
-from ghfdb.template import TemplateError, UploadTemplate
+from ghfdb.template import FIELD_REFERENCE, TemplateError, UploadTemplate
 
 SOURCE = Path(__file__).parent / "sources" / "upload-template.xlsx"
 
@@ -109,6 +109,22 @@ class TestDescriptionRows:
         shown = workbook["data list"].cell(8, column_of(schema, field)).value
 
         assert shown == (f"{field.minimum:,.{places}f} – {field.maximum:,.{places}f}")
+
+    def test_a_whole_number_range_shows_no_decimal_places(
+        self, workbook: Workbook, schema: FieldSchema
+    ) -> None:
+        field = first_field(
+            schema,
+            lambda f: f.minimum is not None
+            and f.maximum is not None
+            and f.decimal_places is None
+            and not f.allowed_values,
+        )
+        assert field.minimum is not None and field.maximum is not None
+
+        shown = workbook["data list"].cell(8, column_of(schema, field)).value
+
+        assert shown == f"{int(field.minimum):,} – {int(field.maximum):,}"
 
     def test_a_field_with_only_a_value_format_shows_the_format(
         self, workbook: Workbook, schema: FieldSchema
@@ -245,6 +261,7 @@ class TestReadme:
         assert any(ghfdb.__version__ in line for line in lines)
         assert any(schema.release.version in line for line in lines)
         assert any(f"https://doi.org/{schema.release.doi}" in line for line in lines)
+        assert any(FIELD_REFERENCE in line for line in lines)
 
     def test_exposes_the_version_it_states(self) -> None:
         assert UploadTemplate().version == ghfdb.__version__

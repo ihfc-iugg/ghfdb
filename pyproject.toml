@@ -15,7 +15,7 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering",
 ]
-dependencies = []
+dependencies = ["openpyxl>=3.1"]
 
 [project.optional-dependencies]
 vocabularies = ["rdflib>=7"]
@@ -33,7 +33,6 @@ dev = [
   "deptry>=0.23",
   "mypy>=1.15",
   "frictionless>=5",
-  "openpyxl>=3.1",
   "types-openpyxl",
   "rdflib>=7",
 ]

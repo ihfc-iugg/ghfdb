@@ -136,3 +136,14 @@ adds, removes and relabels concepts, and compare.
   `ghfdb.fields.release`.
 
 **Checkpoint**: a newer release can be adopted.
+
+---
+
+## Fixes made while accepting the stories
+
+- [x] T019 [US2] Keep each test beside the module it tests, and name the public classes on the
+  API page.
+- [x] T020 [US1] Drop a test that asserted the documentation extension's call sequence; the
+  documentation build proves the registration.
+- [x] T021 [US3] Describe a field's change from the change itself (`FieldChange.describe`), and
+  name the release module's helpers on the API page.

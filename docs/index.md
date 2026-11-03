@@ -31,4 +31,5 @@ contributing/standards/testing
 contributing/standards/documentation
 contributing/standards/code-documentation
 contributing/standards/django
+adr/index
 ```

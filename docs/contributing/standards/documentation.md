@@ -250,19 +250,19 @@ before it is written down.
 <!-- Rules that apply to this repository only, such as a Guides table or a Topics section. Leave
 empty when there are none. -->
 
-### Guides
-
-| Guide | Lives in | Reader | Covers |
-|---|---|---|---|
-| Developer guide | `developer/` | A developer using ghfdb from Python | Loading the field definitions, generating the upload template |
-| Contributor guide | `upload-template/` | A data assessor or contributor filling in the upload template | Downloading the template, its sheets, what changed from the hand-maintained template |
-
 - **Every process has a diagram.** Each check, rule, decision and scoring process the
   documentation describes is also drawn as a simplified Mermaid diagram that a reader who does
   not write code can follow. The diagram sits next to the text it illustrates and leaves out
   implementation detail.
 - **The specification is user documentation.** The pages that state the validation rules and the
   quality scheme are reference pages, and the reasoning behind them is explanation.
+
+### Guides
+
+| Guide | Lives in | Reader | Covers |
+|---|---|---|---|
+| Developer guide | `developer/` | A developer using ghfdb from Python | Loading the field definitions, generating the upload template |
+| Contributor guide | `upload-template/` | A data assessor or contributor filling in the upload template | Downloading the template, its sheets, what changed from the hand-maintained template |
 
 ---
 

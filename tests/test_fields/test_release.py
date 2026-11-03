@@ -10,6 +10,7 @@ from ghfdb.fields.release import (
     MissingSchemeError,
     ReleaseFiles,
     ReleaseMove,
+    add_changed_line,
     main,
 )
 from ghfdb.fields.schema import (
@@ -578,3 +579,24 @@ class TestShippedSchemaDrift:
         write(path, data)
 
         assert list(differences(path)) == ["release"]
+
+
+class TestAddChangedLine:
+    def test_the_line_goes_last_under_an_existing_changed_heading(self) -> None:
+        text = (
+            "## [Unreleased]\n\n### Changed\n\n- First.\n\n### Fixed\n\n- Other.\n"
+            "\n## [1.0.0]\n\n### Changed\n\n- Older.\n"
+        )
+
+        lines = add_changed_line(text, "Second.").splitlines()
+
+        assert lines[:7] == [
+            "## [Unreleased]",
+            "",
+            "### Changed",
+            "",
+            "- First.",
+            "- Second.",
+            "",
+        ]
+        assert lines.count("- Second.") == 1

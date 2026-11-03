@@ -1,0 +1,56 @@
+# Decisions — FS-002: A generated upload template
+
+## Decided by the maintainer
+
+- **This repository owns the upload template.** It is generated from the field schema for each
+  version and distributed as a download linked from the documentation site.
+- **The template is generated and published through the documentation build.** The repository's
+  workflows are not changed by this feature.
+- **Description rows are generated from the field schema**, so they cannot disagree with the rules
+  the check applies.
+- **The layout follows the upload template distributed today**: sheets `readme`, `data list` and
+  `controlled vocabulary`; on `data list`, row 1 holds the field codes with `ID` first, rows 2–8
+  the description rows Obligation, Domain, Quality Relevance, Name, Short Name, Unit and Allowed
+  range, and data starts at row 9. Keeping it lets existing contributors and the GHFDB portal's
+  import recognise the generated template.
+- **The template serves two people with separate stories**: contributors who download and fill it
+  in, and developers who generate it with the package.
+
+## Resolved while specifying
+
+1. **A choice list offers terms and blocks nothing.** A spreadsheet can reject a value that is not
+   on its list, or only offer the list. Rejecting would stop a contributor recording what the
+   publication says and would hide the problem from the check, which exists to report it as
+   "not in vocabulary". Offering the list keeps every problem visible to the check.
+2. **Choice lists cover every data row from row 9 down, with no pre-numbered rows.** Pre-numbered
+   empty rows are something R3 has to tolerate in old workbooks, not something to keep producing.
+   A list that stops at a fixed row leaves contributors with large datasets without it.
+3. **The `readme` sheet states the package version and the vocabulary release.** A downloaded file
+   outlives the page it came from. Without the two, nobody can tell which rules a filled-in
+   workbook was prepared against.
+4. **"Each version downloadable" means the site links the template for the version it documents.**
+   The site is deployed from the default branch only. A permanent address for every earlier
+   version is G12 and R13. Attaching each release's template to its GitHub release would need a
+   change to the publish workflow, which is outside this feature, so it is not proposed here.
+5. **Developers generate the template through the Python interface only.** The package has no
+   command line yet. The checking command (R3) is where a command line first appears, and a
+   command for the template can then be added to this specification as one more scenario.
+6. **The documentation lists how the generated template differs from the last hand-maintained
+   one.** R2 asks for differences from older templates to be noted. Reading older templates is R3,
+   but contributors switching to the generated template need to know what moved now. The list is
+   written once, against the template the GHFDB portal distributes today.
+7. **Generation is reproducible.** The same version always produces the same content, so the
+   published template and a developer's copy can be compared, and a change to the template is
+   always a change to the field schema or the vocabulary release.
+8. **A field fact the template needs but the field schema lacks is FS-001's to add.** The
+   description rows include domain and quality relevance, which the field reference issue does
+   not name. The template never supplies them itself, so the field schema stays the single
+   description of every field.
+
+## Open risks
+
+- FS-001 is being specified in parallel. If its field schema does not carry domain, quality
+  relevance and name for every field, rows 3, 4 and 5 of the template cannot be generated until
+  it does.
+- Very long vocabularies cannot be written into a choice list inline. The choice list then reads
+  its terms from the `controlled vocabulary` sheet, which the layout already provides.

@@ -2,61 +2,20 @@
 
 import json
 from collections.abc import Iterator, Mapping
+from copy import deepcopy
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Literal, Self
 
-
-@dataclass(frozen=True)
-class VocabularyRelease:
-    """The release of the IHFC Controlled Vocabularies a schema was built from.
-
-    Attributes:
-        version: The release version, such as ``2026.1``.
-        doi: The bare DOI of the release, without a resolver prefix.
-    """
-
-    version: str
-    doi: str
-
-
-@dataclass(frozen=True)
-class VocabularyBinding:
-    """The controlled vocabulary a field takes its values from.
-
-    Attributes:
-        scheme_name: The last segment of the concept scheme URI.
-        collection_name: The last segment of the collection URI, or None when the
-            field takes every concept of the scheme.
-        scheme: The full URI of the concept scheme.
-        collection: The full URI of the collection, or None.
-        term_form: Whether a value is written as the concept's label or its notation.
-    """
-
-    scheme_name: str
-    collection_name: str | None
-    scheme: str
-    collection: str | None
-    term_form: Literal["label", "notation"]
-
-
-@dataclass(frozen=True)
-class AllowedValue:
-    """One value a field accepts.
-
-    Attributes:
-        term: The value as written in the template, in square brackets.
-        label: The English preferred label of the concept.
-        uri: The concept URI, or None for a value that belongs to no vocabulary.
-        notation: The concept's notation, or None when it has none.
-    """
-
-    term: str
-    label: str
-    uri: str | None
-    notation: str | None
+from ghfdb.fields.release import (
+    AllowedValue,
+    MissingSchemeError,
+    ReleaseFiles,
+    VocabularyBinding,
+    VocabularyRelease,
+)
 
 
 @dataclass(frozen=True)
@@ -111,17 +70,37 @@ class Field:
     sources: Mapping[str, str]
 
     @classmethod
-    def from_json(cls, data: Mapping[str, Any]) -> Self:
+    def from_json(cls, data: Mapping[str, Any], release: ReleaseFiles) -> Self:
         """Build a field from its entry in the schema file.
 
         Args:
             data: The decoded JSON object of one entry in ``fields``.
+            release: The vocabulary release a vocabulary field takes its values from.
 
         Returns:
-            The field.
+            The field, with the allowed values its vocabulary gives it.
+
+        Raises:
+            MissingSchemeError: The release lacks the scheme or collection the field
+                names. The message starts with the field's code.
         """
         constraints = data["constraints"]
-        binding = data["vocabulary"]
+        entry = data["vocabulary"]
+        binding = (
+            None
+            if entry is None
+            else VocabularyBinding(
+                entry["schemeName"], entry["collectionName"], entry["termForm"]
+            )
+        )
+        try:
+            allowed_values = (
+                tuple(AllowedValue(**value) for value in data.get("allowedValues", ()))
+                if binding is None
+                else release.allowed_values(binding)
+            )
+        except MissingSchemeError as error:
+            raise MissingSchemeError(f"{data['name']}: {error}") from error
         return cls(
             code=data["name"],
             column_name=data["columnName"],
@@ -139,24 +118,8 @@ class Field:
             minimum=constraints.get("minimum"),
             maximum=constraints.get("maximum"),
             max_length=constraints.get("maxLength"),
-            vocabulary=None
-            if binding is None
-            else VocabularyBinding(
-                scheme_name=binding["schemeName"],
-                collection_name=binding["collectionName"],
-                scheme=binding["scheme"],
-                collection=binding["collection"],
-                term_form=binding["termForm"],
-            ),
-            allowed_values=tuple(
-                AllowedValue(
-                    term=value["term"],
-                    label=value["label"],
-                    uri=value["uri"],
-                    notation=value["notation"],
-                )
-                for value in data["allowedValues"]
-            ),
+            vocabulary=binding,
+            allowed_values=allowed_values,
             separator=data["separator"],
             guidance=data["guidance"],
             sources=MappingProxyType(dict(data["sources"])),
@@ -171,49 +134,77 @@ class FieldSchema:
     """The fields of the upload template, read from a schema file.
 
     Attributes:
-        path: The JSON file the schema was read from.
         release: The vocabulary release the allowed values come from.
         fields: Every field, in the order of the file.
+        data: The schema file as written, without any allowed values from the
+            vocabulary release.
     """
 
     def __init__(
-        self, path: Path, release: VocabularyRelease, fields: tuple[Field, ...]
+        self,
+        release: VocabularyRelease,
+        fields: tuple[Field, ...],
+        data: Mapping[str, Any],
     ) -> None:
         """Hold the fields and index them by code and by published column name.
 
         Args:
-            path: The JSON file the fields were read from.
             release: The vocabulary release the allowed values come from.
             fields: Every field, in file order.
+            data: The decoded schema file the fields were read from.
         """
-        self.path = path
         self.release = release
         self.fields = fields
+        self.data = data
         self.index = {field.column_name: field for field in fields}
         self.index.update({field.code: field for field in fields})
 
     @classmethod
-    def load(cls, path: Path | None = None) -> Self:
-        """Read a schema file.
+    def load(
+        cls, path: Path | None = None, vocabularies: ReleaseFiles | None = None
+    ) -> Self:
+        """Read a schema file and resolve its vocabulary fields against the release.
 
         Args:
             path: The file to read. Without one, the file packaged with ghfdb.
+            vocabularies: The files of the vocabulary release the schema names.
+                Without them, the release is taken from the cache, and downloaded
+                into it first when it is not there.
 
         Returns:
             The schema.
+
+        Raises:
+            MissingSchemeError: The release lacks a scheme or collection a field names.
+            OSError: The release is not cached and cannot be downloaded.
         """
         if path is None:
-            with resources.as_file(
-                resources.files("ghfdb.fields").joinpath("schema.json")
-            ) as packaged:
-                return cls.load(packaged)
-        data = json.loads(path.read_text(encoding="utf-8"))
-        release = data["vocabularyRelease"]
-        return cls(
-            path,
-            VocabularyRelease(release["version"], release["doi"]),
-            tuple(Field.from_json(entry) for entry in data["fields"]),
-        )
+            text = (
+                resources.files("ghfdb.fields")
+                .joinpath("schema.json")
+                .read_text("utf-8")
+            )
+        else:
+            text = path.read_text(encoding="utf-8")
+        data = json.loads(text)
+        release = VocabularyRelease(**data["vocabularyRelease"])
+        files = ReleaseFiles.fetch(release) if vocabularies is None else vocabularies
+        fields = tuple(Field.from_json(entry, files) for entry in data["fields"])
+        return cls(release, fields, data)
+
+    def descriptor(self) -> dict[str, Any]:
+        """Build the complete Frictionless Table Schema.
+
+        Returns:
+            The schema file with an ``enum`` constraint added to every field that has
+            allowed values. It is built on each call and never written back.
+        """
+        descriptor = deepcopy(dict(self.data))
+        for entry, field in zip(descriptor["fields"], self.fields, strict=True):
+            if field.allowed_values:
+                terms = [value.term for value in field.allowed_values]
+                entry["constraints"]["enum"] = terms
+        return descriptor
 
     def __getitem__(self, key: str) -> Field:
         """Find a field by its code or its published column name.

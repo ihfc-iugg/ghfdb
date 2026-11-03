@@ -1,92 +1,164 @@
-"""Reading a vocabulary release, and moving a field schema file onto it.
+"""The IHFC Controlled Vocabularies release a field schema names, and its files.
 
-This is the only module that imports rdflib, which is the optional ``vocabularies``
-extra. Importing ``ghfdb.fields`` never reaches it.
+A release is downloaded once from its GitHub release into a cache directory outside the
+repository, keyed by version, and read from there afterwards.
 """
 
-import argparse
-import json
-import sys
-from collections.abc import Sequence
-from dataclasses import dataclass, replace
-from functools import cached_property
+import os
+import shutil
+import tempfile
+import zipfile
+from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Literal, Self
+from urllib.request import urlopen
 
-from rdflib import RDF, Graph, Literal, URIRef
-from rdflib.namespace import DCTERMS, SKOS
+from rdflib import RDF, Graph, URIRef
+from rdflib import Literal as RdfLiteral
+from rdflib.collection import Collection
+from rdflib.namespace import SKOS
 from rdflib.term import Node
 
-from ghfdb.fields.schema import AllowedValue, VocabularyBinding, VocabularyRelease
+CACHE_VARIABLE = "GHFDB_VOCABULARY_CACHE"
+ARCHIVE = "vocabularies-full.zip"
+TIMEOUT = 60
 
-DOI_PREFIX = "https://doi.org/"
+
+@dataclass(frozen=True)
+class VocabularyRelease:
+    """The release of the IHFC Controlled Vocabularies a schema takes its terms from.
+
+    Attributes:
+        version: The release version, such as ``2026.1``.
+        doi: The bare DOI of the release, without a resolver prefix.
+        repository: The address of the repository the release is published in.
+    """
+
+    version: str
+    doi: str
+    repository: str
+
+    @property
+    def archive_url(self) -> str:
+        """Where the release's vocabulary files are downloaded from."""
+        return f"{self.repository}/releases/download/v{self.version}/{ARCHIVE}"
+
+
+@dataclass(frozen=True)
+class VocabularyBinding:
+    """The controlled vocabulary a field takes its values from.
+
+    Attributes:
+        scheme_name: The last segment of the concept scheme URI, which is also the
+            name of the release file holding the scheme.
+        collection_name: The last segment of the collection URI, or None when the
+            field takes every concept of the scheme.
+        term_form: Whether a value is written as the concept's label or its notation.
+    """
+
+    scheme_name: str
+    collection_name: str | None
+    term_form: Literal["label", "notation"]
+
+
+@dataclass(frozen=True)
+class AllowedValue:
+    """One value a field accepts.
+
+    Attributes:
+        term: The value as written in the template, in square brackets.
+        label: The English preferred label of the concept.
+        uri: The concept URI, or None for a value that belongs to no vocabulary.
+        notation: The concept's notation, or None when it has none.
+    """
+
+    term: str
+    label: str
+    uri: str | None
+    notation: str | None
 
 
 class MissingSchemeError(LookupError):
     """Raised when a release holds no scheme or collection of the name asked for."""
 
 
+def cache_directory() -> Path:
+    """Find the directory the downloaded releases are kept in.
+
+    Returns:
+        The directory named by the ``GHFDB_VOCABULARY_CACHE`` environment variable,
+        else ``ghfdb/vocabularies`` in the user's cache directory.
+    """
+    if override := os.environ.get(CACHE_VARIABLE):
+        return Path(override)
+    base = os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache"
+    return Path(base) / "ghfdb" / "vocabularies"
+
+
+def download(release: VocabularyRelease, directory: Path) -> None:
+    """Download a release's vocabulary files into a directory.
+
+    The files are unpacked beside the directory and moved into place at the end, so
+    a download that fails leaves nothing that reads as a release.
+
+    Args:
+        release: The release to download.
+        directory: Where to put its ``.ttl`` files.
+
+    Raises:
+        OSError: The release cannot be downloaded, or holds no Turtle files.
+    """
+    directory.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=directory.parent) as scratch:
+        archive = Path(scratch) / ARCHIVE
+        with urlopen(release.archive_url, timeout=TIMEOUT) as response:
+            archive.write_bytes(response.read())
+        unpacked = Path(scratch) / "release"
+        unpacked.mkdir()
+        try:
+            with zipfile.ZipFile(archive) as zipped:
+                for name in zipped.namelist():
+                    if name.endswith(".ttl"):
+                        (unpacked / Path(name).name).write_bytes(zipped.read(name))
+        except zipfile.BadZipFile as error:
+            raise OSError(f"{release.archive_url} is not a zip archive") from error
+        if not any(unpacked.iterdir()):
+            raise OSError(f"{release.archive_url} holds no Turtle files")
+        shutil.move(unpacked, directory)
+
+
 class ReleaseFiles:
     """One vocabulary release, read from the directory holding its Turtle files."""
 
-    def __init__(self, directory: Path, version: str) -> None:
-        """Remember where the release is; nothing is read until it is needed.
+    def __init__(self, directory: Path) -> None:
+        """Remember where the release is; a file is read when its scheme is asked for.
 
         Args:
-            directory: The directory holding the release's ``.ttl`` files.
-            version: The release version, such as ``2026.1``. It is never read from
-                the files.
+            directory: The directory holding the release's ``.ttl`` files, one per
+                concept scheme, named for the scheme.
         """
         self.directory = directory
-        self.version = version
+        self.graphs: dict[str, Graph] = {}
 
-    @cached_property
-    def graph(self) -> Graph:
-        """All of the release's Turtle files in one graph."""
-        graph = Graph()
-        for path in sorted(self.directory.glob("*.ttl")):
-            graph.parse(path, format="turtle")
-        return graph
-
-    @property
-    def release(self) -> VocabularyRelease:
-        """The version and bare DOI of the release.
-
-        Returns:
-            The release, with the DOI read from ``dcterms:isPartOf`` of its schemes.
-
-        Raises:
-            ValueError: If the schemes name more than one DOI, or none.
-        """
-        dois = {
-            str(doi).removeprefix(DOI_PREFIX)
-            for scheme in self.graph.subjects(RDF.type, SKOS.ConceptScheme)
-            for doi in self.graph.objects(scheme, DCTERMS.isPartOf)
-        }
-        if len(dois) != 1:
-            found = ", ".join(sorted(dois)) or "none"
-            raise ValueError(f"The schemes must share one DOI; found {found}")
-        return VocabularyRelease(self.version, dois.pop())
-
-    def resolve(self, binding: VocabularyBinding) -> VocabularyBinding:
-        """Fill in the scheme and collection URIs of a binding given by name.
+    @classmethod
+    def fetch(cls, release: VocabularyRelease, cache: Path | None = None) -> Self:
+        """Open a release, downloading it first when it is not in the cache.
 
         Args:
-            binding: A binding whose scheme and collection names are set.
+            release: The release to open.
+            cache: The directory releases are kept in; see ``cache_directory``.
 
         Returns:
-            The binding with the URIs the release gives those names.
+            The release's files.
 
         Raises:
-            MissingSchemeError: If the release has no scheme or collection of the name.
+            OSError: The release is not cached and cannot be downloaded.
         """
-        scheme = self.find(SKOS.ConceptScheme, binding.scheme_name, None)
-        collection = None
-        if binding.collection_name is not None:
-            collection = str(
-                self.find(SKOS.Collection, binding.collection_name, str(scheme))
-            )
-        return replace(binding, scheme=str(scheme), collection=collection)
+        directory = (cache or cache_directory()) / release.version
+        if not directory.is_dir():
+            download(release, directory)
+        return cls(directory)
 
     def allowed_values(self, binding: VocabularyBinding) -> tuple[AllowedValue, ...]:
         """The values a field bound to a scheme or collection accepts.
@@ -95,25 +167,79 @@ class ReleaseFiles:
             binding: The binding, by scheme name and optional collection name.
 
         Returns:
-            The collection's members where the binding names one, otherwise every
-            concept of the scheme, sorted by term ignoring case.
+            The members of an ordered collection in the collection's order. Otherwise
+            the members of the collection, or every concept of the scheme, sorted by
+            term ignoring case.
 
         Raises:
-            MissingSchemeError: If the release has no scheme or collection of the name.
+            MissingSchemeError: If the release has no scheme or collection of the name,
+                or a concept has no English preferred label.
         """
-        resolved = self.resolve(binding)
-        scheme = URIRef(resolved.scheme)
-        if resolved.collection is None:
-            concepts = set(self.graph.subjects(SKOS.inScheme, scheme))
+        graph = self.graph(binding.scheme_name)
+        scheme = self.find(graph, SKOS.ConceptScheme, binding.scheme_name, None)
+        concepts: Iterable[Node]
+        ordered = False
+        if binding.collection_name is None:
+            concepts = set(graph.subjects(SKOS.inScheme, scheme))
         else:
-            concepts = set(self.graph.objects(URIRef(resolved.collection), SKOS.member))
-        values = [self.allowed_value(c, resolved.term_form) for c in concepts]
+            concepts, ordered = self.members(graph, binding.collection_name, scheme)
+        values = [self.allowed_value(graph, c, binding.term_form) for c in concepts]
+        if ordered:
+            return tuple(values)
         return tuple(sorted(values, key=lambda value: value.term.casefold()))
 
-    def find(self, kind: URIRef, name: str, within: str | None) -> URIRef:
+    def graph(self, scheme_name: str) -> Graph:
+        """Read the file of one scheme, once.
+
+        Args:
+            scheme_name: The scheme's name, which is its file's name without ``.ttl``.
+
+        Returns:
+            The scheme's graph.
+
+        Raises:
+            MissingSchemeError: If the release has no file for the scheme.
+        """
+        if scheme_name not in self.graphs:
+            path = self.directory / f"{scheme_name}.ttl"
+            if not path.is_file():
+                raise MissingSchemeError(
+                    f"The release has no ConceptScheme '{scheme_name}'"
+                )
+            self.graphs[scheme_name] = Graph().parse(path, format="turtle")
+        return self.graphs[scheme_name]
+
+    def members(
+        self, graph: Graph, name: str, scheme: URIRef
+    ) -> tuple[Iterable[Node], bool]:
+        """List the members of a collection of a scheme.
+
+        Args:
+            graph: The scheme's graph.
+            name: The last segment of the collection's URI.
+            scheme: The scheme the collection belongs to.
+
+        Returns:
+            The members, and whether they are in the order the release gives, which
+            is so for a ``skos:OrderedCollection`` only.
+
+        Raises:
+            MissingSchemeError: If the scheme has no collection of the name.
+        """
+        try:
+            collection = self.find(graph, SKOS.Collection, name, scheme)
+        except MissingSchemeError:
+            ordered = self.find(graph, SKOS.OrderedCollection, name, scheme)
+            (head,) = graph.objects(ordered, SKOS.memberList)
+            return list(Collection(graph, head)), True
+        return set(graph.objects(collection, SKOS.member)), False
+
+    @staticmethod
+    def find(graph: Graph, kind: URIRef, name: str, within: URIRef | None) -> URIRef:
         """Find the one resource of a kind whose URI ends in a name.
 
         Args:
+            graph: The graph to search.
             kind: The RDF class, such as ``skos:ConceptScheme``.
             name: The last segment of the URI.
             within: The URI the resource's parent must be, or None for any.
@@ -122,18 +248,20 @@ class ReleaseFiles:
             The resource's URI.
 
         Raises:
-            MissingSchemeError: If the release holds no such resource.
+            MissingSchemeError: If the graph holds no such resource.
         """
-        for subject in self.graph.subjects(RDF.type, kind):
+        for subject in graph.subjects(RDF.type, kind):
             parent, _, last = str(subject).rpartition("/")
-            if last == name and within in (None, parent):
+            if last == name and within in (None, URIRef(parent)):
                 return URIRef(str(subject))
         raise MissingSchemeError(f"The release has no {kind.split('#')[-1]} '{name}'")
 
-    def allowed_value(self, concept: Node, term_form: str) -> AllowedValue:
+    @staticmethod
+    def allowed_value(graph: Graph, concept: Node, term_form: str) -> AllowedValue:
         """Build the allowed value for one concept.
 
         Args:
+            graph: The graph holding the concept.
             concept: The concept's URI.
             term_form: ``label`` or ``notation``.
 
@@ -141,273 +269,16 @@ class ReleaseFiles:
             The value, its term written in square brackets.
 
         Raises:
-            ValueError: If the concept has no English preferred label.
+            MissingSchemeError: If the concept has no English preferred label.
         """
         labels = [
             str(label)
-            for label in self.graph.objects(concept, SKOS.prefLabel)
-            if isinstance(label, Literal) and label.language == "en"
+            for label in graph.objects(concept, SKOS.prefLabel)
+            if isinstance(label, RdfLiteral) and label.language == "en"
         ]
         if not labels:
-            raise ValueError(f"{concept} has no English preferred label")
-        notations = [str(n) for n in self.graph.objects(concept, SKOS.notation)]
+            raise MissingSchemeError(f"{concept} has no English preferred label")
+        notations = [str(n) for n in graph.objects(concept, SKOS.notation)]
         notation = notations[0] if notations else None
         shown = notation if term_form == "notation" and notation else labels[0]
         return AllowedValue(f"[{shown}]", labels[0], str(concept), notation)
-
-
-@dataclass(frozen=True)
-class FieldChange:
-    """What moving to a release does to the allowed values of one field.
-
-    Attributes:
-        code: The field's code, such as ``C43``.
-        added: Values the release has and the field does not.
-        removed: Values the field has and the release does not.
-        relabelled: Pairs of the old and new value for a concept whose URI is the
-            same and whose term or label differs.
-    """
-
-    code: str
-    added: tuple[AllowedValue, ...]
-    removed: tuple[AllowedValue, ...]
-    relabelled: tuple[tuple[AllowedValue, AllowedValue], ...]
-
-    def describe(self) -> str:
-        """Write this field's change as a line of the report.
-
-        Returns:
-            ``<code>: unchanged``, or the added, removed and relabelled terms.
-        """
-        parts = []
-        if self.added:
-            parts.append("added " + ", ".join(value.term for value in self.added))
-        if self.removed:
-            parts.append("removed " + ", ".join(value.term for value in self.removed))
-        if self.relabelled:
-            pairs = (f"{old.term} -> {new.term}" for old, new in self.relabelled)
-            parts.append("relabelled " + ", ".join(pairs))
-        return f"{self.code}: " + ("; ".join(parts) or "unchanged")
-
-
-class ReleaseMove:
-    """Regenerate the allowed values of a field schema file from a release."""
-
-    def __init__(self, schema_path: Path, release: ReleaseFiles) -> None:
-        """Pair a field schema file with the release to move it onto.
-
-        Args:
-            schema_path: The field schema JSON file to rewrite.
-            release: The vocabulary release whose facts the file takes.
-        """
-        self.schema_path = schema_path
-        self.release = release
-
-    def changes(self) -> tuple[FieldChange, ...]:
-        """Report what moving onto the release would change, writing nothing.
-
-        Returns:
-            One change per vocabulary field, in the order the file lists them.
-
-        Raises:
-            MissingSchemeError: If the release lacks a scheme or collection a field
-                names.
-        """
-        data: dict[str, Any] = json.loads(self.schema_path.read_text())
-        return tuple(
-            self.change(field, values) for field, _, values in self.resolve_all(data)
-        )
-
-    def apply(self) -> tuple[FieldChange, ...]:
-        """Write the release's facts into the schema file.
-
-        Only the generated facts change: ``vocabulary.scheme``,
-        ``vocabulary.collection``, ``allowedValues`` and ``constraints.enum`` of every
-        field with a vocabulary, and ``vocabularyRelease``. Every field is resolved
-        before anything is written, so a failure leaves the file as it was.
-
-        Returns:
-            The same changes ``changes()`` reports.
-
-        Raises:
-            MissingSchemeError: If the release lacks a scheme or collection a field
-                names. The file is not written.
-        """
-        data: dict[str, Any] = json.loads(self.schema_path.read_text())
-        moves = self.resolve_all(data)
-        changes = tuple(self.change(field, values) for field, _, values in moves)
-        for field, resolved, values in moves:
-            self.write_field(field, resolved, values)
-        release = self.release.release
-        data["vocabularyRelease"] = {"version": release.version, "doi": release.doi}
-        text = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
-        self.schema_path.write_text(text)
-        return changes
-
-    def resolve_all(
-        self, data: dict[str, Any]
-    ) -> list[tuple[dict[str, Any], VocabularyBinding, tuple[AllowedValue, ...]]]:
-        """Resolve every vocabulary field against the release.
-
-        Args:
-            data: The parsed field schema file.
-
-        Returns:
-            For each vocabulary field, the field, its resolved binding and the
-            values the release gives it.
-
-        Raises:
-            MissingSchemeError: If the release lacks a scheme or collection a field
-                names; the message starts with the field's code.
-        """
-        moves = []
-        for field in data["fields"]:
-            vocabulary = field.get("vocabulary")
-            if vocabulary is None:
-                continue
-            binding = VocabularyBinding(
-                vocabulary["schemeName"],
-                vocabulary["collectionName"],
-                "",
-                None,
-                vocabulary["termForm"],
-            )
-            try:
-                resolved = self.release.resolve(binding)
-                values = self.release.allowed_values(resolved)
-            except MissingSchemeError as error:
-                raise MissingSchemeError(f"{field['name']}: {error}") from error
-            moves.append((field, resolved, values))
-        return moves
-
-    def change(
-        self, field: dict[str, Any], values: tuple[AllowedValue, ...]
-    ) -> FieldChange:
-        """Compare a field's current allowed values with the release's.
-
-        Args:
-            field: The parsed field.
-            values: The values the release gives the field.
-
-        Returns:
-            The values added, removed and relabelled, matched by concept URI.
-        """
-        old = {item["uri"]: AllowedValue(**item) for item in field["allowedValues"]}
-        new = {value.uri: value for value in values}
-        return FieldChange(
-            field["name"],
-            tuple(new[uri] for uri in new if uri not in old),
-            tuple(old[uri] for uri in old if uri not in new),
-            tuple(
-                (old[uri], new[uri])
-                for uri in new
-                if uri in old
-                and (old[uri].term, old[uri].label) != (new[uri].term, new[uri].label)
-            ),
-        )
-
-    def write_field(
-        self,
-        field: dict[str, Any],
-        resolved: VocabularyBinding,
-        values: tuple[AllowedValue, ...],
-    ) -> None:
-        """Rewrite the generated facts of one vocabulary field in place.
-
-        Args:
-            field: The parsed field.
-            resolved: The field's binding, resolved against the release.
-            values: The values the release gives the field.
-        """
-        field["vocabulary"]["scheme"] = resolved.scheme
-        field["vocabulary"]["collection"] = resolved.collection
-        field["allowedValues"] = [
-            {key: getattr(value, key) for key in ("term", "uri", "label", "notation")}
-            for value in values
-        ]
-        field.setdefault("constraints", {})["enum"] = [value.term for value in values]
-
-
-def add_changed_line(text: str, line: str) -> str:
-    """Add a bullet under ``### Changed`` of the Unreleased changelog section.
-
-    Args:
-        text: The changelog.
-        line: The bullet to add, without its dash.
-
-    Returns:
-        The changelog with the bullet last under ``### Changed`` of
-        ``## [Unreleased]``, the heading created at the end of that section when it
-        is absent.
-    """
-    lines = text.splitlines()
-    start = lines.index("## [Unreleased]")
-    end = next(
-        (i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
-        len(lines),
-    )
-    changed = next(
-        (i for i in range(start + 1, end) if lines[i] == "### Changed"), None
-    )
-    if changed is None:
-        body = ["", "### Changed", "", f"- {line}"]
-        at = end
-    else:
-        body = [f"- {line}"]
-        at = next(
-            (i for i in range(changed + 1, end) if lines[i].startswith("### ")), end
-        )
-    while lines[at - 1] == "":
-        at -= 1
-    return "\n".join([*lines[:at], *body, *lines[at:]]) + "\n"
-
-
-def main(argv: Sequence[str] | None = None) -> int:
-    """Move the field schema onto a release, report it and note it in the changelog.
-
-    Args:
-        argv: The command line without the program name; ``sys.argv`` when None.
-
-    Returns:
-        0 on success; 1 when the release lacks a scheme or collection a field
-        names, in which case neither file is changed.
-    """
-    parser = argparse.ArgumentParser(
-        prog="python -m ghfdb.fields.release", description=__doc__
-    )
-    parser.add_argument("version", help="the release version, such as 2026.1")
-    parser.add_argument("directory", type=Path, help="the release's Turtle files")
-    parser.add_argument(
-        "--schema",
-        type=Path,
-        default=Path(__file__).with_name("schema.json"),
-        help="the field schema file; the packaged one by default",
-    )
-    parser.add_argument(
-        "--changelog",
-        type=Path,
-        default=Path("CHANGELOG.md"),
-        help="the changelog; CHANGELOG.md in the current directory by default",
-    )
-    args = parser.parse_args(argv)
-    files = ReleaseFiles(args.directory, args.version)
-    old = json.loads(args.schema.read_text())["vocabularyRelease"]
-    new = files.release
-    line = (
-        f"Vocabulary release moved from {old['version']} (DOI {old['doi']}) "
-        f"to {new.version} (DOI {new.doi})."
-    )
-    changelog = add_changed_line(args.changelog.read_text(), line)
-    try:
-        changes = ReleaseMove(args.schema, files).apply()
-    except MissingSchemeError as error:
-        print(error, file=sys.stderr)
-        return 1
-    for change in changes:
-        print(change.describe())
-    args.changelog.write_text(changelog)
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

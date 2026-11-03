@@ -1,3 +1,4 @@
+import json
 import re
 from dataclasses import replace
 from pathlib import Path
@@ -161,9 +162,9 @@ class TestVocabularyEntries:
             assert field.vocabulary is not None
             section = section_of(reference.entries(field.group), field)
 
-            assert f"<{field.vocabulary.scheme}>" in section, field.code
-            if field.vocabulary.collection is not None:
-                assert f"<{field.vocabulary.collection}>" in section, field.code
+            assert f"`{field.vocabulary.scheme_name}`" in section, field.code
+            if field.vocabulary.collection_name is not None:
+                assert f"`{field.vocabulary.collection_name}`" in section, field.code
             assert schema.release.version in section, field.code
             assert f"https://doi.org/{schema.release.doi}" in section, field.code
 
@@ -337,7 +338,7 @@ class TestCopySchema:
         copy_schema(schema, tmp_path)
 
         copied = tmp_path / "reference" / "fields" / "ghfdb-field-schema.json"
-        assert copied.read_bytes() == schema.path.read_bytes()
+        assert json.loads(copied.read_text(encoding="utf-8")) == schema.descriptor()
 
     def test_the_copy_is_ignored_by_git(self) -> None:
         root = Path(__file__).parents[3]

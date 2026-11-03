@@ -1,67 +1,61 @@
 # Adopt a new vocabulary release
 
-When the IHFC Controlled Vocabularies publish a new release, the allowed values of the
-fields that take terms from them are moved onto it in one step. The step rewrites only the
-scheme and collection addresses, `allowedValues`, `constraints.enum` and `vocabularyRelease`
-of `ghfdb/fields/schema.json`, and adds a line to the changelog. A test then checks that
-nothing was edited by hand. This page walks through the step.
+The field schema names the release of the IHFC Controlled Vocabularies its allowed values come
+from. The schema holds no term. The terms are read from the named release when the schema is
+loaded, so adopting a newer release means changing the name of the release in the schema and
+reading what the tests say. This page walks through it.
 
 ## Move the field definitions onto a release
 
-1. Download the release's Turtle files and its `LICENSE` from the vocabularies' repository
-   and put them in `vocabularies/<version>/`, where `<version>` is the release's version,
-   such as `2026.2`.
+1. Find the release's version, such as `2026.2`, and its DOI on the vocabularies' releases
+   page, <https://github.com/ihfc-iugg/controlled-vocabularies/releases>.
 
-2. Install the optional extra that reads the files:
+2. In `ghfdb/fields/schema.json`, change `version` and `doi` under `vocabularyRelease`. Leave
+   `repository` as it is.
 
-   ```bash
-   uv sync --extra vocabularies
-   ```
-
-3. Run the command with the version and the directory:
-
-   ```bash
-   uv run python -m ghfdb.fields.release 2026.2 vocabularies/2026.2
-   ```
-
-   Run it from the repository root. It rewrites `ghfdb/fields/schema.json` and adds a line
-   under `## [Unreleased]` and `### Changed` in `CHANGELOG.md`, naming the old and the new release
-   and their DOIs. `--schema` and `--changelog` name other files.
-
-4. Read the report. There is one line for every field that takes terms from a vocabulary:
-
-   ```text
-   C43: unchanged
-   C44: added [new term]; removed [old term]; relabelled [Old name] -> [New name]
-   ```
-
-   A removed or relabelled term can mean existing workbooks no longer pass the check, so say so
-   in the pull request when the report shows one.
-
-5. Remove the old release's directory, `vocabularies/<old version>/`, so that only the stated
-   release is kept.
-
-6. Run the tests. `TestShippedSchemaDrift` compares every vocabulary field with the files in
-   `vocabularies/<version>/` and names each field that differs.
+3. Run the tests. The first run downloads the release into the cache directory.
 
    ```bash
    uv run pytest
    ```
 
-7. Commit the new directory, the changed schema, the changelog and the removed directory, and
-   open the pull request.
+   The test that compares the stated release with the newest published release passes again,
+   and every test that fails names a field or a template cell that depends on a term that moved
+   or was removed.
+
+4. Build the documentation, which shows the new terms in the field reference, and look at the
+   fields the failing tests named.
+
+   ```bash
+   uv run sphinx-build -W --keep-going -b html docs docs/_build/html
+   ```
+
+5. Add a line under `## [Unreleased]` and `### Changed` in `CHANGELOG.md` naming the old and
+   the new release and their DOIs, and say in the pull request which terms were added, removed
+   or renamed. A removed or renamed term can mean existing workbooks no longer pass the check.
+
+6. Open the pull request.
+
+## Where the release is kept
+
+The first time the package needs a release, it downloads `vocabularies-full.zip` from that
+release's page on GitHub and unpacks the Turtle files into `ghfdb/vocabularies/<version>` in the
+user's cache directory (`$XDG_CACHE_HOME`, or `~/.cache`). `GHFDB_VOCABULARY_CACHE` names another
+directory. The release is not stored in this repository. To fetch a release again, delete its
+directory from the cache.
 
 ## When the release lacks a scheme
 
-If a field names a scheme or collection that the release no longer has, the command prints the
-field's code and the missing name, exits with status 1 and changes neither file. Either the
-vocabularies renamed or dropped the scheme, in which case the field's `schemeName` or
-`collectionName` in the schema needs a decision, or the download is incomplete.
+If a field names a scheme or collection that the release does not have, loading the schema
+raises `MissingSchemeError` naming the field's code and the missing name. Either the vocabularies
+renamed or dropped the scheme, in which case the field's `schemeName` or `collectionName` in the
+schema needs a decision, or the download is incomplete and its directory should be deleted from
+the cache.
 
-## Why the file is regenerated
+## Why the schema holds no term
 
-Allowed values are never typed in. They come from the release, so that a term is exactly the
-one the vocabularies publish, and the drift test fails when a value was edited by hand or the
-stated release does not match the files kept in `vocabularies/`. The field reference pages are
-built from the same schema file, so they show the new terms the next time the documentation is
-built. See [the Python API](../reference/python-api.md) for the classes the command uses.
+Allowed values are never typed in or copied. They come from the release, so that a term is
+exactly the one the vocabularies publish, and a change in the vocabularies reaches this
+package as a failing test and not as a surprise. See
+[ADR 0003](../adr/0003-vocabularies-are-read-from-the-published-release.md) and
+[the Python API](../reference/python-api.md) for the classes involved.

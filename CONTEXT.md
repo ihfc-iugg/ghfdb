@@ -45,7 +45,7 @@ Other layouts exist, such as the GHFDB release format and the data assessment te
 | **Quality relevance** | How a field enters the quality score: `U-score`, `M-score` or `perturbation flags`, or none. |
 | **Published column name** | A field's name in row 6 of the upload template and in GHFDB release files, such as `q`, `lat_NS` or `T_grad_mean`. Its casing is part of the name. |
 | **Obligation** | Whether a field must be filled: `M` mandatory, `R` recommended, `O` optional. |
-| **Field schema** | The machine-readable description of every field, as a Frictionless Table Schema: type, unit, obligation, range and allowed values. Built in `ghfdb.fields`, shipped as `schema.json` in the package. |
+| **Field schema** | The machine-readable description of every field, as a Frictionless Table Schema: type, unit, obligation, range and, for a vocabulary field, the concept scheme and collection its allowed values come from. Built in `ghfdb.fields`, shipped as `schema.json` in the package. It holds no vocabulary term: the allowed values are read from the vocabulary release it names. |
 
 ## The heat flow data
 
@@ -76,7 +76,7 @@ Avoid "determination", "entry" and "record" for a row. Say **child**.
 | **Controlled vocabulary** | One of the IHFC Controlled Vocabularies: a SKOS concept scheme with a persistent URI, published as a versioned release. Reserve "vocabulary" for these. A list of column names is not a vocabulary. |
 | **Concept** | One entry of a controlled vocabulary, identified by its URI. |
 | **Term** | How a concept is written in a workbook cell: its label or notation in square brackets, such as `[Core samples]` or `[LOGeq]`. |
-| **Vocabulary release** | The version of the IHFC Controlled Vocabularies the field schema is generated from, such as `v2026.1`. |
+| **Vocabulary release** | The version of the IHFC Controlled Vocabularies the field schema reads its allowed values from, such as `v2026.1`. |
 
 ## Quality
 

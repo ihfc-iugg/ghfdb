@@ -1,7 +1,7 @@
 """Render the field reference from the field schema while the documentation builds."""
 
+import json
 import re
-import shutil
 from pathlib import Path
 from typing import Any
 
@@ -170,9 +170,11 @@ class FieldReference:
         binding = field.vocabulary
         if binding is not None:
             release = self.schema.release
-            where = f"the concept scheme <{binding.scheme}>"
-            if binding.collection is not None:
-                where += f", limited to the collection <{binding.collection}>"
+            where = f"the concept scheme {self.code(binding.scheme_name)}"
+            if binding.collection_name is not None:
+                where += (
+                    f", limited to the collection {self.code(binding.collection_name)}"
+                )
             blocks.append(
                 f"The allowed values come from {where}, in the "
                 f"IHFC Controlled Vocabularies v{release.version} "
@@ -265,15 +267,19 @@ def replace_markers(text: str, reference: FieldReference) -> str:
 
 
 def copy_schema(schema: FieldSchema, source_directory: Path) -> None:
-    """Copy the schema file into the documentation source, for download.
+    """Write the complete schema into the documentation source, for download.
+
+    The copy carries the allowed values of every vocabulary field, which the schema
+    file in the package leaves to the vocabulary release.
 
     Args:
-        schema: The schema whose file is copied.
+        schema: The schema to write.
         source_directory: The documentation source directory.
     """
     target = source_directory / SCHEMA_COPY
     target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(schema.path, target)
+    text = json.dumps(schema.descriptor(), indent=2, ensure_ascii=False)
+    target.write_text(text + "\n", encoding="utf-8")
 
 
 def builder_inited(app: Sphinx) -> None:

@@ -8,7 +8,7 @@ These were settled before the specification was written.
 |---|---|
 | G-1 | The machine-readable field description is one Frictionless Table Schema covering every upload template field. Per-column facts live in it: type, unit, obligation, range, allowed values and missing-value markers. Cross-field rules and scoring are not in it. |
 | G-2 | Every field carries both its field code (`P1`–`P13`, `C1`–`C49`, the header row of the template) and its published column name (row 6 of the template, such as `q` or `lat_NS`). |
-| G-3 | Allowed values of vocabulary fields are generated from a stated release of the IHFC Controlled Vocabularies, v2026.1 (DOI [10.5880/fidgeo.2026.065](https://doi.org/10.5880/fidgeo.2026.065)), and never typed by hand (`CONSTITUTION.md`, Article XI). Each such field records its concept scheme's URI. Moving to a newer release is a separate, explicit step. |
+| G-3 | Allowed values of vocabulary fields are read from a stated release of the IHFC Controlled Vocabularies, v2026.1 (DOI [10.5880/fidgeo.2026.065](https://doi.org/10.5880/fidgeo.2026.065)), and never typed by hand or copied into the field schema (`CONSTITUTION.md`, Article XI). Each such field names its concept scheme, and its collection where there is one. Moving to a newer release is a separate, explicit step. |
 | G-4 | The field list comes from the current published upload template, sheet `data list`. A newer template version is an ordinary change to the field reference. |
 | G-5 | Every rule names its source (`CONSTITUTION.md`, Article IX): Fuchs et al. (2023) Appendix A, the template, or a recorded decision. |
 | G-6 | The field reference in the documentation follows `docs/contributing/standards/documentation.md` for reference pages, with simplified Mermaid diagrams where a process is described. |
@@ -90,22 +90,24 @@ values come from the vocabulary release.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 
-### D-8 — The definitions ship with the package
+### D-8 — The field schema ships with the package and the vocabulary release is downloaded once
 
-**Chosen:** the field schema and the vocabulary terms it was generated from are part of the
-installed package, so loading them needs no network access. The package is an offline tool for
-assessors.
+**Chosen:** the field schema is part of the installed package. The vocabulary files are not: the
+package downloads the stated release the first time it is needed, keeps it in a cache directory
+outside the repository, keyed by version, and reads it from there afterwards, so only the first
+load needs the network.
 
-**ADR:** docs/adr/0001-field-schema-hand-written-and-generated-facts.md
+**ADR:** docs/adr/0003-vocabularies-are-read-from-the-published-release.md
 
-### D-9 — Moving to a newer vocabulary release is a maintainer's step with a report
+### D-9 — Moving to a newer vocabulary release is a change of the stated release
 
-**Chosen:** the maintainer names the release, the allowed values are regenerated, and the step
-reports per field the concepts added, removed and relabelled. A release that lacks a scheme a
-field names stops the move with nothing changed. The repository's checks fail when the allowed
-values no longer match the stated release, which is what stops a hand edit.
+**Chosen:** the maintainer changes the release the field schema names. The allowed values are
+read from that release, so nothing is regenerated and nothing can be edited by hand. The
+repository's checks use the real published release and fail when the vocabularies have published
+a newer one than the field schema names. A release that lacks a scheme a field names stops the
+load, naming the field.
 
-**ADR:** docs/adr/0001-field-schema-hand-written-and-generated-facts.md
+**ADR:** docs/adr/0003-vocabularies-are-read-from-the-published-release.md
 
 ### D-10 — Three stories
 
@@ -211,7 +213,8 @@ labels, which v2026.1 keeps as alternative labels, are not allowed values.
 ### D-21 — Allowed values are listed in the order of their terms
 
 A concept scheme has no order of its own. **Chosen:** allowed values are sorted by term, ignoring
-case, so a regenerated list is identical when the release is.
+case, so the list is identical whenever the release is. The members of a `skos:OrderedCollection`
+are the exception: they keep the collection's order, because the release gave them one.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 
@@ -238,11 +241,12 @@ nor Appendix A says one does.
 ### D-24 — Vocabulary bindings are written by scheme name
 
 **Chosen:** a vocabulary field names its scheme and collection by the last segment of their URI
-(`conductivity-methods`, `insitu`), and the step that adopts a release writes the full URIs with
-the allowed values. The vocabularies' main branch has already moved its URIs to `w3id.org`, so a
-binding written as a full URI would need a hand edit at the first move, which FR-015 rules out.
+(`conductivity-methods`, `insitu`), and the scheme's name is also the name of its file in the
+release. No full URI is written in the field schema. The vocabularies' main branch has already
+moved its URIs to `w3id.org`, so a binding written as a full URI would need a hand edit at the
+first move, which FR-015 rules out.
 
-**ADR:** docs/adr/0001-field-schema-hand-written-and-generated-facts.md
+**ADR:** docs/adr/0003-vocabularies-are-read-from-the-published-release.md
 
 ### D-25 — The value format is not called `format`
 
@@ -260,11 +264,11 @@ asks of every feature.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 
-### D-27 — The release step ships in the package
+### D-27 — Reading a vocabulary release ships in the package
 
-**Chosen:** `ghfdb.fields.release` is part of the package, behind the optional `vocabularies`
-extra, and the Python API page introduces it as maintainer tooling. Keeping it outside the package
-would leave it untyped and uncovered by the checks every other module passes.
+**Chosen:** `ghfdb.fields.release` is part of the package and `rdflib` is a runtime dependency,
+because loading the field schema reads the release. Keeping the reading outside the package would
+leave it untyped and uncovered by the checks every other module passes.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 

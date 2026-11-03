@@ -244,7 +244,7 @@ class TestChoiceLists:
         bound = first_field(schema, lambda f: f.vocabulary is not None)
         broken = replace(bound, allowed_values=())
         fields = tuple(broken if f is bound else f for f in schema)
-        template = UploadTemplate(FieldSchema(schema.path, schema.release, fields))
+        template = UploadTemplate(FieldSchema(schema.release, fields, schema.data))
 
         with pytest.raises(TemplateError, match=bound.code):
             template.workbook()
@@ -311,7 +311,7 @@ class TestWrite:
         bound = first_field(schema, lambda f: f.vocabulary is not None)
         broken = replace(bound, allowed_values=())
         fields = tuple(broken if f is bound else f for f in schema)
-        template = UploadTemplate(FieldSchema(schema.path, schema.release, fields))
+        template = UploadTemplate(FieldSchema(schema.release, fields, schema.data))
         path = tmp_path / "template.xlsx"
 
         with pytest.raises(TemplateError):

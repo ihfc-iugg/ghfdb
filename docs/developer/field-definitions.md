@@ -4,8 +4,10 @@ The package ships what the GHFDB upload template records about each of its 70 fi
 field code and published column name, the title and meaning, the type, unit and range, the
 obligation, the domain, how the field enters the quality score, and the allowed values of
 every field that takes terms from a controlled vocabulary. Every fact names the source it was
-taken from. The definitions are read from a file inside the package, so loading them needs no
-network access.
+taken from. The definitions are read from a file inside the package. The allowed values of the
+vocabulary fields are read from the vocabulary release that file names, which is downloaded
+the first time you load the definitions and kept in a cache directory after that, so only the
+first load needs network access.
 
 ## Load the field definitions
 
@@ -27,6 +29,14 @@ network access.
 
 The result is a {py:class}`~ghfdb.fields.FieldSchema`. Its `release` attribute says which
 version of the IHFC Controlled Vocabularies the allowed values come from.
+
+The release is downloaded from its GitHub release into `~/.cache/ghfdb/vocabularies/<version>`
+(or `$XDG_CACHE_HOME/ghfdb/vocabularies/<version>`) the first time it is needed. Set
+`GHFDB_VOCABULARY_CACHE` to keep the downloads in another directory. Call
+`ghfdb.fields.release.cache_directory()` to see which directory is in use.
+
+To get the whole schema as a Frictionless Table Schema, with an `enum` on every field that
+has allowed values, call `schema.descriptor()`. It builds the dictionary on each call.
 
 ## Look a field up
 

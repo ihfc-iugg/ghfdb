@@ -51,19 +51,23 @@ flowchart LR
 
 ## How a newer vocabulary release is adopted
 
-When the IHFC Controlled Vocabularies publish a new release, a maintainer names it. The allowed
-values of every vocabulary field are then regenerated from that release, and a report shows
-which terms were added, removed or renamed. Nothing else about the fields changes. The steps
-are in [Adopt a new vocabulary release](../../contributing/vocabulary-release.md).
+The field schema names one release of the IHFC Controlled Vocabularies and, for each
+vocabulary field, the concept scheme and the collection it takes its terms from. It holds no
+term. The terms are read from the named release when the schema is loaded, so this reference
+always shows exactly what that release publishes. When the vocabularies publish a new
+release, a maintainer changes the release the schema names, and the tests show what depends
+on the terms that moved. The steps are in
+[Adopt a new vocabulary release](../../contributing/vocabulary-release.md).
 
 ```{mermaid}
 flowchart LR
-    named[Maintainer names the new release] --> regenerated[Allowed values are regenerated]
-    regenerated --> report[A report shows what changed]
-    report --> pages[This reference shows the new terms]
+    named[Maintainer names the new release] --> downloaded[The release is downloaded]
+    downloaded --> read[Allowed values are read from it]
+    read --> pages[This reference shows the new terms]
 ```
 
 ## Download the schema
 
 The facts on these pages are also available as a machine-readable file:
-{download}`ghfdb-field-schema.json <ghfdb-field-schema.json>`.
+{download}`ghfdb-field-schema.json <ghfdb-field-schema.json>`. It is a Frictionless Table
+Schema that lists the allowed values of each vocabulary field, as read from the release.

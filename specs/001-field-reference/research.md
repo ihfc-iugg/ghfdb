@@ -91,12 +91,13 @@ field`. Appendix A gives no meaning for `A1`–`A8`.
 
 ### How the field schema is held and who writes which part
 
-The field schema is one JSON file, `src/ghfdb/fields/schema.json`, a Frictionless Table Schema,
-shipped inside the package. Every fact except the allowed values of a vocabulary field and the
-stated release is written by hand in it, each with its source. The allowed values and the stated
-release are only ever written by the step that adopts a vocabulary release. That split is what
-makes FR-005, FR-015 and FR-017 checkable: the step can only touch its own part, and a check
-regenerates that part from the stored release and compares.
+The field schema is one JSON file, `ghfdb/fields/schema.json`, a Frictionless Table Schema,
+shipped inside the package and written entirely by hand, each fact with its source. It names the
+vocabulary release once and, for each vocabulary field, the concept scheme and collection, and
+holds no term, no concept address and no `enum`. The allowed values are read from the release when
+the schema is loaded. That is what makes FR-005, FR-015 and FR-017 checkable: there is no copy of
+the terms to fall out of step, and a check against the real release can only fail because the
+vocabularies changed.
 
 A separate hand-written source file (YAML or TOML) generating the JSON was weighed. It would hold
 the same facts in a second format and add a build step between the source and what ships, for no
@@ -128,16 +129,17 @@ the shipped schema independently (SC-006).
 ### Reading a vocabulary release
 
 `rdflib` parses the Turtle files and answers the SKOS questions (scheme, collection members,
-labels, notations, `isPartOf`). Only the step that adopts a release and the check that compares
-against it need it, so it is an optional dependency, `ghfdb[vocabularies]`, and part of the
-development environment. A user loading the field definitions never installs it.
+ordered collection lists, labels, notations, `isPartOf`). Loading the field schema needs it, so it
+is a runtime dependency.
 
 ### The stored release
 
-The Turtle files of the stated release are kept in the repository under `vocabularies/<version>/`
-with the release's `LICENSE` (CC BY 4.0), so the checks compare against it without the network. They
-are not part of the installed package: the allowed values the package needs are already in the
-field schema.
+The Turtle files of the stated release are not kept in the repository or in the package. The
+GitHub release publishes each vocabulary as `.ttl`, `.rdf`, `.nt` and `.jsonld`, plus
+`vocabularies-full.zip` holding all of them, and the `.ttl` files in the zip are byte for byte the
+files of the release's assets. The package downloads the zip once, from the repository and version
+the schema names, keeps the `.ttl` files in a cache directory keyed by version, and reads them
+from there. A reader who wants the releases' terms of use finds them with the release.
 
 ### The template as a test source
 
@@ -161,9 +163,9 @@ The specification directory has no `planning-notes.md`.
 ## What already exists
 
 ```
-field definitions loader          · 4, standard library · json, dataclasses
+field definitions loader          · 4, standard library · json, dataclasses, importlib.resources
 schema validity check             · 6, maintained package · frictionless (development only)
-reading a vocabulary release      · 6, maintained package · rdflib (optional extra)
+reading a vocabulary release      · 6, maintained package · rdflib
 reading the template in tests     · 6, maintained package · openpyxl (development only)
 markdown entries for the docs     · 7, new · searched myst-parser and sphinx for a table-schema renderer; none
 diagrams in the docs              · 6, maintained package · sphinxcontrib-mermaid

@@ -1,5 +1,4 @@
 import subprocess
-import sys
 import zipfile
 from importlib.metadata import version
 from pathlib import Path
@@ -21,19 +20,17 @@ class TestPackage:
 
 
 class TestFieldsPublicSurface:
-    def test_exports_the_public_names_without_importing_rdflib(self) -> None:
-        code = (
-            "import sys\n"
-            "from ghfdb.fields import (FieldSchema, Field, AllowedValue,\n"
-            "    VocabularyBinding, VocabularyRelease, UnknownFieldError)\n"
-            "assert 'rdflib' not in sys.modules\n"
+    def test_exports_the_public_names(self) -> None:
+        from ghfdb.fields import (  # noqa: F401
+            AllowedValue,
+            Field,
+            FieldSchema,
+            MissingSchemeError,
+            ReleaseFiles,
+            UnknownFieldError,
+            VocabularyBinding,
+            VocabularyRelease,
         )
-
-        result = subprocess.run(
-            [sys.executable, "-c", code], capture_output=True, text=True, check=False
-        )
-
-        assert result.returncode == 0, result.stderr
 
 
 @pytest.fixture(scope="module")
@@ -62,6 +59,9 @@ class TestBuiltWheel:
 
     def test_contains_the_field_schema(self, wheel_names: set[str]) -> None:
         assert "ghfdb/fields/schema.json" in wheel_names
+
+    def test_contains_no_vocabulary_files(self, wheel_names: set[str]) -> None:
+        assert {name for name in wheel_names if name.endswith(".ttl")} == set()
 
     def test_contains_nothing_from_the_repository_outside_the_package(
         self, wheel_names: set[str]

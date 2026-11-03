@@ -131,9 +131,10 @@ its content with the template the documentation build publishes for the same ver
   form used for every such field.
 - A field added to or removed from the field schema in a later version: it appears in or
   disappears from that version's template with no hand edit.
-- The field schema cannot be read, or a vocabulary field names a vocabulary the release does not
-  hold: generation fails with a message naming the field, and the documentation build fails with
-  it rather than publishing a template that disagrees with the field schema.
+- The field schema cannot be read, the vocabulary release it names cannot be downloaded, or a
+  vocabulary field names a vocabulary the release does not hold: generation fails with a message,
+  naming the field where there is one, and the documentation build fails with it rather than
+  publishing a template that disagrees with the field schema.
 
 ## Requirements *(mandatory)*
 

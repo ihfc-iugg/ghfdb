@@ -15,6 +15,12 @@ ex:colours
     skos:prefLabel "Warm colours"@en ;
 .
 
+:spectrum
+    a skos:OrderedCollection ;
+    skos:memberList ( :red :orange :green ) ;
+    skos:prefLabel "Spectrum"@en ;
+.
+
 :red
     a skos:Concept ;
     skos:altLabel "Crimson"@en ;

@@ -7,8 +7,7 @@
 The upload template is built from the field schema by `ghfdb.template.UploadTemplate`, with
 openpyxl, and no copy of it is kept in the repository.
 
-- openpyxl is a runtime dependency of the package. `ghfdb.fields` still needs only the standard
-  library, because the template is a module of its own.
+- openpyxl is a runtime dependency of the package, for the template module.
 - The documentation build writes the template for the version it documents beside its page and
   links it. A failure to generate the template fails the build.
 - The page's list of differences from the last hand-maintained template is computed on each build,

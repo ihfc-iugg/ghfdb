@@ -5,7 +5,8 @@ field schema. It has three sheets: `readme`, `data list` and `controlled vocabul
 `data list` sheet has a header row of field codes and a description row for each of the
 obligation, domain, quality relevance, name, published column name, unit and allowed range of
 values. Fields with a fixed list of allowed values get a choice list. Generating the
-template needs no network access.
+template reads the vocabulary release from the cache, which downloads it on first use (see
+[Field definitions](field-definitions.md)).
 
 ## Generate the template
 

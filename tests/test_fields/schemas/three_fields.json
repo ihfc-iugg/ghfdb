@@ -1,6 +1,10 @@
 {
   "missingValues": [""],
-  "vocabularyRelease": {"version": "9999.1", "doi": "10.0000/test.1"},
+  "vocabularyRelease": {
+    "version": "9999.1",
+    "doi": "10.0000/test.1",
+    "repository": "https://example.test/vocabularies-repository"
+  },
   "fields": [
     {
       "name": "X1",
@@ -16,28 +20,12 @@
       "obligation": "M",
       "domain": ["B", "S"],
       "qualityRelevance": "M-score",
-      "constraints": {"enum": ["[Red]", "[Green]"]},
+      "constraints": {},
       "vocabulary": {
         "schemeName": "colours",
         "collectionName": "warm",
-        "scheme": "https://example.test/vocabularies/colours",
-        "collection": "https://example.test/vocabularies/colours/warm",
         "termForm": "label"
       },
-      "allowedValues": [
-        {
-          "term": "[Green]",
-          "uri": "https://example.test/vocabularies/colours/green",
-          "label": "Green",
-          "notation": null
-        },
-        {
-          "term": "[Red]",
-          "uri": "https://example.test/vocabularies/colours/red",
-          "label": "Red",
-          "notation": "r"
-        }
-      ],
       "separator": ";",
       "guidance": "Pick one.",
       "sources": {"code": "upload-template", "columnName": "upload-template"}
@@ -58,7 +46,6 @@
       "qualityRelevance": null,
       "constraints": {"minimum": 0, "maximum": 99.5},
       "vocabulary": null,
-      "allowedValues": [],
       "separator": null,
       "guidance": null,
       "sources": {"code": "upload-template"}
@@ -79,7 +66,6 @@
       "qualityRelevance": null,
       "constraints": {"maxLength": 255},
       "vocabulary": null,
-      "allowedValues": [],
       "separator": null,
       "guidance": null,
       "sources": {"code": "upload-template"}

@@ -1,0 +1,88 @@
+{
+  "missingValues": [""],
+  "vocabularyRelease": {"version": "9999.1", "doi": "10.0000/test.1"},
+  "fields": [
+    {
+      "name": "X1",
+      "columnName": "shade",
+      "earlierColumnNames": ["Shade_old"],
+      "group": "parent",
+      "title": "Shade",
+      "description": "The shade of a made-up thing.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": ["B", "S"],
+      "qualityRelevance": "M-score",
+      "constraints": {"enum": ["[Red]", "[Green]"]},
+      "vocabulary": {
+        "schemeName": "colours",
+        "collectionName": "warm",
+        "scheme": "https://example.test/vocabularies/colours",
+        "collection": "https://example.test/vocabularies/colours/warm",
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Green]",
+          "uri": "https://example.test/vocabularies/colours/green",
+          "label": "Green",
+          "notation": null
+        },
+        {
+          "term": "[Red]",
+          "uri": "https://example.test/vocabularies/colours/red",
+          "label": "Red",
+          "notation": "r"
+        }
+      ],
+      "separator": ";",
+      "guidance": "Pick one.",
+      "sources": {"code": "upload-template", "columnName": "upload-template"}
+    },
+    {
+      "name": "X2",
+      "columnName": "Width_mm",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Width",
+      "description": "The width of a made-up thing.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "mm",
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": ["S"],
+      "qualityRelevance": null,
+      "constraints": {"minimum": 0, "maximum": 99.5},
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {"code": "upload-template"}
+    },
+    {
+      "name": "X3",
+      "columnName": "label",
+      "earlierColumnNames": [],
+      "group": "assessment",
+      "title": "Label",
+      "description": "A made-up label.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": "YYYY-MM",
+      "obligation": null,
+      "domain": [],
+      "qualityRelevance": null,
+      "constraints": {"maxLength": 255},
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {"code": "upload-template"}
+    }
+  ]
+}

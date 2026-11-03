@@ -24,6 +24,8 @@ All notable changes to this project are recorded here. The format follows
 - `ghfdb.template.UploadTemplate`, which generates the upload template from the field schema
   (the three sheets, description rows and choice lists) and writes it to a path without
   replacing an existing file unless asked.
+- The documentation site publishes the upload template generated for its version, with a
+  list of how it differs from the hand-maintained template.
 - Documentation: a developer guide for loading and looking up field definitions, and a Python
   API reference.
 

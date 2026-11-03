@@ -9,6 +9,13 @@ It is in development and does not yet check or score anything.
 
 ```{toctree}
 :maxdepth: 1
+:caption: Contributing data
+
+upload-template/index
+```
+
+```{toctree}
+:maxdepth: 1
 :caption: Developer guide
 
 developer/field-definitions

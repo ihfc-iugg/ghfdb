@@ -1,0 +1,32 @@
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, test and build the docs
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync --locked
+      - name: Lint
+        run: uv run pre-commit run --all-files --show-diff-on-failure
+      - name: Test
+        run: uv run pytest --cov=ghfdb --cov-report=term-missing
+      - name: Build the documentation
+        run: uv run sphinx-build -W --keep-going -b html docs docs/_build/html
+      - name: Build the package
+        run: uv build

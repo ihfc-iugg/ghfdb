@@ -1,0 +1,35 @@
+# Temporary and binary files
+*~
+*.ruff_cache
+*.mypy_cache
+*.py[cod]
+*.so
+*.cfg
+*.orig
+*.log
+*.pot
+**/__pycache__
+.cache/*
+.*.swp
+
+# IDEs and editors
+.vscode
+
+# Unittest and coverage
+htmlcov
+.coverage
+.coverage.*
+.tox
+junit*.xml
+coverage.xml
+.pytest_cache/
+
+# Environments
+.env
+.venv
+
+# Release archives
+dist/
+
+# The documentation site build
+docs/_build/

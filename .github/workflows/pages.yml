@@ -1,0 +1,39 @@
+name: Pages
+
+# Builds the documentation site and deploys it to GitHub Pages on every push to
+# the default branch, so a change to a page is live once merged. Run it from the
+# Actions tab to deploy again by hand.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  pages:
+    name: Publish the documentation site
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+      - run: uv sync --locked
+      - name: Build the site
+        run: uv run sphinx-build -W --keep-going -b html docs docs/_build/html
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs/_build/html
+      - name: Deploy the site
+        id: deployment
+        uses: actions/deploy-pages@v5

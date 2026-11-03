@@ -13,7 +13,7 @@ schema and need nothing beyond the standard library.
 
 ## Adopting a vocabulary release
 
-`ghfdb.fields.release`, with `ReleaseFiles`, `ReleaseMove` and `MissingSchemeError`, is the
+`ghfdb.fields.release`, with `ReleaseFiles`, `ReleaseMove`, `FieldChange` and `MissingSchemeError`, is the
 maintainers' tooling for moving the field schema onto a
 newer release of the IHFC Controlled Vocabularies. It needs the optional `vocabularies`
 extra (`pip install "ghfdb[vocabularies]"`), which installs rdflib.

@@ -26,6 +26,7 @@ reference/index
 :caption: Maintainers
 
 developer/brainstorm
+contributing/vocabulary-release
 contributing/standards/testing
 contributing/standards/documentation
 contributing/standards/code-documentation

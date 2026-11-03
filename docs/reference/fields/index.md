@@ -53,7 +53,8 @@ flowchart LR
 
 When the IHFC Controlled Vocabularies publish a new release, a maintainer names it. The allowed
 values of every vocabulary field are then regenerated from that release, and a report shows
-which terms were added, removed or renamed. Nothing else about the fields changes.
+which terms were added, removed or renamed. Nothing else about the fields changes. The steps
+are in [Adopt a new vocabulary release](../../contributing/vocabulary-release.md).
 
 ```{mermaid}
 flowchart LR

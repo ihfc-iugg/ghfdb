@@ -18,5 +18,8 @@ All notable changes to this project are recorded here. The format follows
   from release 2026.1 of the IHFC Controlled Vocabularies.
 - `ghfdb.fields.release`, for maintainers, behind the optional `vocabularies` extra: it
   reads a vocabulary release and rewrites the allowed values of the field definitions from it.
+- `python -m ghfdb.fields.release <version> <directory>`, which moves the field definitions
+  onto a newer vocabulary release, prints what changed in each field and adds a changelog
+  line. A test fails when the allowed values differ from the release the schema states.
 - Documentation: a developer guide for loading and looking up field definitions, and a Python
   API reference.

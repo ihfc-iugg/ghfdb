@@ -3,7 +3,7 @@
 When the IHFC Controlled Vocabularies publish a new release, the allowed values of the
 fields that take terms from them are moved onto it in one step. The step rewrites only the
 scheme and collection addresses, `allowedValues`, `constraints.enum` and `vocabularyRelease`
-of `src/ghfdb/fields/schema.json`, and adds a line to the changelog. A test then checks that
+of `ghfdb/fields/schema.json`, and adds a line to the changelog. A test then checks that
 nothing was edited by hand. This page walks through the step.
 
 ## Move the field definitions onto a release
@@ -24,7 +24,7 @@ nothing was edited by hand. This page walks through the step.
    uv run python -m ghfdb.fields.release 2026.2 vocabularies/2026.2
    ```
 
-   Run it from the repository root. It rewrites `src/ghfdb/fields/schema.json` and adds a line
+   Run it from the repository root. It rewrites `ghfdb/fields/schema.json` and adds a line
    under `## [Unreleased]` and `### Changed` in `CHANGELOG.md`, naming the old and the new release
    and their DOIs. `--schema` and `--changelog` name other files.
 

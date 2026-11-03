@@ -15,7 +15,7 @@ This is a single-context repo. There is no `CONTEXT-MAP.md`.
 
 ```
 /
-├── src/ghfdb/              ← the package
+├── ghfdb/                  ← the package
 │   └── qc/                 ← quality control for upload template workbooks
 ├── tests/                  ← the test suite
 ├── docs/                   ← the documentation site

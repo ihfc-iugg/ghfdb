@@ -17,9 +17,10 @@ FS-001 was delivered after this specification was written. Read side by side:
   `[Unspecified]` from Fuchs et al. (2023) (D-5). The specification promises a choice list on
   every vocabulary field and none on any other. Read against FS-001, the line it draws is between
   a field with a fixed list of allowed values and one without. Recorded as D-9.
-- **Three fields lose the list the hand-maintained template gave them.** C20 takes free text
-  (D-22). C25 and C26 have no list of allowed values (D-5). They get no choice list, and the
-  differences page says so.
+- **One field loses the list the hand-maintained template gave it.** C20 takes free text
+  (D-22), so it gets no choice list, and the differences page says so. C25 and C26 had no list
+  before either: their columns on `controlled vocabulary` hold `= Multiple choices =` and no
+  terms.
 - **Two published column names are spelled correctly** (`tc_pT_function`, `Ref_IGSN`, D-2), and
   quality relevance is written `U-score`, `M-score`, `perturbation flags` (D-16). The description
   rows show the schema's values, and the differences page lists each change.
@@ -27,8 +28,9 @@ FS-001 was delivered after this specification was written. Read side by side:
   label or notation the field records (D-20). Allowed values are already sorted (D-21), so the
   choice lists come out in a stable order.
 
-No acceptance scenario is contradicted. The reading above changes how FR-004 and FR-005 are
-applied to P9 and C9 only.
+Read literally, FR-005 and AS 1.5 would give P9 and C9 no choice list, because neither has a
+controlled vocabulary. The build follows D-9 instead: a choice list on every field with a fixed
+list of allowed values. No other scenario is affected.
 
 ## The hand-maintained template
 
@@ -44,8 +46,8 @@ reference for layout (SC-004) and for the differences page (FR-009).
   by one: the column under P11's letter is labelled "Type of exploration method", which is P12.
   A column is matched to its field by its row 1 label, which equals the field's name on
   `data list` row 5 for every column but one, "TC averaging method", which is C48.
-- Choice lists exist only on row 8, as Excel 2010 extension validations that openpyxl cannot
-  read. Each references a range on `controlled vocabulary` and shows an input message holding the
+- Choice lists exist only on row 8, nearly all as Excel 2010 extension validations that openpyxl
+  cannot read (one, on C9, is an ordinary inline list). Each references a range on `controlled vocabulary` and shows an input message holding the
   field's meaning.
 
 ## Choices
@@ -73,9 +75,11 @@ last row Excel has (1,048,576), with `showErrorMessage=False`, so a typed value 
 
 ### Columns on `controlled vocabulary` sit under their `data list` letters
 
-The layout the hand-maintained template meant to have, without its shift. Row 1 holds the field
-code, row 2 the field's name, terms from row 3, as before. A field with no list leaves its column
-empty.
+The layout the hand-maintained template meant to have, without its shift. Terms start in row 3,
+as before. The two header rows change: the hand-maintained sheet has the field's name in row 1
+and its range in row 2 (column A `Name`, `Allowed range of values`). The generated sheet has the
+field code in row 1 and the name in row 2 (column A `Field code`, `Name`), so a column can be
+matched to its field without reading names. A field with no list leaves its column empty.
 
 ### Description rows
 
@@ -127,10 +131,10 @@ tables, so the page is right whenever the build runs.
 | Piece | Where the search stopped |
 |---|---|
 | Field facts, allowed terms, term form, sort order | this repo: `ghfdb.fields.FieldSchema`, `Field`, `AllowedValue.term` |
-| Package version | the standard library: `importlib.metadata.version` |
+| Package version | this repo: `ghfdb.__version__` |
 | Column letters | an installed package: `openpyxl.utils.get_column_letter` |
 | Writing sheets and list validations | an installed package: `openpyxl.Workbook`, `openpyxl.worksheet.datavalidation.DataValidation` |
 | Copying a generated file next to its page and linking it | this repo: the pattern in `docs/extensions/field_reference.py` (`copy_schema`, marker replacement in `source-read`) |
 | Download link in the page | Sphinx: the `{download}` role |
 | Comparing two workbooks | new code: no installed package compares workbooks cell by cell and term by term |
-| Refusing to replace a file | the standard library: `open(path, "xb")` semantics, raised as `FileExistsError` |
+| Refusing to replace a file | the standard library: `open(path, "xb")` raises `FileExistsError`, and openpyxl's `save` accepts an open file |

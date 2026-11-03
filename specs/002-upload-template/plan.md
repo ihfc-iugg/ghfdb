@@ -57,7 +57,7 @@ specs/002-upload-template/
 ### Source code
 
 ```text
-src/ghfdb/template.py                      # UploadTemplate, TemplateExistsError, TemplateError
+src/ghfdb/template.py                      # UploadTemplate, TemplateError
 docs/extensions/upload_template.py         # writes the workbook, the download link, TemplateChanges
 docs/upload-template/index.md              # the template page, for contributors
 docs/developer/upload-template.md          # generating the template from Python
@@ -77,17 +77,14 @@ pyproject.toml, uv.lock, .gitignore, README.md, CHANGELOG.md
 class TemplateError(ValueError):
     """A field the template cannot be written for, named in the message."""
 
-class TemplateExistsError(FileExistsError):
-    """The path already holds a file and replacing it was not asked for."""
-
 class UploadTemplate:
     def __init__(self, schema: FieldSchema | None = None) -> None: ...
     def workbook(self) -> Workbook: ...
     def write(self, path: Path, replace: bool = False) -> None: ...
 ```
 
-- `schema` defaults to `FieldSchema.load()`. `version` is `importlib.metadata.version("ghfdb")`,
-  read once in `__init__` and held as an attribute so a test can see what the readme states.
+- `schema` defaults to `FieldSchema.load()`. The package version is `ghfdb.__version__`, which
+  already exists.
 - `workbook()` builds the three sheets in the order `readme`, `data list`,
   `controlled vocabulary`, and nothing else (openpyxl's default sheet is renamed, not left).
 - **`data list`**: A1 `ID`. Field `i` (from 0, schema order) sits in column `i + 2`. Row 1 its
@@ -113,12 +110,13 @@ class UploadTemplate:
 - **`readme`**: column A, one line per row: what the workbook is, the package version, the
   vocabulary release version and its DOI as `https://doi.org/<doi>`, the field reference URL
   `https://ihfc-iugg.github.io/ghfdb/reference/fields/index.html`, and how to fill it in (data
-  from row 9 on `data list`, choice lists offer terms and accept any value, the check reports a
-  value that is not allowed). The version and release lines are computed, the rest is fixed
-  wording and untested.
-- **`write(path, replace=False)`**: if `path` exists and `replace` is false, raise
-  `TemplateExistsError` with a message naming the path and saying to pass `replace=True`; nothing
-  is written. Otherwise `self.workbook().save(path)`.
+  from row 9 on `data list`, choice lists offer the allowed terms and accept any value).
+  The version and release lines are computed, the rest is fixed wording and untested. It says
+  nothing about checking, which arrives with R3.
+- **`write(path, replace=False)`**: builds the workbook first, then opens `path` with mode `"xb"`,
+  or `"wb"` when `replace` is true, and saves the workbook into the open file. A
+  `FileExistsError` from `open` is re-raised as `FileExistsError` with a message naming the path
+  and saying to pass `replace=True`. Nothing is written and the existing file is untouched.
 - `ghfdb.template` is not re-exported from `ghfdb/__init__.py`. It is imported as
   `from ghfdb.template import UploadTemplate`.
 
@@ -150,8 +148,10 @@ Mirrors `field_reference.py`.
     codes that gained a list and the codes that lost one. Previous terms: the hand-maintained
     `controlled vocabulary` column whose row 1 label, whitespace-collapsed and compared without
     case, equals the field's name on `data list` row 5. `PREVIOUS_LABELS = {"TC averaging method":
-    "C48"}` maps the one label that equals no name (research.md). Generated terms: the generated
-    sheet's column for the code, from row 3.
+    "C48"}` maps the one label that equals no name (research.md). A previous column that holds
+    terms and matches neither raises `ValueError` naming its label, so an edit to the stored file
+    cannot silently shorten the list. Generated terms: the generated sheet's column for the code,
+    from row 3.
   - Markdown cells are escaped as `FieldReference.cell` does; reuse it by import, not by copy.
 - `setup` connects `builder-inited` and `source-read`, parallel safe.
 - `.gitignore`: `docs/upload-template/*.xlsx`.
@@ -160,13 +160,20 @@ Mirrors `field_reference.py`.
 
 - `docs/upload-template/index.md`, in the home page's toctree under a new caption "Contributing
   data", placed first. It says what the template is and links the download (the marker), then
-  explains the three sheets, the description rows, the choice lists (offer, never reject), that
-  the readme names the version and release, and that it is generated from the field reference,
-  with a Mermaid flowchart: field schema and vocabulary release → `UploadTemplate` → documentation
-  build → download. Last, "Changes from the hand-maintained template", holding the changes marker.
-  Home page → this page → download is two links (SC-005).
-- `docs/developer/upload-template.md`, under "Developer guide": generate the template, choose a
-  path, replace an existing file, read the version and release a template came from.
+  opens by saying who it is for (a data assessor or contributor filling in the template), then
+  the three sheets and the description rows, then "Changes from the hand-maintained template"
+  holding the changes marker, and closes with the explanation: the choice lists offer the allowed
+  terms and accept any value, the readme names the version and release, and the template is
+  generated from the field reference, with a Mermaid flowchart: field schema and vocabulary
+  release → `UploadTemplate` → documentation build → download. Home page → this page → download
+  is two links (SC-005).
+- `docs/contributing/standards/documentation.md`, Project additions: a Guides table with two
+  rows, the developer guide (`developer/`, a developer using ghfdb from Python) and the
+  contributor guide (`upload-template/`, a data assessor or contributor filling in the upload
+  template), as its section 4 requires of a second guide.
+- `docs/developer/upload-template.md`, added to the "Developer guide" toctree in
+  `docs/index.md`: generate the template, choose a path, replace an existing file, read the
+  version and release a template came from.
 - `docs/reference/python-api.md`: a section "Upload template" with `automodule:: ghfdb.template`.
 - README: a line under the documentation links pointing at the template page. CHANGELOG: `Added`
   lines for the template, the download and the developer interface, and `Changed` for openpyxl
@@ -185,13 +192,16 @@ Mirrors `field_reference.py`.
   - choice lists: the set of columns with a validation equals the set of fields with allowed
     values; each validation's range starts at row 9 and ends at row 1,048,576; its formula's range
     on `controlled vocabulary` holds exactly the field's terms; `showErrorMessage` is false;
-  - the readme states `template.version` and the schema's release version and DOI;
+  - the readme states `ghfdb.__version__` and the schema's release version and DOI;
   - `TemplateError` names the field for a vocabulary field with no allowed values;
   - layout against `tests/sources/upload-template.xlsx`: sheet names, A1, A2–A8, first empty
     row (SC-004);
-  - `write`: writes to a new path; refuses an existing one and leaves its bytes unchanged;
-    replaces with `replace=True`; two generations have identical content (sheets, cell values,
-    validations), compared by a test helper that reads both files.
+  - `write`: writes to a new path; refuses an existing one with `FileExistsError` and leaves its
+    bytes unchanged; replaces with `replace=True`; two generations have identical content
+    (sheets, cell values, validations).
+- The comparison of two workbook files lives once, as the fixture `workbook_content` in
+  `tests/conftest.py`, returning a function from a path to the sheets, their cell values and their
+  validations. Both test modules use it.
 - `tests/test_docs/test_extensions/test_upload_template.py`:
   - `write_template` writes the versioned file under `upload-template/`, and its content is
     identical to `UploadTemplate().write(...)` to another path (SC-006);
@@ -201,7 +211,8 @@ Mirrors `field_reference.py`.
     reorder, a changed description cell, whitespace-only differences ignored, a term added and
     removed, a list gained and lost, `None.` sections;
   - `TemplateChanges` on the real pair finds C46's `Short Name` change and C20's lost list
-    (values read from the two files, so the test holds whatever the wording).
+    (values read from the two files, so the test holds whatever the wording);
+  - a previous column with terms whose label matches no field raises `ValueError`.
 
 ## Complexity Tracking
 

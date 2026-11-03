@@ -41,14 +41,15 @@ without `replace=True`; compare two generations.
 
 ### Group 2 — writing to a path
 
-- [ ] T006 [US2] `UploadTemplate.write(path, replace=False)` and `TemplateExistsError`: writes to
-  a new path, refuses an existing one leaving it untouched with a message naming the path,
-  replaces with `replace=True` (FR-010).
+- [ ] T006 [US2] `UploadTemplate.write(path, replace=False)`: writes to a new path, refuses an
+  existing one with `FileExistsError` leaving it untouched, the message naming the path, replaces
+  with `replace=True` (FR-010).
 - [ ] T007 [US2] Two generations have identical content: sheets, cell values and validations,
-  compared by a test helper that reads both files (FR-011).
+  compared by the `workbook_content` fixture in `tests/conftest.py` (FR-011).
 - [ ] T008 [US2] `docs/reference/python-api.md`: an "Upload template" section with
-  `automodule:: ghfdb.template`. `docs/developer/upload-template.md` under "Developer guide":
-  generate, choose a path, replace, read the version and release. CHANGELOG `Added` line for
+  `automodule:: ghfdb.template`. `docs/developer/upload-template.md`, added to the "Developer
+  guide" toctree in `docs/index.md`: generate, choose a path, replace, read the version and
+  release. CHANGELOG `Added` line for
   `ghfdb.template` and `Changed` line for openpyxl becoming a runtime dependency (FR-012).
 
 ---
@@ -69,6 +70,7 @@ download the file, and compare it with one written by `UploadTemplate().write()`
 - [ ] T010 [US1] `TemplateChanges` and the changes marker (plan.md,
   "`docs/extensions/upload_template.py`") (FR-009).
 - [ ] T011 [US1] `docs/upload-template/index.md` with the Mermaid flowchart, the download and the
-  changes marker, linked first from the home page under "Contributing data" (SC-005). README
-  line, CHANGELOG `Added` line for the download. `sphinx-build -W` passes and the built page
+  changes marker, linked first from the home page under "Contributing data" (SC-005). A Guides
+  table in the Project additions of `docs/contributing/standards/documentation.md`. README line,
+  CHANGELOG `Added` line for the download. `sphinx-build -W` passes and the built page
   links the file.

@@ -63,8 +63,11 @@ The specification offers a choice list on every vocabulary field and none on any
 (FR-004, FR-005). The field reference (FS-001, D-5) gives P9 and C9 a fixed set of values from
 Fuchs et al. (2023) and no vocabulary. **Chosen:** the line falls between a field with a fixed
 list of allowed values and one without, so P9 and C9 get a choice list of their fixed set, as
-the hand-maintained template gives them. C20, C25 and C26 have no list in the field reference
-and get none, and the differences page shows that they lost one.
+the hand-maintained template gives them. C20 has no list in the field reference and gets none,
+and the differences page shows that it lost one. Read literally, FR-005 and AS 1.5 say otherwise
+for P9 and C9, and the design review asked for this reading to be put to the maintainer. The
+instruction for this build is to record such a change and carry on, so it is recorded here and
+named when the pull request is handed over for review.
 
 **ADR:** none — a reading of FS-001 for two fields, which nothing else inherits
 
@@ -111,3 +114,22 @@ label, and the one label that names no field, "TC averaging method", is mapped t
 expects. A field with allowed values shows `-` in the range row: its values are its choice list.
 
 **ADR:** none — follows the hand-maintained template
+
+## Made at the design review
+
+### D-15 — Refusing to replace a file is the standard library's `FileExistsError`
+
+**Chosen:** `write` opens the path exclusively and lets openpyxl save into the open file, so the
+refusal is the operating system's, raised as `FileExistsError` with a message that names the path
+and says how to replace it. A package-specific exception would add a name and catch nothing a
+developer could not already catch.
+
+**ADR:** none — local to this feature
+
+### D-16 — The template page starts a contributor guide
+
+The documentation standard allows one guide unless more are declared. **Chosen:** the template
+page is the index of a second guide, for data assessors and contributors, declared in the Project
+additions of `docs/contributing/standards/documentation.md`.
+
+**ADR:** none — a documentation layout choice

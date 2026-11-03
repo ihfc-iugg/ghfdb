@@ -12,6 +12,7 @@ It is in development and does not yet check or score anything.
 :caption: Developer guide
 
 developer/field-definitions
+developer/upload-template
 ```
 
 ```{toctree}

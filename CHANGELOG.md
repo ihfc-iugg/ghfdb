@@ -21,5 +21,12 @@ All notable changes to this project are recorded here. The format follows
 - `python -m ghfdb.fields.release <version> <directory>`, which moves the field definitions
   onto a newer vocabulary release, prints what changed in each field and adds a changelog
   line. A test fails when the allowed values differ from the release the schema states.
+- `ghfdb.template.UploadTemplate`, which generates the upload template from the field schema
+  (the three sheets, description rows and choice lists) and writes it to a path without
+  replacing an existing file unless asked.
 - Documentation: a developer guide for loading and looking up field definitions, and a Python
   API reference.
+
+### Changed
+
+- openpyxl is now a runtime dependency, because `ghfdb.template` writes the upload template.

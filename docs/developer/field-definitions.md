@@ -65,4 +65,5 @@ for value in schema["C44"].allowed_values:
     print(value.term, value.uri)
 ```
 
-Every public name is described on the [Python API](../reference/python-api.md) page.
+Every public name is described on the [Python API](../reference/python-api.md) page, and every
+field is described in the [field reference](../reference/fields/index.md).

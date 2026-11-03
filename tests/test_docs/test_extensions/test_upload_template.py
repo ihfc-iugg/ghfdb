@@ -268,10 +268,12 @@ class TestTemplateChangesMarkdown:
 
         assert markdown.count("\n### ") + markdown.startswith("### ") == 3
 
-    def test_says_none_under_a_heading_with_no_changes(self) -> None:
+    def test_draws_no_table_under_a_heading_with_no_changes(self) -> None:
         changes = compare({"X1": described("one")}, {"X1": described("one")})
 
-        assert changes.markdown().count("None.") == 3
+        lines = changes.markdown().splitlines()
+
+        assert not any(line.startswith("|") for line in lines)
 
     def test_tabulates_the_changes_and_escapes_the_cells(self) -> None:
         changes = compare(

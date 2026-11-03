@@ -32,7 +32,11 @@ Every field is described in full in the [field reference](../reference/fields/in
 
 This template replaces the one the GHFDB portal has distributed until now. The lists below are
 computed from the two workbooks each time the documentation is built, so they show every
-difference.
+difference in the fields, the description rows and the allowed terms.
+
+The `controlled vocabulary` sheet is also laid out differently. Each field's terms sit under the
+same column letter as the field on `data list`, and the two rows above them hold the field code
+and the field's name.
 
 {upload-template-changes}
 

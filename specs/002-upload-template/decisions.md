@@ -77,7 +77,7 @@ sheet and accept any value, is typed, and is the reader checking (R3) will need.
 writes, and hand-written SpreadsheetML would be several hundred lines. `ghfdb.fields` still
 needs only the standard library, because the template is a module of its own.
 
-**ADR:** pending — decided at convergence
+**ADR:** docs/adr/0002-upload-template-is-generated-never-stored.md
 
 ### D-11 — Every choice list reads its terms from the `controlled vocabulary` sheet
 
@@ -105,7 +105,7 @@ by hand, the list would type some sixty vocabulary terms into a page and could b
 day it merged. The hand-maintained `controlled vocabulary` columns are matched to fields by their
 label, and the one label that names no field, "TC averaging method", is mapped to C48.
 
-**ADR:** none — local to this feature
+**ADR:** docs/adr/0002-upload-template-is-generated-never-stored.md
 
 ### D-14 — `-` stands for "none" in every description row
 
@@ -132,3 +132,12 @@ page is the index of a second guide, for data assessors and contributors, declar
 additions of `docs/contributing/standards/documentation.md`.
 
 **ADR:** none — a documentation layout choice
+
+### D-17 — The template keeps a `version` attribute
+
+The design review suggested reading `ghfdb.__version__` instead of keeping a `version` attribute
+on `UploadTemplate`. **Chosen:** keep it. The documentation build names the published file after
+it, and the developer guide reads it to tell which version generated a template, so it is the one
+place both read.
+
+**ADR:** none — local to this feature

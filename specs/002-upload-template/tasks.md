@@ -74,3 +74,11 @@ download the file, and compare it with one written by `UploadTemplate().write()`
   table in the Project additions of `docs/contributing/standards/documentation.md`. README line,
   CHANGELOG `Added` line for the download. `sphinx-build -W` passes and the built page
   links the file.
+
+---
+
+## Fixes made at convergence
+
+- [x] T012 [US1] Move the Guides table under the Project additions' existing rules in
+  `docs/contributing/standards/documentation.md`, and link the developer guide from the
+  contributor guide's index, as its section 4 asks.

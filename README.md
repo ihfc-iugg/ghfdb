@@ -21,6 +21,22 @@ score, the methodological score and the perturbation flags of Fuchs et al. (2023
 
 The package is in early development and does not yet check or score anything.
 
+## Field definitions
+
+`ghfdb.fields` holds what the upload template records about each of its 70 fields: the
+published column name, meaning, type, unit, range, obligation, domain and quality relevance,
+and the allowed values of every field that takes terms from a controlled vocabulary, each
+fact with its source. It needs no network access.
+
+```python
+from ghfdb.fields import FieldSchema
+
+schema = FieldSchema.load()
+print(schema["tc_method"].allowed_values[0].term)  # or schema["C43"]
+```
+
+See the [developer guide](https://ihfc-iugg.github.io/ghfdb/developer/field-definitions.html).
+
 ## Why
 
 Data assessors prepare heat-flow datasets in the GHFDB data template before they are

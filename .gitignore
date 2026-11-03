@@ -33,3 +33,6 @@ dist/
 
 # The documentation site build
 docs/_build/
+
+# The schema copy the documentation build makes for download
+docs/reference/fields/ghfdb-field-schema.json

@@ -38,10 +38,14 @@ Other layouts exist, such as the GHFDB release format and the data assessment te
 | Term | Meaning |
 |---|---|
 | **Field** | One column of the GHFDB structure. |
-| **Field code** | A field's short identifier: `P1`–`P13` for parent fields, `C1`–`C49` for child fields. The header row of the upload template. |
+| **Field reference** | The documentation of every field of the upload template: what it holds, its type, unit, range, obligation, domain, quality relevance and allowed values, each fact with its source. Generated from the field schema. |
+| **Field code** | A field's short identifier: `P1`–`P13` for parent fields, `C1`–`C49` for child fields, `A1`–`A8` for assessment fields. The header row of the upload template. |
+| **Assessment fields** | `A1`–`A8`: the reviewer's name and comment, the date of the review, the country, region and continent of the site, the domain recorded in review and the child's unique ID. The data assessment team fills them in, not a contributor, so they have no obligation. |
+| **Domain** | Where a field applies: `B` for borehole and mine data, `S` for probe-sensing (marine) data. |
+| **Quality relevance** | How a field enters the quality score: `U-score`, `M-score` or `perturbation flags`, or none. |
 | **Published column name** | A field's name in row 6 of the upload template and in GHFDB release files, such as `q`, `lat_NS` or `T_grad_mean`. Its casing is part of the name. |
 | **Obligation** | Whether a field must be filled: `M` mandatory, `R` recommended, `O` optional. |
-| **Field schema** | The machine-readable description of every field, as a Frictionless Table Schema: type, unit, obligation, range and allowed values (planned). |
+| **Field schema** | The machine-readable description of every field, as a Frictionless Table Schema: type, unit, obligation, range and allowed values. Built in `ghfdb.fields`, shipped as `schema.json` in the package. |
 
 ## The heat flow data
 

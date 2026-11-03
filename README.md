@@ -1,7 +1,12 @@
 # ghfdb
 
+[![PyPI version](https://img.shields.io/pypi/v/ghfdb.svg)](https://pypi.org/project/ghfdb/)
+[![Development status](https://img.shields.io/pypi/status/ghfdb.svg)](https://pypi.org/project/ghfdb/)
+[![Python versions](https://img.shields.io/pypi/pyversions/ghfdb.svg)](https://pypi.org/project/ghfdb/)
 [![Checks](https://github.com/ihfc-iugg/ghfdb/actions/workflows/checks.yml/badge.svg)](https://github.com/ihfc-iugg/ghfdb/actions/workflows/checks.yml)
+[![Coverage](https://codecov.io/gh/ihfc-iugg/ghfdb/graph/badge.svg)](https://codecov.io/gh/ihfc-iugg/ghfdb)
 [![Documentation](https://github.com/ihfc-iugg/ghfdb/actions/workflows/pages.yml/badge.svg)](https://ihfc-iugg.github.io/ghfdb/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ihfc-iugg/ghfdb/blob/main/LICENSE)
 
 Python tools for working with the Global Heat Flow Database (GHFDB), the International
@@ -51,6 +56,12 @@ against agreed worked examples.
 - A problem is reported exactly as it is: an invalid value is never reported as a
   missing one, and nothing is corrected silently.
 
+## Contributing
+
+Proposals for a new check, a change to a rule or a change to the quality scheme start as an
+[issue](https://github.com/ihfc-iugg/ghfdb/issues), where they are discussed and agreed before a
+pull request is opened.
+
 ## Licence
 
-The code is released under the [MIT Licence](LICENSE).
+The code is released under the [MIT Licence](https://github.com/ihfc-iugg/ghfdb/blob/main/LICENSE).

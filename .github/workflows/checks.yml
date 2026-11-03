@@ -24,8 +24,21 @@ jobs:
       - run: uv sync --locked
       - name: Lint
         run: uv run pre-commit run --all-files --show-diff-on-failure
+      - name: Type-check
+        run: uv run mypy
+      - name: Check dependencies
+        run: uv run deptry src
       - name: Test
-        run: uv run pytest --cov=ghfdb --cov-report=term-missing
+        run: uv run pytest --cov=ghfdb --cov-report=term-missing --cov-report=xml
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v7
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: ${{ github.event.pull_request.head.repo.fork != true }}
       - name: Build the documentation
         run: uv run sphinx-build -W --keep-going -b html docs docs/_build/html
       - name: Build the package

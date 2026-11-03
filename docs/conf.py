@@ -10,7 +10,8 @@ version = release
 
 extensions = ["myst_parser"]
 source_suffix = {".md": "markdown"}
-exclude_patterns = ["_build"]
+# docs/agents/ is guidance for automated contributors, not part of the site.
+exclude_patterns = ["_build", "agents"]
 
 html_theme = "furo"
 html_title = "ghfdb"

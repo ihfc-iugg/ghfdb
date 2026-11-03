@@ -23,7 +23,7 @@ Issues = "https://github.com/ihfc-iugg/ghfdb/issues"
 Changelog = "https://github.com/ihfc-iugg/ghfdb/blob/main/CHANGELOG.md"
 
 [dependency-groups]
-dev = ["pytest>=8", "pytest-cov>=6", "pre-commit>=4"]
+dev = ["pytest>=8", "pytest-cov>=6", "pre-commit>=4", "deptry>=0.23", "mypy>=1.15"]
 docs = ["sphinx>=8", "myst-parser>=4", "furo>=2025.1"]
 
 [tool.uv]
@@ -43,6 +43,10 @@ include = ["/src", "/tests", "/README.md", "/LICENSE", "/CHANGELOG.md"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--import-mode=importlib"
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
 
 [tool.ruff]
 line-length = 88

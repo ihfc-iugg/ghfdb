@@ -267,3 +267,14 @@ extra, and the Python API page introduces it as maintainer tooling. Keeping it o
 would leave it untyped and uncovered by the checks every other module passes.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
+
+## Made at the code review
+
+### D-28 — The date of acquisition accepts a range of months
+
+Appendix A's meaning for C38 asks for a range of months, written `YYYY-MM; YYYY-MM`, when the
+data were acquired over more than one month, and the template's unit row gives only `YYYY-MM`.
+**Chosen:** C38 accepts one month, a range written as Appendix A writes it, or `[Unspecified]`.
+Its format is sourced to this decision.
+
+**ADR:** none — a reading of the sources for one field

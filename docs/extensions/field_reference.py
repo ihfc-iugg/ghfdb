@@ -210,7 +210,7 @@ class FieldReference:
         )
         table = ["| Fact | Value | Source |", "|---|---|---|"]
         table += [
-            f"| {fact} | {value.replace('|', '\\|')} | {source} |"
+            f"| {fact} | {re.sub(r'(?<!\\)\|', r'\\|', value)} | {source} |"
             for fact, value, source in self.rows(field)
         ]
         blocks = [

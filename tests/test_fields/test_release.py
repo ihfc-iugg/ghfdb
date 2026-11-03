@@ -361,6 +361,20 @@ class TestReleaseMoveChanges:
 
         assert all(not change.added for change in move.changes())
 
+    def test_a_concept_whose_label_changed_under_the_same_term_is_relabelled(
+        self, tmp_path: Path
+    ) -> None:
+        path = moved_to_a(tmp_path)
+        data = json.loads(path.read_text())
+        stale = data["fields"][0]["allowedValues"][0]
+        stale["label"] = stale["label"] + " (earlier)"
+        write(path, data)
+        move = ReleaseMove(path, ReleaseFiles(RELEASES / "9999.1", "9999.1"))
+
+        change = move.changes()[0]
+
+        assert [old.uri for old, _ in change.relabelled] == [stale["uri"]]
+
 
 class TestReleaseMoveAtomic:
     def test_a_missing_scheme_names_the_field_and_the_scheme(
@@ -539,6 +553,8 @@ def differences(schema_path: Path) -> dict[str, list[str]]:
                 wrong.append("scheme or collection")
             if values != field.allowed_values:
                 wrong.append("allowed values")
+        elif field.sources["allowedValues"] == "vocabulary-release":
+            wrong.append("allowed values without a vocabulary")
         if values and enums[field.code] != [value.term for value in values]:
             wrong.append("constraints.enum")
         if wrong:
@@ -569,6 +585,17 @@ class TestShippedSchemaDrift:
         write(path, data)
 
         assert differences(path) == {"P9": ["constraints.enum"]}
+
+    def test_a_field_unbound_from_its_vocabulary_is_reported(
+        self, tmp_path: Path
+    ) -> None:
+        data = json.loads(SHIPPED.path.read_text())
+        field = next(f for f in data["fields"] if f["name"] == "C43")
+        field["vocabulary"] = None
+        path = tmp_path / "schema.json"
+        write(path, data)
+
+        assert list(differences(path)) == ["C43"]
 
     def test_a_stated_doi_that_the_release_does_not_give_is_reported(
         self, tmp_path: Path

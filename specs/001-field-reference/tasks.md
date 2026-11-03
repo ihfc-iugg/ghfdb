@@ -147,3 +147,12 @@ adds, removes and relabels concepts, and compare.
   documentation build proves the registration.
 - [x] T021 [US3] Describe a field's change from the change itself (`FieldChange.describe`), and
   name the release module's helpers on the API page.
+
+## Fixes from the code review
+
+- [x] T022 [US3] A concept whose label changed under the same term is reported as relabelled.
+- [x] T023 [US3] The drift check reports a field whose allowed values come from the release but
+  whose vocabulary binding was removed.
+- [x] T024 [US2] C38 accepts a range of months, as Appendix A describes (D-28).
+- [x] T025 [US1] A pipe in a fact is escaped once in the entry's table, and a test holds the first
+  facts of every entry in their order.

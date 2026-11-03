@@ -1,4 +1,5 @@
 import re
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -134,6 +135,18 @@ class TestFieldReferenceEntries:
         assert f"[Decision {label}]({GITHUB_DECISIONS})" in section
 
 
+class TestFactOrder:
+    def test_every_entry_opens_with_code_column_name_and_name_in_that_order(
+        self, reference: FieldReference, schema: FieldSchema
+    ) -> None:
+        for field in schema:
+            values = [value for _, value, _ in reference.rows(field)[:3]]
+
+            assert field.code in values[0], field.code
+            assert field.column_name in values[1], field.code
+            assert reference.cell(field.name) == values[2], field.code
+
+
 class TestVocabularyEntries:
     def vocabulary_fields(self, schema: FieldSchema) -> list[Field]:
         return [f for f in schema if f.vocabulary is not None]
@@ -244,6 +257,18 @@ class TestSeparatorsAndEarlierSpellings:
         section = section_of(reference.entries(field.group), field)
 
         assert f"`{field.value_format}`" in section
+
+
+class TestTableCells:
+    def test_a_pipe_in_a_fact_is_escaped_once(
+        self, reference: FieldReference, schema: FieldSchema
+    ) -> None:
+        field = replace(schema["C43"], meaning="left | right")
+
+        markdown = reference.entry(field)
+
+        assert "left \\| right" in markdown
+        assert "\\\\|" not in markdown
 
 
 class TestFieldIndex:

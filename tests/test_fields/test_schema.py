@@ -359,3 +359,23 @@ class TestShippedField:
         else:
             assert "minimum" not in constraints
             assert "maximum" not in constraints
+
+
+def date_pattern() -> str:
+    data = json.loads(FieldSchema.load().path.read_text())
+    field = next(entry for entry in data["fields"] if entry["name"] == "C38")
+    return str(field["constraints"]["pattern"])
+
+
+class TestDateOfAcquisitionFormat:
+    @pytest.mark.parametrize(
+        "value", ["2005-01", "1998-12", "2005-01; 2007-12", "[Unspecified]"]
+    )
+    def test_a_month_a_range_of_months_or_unspecified_is_accepted(
+        self, value: str
+    ) -> None:
+        assert re.fullmatch(date_pattern(), value)
+
+    @pytest.mark.parametrize("value", ["2005", "2005-13", "2005-01;2007", "unknown"])
+    def test_anything_else_is_refused(self, value: str) -> None:
+        assert not re.fullmatch(date_pattern(), value)

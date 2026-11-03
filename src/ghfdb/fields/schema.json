@@ -3699,7 +3699,7 @@
       ],
       "qualityRelevance": null,
       "constraints": {
-        "pattern": "^([0-9]{4}-(0[1-9]|1[0-2])|\\[Unspecified\\])$"
+        "pattern": "^([0-9]{4}-(0[1-9]|1[0-2])(; [0-9]{4}-(0[1-9]|1[0-2]))?|\\[Unspecified\\])$"
       },
       "vocabulary": null,
       "allowedValues": [],
@@ -3716,7 +3716,7 @@
         "decimalPlaces": "fuchs-2023-appendix-a",
         "maxLength": "fuchs-2023-appendix-a",
         "unit": "decision:D-13",
-        "valueFormat": "decision:D-13",
+        "valueFormat": "decision:D-28",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",

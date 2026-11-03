@@ -165,7 +165,7 @@ class FieldChange:
         added: Values the release has and the field does not.
         removed: Values the field has and the release does not.
         relabelled: Pairs of the old and new value for a concept whose URI is the
-            same and whose term differs.
+            same and whose term or label differs.
     """
 
     code: str
@@ -301,7 +301,8 @@ class ReleaseMove:
             tuple(
                 (old[uri], new[uri])
                 for uri in new
-                if uri in old and old[uri].term != new[uri].term
+                if uri in old
+                and (old[uri].term, old[uri].label) != (new[uri].term, new[uri].label)
             ),
         )
 

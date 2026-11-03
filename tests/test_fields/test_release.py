@@ -5,7 +5,12 @@ from typing import Any, Literal
 
 import pytest
 
-from ghfdb.fields.release import MissingSchemeError, ReleaseFiles, ReleaseMove
+from ghfdb.fields.release import (
+    FieldChange,
+    MissingSchemeError,
+    ReleaseFiles,
+    ReleaseMove,
+)
 from ghfdb.fields.schema import AllowedValue, VocabularyBinding, VocabularyRelease
 
 RELEASES = Path(__file__).parent / "releases"
@@ -256,3 +261,95 @@ class TestReleaseMove:
         text = path.read_text()
         assert text == json.dumps(json.loads(text), indent=2, ensure_ascii=False) + "\n"
         assert "Température" in text
+
+
+SHAPES = "https://example.test/vocabularies/shapes"
+
+
+def two_field_schema() -> dict[str, Any]:
+    def field(name: str, scheme_name: str) -> dict[str, Any]:
+        return {
+            "name": name,
+            "title": name,
+            "constraints": {"enum": []},
+            "vocabulary": {
+                "schemeName": scheme_name,
+                "collectionName": None,
+                "scheme": "",
+                "collection": None,
+                "termForm": "label",
+            },
+            "allowedValues": [],
+        }
+
+    return {
+        "vocabularyRelease": {"version": "0000.0", "doi": "10.0000/old.0"},
+        "fields": [field("X1", "colours"), field("X2", "shapes"), {"name": "X3"}],
+    }
+
+
+def moved_to_a(tmp_path: Path) -> Path:
+    path = tmp_path / "schema.json"
+    write(path, two_field_schema())
+    ReleaseMove(path, ReleaseFiles(RELEASES / "9999.1", "9999.1")).apply()
+    return path
+
+
+def term_set(values: tuple[AllowedValue, ...]) -> set[str]:
+    return {value.term for value in values}
+
+
+class TestReleaseMoveChanges:
+    def test_a_field_lists_the_concepts_added_removed_and_relabelled(
+        self, tmp_path: Path
+    ) -> None:
+        path = moved_to_a(tmp_path)
+        move = ReleaseMove(path, ReleaseFiles(RELEASES / "9999.2", "9999.2"))
+
+        change = move.changes()[0]
+
+        assert change.code == "X1"
+        assert term_set(change.added) == {"[purple]"}
+        assert term_set(change.removed) == {"[green]"}
+        assert [(old.term, new.term) for old, new in change.relabelled] == [
+            ("[Blue]", "[Indigo]")
+        ]
+
+    def test_a_field_whose_concepts_are_the_same_has_an_empty_change(
+        self, tmp_path: Path
+    ) -> None:
+        path = moved_to_a(tmp_path)
+        move = ReleaseMove(path, ReleaseFiles(RELEASES / "9999.2", "9999.2"))
+
+        assert move.changes()[1] == FieldChange("X2", (), (), ())
+
+    def test_there_is_one_change_per_vocabulary_field_in_file_order(
+        self, tmp_path: Path
+    ) -> None:
+        path = moved_to_a(tmp_path)
+        move = ReleaseMove(path, ReleaseFiles(RELEASES / "9999.2", "9999.2"))
+
+        assert [change.code for change in move.changes()] == ["X1", "X2"]
+
+    def test_reporting_changes_leaves_the_file_untouched(self, tmp_path: Path) -> None:
+        path = moved_to_a(tmp_path)
+        before = path.read_bytes()
+
+        ReleaseMove(path, ReleaseFiles(RELEASES / "9999.2", "9999.2")).changes()
+
+        assert path.read_bytes() == before
+
+    def test_applying_returns_the_same_changes(self, tmp_path: Path) -> None:
+        path = moved_to_a(tmp_path)
+        move = ReleaseMove(path, ReleaseFiles(RELEASES / "9999.2", "9999.2"))
+        expected = move.changes()
+
+        assert move.apply() == expected
+
+    def test_a_field_that_has_just_been_moved_has_no_changes(
+        self, tmp_path: Path
+    ) -> None:
+        path = moved_to_a(tmp_path)
+        move = ReleaseMove(path, ReleaseFiles(RELEASES / "9999.1", "9999.1"))
+
+        assert all(not change.added for change in move.changes())

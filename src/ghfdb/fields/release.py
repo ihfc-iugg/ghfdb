@@ -5,7 +5,7 @@ extra. Importing ``ghfdb.fields`` never reaches it.
 """
 
 import json
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from functools import cached_property
 from pathlib import Path
 from typing import Any
@@ -153,6 +153,24 @@ class ReleaseFiles:
         return AllowedValue(f"[{shown}]", labels[0], str(concept), notation)
 
 
+@dataclass(frozen=True)
+class FieldChange:
+    """What moving to a release does to the allowed values of one field.
+
+    Attributes:
+        code: The field's code, such as ``C43``.
+        added: Values the release has and the field does not.
+        removed: Values the field has and the release does not.
+        relabelled: Pairs of the old and new value for a concept whose URI is the
+            same and whose term differs.
+    """
+
+    code: str
+    added: tuple[AllowedValue, ...]
+    removed: tuple[AllowedValue, ...]
+    relabelled: tuple[tuple[AllowedValue, AllowedValue], ...]
+
+
 class ReleaseMove:
     """Regenerate the allowed values of a field schema file from a release."""
 
@@ -166,40 +184,123 @@ class ReleaseMove:
         self.schema_path = schema_path
         self.release = release
 
-    def apply(self) -> None:
+    def changes(self) -> tuple[FieldChange, ...]:
+        """Report what moving onto the release would change, writing nothing.
+
+        Returns:
+            One change per vocabulary field, in the order the file lists them.
+
+        Raises:
+            MissingSchemeError: If the release lacks a scheme or collection a field
+                names.
+        """
+        data: dict[str, Any] = json.loads(self.schema_path.read_text())
+        return tuple(
+            self.change(field, values) for field, _, values in self.resolve_all(data)
+        )
+
+    def apply(self) -> tuple[FieldChange, ...]:
         """Write the release's facts into the schema file.
 
         Only the generated facts change: ``vocabulary.scheme``,
         ``vocabulary.collection``, ``allowedValues`` and ``constraints.enum`` of every
-        field with a vocabulary, and ``vocabularyRelease``.
+        field with a vocabulary, and ``vocabularyRelease``. Every field is resolved
+        before anything is written, so a failure leaves the file as it was.
+
+        Returns:
+            The same changes ``changes()`` reports.
+
+        Raises:
+            MissingSchemeError: If the release lacks a scheme or collection a field
+                names. The file is not written.
         """
         data: dict[str, Any] = json.loads(self.schema_path.read_text())
-        for field in data["fields"]:
-            if field.get("vocabulary") is not None:
-                self.move_field(field)
+        moves = self.resolve_all(data)
+        changes = tuple(self.change(field, values) for field, _, values in moves)
+        for field, resolved, values in moves:
+            self.write_field(field, resolved, values)
         release = self.release.release
         data["vocabularyRelease"] = {"version": release.version, "doi": release.doi}
         text = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
         self.schema_path.write_text(text)
+        return changes
 
-    def move_field(self, field: dict[str, Any]) -> None:
+    def resolve_all(
+        self, data: dict[str, Any]
+    ) -> list[tuple[dict[str, Any], VocabularyBinding, tuple[AllowedValue, ...]]]:
+        """Resolve every vocabulary field against the release.
+
+        Args:
+            data: The parsed field schema file.
+
+        Returns:
+            For each vocabulary field, the field, its resolved binding and the
+            values the release gives it.
+
+        Raises:
+            MissingSchemeError: If the release lacks a scheme or collection a field
+                names; the message starts with the field's code.
+        """
+        moves = []
+        for field in data["fields"]:
+            vocabulary = field.get("vocabulary")
+            if vocabulary is None:
+                continue
+            binding = VocabularyBinding(
+                vocabulary["schemeName"],
+                vocabulary["collectionName"],
+                "",
+                None,
+                vocabulary["termForm"],
+            )
+            try:
+                resolved = self.release.resolve(binding)
+                values = self.release.allowed_values(resolved)
+            except MissingSchemeError as error:
+                raise MissingSchemeError(f"{field['name']}: {error}") from error
+            moves.append((field, resolved, values))
+        return moves
+
+    def change(
+        self, field: dict[str, Any], values: tuple[AllowedValue, ...]
+    ) -> FieldChange:
+        """Compare a field's current allowed values with the release's.
+
+        Args:
+            field: The parsed field.
+            values: The values the release gives the field.
+
+        Returns:
+            The values added, removed and relabelled, matched by concept URI.
+        """
+        old = {item["uri"]: AllowedValue(**item) for item in field["allowedValues"]}
+        new = {value.uri: value for value in values}
+        return FieldChange(
+            field["name"],
+            tuple(new[uri] for uri in new if uri not in old),
+            tuple(old[uri] for uri in old if uri not in new),
+            tuple(
+                (old[uri], new[uri])
+                for uri in new
+                if uri in old and old[uri].term != new[uri].term
+            ),
+        )
+
+    def write_field(
+        self,
+        field: dict[str, Any],
+        resolved: VocabularyBinding,
+        values: tuple[AllowedValue, ...],
+    ) -> None:
         """Rewrite the generated facts of one vocabulary field in place.
 
         Args:
-            field: The parsed field, with a vocabulary binding given by name.
+            field: The parsed field.
+            resolved: The field's binding, resolved against the release.
+            values: The values the release gives the field.
         """
-        vocabulary = field["vocabulary"]
-        binding = VocabularyBinding(
-            vocabulary["schemeName"],
-            vocabulary["collectionName"],
-            "",
-            None,
-            vocabulary["termForm"],
-        )
-        resolved = self.release.resolve(binding)
-        values = self.release.allowed_values(resolved)
-        vocabulary["scheme"] = resolved.scheme
-        vocabulary["collection"] = resolved.collection
+        field["vocabulary"]["scheme"] = resolved.scheme
+        field["vocabulary"]["collection"] = resolved.collection
         field["allowedValues"] = [
             {key: getattr(value, key) for key in ("term", "uri", "label", "notation")}
             for value in values

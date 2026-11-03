@@ -6,5 +6,5310 @@
     "version": "2026.1",
     "doi": "10.5880/fidgeo.2026.065"
   },
-  "fields": []
+  "fields": [
+    {
+      "name": "P1",
+      "columnName": "q",
+      "earlierColumnNames": [],
+      "group": "parent",
+      "title": "Heat-flow value",
+      "description": "Heat-flow density (q) for the location after all corrections for instrumental and environmental effects.",
+      "type": "number",
+      "decimalPlaces": 1,
+      "unit": "mW/m²",
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "U-score",
+      "constraints": {
+        "minimum": -999999.9,
+        "maximum": 999999.9
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "P2",
+      "columnName": "q_uncertainty",
+      "earlierColumnNames": [],
+      "group": "parent",
+      "title": "Heat-flow uncertainty",
+      "description": "Uncertainty (one standard deviation) of the heat-flow value [q] estimated by an error propagation from uncertainty in thermal conductivity and temperature gradient, standard deviation from the average of the heat flow intervals or deviation from the linear regression of the Bullard plot",
+      "type": "number",
+      "decimalPlaces": 1,
+      "unit": "mW/m²",
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "U-score",
+      "constraints": {
+        "minimum": 0,
+        "maximum": 999999.9
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "P3",
+      "columnName": "name",
+      "earlierColumnNames": [],
+      "group": "parent",
+      "title": "Site name",
+      "description": "Specification of the (local) name of the related heat-flow site or the related survey. Should be consistent with the publication.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "P4",
+      "columnName": "lat_NS",
+      "earlierColumnNames": [],
+      "group": "parent",
+      "title": "Geographical latitude",
+      "description": "Latitude (lat) is a geographic coordinate that specifies the North–South (NS) position of a point on the planetary's surface. The Equator has a latitude of 0°, the North Pole has a latitude of 90° North (written +90), and the South Pole has a latitude of 90° South (written −90). Numeric values (2 digits) with 5 decimal places are used for this database item instead of the N or S format (e.g., -80.00000 instead of 80° S).",
+      "type": "number",
+      "decimalPlaces": 5,
+      "unit": "degrees",
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": -90,
+        "maximum": 90
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "P5",
+      "columnName": "long_EW",
+      "earlierColumnNames": [],
+      "group": "parent",
+      "title": "Geographical longitude",
+      "description": "Longitude (long) is a geographic coordinate that specifies the east–west (EW) position of a point on the planetary surface. The Prime Meridian, which passes near the Royal Observatory, Greenwich, England, is defined as 0° longitude by convention. Positive longitudes are east of the Prime Meridian, and negative ones are west. Numeric values (3 digits) with 5 decimal places are used for this database instead of the E or W format (e.g., -50.00000 instead of 50° W).",
+      "type": "number",
+      "decimalPlaces": 5,
+      "unit": "degrees",
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": -180,
+        "maximum": 180
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "P6",
+      "columnName": "elevation",
+      "earlierColumnNames": [],
+      "group": "parent",
+      "title": "Elevation (Geographical)",
+      "description": "The elevation of a geographic location is its height above (land elevation) or below (water depth) mean sea level. Caution: different national reference systems are used. Also the reference level may be diverse depending on the study (drilling, lake, marine…).",
+      "type": "number",
+      "decimalPlaces": 1,
+      "unit": "m",
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "minimum": -12000,
+        "maximum": 9000
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "P7",
+      "columnName": "environment",
+      "earlierColumnNames": [],
+      "group": "parent",
+      "title": "Basic geographical environment",
+      "description": "Describes the general geographical setting of the heat-flow site (not the applied methodology).",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "enum": [
+          "[Offshore (continental)]",
+          "[Offshore (marine)]",
+          "[Onshore (continental)]",
+          "[Onshore (lake, river, etc.)]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "geographic-environments",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/geographic-environments",
+        "collection": null,
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Offshore (continental)]",
+          "uri": "https://portal.heatflow.world/vocabularies/geographic-environments/offshore_continental",
+          "label": "Offshore (continental)",
+          "notation": null
+        },
+        {
+          "term": "[Offshore (marine)]",
+          "uri": "https://portal.heatflow.world/vocabularies/geographic-environments/offshore_marine",
+          "label": "Offshore (marine)",
+          "notation": null
+        },
+        {
+          "term": "[Onshore (continental)]",
+          "uri": "https://portal.heatflow.world/vocabularies/geographic-environments/onshore_continental",
+          "label": "Onshore (continental)",
+          "notation": null
+        },
+        {
+          "term": "[Onshore (lake, river, etc.)]",
+          "uri": "https://portal.heatflow.world/vocabularies/geographic-environments/onshore_marine",
+          "label": "Onshore (lake, river, etc.)",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/geographic-environments/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "P8",
+      "columnName": "p_comment",
+      "earlierColumnNames": [],
+      "group": "parent",
+      "title": "General comments parent level",
+      "description": "Comments on the reported heat-flow location value.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "P9",
+      "columnName": "corr_HP_flag",
+      "earlierColumnNames": [],
+      "group": "parent",
+      "title": "Flag heat production of the overburden (heat-flow correction)",
+      "description": "Specifies if corrections to the calculated heat flow considers the contribution of the heat production of the overburden to the terrestrial surface heat flow q.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "enum": [
+          "[Yes]",
+          "[No]",
+          "[unspecified]"
+        ]
+      },
+      "vocabulary": null,
+      "allowedValues": [
+        {
+          "term": "[Yes]",
+          "uri": null,
+          "label": "Yes",
+          "notation": null
+        },
+        {
+          "term": "[No]",
+          "uri": null,
+          "label": "No",
+          "notation": null
+        },
+        {
+          "term": "[unspecified]",
+          "uri": null,
+          "label": "unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "decision:D-5",
+        "termForm": "upload-template",
+        "allowedValues": "fuchs-2023-appendix-a",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "P10",
+      "columnName": "total_depth_MD",
+      "earlierColumnNames": [],
+      "group": "parent",
+      "title": "Total Measured Depth",
+      "description": "Specification of the total measured depth below mean sea level. Caution: different national reference systems are used. Also the reference level may be diverse depending on the study (drilling, lake, marine…).",
+      "type": "number",
+      "decimalPlaces": 1,
+      "unit": "m",
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": -12000,
+        "maximum": 9000
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "P11",
+      "columnName": "total_depth_TVD",
+      "earlierColumnNames": [],
+      "group": "parent",
+      "title": "Total True Vertical Depth",
+      "description": "Specification of the total true vertical depth below mean sea level. Caution: different national reference systems are used. Also the reference level may be diverse depending on the study (drilling, lake, marine…).",
+      "type": "number",
+      "decimalPlaces": 1,
+      "unit": "m",
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": -12000,
+        "maximum": 9000
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "P12",
+      "columnName": "explo_method",
+      "earlierColumnNames": [],
+      "group": "parent",
+      "title": "Type of exploration method",
+      "description": "Specification of the general means by which the rock was accessed by temperature sensors for the respective data entry.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "enum": [
+          "[Drilling (clustered)]",
+          "[Drilling]",
+          "[Indirect (GTM, BSR, CPD, etc.)]",
+          "[Mining]",
+          "[Other]",
+          "[Probing (clustered)]",
+          "[Probing (offshore, ocean)]",
+          "[Probing (onshore, lake, river, etc.)]",
+          "[Tunneling]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "exploration-methods",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/exploration-methods",
+        "collection": null,
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Drilling (clustered)]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-methods/drilling_clustering",
+          "label": "Drilling (clustered)",
+          "notation": null
+        },
+        {
+          "term": "[Drilling]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-methods/drilling",
+          "label": "Drilling",
+          "notation": null
+        },
+        {
+          "term": "[Indirect (GTM, BSR, CPD, etc.)]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-methods/indirect",
+          "label": "Indirect (GTM, BSR, CPD, etc.)",
+          "notation": null
+        },
+        {
+          "term": "[Mining]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-methods/mining",
+          "label": "Mining",
+          "notation": null
+        },
+        {
+          "term": "[Other]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-methods/other",
+          "label": "Other",
+          "notation": null
+        },
+        {
+          "term": "[Probing (clustered)]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-methods/probing_clustering",
+          "label": "Probing (clustered)",
+          "notation": null
+        },
+        {
+          "term": "[Probing (offshore, ocean)]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-methods/probing_offshore",
+          "label": "Probing (offshore, ocean)",
+          "notation": null
+        },
+        {
+          "term": "[Probing (onshore, lake, river, etc.)]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-methods/probing_onshore",
+          "label": "Probing (onshore, lake, river, etc.)",
+          "notation": null
+        },
+        {
+          "term": "[Tunneling]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-methods/tunneling",
+          "label": "Tunneling",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-methods/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "P13",
+      "columnName": "explo_purpose",
+      "earlierColumnNames": [],
+      "group": "parent",
+      "title": "Original exploration purpose",
+      "description": "Main purpose of the reconnaissance target providing access for the temperature sensors.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "enum": [
+          "[Geothermal]",
+          "[Groundwater]",
+          "[Hydrocarbon]",
+          "[Mapping]",
+          "[Mining]",
+          "[Other]",
+          "[Research]",
+          "[Tunneling]",
+          "[Underground storage]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "exploration-purpose",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/exploration-purpose",
+        "collection": null,
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Geothermal]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-purpose/geothermal",
+          "label": "Geothermal",
+          "notation": null
+        },
+        {
+          "term": "[Groundwater]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-purpose/groundwater",
+          "label": "Groundwater",
+          "notation": null
+        },
+        {
+          "term": "[Hydrocarbon]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-purpose/hydrocarbon",
+          "label": "Hydrocarbon",
+          "notation": null
+        },
+        {
+          "term": "[Mapping]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-purpose/mapping",
+          "label": "Mapping",
+          "notation": null
+        },
+        {
+          "term": "[Mining]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-purpose/mining",
+          "label": "Mining",
+          "notation": null
+        },
+        {
+          "term": "[Other]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-purpose/other",
+          "label": "Other",
+          "notation": null
+        },
+        {
+          "term": "[Research]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-purpose/research",
+          "label": "Research",
+          "notation": null
+        },
+        {
+          "term": "[Tunneling]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-purpose/tunneling",
+          "label": "Tunneling",
+          "notation": null
+        },
+        {
+          "term": "[Underground storage]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-purpose/underground_storage",
+          "label": "Underground storage",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/exploration-purpose/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C1",
+      "columnName": "qc",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Heat-flow value child",
+      "description": "Any kind of heat-flow value (qc).",
+      "type": "number",
+      "decimalPlaces": 1,
+      "unit": "mW/m²",
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "U-score",
+      "constraints": {
+        "minimum": -999999.9,
+        "maximum": 999999.9
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C2",
+      "columnName": "qc_uncertainty",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Heat-flow uncertainty child",
+      "description": "Uncertainty (one standard deviation) of the heat-flow value [qc] estimated by an error propagation from uncertainty in thermal conductivity and temperature gradient or deviation from the linear regression of the Bullard plot (corrected preferred over measured gradient).",
+      "type": "number",
+      "decimalPlaces": 1,
+      "unit": "mW/m²",
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "U-score",
+      "constraints": {
+        "minimum": 0,
+        "maximum": 999999.9
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C3",
+      "columnName": "q_method",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Heat-flow method",
+      "description": "Principal method of heat-flow calculation from temperature and thermal conductivity data. Allowed entries: controlled vocabulary",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "enum": [
+          "[Boot-strapping method]",
+          "[Bullard method]",
+          "[Interval method]",
+          "[Numerical inversion]",
+          "[Other]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "heat-flow-method",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/heat-flow-method",
+        "collection": null,
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Boot-strapping method]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-method/bootstrap",
+          "label": "Boot-strapping method",
+          "notation": null
+        },
+        {
+          "term": "[Bullard method]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-method/bullard",
+          "label": "Bullard method",
+          "notation": null
+        },
+        {
+          "term": "[Interval method]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-method/interval",
+          "label": "Interval method",
+          "notation": null
+        },
+        {
+          "term": "[Numerical inversion]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-method/numerical",
+          "label": "Numerical inversion",
+          "notation": null
+        },
+        {
+          "term": "[Other]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-method/other",
+          "label": "Other",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-method/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C4",
+      "columnName": "q_top",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Heat-flow interval top",
+      "description": "Describes the true vertical depth (TVD) of the top end of the heat-flow determination interval relative to the land surface/seafloor.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "m",
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "minimum": 0,
+        "maximum": 19999.9
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C5",
+      "columnName": "q_bottom",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Heat-flow interval bottom",
+      "description": "Describes the true vertical depth (TVD) of the bottom end of the heat-flow determination interval relative to the land surface.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "m",
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "minimum": 0,
+        "maximum": 19999.9
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C6",
+      "columnName": "probe_penetration",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Penetration depth",
+      "description": "Penetration depth of marine probe into the sediment.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "m",
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "S"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "minimum": 0,
+        "maximum": 999.9
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C7",
+      "columnName": "publication_reference",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Primary publication reference",
+      "description": "References of primary publication related to the respective heat-flow entry.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": "Write the reference in the form [First author_Year_Title_Journal/ Publisher_doi].",
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "decision:D-22"
+      }
+    },
+    {
+      "name": "C8",
+      "columnName": "data_reference",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Primary reference",
+      "description": "References of primary data publication related to the respective heat-flow entry.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": "Write the reference in the form [First author_Year_Title_Journal/ Publisher_doi].",
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "decision:D-22"
+      }
+    },
+    {
+      "name": "C9",
+      "columnName": "relevant_child",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Relevant child",
+      "description": "Specifies whether the child entry is used for computation of representative location heat-flow values at the parent level or not.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "enum": [
+          "[Yes]",
+          "[No]",
+          "[unspecified]"
+        ]
+      },
+      "vocabulary": null,
+      "allowedValues": [
+        {
+          "term": "[Yes]",
+          "uri": null,
+          "label": "Yes",
+          "notation": null
+        },
+        {
+          "term": "[No]",
+          "uri": null,
+          "label": "No",
+          "notation": null
+        },
+        {
+          "term": "[unspecified]",
+          "uri": null,
+          "label": "unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "decision:D-5",
+        "termForm": "upload-template",
+        "allowedValues": "fuchs-2023-appendix-a",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C10",
+      "columnName": "c_comment",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "General comments child level",
+      "description": "Comments and further specifications to the individual reported heat-flow determination.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C11",
+      "columnName": "corr_IS_flag",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Flag in-situ thermal properties",
+      "description": "Specifies whether the in-situ pressure and temperature conditions were considered to the reported thermal conductivity value or not.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "enum": [
+          "[Not considered]",
+          "[Pressure and temperature considered]",
+          "[Pressure considered]",
+          "[Temperature considered]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "heat-flow-corrections",
+        "collectionName": "insitu",
+        "scheme": "https://portal.heatflow.world/vocabularies/heat-flow-corrections",
+        "collection": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/insitu",
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Not considered]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/notConsidered",
+          "label": "Not considered",
+          "notation": null
+        },
+        {
+          "term": "[Pressure and temperature considered]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/consideredPT",
+          "label": "Pressure and temperature considered",
+          "notation": null
+        },
+        {
+          "term": "[Pressure considered]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/consideredP",
+          "label": "Pressure considered",
+          "notation": null
+        },
+        {
+          "term": "[Temperature considered]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/consideredT",
+          "label": "Temperature considered",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C12",
+      "columnName": "corr_T_flag",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Flag temperature corrections (instrumental correction)",
+      "description": "Specifies if instrumental corrections to the measured temperature data were required and performed, e.g. for the tilt correction of probes.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "enum": [
+          "[Corrected]",
+          "[Drift corrected]",
+          "[Not corrected]",
+          "[Tilt corrected]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "heat-flow-corrections",
+        "collectionName": "temperature",
+        "scheme": "https://portal.heatflow.world/vocabularies/heat-flow-corrections",
+        "collection": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/temperature",
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/corrected",
+          "label": "Corrected",
+          "notation": null
+        },
+        {
+          "term": "[Drift corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/driftCorrected",
+          "label": "Drift corrected",
+          "notation": null
+        },
+        {
+          "term": "[Not corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/notCorrected",
+          "label": "Not corrected",
+          "notation": null
+        },
+        {
+          "term": "[Tilt corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/tiltCorrected",
+          "label": "Tilt corrected",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C13",
+      "columnName": "corr_S_flag",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Flag sedimentation effect (temperature/heat flow correction)",
+      "description": "Specifies if sedimentation/subsidence effects with respect to the reported heat-flow value were present and if corrections were performed.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "perturbation flags",
+      "constraints": {
+        "enum": [
+          "[Not recognized]",
+          "[Present and corrected]",
+          "[Present and not corrected]",
+          "[Present and not significant]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "heat-flow-corrections",
+        "collectionName": "generic",
+        "scheme": "https://portal.heatflow.world/vocabularies/heat-flow-corrections",
+        "collection": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/generic",
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Not recognized]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/not_recognized",
+          "label": "Not recognized",
+          "notation": null
+        },
+        {
+          "term": "[Present and corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_corrected",
+          "label": "Present and corrected",
+          "notation": null
+        },
+        {
+          "term": "[Present and not corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_not_corrected",
+          "label": "Present and not corrected",
+          "notation": null
+        },
+        {
+          "term": "[Present and not significant]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_not_significant",
+          "label": "Present and not significant",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C14",
+      "columnName": "corr_E_flag",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Flag erosion effect (heat-flow correction)",
+      "description": "Specifies if erosion effects with respect to the reported heat-flow value were present and if corrections were performed.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "perturbation flags",
+      "constraints": {
+        "enum": [
+          "[Not recognized]",
+          "[Present and corrected]",
+          "[Present and not corrected]",
+          "[Present and not significant]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "heat-flow-corrections",
+        "collectionName": "generic",
+        "scheme": "https://portal.heatflow.world/vocabularies/heat-flow-corrections",
+        "collection": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/generic",
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Not recognized]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/not_recognized",
+          "label": "Not recognized",
+          "notation": null
+        },
+        {
+          "term": "[Present and corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_corrected",
+          "label": "Present and corrected",
+          "notation": null
+        },
+        {
+          "term": "[Present and not corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_not_corrected",
+          "label": "Present and not corrected",
+          "notation": null
+        },
+        {
+          "term": "[Present and not significant]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_not_significant",
+          "label": "Present and not significant",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C15",
+      "columnName": "corr_TOPO_flag",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Flag topographic effect (heat-flow correction)",
+      "description": "Specifies if topographic effects with respect to the reported heat-flow value were present and if corrections were performed.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "perturbation flags",
+      "constraints": {
+        "enum": [
+          "[Not recognized]",
+          "[Present and corrected]",
+          "[Present and not corrected]",
+          "[Present and not significant]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "heat-flow-corrections",
+        "collectionName": "generic",
+        "scheme": "https://portal.heatflow.world/vocabularies/heat-flow-corrections",
+        "collection": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/generic",
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Not recognized]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/not_recognized",
+          "label": "Not recognized",
+          "notation": null
+        },
+        {
+          "term": "[Present and corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_corrected",
+          "label": "Present and corrected",
+          "notation": null
+        },
+        {
+          "term": "[Present and not corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_not_corrected",
+          "label": "Present and not corrected",
+          "notation": null
+        },
+        {
+          "term": "[Present and not significant]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_not_significant",
+          "label": "Present and not significant",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C16",
+      "columnName": "corr_PAL_flag",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Flag paleoclimatic effect (heat-flow correction)",
+      "description": "Specifies if climatic conditions (glaciation, post-industrial warming, etc.) with respect to the reported heat-flow value were present and if corrections were performed.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "perturbation flags",
+      "constraints": {
+        "enum": [
+          "[Not recognized]",
+          "[Present and corrected]",
+          "[Present and not corrected]",
+          "[Present and not significant]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "heat-flow-corrections",
+        "collectionName": "generic",
+        "scheme": "https://portal.heatflow.world/vocabularies/heat-flow-corrections",
+        "collection": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/generic",
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Not recognized]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/not_recognized",
+          "label": "Not recognized",
+          "notation": null
+        },
+        {
+          "term": "[Present and corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_corrected",
+          "label": "Present and corrected",
+          "notation": null
+        },
+        {
+          "term": "[Present and not corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_not_corrected",
+          "label": "Present and not corrected",
+          "notation": null
+        },
+        {
+          "term": "[Present and not significant]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_not_significant",
+          "label": "Present and not significant",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C17",
+      "columnName": "corr_SUR_flag",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Flag transient surface temperature (heat-flow correction)",
+      "description": "Specifies if surface temperature variation (S) or bottom water temperature variation (B) with respect to the reported heat-flow value were present and if corrections were performed.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "perturbation flags",
+      "constraints": {
+        "enum": [
+          "[Not recognized]",
+          "[Present and corrected]",
+          "[Present and not corrected]",
+          "[Present and not significant]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "heat-flow-corrections",
+        "collectionName": "generic",
+        "scheme": "https://portal.heatflow.world/vocabularies/heat-flow-corrections",
+        "collection": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/generic",
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Not recognized]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/not_recognized",
+          "label": "Not recognized",
+          "notation": null
+        },
+        {
+          "term": "[Present and corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_corrected",
+          "label": "Present and corrected",
+          "notation": null
+        },
+        {
+          "term": "[Present and not corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_not_corrected",
+          "label": "Present and not corrected",
+          "notation": null
+        },
+        {
+          "term": "[Present and not significant]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_not_significant",
+          "label": "Present and not significant",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C18",
+      "columnName": "corr_CONV_flag",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Flag convection processes (heat-flow correction)",
+      "description": "Specifies if convection effects with respect to the reported heat-flow value were present and if corrections were performed.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "perturbation flags",
+      "constraints": {
+        "enum": [
+          "[Not recognized]",
+          "[Present and corrected]",
+          "[Present and not corrected]",
+          "[Present and not significant]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "heat-flow-corrections",
+        "collectionName": "generic",
+        "scheme": "https://portal.heatflow.world/vocabularies/heat-flow-corrections",
+        "collection": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/generic",
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Not recognized]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/not_recognized",
+          "label": "Not recognized",
+          "notation": null
+        },
+        {
+          "term": "[Present and corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_corrected",
+          "label": "Present and corrected",
+          "notation": null
+        },
+        {
+          "term": "[Present and not corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_not_corrected",
+          "label": "Present and not corrected",
+          "notation": null
+        },
+        {
+          "term": "[Present and not significant]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_not_significant",
+          "label": "Present and not significant",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C19",
+      "columnName": "corr_HR_flag",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Flag heat refraction effect (heat-flow correction)",
+      "description": "Specifies if refraction effects, e.g., due to significant local conductivity contrasts, with respect to the reported heat-flow value were present and if corrections were performed.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "perturbation flags",
+      "constraints": {
+        "enum": [
+          "[Not recognized]",
+          "[Present and corrected]",
+          "[Present and not corrected]",
+          "[Present and not significant]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "heat-flow-corrections",
+        "collectionName": "generic",
+        "scheme": "https://portal.heatflow.world/vocabularies/heat-flow-corrections",
+        "collection": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/generic",
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Not recognized]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/not_recognized",
+          "label": "Not recognized",
+          "notation": null
+        },
+        {
+          "term": "[Present and corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_corrected",
+          "label": "Present and corrected",
+          "notation": null
+        },
+        {
+          "term": "[Present and not corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_not_corrected",
+          "label": "Present and not corrected",
+          "notation": null
+        },
+        {
+          "term": "[Present and not significant]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/present_not_significant",
+          "label": "Present and not significant",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-corrections/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C20",
+      "columnName": "expedition",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Platform, Vessel, Expedition",
+      "description": "Specification of the expedition, cruise, platform or research vessel where the marine heat flow survey was conducted.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": "Give the expedition cruise number, or the research vessel or drilling platform, in the forms [Expedition cruise number], [R/V Ship] and [D/V Platform].",
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "decision:D-22"
+      }
+    },
+    {
+      "name": "C21",
+      "columnName": "probe_type",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Probe type",
+      "description": "Type of heat-flow probe used for measurement.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "enum": [
+          "[Hybrid Lister-Outrigger probe (HyLO)]",
+          "[Other]",
+          "[Outrigger probe (autonomous) with corer]",
+          "[Outrigger probe (autonomous) without corer]",
+          "[Outrigger probe (Ewing) with corer]",
+          "[Outrigger probe (Haenel) with in-situ thermal conductivity]",
+          "[Outrigger probe (Lister) with corer]",
+          "[Outrigger probe (Von Herzen) with in-situ thermal conductivity]",
+          "[Single steel probe (Bullard) with in-situ thermal conductivity]",
+          "[Single steel probe (Bullard)]",
+          "[Submersible probe]",
+          "[Unspecified]",
+          "[Violin-bow probe (Lister)]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "heat-flow-probes",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/heat-flow-probes",
+        "collection": null,
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Hybrid Lister-Outrigger probe (HyLO)]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-probes/outrigger_hybrid_lister_hylo",
+          "label": "Hybrid Lister-Outrigger probe (HyLO)",
+          "notation": null
+        },
+        {
+          "term": "[Other]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-probes/other",
+          "label": "Other",
+          "notation": null
+        },
+        {
+          "term": "[Outrigger probe (autonomous) with corer]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-probes/outrigger_autonomous_with_corer",
+          "label": "Outrigger probe (autonomous) with corer",
+          "notation": null
+        },
+        {
+          "term": "[Outrigger probe (autonomous) without corer]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-probes/outrigger_autonomous_no_corer",
+          "label": "Outrigger probe (autonomous) without corer",
+          "notation": null
+        },
+        {
+          "term": "[Outrigger probe (Ewing) with corer]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-probes/outrigger_ewing",
+          "label": "Outrigger probe (Ewing) with corer",
+          "notation": null
+        },
+        {
+          "term": "[Outrigger probe (Haenel) with in-situ thermal conductivity]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-probes/outrigger_haenel",
+          "label": "Outrigger probe (Haenel) with in-situ thermal conductivity",
+          "notation": null
+        },
+        {
+          "term": "[Outrigger probe (Lister) with corer]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-probes/outrigger_lister",
+          "label": "Outrigger probe (Lister) with corer",
+          "notation": null
+        },
+        {
+          "term": "[Outrigger probe (Von Herzen) with in-situ thermal conductivity]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-probes/outrigger_von_herzen",
+          "label": "Outrigger probe (Von Herzen) with in-situ thermal conductivity",
+          "notation": null
+        },
+        {
+          "term": "[Single steel probe (Bullard) with in-situ thermal conductivity]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-probes/single_steel_insituTC",
+          "label": "Single steel probe (Bullard) with in-situ thermal conductivity",
+          "notation": null
+        },
+        {
+          "term": "[Single steel probe (Bullard)]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-probes/single_steel",
+          "label": "Single steel probe (Bullard)",
+          "notation": null
+        },
+        {
+          "term": "[Submersible probe]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-probes/submersible",
+          "label": "Submersible probe",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-probes/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        },
+        {
+          "term": "[Violin-bow probe (Lister)]",
+          "uri": "https://portal.heatflow.world/vocabularies/heat-flow-probes/violin_bow",
+          "label": "Violin-bow probe (Lister)",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C22",
+      "columnName": "probe_length",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Probe length",
+      "description": "Length of marine heat-flow probe.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "m",
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": 0,
+        "maximum": 99.99
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C23",
+      "columnName": "probe_tilt",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Probe tilt",
+      "description": "Tilt of the marine heat-flow probe.",
+      "type": "number",
+      "decimalPlaces": 1,
+      "unit": "degree",
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "S"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "minimum": 0,
+        "maximum": 99.9
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C24",
+      "columnName": "water_temperature",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Bottom-water temperature",
+      "description": "Seafloor temperature where surface heat-flow value (q) is taken. e.g. PT 100 or Mudline temperature for ocean drilling data.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "°C",
+      "valueFormat": null,
+      "obligation": "O",
+      "domain": [
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": -9.99,
+        "maximum": 999.99
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C25",
+      "columnName": "geo_lithology",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Lithology",
+      "description": "Dominant rock type/lithology within the interval of heat-flow determination.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "O",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": ";",
+      "guidance": "Use existing CGI simple lithology (http://resource.geosciml.org/classifier/cgi/lithology) scheme for naming the lithology.",
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "decision:D-5",
+        "termForm": "upload-template",
+        "allowedValues": "decision:D-5",
+        "separator": "decision:D-5",
+        "guidance": "fuchs-2023-appendix-a"
+      }
+    },
+    {
+      "name": "C26",
+      "columnName": "geo_stratigraphy",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Stratigraphic age",
+      "description": "Stratigraphic age (series/epoch or stage/age) of the depth range involved in the reported heat-flow determination.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "O",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": ";",
+      "guidance": "Use the existing International Chronostratigraphic Chart of the International Commission on Stratigraphy (https://stratigraphy.org).",
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "decision:D-5",
+        "termForm": "upload-template",
+        "allowedValues": "decision:D-5",
+        "separator": "decision:D-5",
+        "guidance": "fuchs-2023-appendix-a"
+      }
+    },
+    {
+      "name": "C27",
+      "columnName": "T_grad_mean",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Calculated or inferred temperature gradient",
+      "description": "Mean temperature gradient measured for the heat-flow determination interval.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "K/km",
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": -99999.99,
+        "maximum": 99999.99
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "decision:D-17",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C28",
+      "columnName": "T_grad_uncertainty",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Temperature gradient uncertainty",
+      "description": "Uncertainty (one standard deviation) of mean measured temperature gradient [T_grad_mean] as estimated by an error propagation from the uncertainty in the top and bottom temperature determinations or deviation from the linear regression of the temperature-depth data.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "K/km",
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": -99999.99,
+        "maximum": 99999.99
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "decision:D-17",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C29",
+      "columnName": "T_grad_mean_cor",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Mean temperature gradient corrected",
+      "description": "Mean temperature gradient corrected for borehole (drilling/mud circulation) and environmental effects (terrain effects/topography, sedimentation, erosion, magmatic intrusions, paleoclimate, etc.). Name the correction method in the corresponding item.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "K/km",
+      "valueFormat": null,
+      "obligation": "O",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": -99999.99,
+        "maximum": 99999.99
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "decision:D-17",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C30",
+      "columnName": "T_grad_uncertainty_cor",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Corrected temperature gradient uncertainty",
+      "description": "Uncertainty (one standard deviation) of mean corrected temperature gradient [T_grad_mean_cor] as estimated by an error propagation from the uncertainty in the top and bottom temperature determinations or deviation from the linear regression of the temperature depth data.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "K/km",
+      "valueFormat": null,
+      "obligation": "O",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": -99999.99,
+        "maximum": 99999.99
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "decision:D-17",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C31",
+      "columnName": "T_method_top",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Temperature method (top)",
+      "description": "Method used for temperature determination at the top of the heat-flow determination interval.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "enum": [
+          "[BHT]",
+          "[BLK]",
+          "[BSR]",
+          "[cBHT]",
+          "[cDST]",
+          "[cDTS]",
+          "[cHT-FT]",
+          "[cLOG]",
+          "[CPD]",
+          "[cRTD]",
+          "[DST]",
+          "[DTSeq]",
+          "[DTSpert]",
+          "[EGRT]",
+          "[GRT]",
+          "[GTM]",
+          "[HT-FTeq]",
+          "[HT-FTpert]",
+          "[LOGeq]",
+          "[LOGpert]",
+          "[ODTT-PC]",
+          "[ODTT-TP]",
+          "[Other]",
+          "[RTDeq]",
+          "[RTDpert]",
+          "[SUR]",
+          "[Unspecified]",
+          "[XEN]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "temperature-method",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/temperature-method",
+        "collection": null,
+        "termForm": "notation"
+      },
+      "allowedValues": [
+        {
+          "term": "[BHT]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/BHT",
+          "label": "Bottom-hole temperature, uncorrected",
+          "notation": "BHT"
+        },
+        {
+          "term": "[BLK]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/BLK",
+          "label": "Thermal blanket",
+          "notation": "BLK"
+        },
+        {
+          "term": "[BSR]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/BSR",
+          "label": "Bottom-simulating reflector",
+          "notation": "BSR"
+        },
+        {
+          "term": "[cBHT]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/cBHT",
+          "label": "Bottom-hole temperature, corrected",
+          "notation": "cBHT"
+        },
+        {
+          "term": "[cDST]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/cDST",
+          "label": "Drill stem test, corrected",
+          "notation": "cDST"
+        },
+        {
+          "term": "[cDTS]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/cDTS",
+          "label": "Distributed temperature sensing, corrected",
+          "notation": "cDTS"
+        },
+        {
+          "term": "[cHT-FT]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/cHT_FT",
+          "label": "High-temperature fluid temperature, corrected",
+          "notation": "cHT-FT"
+        },
+        {
+          "term": "[cLOG]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/cLOG",
+          "label": "Temperature log, corrected",
+          "notation": "cLOG"
+        },
+        {
+          "term": "[CPD]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/CPD",
+          "label": "Curie point depth",
+          "notation": "CPD"
+        },
+        {
+          "term": "[cRTD]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/cRTD",
+          "label": "Resistance temperature detector, corrected",
+          "notation": "cRTD"
+        },
+        {
+          "term": "[DST]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/DST",
+          "label": "Drill stem test, uncorrected",
+          "notation": "DST"
+        },
+        {
+          "term": "[DTSeq]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/DTSeq",
+          "label": "Distributed temperature sensing, equilibrium",
+          "notation": "DTSeq"
+        },
+        {
+          "term": "[DTSpert]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/DTSpert",
+          "label": "Distributed temperature sensing, perturbed",
+          "notation": "DTSpert"
+        },
+        {
+          "term": "[EGRT]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/EGRT",
+          "label": "Enhanced geothermal response test",
+          "notation": "EGRT"
+        },
+        {
+          "term": "[GRT]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/GRT",
+          "label": "Geothermal response test",
+          "notation": "GRT"
+        },
+        {
+          "term": "[GTM]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/GTM",
+          "label": "Geothermometry",
+          "notation": "GTM"
+        },
+        {
+          "term": "[HT-FTeq]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/HT_FT",
+          "label": "High-temperature fluid temperature, equilibrium",
+          "notation": "HT-FTeq"
+        },
+        {
+          "term": "[HT-FTpert]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/HT_FTpert",
+          "label": "High-temperature fluid temperature, perturbed",
+          "notation": "HT-FTpert"
+        },
+        {
+          "term": "[LOGeq]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/LOGeq",
+          "label": "Temperature log, equilibrium",
+          "notation": "LOGeq"
+        },
+        {
+          "term": "[LOGpert]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/LOGpert",
+          "label": "Temperature log, perturbed",
+          "notation": "LOGpert"
+        },
+        {
+          "term": "[ODTT-PC]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/ODTT_PC",
+          "label": "Ocean drilling temperature tool, piston corer",
+          "notation": "ODTT-PC"
+        },
+        {
+          "term": "[ODTT-TP]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/ODTT_TP",
+          "label": "Ocean drilling temperature tool, thermistor probe",
+          "notation": "ODTT-TP"
+        },
+        {
+          "term": "[Other]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/other",
+          "label": "Other",
+          "notation": null
+        },
+        {
+          "term": "[RTDeq]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/RTDeq",
+          "label": "Resistance temperature detector, equilibrium",
+          "notation": "RTDeq"
+        },
+        {
+          "term": "[RTDpert]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/RTDpert",
+          "label": "Resistance temperature detector, perturbed",
+          "notation": "RTDpert"
+        },
+        {
+          "term": "[SUR]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/SUR",
+          "label": "Surface or bottom-water temperature",
+          "notation": "SUR"
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        },
+        {
+          "term": "[XEN]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/XEN",
+          "label": "Xenoliths",
+          "notation": "XEN"
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C32",
+      "columnName": "T_method_bottom",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Temperature method (bottom)",
+      "description": "Method used for temperature determination at the bottom of the heat-flow determination interval.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "enum": [
+          "[BHT]",
+          "[BLK]",
+          "[BSR]",
+          "[cBHT]",
+          "[cDST]",
+          "[cDTS]",
+          "[cHT-FT]",
+          "[cLOG]",
+          "[CPD]",
+          "[cRTD]",
+          "[DST]",
+          "[DTSeq]",
+          "[DTSpert]",
+          "[EGRT]",
+          "[GRT]",
+          "[GTM]",
+          "[HT-FTeq]",
+          "[HT-FTpert]",
+          "[LOGeq]",
+          "[LOGpert]",
+          "[ODTT-PC]",
+          "[ODTT-TP]",
+          "[Other]",
+          "[RTDeq]",
+          "[RTDpert]",
+          "[SUR]",
+          "[Unspecified]",
+          "[XEN]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "temperature-method",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/temperature-method",
+        "collection": null,
+        "termForm": "notation"
+      },
+      "allowedValues": [
+        {
+          "term": "[BHT]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/BHT",
+          "label": "Bottom-hole temperature, uncorrected",
+          "notation": "BHT"
+        },
+        {
+          "term": "[BLK]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/BLK",
+          "label": "Thermal blanket",
+          "notation": "BLK"
+        },
+        {
+          "term": "[BSR]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/BSR",
+          "label": "Bottom-simulating reflector",
+          "notation": "BSR"
+        },
+        {
+          "term": "[cBHT]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/cBHT",
+          "label": "Bottom-hole temperature, corrected",
+          "notation": "cBHT"
+        },
+        {
+          "term": "[cDST]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/cDST",
+          "label": "Drill stem test, corrected",
+          "notation": "cDST"
+        },
+        {
+          "term": "[cDTS]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/cDTS",
+          "label": "Distributed temperature sensing, corrected",
+          "notation": "cDTS"
+        },
+        {
+          "term": "[cHT-FT]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/cHT_FT",
+          "label": "High-temperature fluid temperature, corrected",
+          "notation": "cHT-FT"
+        },
+        {
+          "term": "[cLOG]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/cLOG",
+          "label": "Temperature log, corrected",
+          "notation": "cLOG"
+        },
+        {
+          "term": "[CPD]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/CPD",
+          "label": "Curie point depth",
+          "notation": "CPD"
+        },
+        {
+          "term": "[cRTD]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/cRTD",
+          "label": "Resistance temperature detector, corrected",
+          "notation": "cRTD"
+        },
+        {
+          "term": "[DST]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/DST",
+          "label": "Drill stem test, uncorrected",
+          "notation": "DST"
+        },
+        {
+          "term": "[DTSeq]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/DTSeq",
+          "label": "Distributed temperature sensing, equilibrium",
+          "notation": "DTSeq"
+        },
+        {
+          "term": "[DTSpert]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/DTSpert",
+          "label": "Distributed temperature sensing, perturbed",
+          "notation": "DTSpert"
+        },
+        {
+          "term": "[EGRT]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/EGRT",
+          "label": "Enhanced geothermal response test",
+          "notation": "EGRT"
+        },
+        {
+          "term": "[GRT]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/GRT",
+          "label": "Geothermal response test",
+          "notation": "GRT"
+        },
+        {
+          "term": "[GTM]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/GTM",
+          "label": "Geothermometry",
+          "notation": "GTM"
+        },
+        {
+          "term": "[HT-FTeq]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/HT_FT",
+          "label": "High-temperature fluid temperature, equilibrium",
+          "notation": "HT-FTeq"
+        },
+        {
+          "term": "[HT-FTpert]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/HT_FTpert",
+          "label": "High-temperature fluid temperature, perturbed",
+          "notation": "HT-FTpert"
+        },
+        {
+          "term": "[LOGeq]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/LOGeq",
+          "label": "Temperature log, equilibrium",
+          "notation": "LOGeq"
+        },
+        {
+          "term": "[LOGpert]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/LOGpert",
+          "label": "Temperature log, perturbed",
+          "notation": "LOGpert"
+        },
+        {
+          "term": "[ODTT-PC]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/ODTT_PC",
+          "label": "Ocean drilling temperature tool, piston corer",
+          "notation": "ODTT-PC"
+        },
+        {
+          "term": "[ODTT-TP]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/ODTT_TP",
+          "label": "Ocean drilling temperature tool, thermistor probe",
+          "notation": "ODTT-TP"
+        },
+        {
+          "term": "[Other]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/other",
+          "label": "Other",
+          "notation": null
+        },
+        {
+          "term": "[RTDeq]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/RTDeq",
+          "label": "Resistance temperature detector, equilibrium",
+          "notation": "RTDeq"
+        },
+        {
+          "term": "[RTDpert]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/RTDpert",
+          "label": "Resistance temperature detector, perturbed",
+          "notation": "RTDpert"
+        },
+        {
+          "term": "[SUR]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/SUR",
+          "label": "Surface or bottom-water temperature",
+          "notation": "SUR"
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        },
+        {
+          "term": "[XEN]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-method/XEN",
+          "label": "Xenoliths",
+          "notation": "XEN"
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C33",
+      "columnName": "T_shutin_top",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Shut-in time (top)",
+      "description": "Time of measurement at the interval top in relation to the end values measured during the drilling are equal to zero.",
+      "type": "integer",
+      "decimalPlaces": null,
+      "unit": "hr",
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": 0,
+        "maximum": 99999
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C34",
+      "columnName": "T_shutin_bottom",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Shut-in time (bottom)",
+      "description": "Time of measurement at the interval bottom in relation to the end values measured during the drilling are equal to zero.",
+      "type": "integer",
+      "decimalPlaces": null,
+      "unit": "hr",
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": 0,
+        "maximum": 99999
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C35",
+      "columnName": "T_corr_top",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "T correction method (top)",
+      "description": "Applicable only if gradient correction for borehole effects is reported. Approach applied to correct the temperature measurement for drilling perturbations at the top of the interval used for heat-flow determination.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "enum": [
+          "[AAPG correction]",
+          "[Cylinder source method]",
+          "[Horner plot]",
+          "[Inverse numerical modelling]",
+          "[Line source explosion method]",
+          "[Not corrected]",
+          "[Other published correction]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "temperature-corrections",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/temperature-corrections",
+        "collection": null,
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[AAPG correction]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/aapg",
+          "label": "AAPG correction",
+          "notation": null
+        },
+        {
+          "term": "[Cylinder source method]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/cylinderSource",
+          "label": "Cylinder source method",
+          "notation": null
+        },
+        {
+          "term": "[Horner plot]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/hornerPlot",
+          "label": "Horner plot",
+          "notation": null
+        },
+        {
+          "term": "[Inverse numerical modelling]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/inverseNM",
+          "label": "Inverse numerical modelling",
+          "notation": null
+        },
+        {
+          "term": "[Line source explosion method]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/lineSourceExplosion",
+          "label": "Line source explosion method",
+          "notation": null
+        },
+        {
+          "term": "[Not corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/not_corrected",
+          "label": "Not corrected",
+          "notation": null
+        },
+        {
+          "term": "[Other published correction]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/other",
+          "label": "Other published correction",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C36",
+      "columnName": "T_corr_bottom",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "T correction method (bottom)",
+      "description": "Applicable only if gradient correction for borehole effects is reported. Approach applied to correct the temperature measurement for drilling perturbations at the bottom of the interval used for heat-flow determination.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "enum": [
+          "[AAPG correction]",
+          "[Cylinder source method]",
+          "[Horner plot]",
+          "[Inverse numerical modelling]",
+          "[Line source explosion method]",
+          "[Not corrected]",
+          "[Other published correction]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "temperature-corrections",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/temperature-corrections",
+        "collection": null,
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[AAPG correction]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/aapg",
+          "label": "AAPG correction",
+          "notation": null
+        },
+        {
+          "term": "[Cylinder source method]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/cylinderSource",
+          "label": "Cylinder source method",
+          "notation": null
+        },
+        {
+          "term": "[Horner plot]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/hornerPlot",
+          "label": "Horner plot",
+          "notation": null
+        },
+        {
+          "term": "[Inverse numerical modelling]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/inverseNM",
+          "label": "Inverse numerical modelling",
+          "notation": null
+        },
+        {
+          "term": "[Line source explosion method]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/lineSourceExplosion",
+          "label": "Line source explosion method",
+          "notation": null
+        },
+        {
+          "term": "[Not corrected]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/not_corrected",
+          "label": "Not corrected",
+          "notation": null
+        },
+        {
+          "term": "[Other published correction]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/other",
+          "label": "Other published correction",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/temperature-corrections/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C37",
+      "columnName": "T_number",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Number of temperature recordings",
+      "description": "Number of discrete temperature points (e.g. number of used BHT values, log values or thermistors used in probe sensing) confirming the mean temperature gradient [T_grad_mean_meas]. Not the repetition of one measurement at a certain depth.",
+      "type": "integer",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "minimum": 0,
+        "maximum": 999999
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "decision:D-12",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C38",
+      "columnName": "q_date",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Date of acquisition",
+      "description": "The entry gives the year of the acquisition of the temperature data (which may differ from the year of publication). If the month is unknown use 01, i.e. for the year 2005 use 2005-01. For non-unique time values, define a range in the format: ‘YYYY-MM; YYYY-MM’",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": "YYYY-MM",
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "pattern": "^([0-9]{4}-(0[1-9]|1[0-2])|\\[Unspecified\\])$"
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "decision:D-13",
+        "valueFormat": "decision:D-13",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C39",
+      "columnName": "tc_mean",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Mean thermal conductivity",
+      "description": "Mean conductivity in vertical direction representative for the interval of heat-flow determination. In best case, the value reflects the true in-situ conditions for the corresponding heat-flow interval.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "W/(mK)",
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": 0,
+        "maximum": 99.99
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C40",
+      "columnName": "tc_uncertainty",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Thermal conductivity uncertainty",
+      "description": "Uncertainty (one standard deviation) of mean thermal conductivity [tc_mean]",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "W/(mK)",
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": 0,
+        "maximum": 99.99
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C41",
+      "columnName": "tc_source",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Thermal conductivity source",
+      "description": "Nature of the samples upon which thermal-conductivity was determined [tc_mean].",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "enum": [
+          "[Assumed from literature]",
+          "[Core samples]",
+          "[Core-log integration]",
+          "[Cutting samples]",
+          "[In-situ probe]",
+          "[Mineral computation]",
+          "[Other]",
+          "[Outcrop samples]",
+          "[Unspecified]",
+          "[Well-log interpretation]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "conductivity-sources",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/conductivity-sources",
+        "collection": null,
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Assumed from literature]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-sources/assumed_from_literature",
+          "label": "Assumed from literature",
+          "notation": null
+        },
+        {
+          "term": "[Core samples]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-sources/core_samples",
+          "label": "Core samples",
+          "notation": null
+        },
+        {
+          "term": "[Core-log integration]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-sources/core_log",
+          "label": "Core-log integration",
+          "notation": null
+        },
+        {
+          "term": "[Cutting samples]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-sources/cutting_samples",
+          "label": "Cutting samples",
+          "notation": null
+        },
+        {
+          "term": "[In-situ probe]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-sources/insitu_probe",
+          "label": "In-situ probe",
+          "notation": null
+        },
+        {
+          "term": "[Mineral computation]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-sources/mineral_computation",
+          "label": "Mineral computation",
+          "notation": null
+        },
+        {
+          "term": "[Other]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-sources/other",
+          "label": "Other",
+          "notation": null
+        },
+        {
+          "term": "[Outcrop samples]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-sources/outcrop_samples",
+          "label": "Outcrop samples",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-sources/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        },
+        {
+          "term": "[Well-log interpretation]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-sources/well_log",
+          "label": "Well-log interpretation",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C42",
+      "columnName": "tc_location",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Thermal conductivity location",
+      "description": "Location of conductivity data used for heat-flow calculation.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "enum": [
+          "[Actual heat-flow location]",
+          "[Literature or unspecified]",
+          "[Other location]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "conductivity-location",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/conductivity-location",
+        "collection": null,
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Actual heat-flow location]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-location/actual",
+          "label": "Actual heat-flow location",
+          "notation": null
+        },
+        {
+          "term": "[Literature or unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-location/literature",
+          "label": "Literature or unspecified",
+          "notation": null
+        },
+        {
+          "term": "[Other location]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-location/other",
+          "label": "Other location",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C43",
+      "columnName": "tc_method",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Thermal conductivity method",
+      "description": "Method used for thermal-conductivity determination for [tc_mean].",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "enum": [
+          "[Estimation - from chlorine content]",
+          "[Estimation - from lithology and literature]",
+          "[Estimation - from mineral composition]",
+          "[Estimation - from water content-porosity]",
+          "[Lab - line source - full space]",
+          "[Lab - line source - half space]",
+          "[Lab - other]",
+          "[Lab - plane source - full space]",
+          "[Lab - plane source - half space]",
+          "[Lab - point source]",
+          "[Probe - continuous heating technique]",
+          "[Probe - pulse technique]",
+          "[Unspecified]",
+          "[Well-log - deterministic approach]",
+          "[Well-log - empirical equation]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "conductivity-methods",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/conductivity-methods",
+        "collection": null,
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Estimation - from chlorine content]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/chlorineContent",
+          "label": "Estimation - from chlorine content",
+          "notation": null
+        },
+        {
+          "term": "[Estimation - from lithology and literature]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/lithology",
+          "label": "Estimation - from lithology and literature",
+          "notation": null
+        },
+        {
+          "term": "[Estimation - from mineral composition]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/mineralComposition",
+          "label": "Estimation - from mineral composition",
+          "notation": null
+        },
+        {
+          "term": "[Estimation - from water content-porosity]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/waterContent",
+          "label": "Estimation - from water content-porosity",
+          "notation": null
+        },
+        {
+          "term": "[Lab - line source - full space]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/lineSourceFull",
+          "label": "Lab - line source - full space",
+          "notation": null
+        },
+        {
+          "term": "[Lab - line source - half space]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/lineSourceHalf",
+          "label": "Lab - line source - half space",
+          "notation": null
+        },
+        {
+          "term": "[Lab - other]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/laboratoryOther",
+          "label": "Lab - other",
+          "notation": null
+        },
+        {
+          "term": "[Lab - plane source - full space]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/planeSourceFull",
+          "label": "Lab - plane source - full space",
+          "notation": null
+        },
+        {
+          "term": "[Lab - plane source - half space]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/planeSourceHalf",
+          "label": "Lab - plane source - half space",
+          "notation": null
+        },
+        {
+          "term": "[Lab - point source]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/pointSource",
+          "label": "Lab - point source",
+          "notation": null
+        },
+        {
+          "term": "[Probe - continuous heating technique]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/probeContinuousHeating",
+          "label": "Probe - continuous heating technique",
+          "notation": null
+        },
+        {
+          "term": "[Probe - pulse technique]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/probePulse",
+          "label": "Probe - pulse technique",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        },
+        {
+          "term": "[Well-log - deterministic approach]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/wellLogDeterministic",
+          "label": "Well-log - deterministic approach",
+          "notation": null
+        },
+        {
+          "term": "[Well-log - empirical equation]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-methods/wellLogEmpirical",
+          "label": "Well-log - empirical equation",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C44",
+      "columnName": "tc_saturation",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Thermal conductivity saturation",
+      "description": "Saturation state of the studied rock interval studied for thermal conductivity [tc_mean].",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "enum": [
+          "[Dry measured]",
+          "[Other]",
+          "[Recovered]",
+          "[Saturated calculated]",
+          "[Saturated measured in-situ]",
+          "[Saturated measured]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "conductivity-saturation",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/conductivity-saturation",
+        "collection": null,
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Dry measured]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-saturation/dryMeasured",
+          "label": "Dry measured",
+          "notation": "drymeas"
+        },
+        {
+          "term": "[Other]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-saturation/other",
+          "label": "Other",
+          "notation": "other"
+        },
+        {
+          "term": "[Recovered]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-saturation/recovered",
+          "label": "Recovered",
+          "notation": "recov"
+        },
+        {
+          "term": "[Saturated calculated]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-saturation/saturatedCalculated",
+          "label": "Saturated calculated",
+          "notation": "satcalc"
+        },
+        {
+          "term": "[Saturated measured in-situ]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-saturation/saturatedInSitu",
+          "label": "Saturated measured in-situ",
+          "notation": "insitusatmeas"
+        },
+        {
+          "term": "[Saturated measured]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-saturation/saturatedMeasured",
+          "label": "Saturated measured",
+          "notation": "satmeas"
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-saturation/unspecified",
+          "label": "Unspecified",
+          "notation": "unspec"
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C45",
+      "columnName": "tc_pT_conditions",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Thermal conductivity pT conditions",
+      "description": "Qualified conditions of pressure and temperature under which the mean thermal conductivity [tc_mean] used for the heat-flow computation was determined.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "enum": [
+          "[Actual in-situ (pT) conditions]",
+          "[Corrected in-situ (p)]",
+          "[Corrected in-situ (pT)]",
+          "[Corrected in-situ (T)]",
+          "[Recorded ambient pT conditions]",
+          "[Replicated in-situ (p)]",
+          "[Replicated in-situ (pT)]",
+          "[Replicated in-situ (T)]",
+          "[Unrecorded ambient pT conditions]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "conductivity-conditions",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/conductivity-conditions",
+        "collection": null,
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Actual in-situ (pT) conditions]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-conditions/actualInSitu",
+          "label": "Actual in-situ (pT) conditions",
+          "notation": null
+        },
+        {
+          "term": "[Corrected in-situ (p)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-conditions/correctedP",
+          "label": "Corrected in-situ (p)",
+          "notation": null
+        },
+        {
+          "term": "[Corrected in-situ (pT)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-conditions/correctedPT",
+          "label": "Corrected in-situ (pT)",
+          "notation": null
+        },
+        {
+          "term": "[Corrected in-situ (T)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-conditions/correctedT",
+          "label": "Corrected in-situ (T)",
+          "notation": null
+        },
+        {
+          "term": "[Recorded ambient pT conditions]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-conditions/recordedAmbient",
+          "label": "Recorded ambient pT conditions",
+          "notation": null
+        },
+        {
+          "term": "[Replicated in-situ (p)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-conditions/replicatedP",
+          "label": "Replicated in-situ (p)",
+          "notation": null
+        },
+        {
+          "term": "[Replicated in-situ (pT)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-conditions/replicatedPT",
+          "label": "Replicated in-situ (pT)",
+          "notation": null
+        },
+        {
+          "term": "[Replicated in-situ (T)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-conditions/replicatedT",
+          "label": "Replicated in-situ (T)",
+          "notation": null
+        },
+        {
+          "term": "[Unrecorded ambient pT conditions]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-conditions/unrecordedAmbient",
+          "label": "Unrecorded ambient pT conditions",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-conditions/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C46",
+      "columnName": "tc_pT_function",
+      "earlierColumnNames": [
+        "tc_pT_fuction"
+      ],
+      "group": "child",
+      "title": "Thermal conductivity pT assumed function",
+      "description": "Technique or approach used to correct the measured thermal conductivity towards in-situ pressure (p) and/or temperature (T) conditions.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "enum": [
+          "[Other]",
+          "[p - Bridgman (1924)]",
+          "[p - Demirci et al. (2004)]",
+          "[p - Durutürk et al. (2002)]",
+          "[p - Fuchs & Förster (2014)]",
+          "[p - Görgülü et al. (2008)]",
+          "[p - Kukkonen et al. (1999)]",
+          "[p - Ratcliffe (1960)]",
+          "[p - Seipold (2001)]",
+          "[p - Sibbitt (1975)]",
+          "[pT - Abdulagatov et al. (2006)]",
+          "[pT - Abdulagatova et al. (2009)]",
+          "[pT - Buntebarth (1991)]",
+          "[pT - Chapman & Furlong (1992)]",
+          "[pT - Emirov & Ramazanova (2007)]",
+          "[pT - Emirov et al. (1997)]",
+          "[pT - Emirov et al. (2017)]",
+          "[pT - Hyndman et al. (1974)]",
+          "[pT - Langseth (1965)]",
+          "[pT - Ramazanova & Emirov (2010)]",
+          "[pT - Ramazanova & Emirov (2012)]",
+          "[pT - Ratcliffe (1960)]",
+          "[Site-specific experimental relationships]",
+          "[T - Anand et al. (1973)]",
+          "[T - Birch & Clark (1940)]",
+          "[T - Blesch et al. (1983)]",
+          "[T - Chapman et al. (1984)]",
+          "[T - Funnell et al. (1996)]",
+          "[T - Haenel & Zoth (1973)]",
+          "[T - Kukkonen et al. (1999)]",
+          "[T - Kutas & Gordienko (1971)]",
+          "[T - Miranda et al. (2018)]",
+          "[T - Ratcliffe (1960)]",
+          "[T - Sass et al. (1992)]",
+          "[T - Seipold (2001)]",
+          "[T - Sekiguchi (1984)]",
+          "[T - Somerton (1992)]",
+          "[T - Sun et al. (2017)]",
+          "[T - Tikhomirov (1968)]",
+          "[T - Vosteen & Schellschmidt (2003)]",
+          "[T - Zoth & Haenel (1988)]",
+          "[Unspecified]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "conductivity-pt-function",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/conductivity-pt-function",
+        "collection": null,
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Other]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/other",
+          "label": "Other",
+          "notation": null
+        },
+        {
+          "term": "[p - Bridgman (1924)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Bridgman1924",
+          "label": "p - Bridgman (1924)",
+          "notation": null
+        },
+        {
+          "term": "[p - Demirci et al. (2004)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Demirci2004",
+          "label": "p - Demirci et al. (2004)",
+          "notation": null
+        },
+        {
+          "term": "[p - Durutürk et al. (2002)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Duruturk2002",
+          "label": "p - Durutürk et al. (2002)",
+          "notation": null
+        },
+        {
+          "term": "[p - Fuchs & Förster (2014)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/FuchsFoerster2014",
+          "label": "p - Fuchs & Förster (2014)",
+          "notation": null
+        },
+        {
+          "term": "[p - Görgülü et al. (2008)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Gorgulu2008",
+          "label": "p - Görgülü et al. (2008)",
+          "notation": null
+        },
+        {
+          "term": "[p - Kukkonen et al. (1999)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Kukkonen1999",
+          "label": "p - Kukkonen et al. (1999)",
+          "notation": null
+        },
+        {
+          "term": "[p - Ratcliffe (1960)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/RatcliffeP1960",
+          "label": "p - Ratcliffe (1960)",
+          "notation": null
+        },
+        {
+          "term": "[p - Seipold (2001)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Seipold2001",
+          "label": "p - Seipold (2001)",
+          "notation": null
+        },
+        {
+          "term": "[p - Sibbitt (1975)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Sibbitt1975",
+          "label": "p - Sibbitt (1975)",
+          "notation": null
+        },
+        {
+          "term": "[pT - Abdulagatov et al. (2006)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Abdulagatov2006",
+          "label": "pT - Abdulagatov et al. (2006)",
+          "notation": null
+        },
+        {
+          "term": "[pT - Abdulagatova et al. (2009)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Abdulagatova2009",
+          "label": "pT - Abdulagatova et al. (2009)",
+          "notation": null
+        },
+        {
+          "term": "[pT - Buntebarth (1991)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Buntebarth1991",
+          "label": "pT - Buntebarth (1991)",
+          "notation": null
+        },
+        {
+          "term": "[pT - Chapman & Furlong (1992)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/ChapmanFurlong1992",
+          "label": "pT - Chapman & Furlong (1992)",
+          "notation": null
+        },
+        {
+          "term": "[pT - Emirov & Ramazanova (2007)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/EmirovRamazanova2007",
+          "label": "pT - Emirov & Ramazanova (2007)",
+          "notation": null
+        },
+        {
+          "term": "[pT - Emirov et al. (1997)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Emirov1997",
+          "label": "pT - Emirov et al. (1997)",
+          "notation": null
+        },
+        {
+          "term": "[pT - Emirov et al. (2017)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Emirov2017",
+          "label": "pT - Emirov et al. (2017)",
+          "notation": null
+        },
+        {
+          "term": "[pT - Hyndman et al. (1974)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Hyndman1974",
+          "label": "pT - Hyndman et al. (1974)",
+          "notation": null
+        },
+        {
+          "term": "[pT - Langseth (1965)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Langseth1965",
+          "label": "pT - Langseth (1965)",
+          "notation": null
+        },
+        {
+          "term": "[pT - Ramazanova & Emirov (2010)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/RamazanovaEmirov2010",
+          "label": "pT - Ramazanova & Emirov (2010)",
+          "notation": null
+        },
+        {
+          "term": "[pT - Ramazanova & Emirov (2012)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/RamazanovaEmirov2012",
+          "label": "pT - Ramazanova & Emirov (2012)",
+          "notation": null
+        },
+        {
+          "term": "[pT - Ratcliffe (1960)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Radcliff1960",
+          "label": "pT - Ratcliffe (1960)",
+          "notation": null
+        },
+        {
+          "term": "[Site-specific experimental relationships]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/site_specific",
+          "label": "Site-specific experimental relationships",
+          "notation": null
+        },
+        {
+          "term": "[T - Anand et al. (1973)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Anand1973",
+          "label": "T - Anand et al. (1973)",
+          "notation": null
+        },
+        {
+          "term": "[T - Birch & Clark (1940)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/BirchClark1940",
+          "label": "T - Birch & Clark (1940)",
+          "notation": null
+        },
+        {
+          "term": "[T - Blesch et al. (1983)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Blesch1983",
+          "label": "T - Blesch et al. (1983)",
+          "notation": null
+        },
+        {
+          "term": "[T - Chapman et al. (1984)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Chapman1984",
+          "label": "T - Chapman et al. (1984)",
+          "notation": null
+        },
+        {
+          "term": "[T - Funnell et al. (1996)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Funnell1996",
+          "label": "T - Funnell et al. (1996)",
+          "notation": null
+        },
+        {
+          "term": "[T - Haenel & Zoth (1973)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/HaenelZoth1973",
+          "label": "T - Haenel & Zoth (1973)",
+          "notation": null
+        },
+        {
+          "term": "[T - Kukkonen et al. (1999)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/KukkonenT1999",
+          "label": "T - Kukkonen et al. (1999)",
+          "notation": null
+        },
+        {
+          "term": "[T - Kutas & Gordienko (1971)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/KutasGordienko1971",
+          "label": "T - Kutas & Gordienko (1971)",
+          "notation": null
+        },
+        {
+          "term": "[T - Miranda et al. (2018)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Miranda2018",
+          "label": "T - Miranda et al. (2018)",
+          "notation": null
+        },
+        {
+          "term": "[T - Ratcliffe (1960)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Ratcliff1960",
+          "label": "T - Ratcliffe (1960)",
+          "notation": null
+        },
+        {
+          "term": "[T - Sass et al. (1992)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Sass1992",
+          "label": "T - Sass et al. (1992)",
+          "notation": null
+        },
+        {
+          "term": "[T - Seipold (2001)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/SeipoldT2001",
+          "label": "T - Seipold (2001)",
+          "notation": null
+        },
+        {
+          "term": "[T - Sekiguchi (1984)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Sekiguchi1984",
+          "label": "T - Sekiguchi (1984)",
+          "notation": null
+        },
+        {
+          "term": "[T - Somerton (1992)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Somerton1992",
+          "label": "T - Somerton (1992)",
+          "notation": null
+        },
+        {
+          "term": "[T - Sun et al. (2017)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Sun2017",
+          "label": "T - Sun et al. (2017)",
+          "notation": null
+        },
+        {
+          "term": "[T - Tikhomirov (1968)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/Tikhomirov1968",
+          "label": "T - Tikhomirov (1968)",
+          "notation": null
+        },
+        {
+          "term": "[T - Vosteen & Schellschmidt (2003)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/VosteenSchellschmidt2003",
+          "label": "T - Vosteen & Schellschmidt (2003)",
+          "notation": null
+        },
+        {
+          "term": "[T - Zoth & Haenel (1988)]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/ZothHaenal1988",
+          "label": "T - Zoth & Haenel (1988)",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-pt-function/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "decision:D-2",
+        "earlierColumnNames": "decision:D-2",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C47",
+      "columnName": "tc_number",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "TC number",
+      "description": "Number of discrete conductivity determinations used to determine the mean thermal conductivity [tc_mean], e.g. number of rock samples with a conductivity value used, or number of thermistors used by probe sensing techniques. Not the repetition of one measurement on one rock sample or one thermistor.",
+      "type": "integer",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "M",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": "M-score",
+      "constraints": {
+        "minimum": 0,
+        "maximum": 9999
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C48",
+      "columnName": "tc_strategy",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Thermal conductivity averaging methodology",
+      "description": "Strategy that was employed to estimate the thermal conductivity [tc_mean] over the vertical interval of heat-flow determination.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "enum": [
+          "[Characterize formation conductivities]",
+          "[Computation from probe sensing]",
+          "[Other]",
+          "[Random or periodic depth sampling]",
+          "[Unspecified]",
+          "[Well log interpretation]"
+        ]
+      },
+      "vocabulary": {
+        "schemeName": "conductivity-strategy",
+        "collectionName": null,
+        "scheme": "https://portal.heatflow.world/vocabularies/conductivity-strategy",
+        "collection": null,
+        "termForm": "label"
+      },
+      "allowedValues": [
+        {
+          "term": "[Characterize formation conductivities]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-strategy/characterize",
+          "label": "Characterize formation conductivities",
+          "notation": null
+        },
+        {
+          "term": "[Computation from probe sensing]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-strategy/computation",
+          "label": "Computation from probe sensing",
+          "notation": null
+        },
+        {
+          "term": "[Other]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-strategy/other",
+          "label": "Other",
+          "notation": null
+        },
+        {
+          "term": "[Random or periodic depth sampling]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-strategy/random",
+          "label": "Random or periodic depth sampling",
+          "notation": null
+        },
+        {
+          "term": "[Unspecified]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-strategy/unspecified",
+          "label": "Unspecified",
+          "notation": null
+        },
+        {
+          "term": "[Well log interpretation]",
+          "uri": "https://portal.heatflow.world/vocabularies/conductivity-strategy/well_log",
+          "label": "Well log interpretation",
+          "notation": null
+        }
+      ],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "vocabulary-release",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "vocabulary-release",
+        "termForm": "upload-template",
+        "allowedValues": "vocabulary-release",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C49",
+      "columnName": "Ref_IGSN",
+      "earlierColumnNames": [
+        "Ref_ISGN"
+      ],
+      "group": "child",
+      "title": "IGSN",
+      "description": "International Generic Sample Numbers (IGSN, semicolon separated) for rock samples used for laboratory measurements of thermal conductivity in the heat flow calculation.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": "O",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": ";",
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "decision:D-2",
+        "earlierColumnNames": "decision:D-2",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2023-appendix-a",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "fuchs-2023-appendix-a",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "A1",
+      "columnName": "Reviewer_name",
+      "earlierColumnNames": [],
+      "group": "assessment",
+      "title": "Reviewer_name",
+      "description": "The reviewer's name.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": null,
+      "domain": [],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "decision:D-19",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "decision:D-14",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "A2",
+      "columnName": "Reviewer_comment",
+      "earlierColumnNames": [],
+      "group": "assessment",
+      "title": "Reviewer_comment",
+      "description": "The reviewer's comment.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": null,
+      "domain": [],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "decision:D-19",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "decision:D-14",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "A3",
+      "columnName": "Review_date",
+      "earlierColumnNames": [],
+      "group": "assessment",
+      "title": "Review Date",
+      "description": "The date of the review.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": "YYYY-MM",
+      "obligation": null,
+      "domain": [],
+      "qualityRelevance": null,
+      "constraints": {
+        "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "decision:D-19",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "fuchs-2023-appendix-a",
+        "obligation": "decision:D-14",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "A4",
+      "columnName": "Country",
+      "earlierColumnNames": [],
+      "group": "assessment",
+      "title": "Country",
+      "description": "The country of the site.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": null,
+      "domain": [],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "decision:D-19",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "decision:D-14",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "A5",
+      "columnName": "Region",
+      "earlierColumnNames": [],
+      "group": "assessment",
+      "title": "Region",
+      "description": "The region of the site.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": null,
+      "domain": [],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "decision:D-19",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "decision:D-14",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "A6",
+      "columnName": "Continent",
+      "earlierColumnNames": [],
+      "group": "assessment",
+      "title": "Continent",
+      "description": "The continent of the site.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": null,
+      "domain": [],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "decision:D-19",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "decision:D-14",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "A7",
+      "columnName": "Domain",
+      "earlierColumnNames": [],
+      "group": "assessment",
+      "title": "Domain",
+      "description": "The domain recorded in the review.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": null,
+      "domain": [],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "decision:D-19",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "decision:D-14",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "A8",
+      "columnName": "ID",
+      "earlierColumnNames": [],
+      "group": "assessment",
+      "title": "Unique entry ID",
+      "description": "The unique ID of the child.",
+      "type": "string",
+      "decimalPlaces": null,
+      "unit": null,
+      "valueFormat": null,
+      "obligation": null,
+      "domain": [],
+      "qualityRelevance": null,
+      "constraints": {
+        "maxLength": 255
+      },
+      "vocabulary": null,
+      "allowedValues": [],
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "decision:D-19",
+        "type": "decision:D-18",
+        "decimalPlaces": "fuchs-2023-appendix-a",
+        "maxLength": "fuchs-2023-appendix-a",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "decision:D-14",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    }
+  ]
 }

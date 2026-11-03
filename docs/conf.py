@@ -10,8 +10,9 @@ version = release
 
 extensions = ["myst_parser"]
 source_suffix = {".md": "markdown"}
-# docs/agents/ is guidance for automated contributors, not part of the site.
-exclude_patterns = ["_build", "agents"]
+# docs/agents/ is guidance for automated contributors, and ROADMAP.md is read on GitHub;
+# neither is part of the site.
+exclude_patterns = ["_build", "agents", "ROADMAP.md"]
 
 html_theme = "furo"
 html_title = "ghfdb"

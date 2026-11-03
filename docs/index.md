@@ -9,6 +9,11 @@ It is in development and does not yet check or score anything.
 
 ```{toctree}
 :maxdepth: 1
+:caption: Maintainers
 
-brainstorm
+developer/brainstorm
+contributing/standards/testing
+contributing/standards/documentation
+contributing/standards/code-documentation
+contributing/standards/django
 ```

@@ -1,6 +1,10 @@
 """Sphinx configuration for the ghfdb documentation."""
 
+import sys
 from importlib.metadata import version as _version
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
 
 project = "ghfdb"
 author = "International Heat Flow Commission"
@@ -13,6 +17,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinxcontrib.mermaid",
+    "extensions.field_reference",
 ]
 source_suffix = {".md": "markdown"}
 # docs/agents/ is guidance for automated contributors, and ROADMAP.md is read on GitHub;

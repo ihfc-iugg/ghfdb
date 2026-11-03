@@ -82,3 +82,12 @@ download the file, and compare it with one written by `UploadTemplate().write()`
 - [x] T012 [US1] Move the Guides table under the Project additions' existing rules in
   `docs/contributing/standards/documentation.md`, and link the developer guide from the
   contributor guide's index, as its section 4 asks.
+
+## Fixes from the code review
+
+- [x] T013 [US2] The developer guide's example for a different field schema writes to a path of
+  its own, so it no longer fails on the file the first example wrote.
+- [x] T014 [US2] Test the range row of a whole-number field, and that the readme links the field
+  reference.
+- [x] T015 [US1] The template page says how the `controlled vocabulary` sheet's layout changed, and
+  the empty-section test reads the structure, not the wording.

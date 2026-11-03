@@ -141,3 +141,15 @@ it, and the developer guide reads it to tell which version generated a template,
 place both read.
 
 **ADR:** none — local to this feature
+
+## Made at the code review
+
+### D-18 — Replacing a file is not made atomic
+
+The review noted that `write(path, replace=True)` empties the file before saving, so a save
+interrupted by a full disk leaves it truncated. **Chosen:** leave it. Replacing is asked for
+explicitly, a template that fails to build raises before the file is opened, and the file being
+replaced is a template, not a contributor's filled-in workbook, in every use the documentation
+describes. Writing to a temporary file and renaming it is the fix if that changes.
+
+**ADR:** none — local to this feature

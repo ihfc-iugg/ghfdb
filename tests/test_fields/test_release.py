@@ -12,7 +12,12 @@ from ghfdb.fields.release import (
     ReleaseMove,
     main,
 )
-from ghfdb.fields.schema import AllowedValue, VocabularyBinding, VocabularyRelease
+from ghfdb.fields.schema import (
+    AllowedValue,
+    FieldSchema,
+    VocabularyBinding,
+    VocabularyRelease,
+)
 
 RELEASES = Path(__file__).parent / "releases"
 COLOURS = "https://example.test/vocabularies/colours"
@@ -506,3 +511,70 @@ class TestMain:
         assert code == 1
         assert (schema.read_bytes(), changelog.read_bytes()) == before
         assert "X2" in capsys.readouterr().err
+
+
+SHIPPED = FieldSchema.load()
+VOCABULARIES = Path(__file__).parents[2] / "vocabularies"
+
+
+def differences(schema_path: Path) -> dict[str, list[str]]:
+    """The facts of each field that its stated release does not give."""
+    schema = FieldSchema.load(schema_path)
+    files = ReleaseFiles(VOCABULARIES / schema.release.version, schema.release.version)
+    enums = {
+        entry["name"]: entry.get("constraints", {}).get("enum")
+        for entry in json.loads(schema_path.read_text())["fields"]
+    }
+    found: dict[str, list[str]] = {}
+    if files.release != schema.release:
+        found["release"] = [f"the files give {files.release}, not {schema.release}"]
+    for field in schema:
+        wrong = []
+        values = field.allowed_values
+        if field.vocabulary is not None:
+            resolved = files.resolve(field.vocabulary)
+            values = files.allowed_values(field.vocabulary)
+            if resolved != field.vocabulary:
+                wrong.append("scheme or collection")
+            if values != field.allowed_values:
+                wrong.append("allowed values")
+        if values and enums[field.code] != [value.term for value in values]:
+            wrong.append("constraints.enum")
+        if wrong:
+            found[field.code] = wrong
+    return found
+
+
+class TestShippedSchemaDrift:
+    def test_every_vocabulary_field_matches_its_stated_release(self) -> None:
+        assert differences(SHIPPED.path) == {}
+
+    def test_a_hand_edited_allowed_term_is_reported_with_its_field(
+        self, tmp_path: Path
+    ) -> None:
+        data = json.loads(SHIPPED.path.read_text())
+        field = next(f for f in data["fields"] if f.get("vocabulary"))
+        field["allowedValues"][0]["term"] = "[edited by hand]"
+        path = tmp_path / "schema.json"
+        write(path, data)
+
+        assert list(differences(path)) == [field["name"]]
+
+    def test_an_edited_enum_is_reported_with_its_field(self, tmp_path: Path) -> None:
+        data = json.loads(SHIPPED.path.read_text())
+        field = next(f for f in data["fields"] if f["name"] == "P9")
+        field["constraints"]["enum"].reverse()
+        path = tmp_path / "schema.json"
+        write(path, data)
+
+        assert differences(path) == {"P9": ["constraints.enum"]}
+
+    def test_a_stated_doi_that_the_release_does_not_give_is_reported(
+        self, tmp_path: Path
+    ) -> None:
+        data = json.loads(SHIPPED.path.read_text())
+        data["vocabularyRelease"]["doi"] = "10.0000/not-the-release"
+        path = tmp_path / "schema.json"
+        write(path, data)
+
+        assert list(differences(path)) == ["release"]

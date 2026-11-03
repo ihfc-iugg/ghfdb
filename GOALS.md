@@ -22,7 +22,7 @@ Importance is a tag on each goal, not a ranking:
 | G4 | Every validation rule and quality rule is documented and traceable to its source | Essential | | |
 | G5 | The documentation is the reference for the GHFDB validation rules and quality scheme, superseding Fuchs et al. (2023) | Essential | | |
 | G6 | The quality scheme is released in citable versions, with worked examples any implementation can test against | Expected | | |
-| G7 | The upload template is generated from the field schema for each release | Expected | | |
+| G7 | The upload template is generated from the field schema for each release | Essential | | |
 | G8 | Parents' inherited quality codes appear in the report | Expected | | |
 | G9 | A dataset the size of the GHFDB is checked and scored in seconds | Expected | | |
 | G10 | Assessors who do not write code can install and run it from the command line by following a step-by-step guide | Expected | | |

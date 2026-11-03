@@ -353,3 +353,51 @@ class TestReleaseMoveChanges:
         move = ReleaseMove(path, ReleaseFiles(RELEASES / "9999.1", "9999.1"))
 
         assert all(not change.added for change in move.changes())
+
+
+class TestReleaseMoveAtomic:
+    def test_a_missing_scheme_names_the_field_and_the_scheme(
+        self, tmp_path: Path
+    ) -> None:
+        path = moved_to_a(tmp_path)
+        move = ReleaseMove(path, ReleaseFiles(RELEASES / "9999.3", "9999.3"))
+
+        with pytest.raises(MissingSchemeError, match=r"X2.*shapes"):
+            move.apply()
+
+    def test_a_missing_scheme_leaves_the_file_byte_for_byte_unchanged(
+        self, tmp_path: Path
+    ) -> None:
+        path = moved_to_a(tmp_path)
+        before = path.read_bytes()
+        move = ReleaseMove(path, ReleaseFiles(RELEASES / "9999.3", "9999.3"))
+
+        with pytest.raises(MissingSchemeError):
+            move.apply()
+
+        assert path.read_bytes() == before
+
+    def test_a_missing_scheme_is_also_reported_by_changes(self, tmp_path: Path) -> None:
+        path = moved_to_a(tmp_path)
+        move = ReleaseMove(path, ReleaseFiles(RELEASES / "9999.3", "9999.3"))
+
+        with pytest.raises(MissingSchemeError, match="X2"):
+            move.changes()
+
+    def test_a_complete_release_changes_only_the_generated_facts(
+        self, tmp_path: Path
+    ) -> None:
+        path = moved_to_a(tmp_path)
+        before = json.loads(path.read_text())
+
+        ReleaseMove(path, ReleaseFiles(RELEASES / "9999.2", "9999.2")).apply()
+
+        after = json.loads(path.read_text())
+        for old, new in zip(before["fields"], after["fields"], strict=True):
+            for key in set(old) | set(new):
+                if key not in ("vocabulary", "allowedValues", "constraints"):
+                    assert old[key] == new[key]
+        assert after["vocabularyRelease"] == {
+            "version": "9999.2",
+            "doi": "10.0000/test.2",
+        }

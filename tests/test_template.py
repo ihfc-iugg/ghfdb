@@ -3,6 +3,7 @@ import warnings
 from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
+from typing import Any
 
 import pytest
 from openpyxl import Workbook, load_workbook
@@ -300,3 +301,34 @@ class TestWrite:
             template.write(path)
 
         assert not path.exists()
+
+
+class TestIdenticalContent:
+    def test_two_generations_have_identical_content(
+        self,
+        tmp_path: Path,
+        schema: FieldSchema,
+        workbook_content: Callable[[Path], dict[str, Any]],
+    ) -> None:
+        first, second = tmp_path / "first.xlsx", tmp_path / "second.xlsx"
+
+        UploadTemplate(schema).write(first)
+        UploadTemplate(schema).write(second)
+
+        assert workbook_content(first) == workbook_content(second)
+
+    def test_the_content_holds_the_sheets_cells_and_validations(
+        self,
+        tmp_path: Path,
+        schema: FieldSchema,
+        workbook_content: Callable[[Path], dict[str, Any]],
+    ) -> None:
+        path = tmp_path / "template.xlsx"
+        UploadTemplate(schema).write(path)
+
+        content = workbook_content(path)
+
+        assert list(content) == ["readme", "data list", "controlled vocabulary"]
+        assert content["data list"]["cells"]["A1"] == "ID"
+        choice_fields = [f for f in schema if f.allowed_values]
+        assert len(content["data list"]["validations"]) == len(choice_fields)

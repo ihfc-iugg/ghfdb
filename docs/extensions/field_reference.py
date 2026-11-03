@@ -30,7 +30,8 @@ class FieldReference:
     def __init__(self, schema: FieldSchema) -> None:
         self.schema = schema
 
-    def cell(self, text: str) -> str:
+    @staticmethod
+    def cell(text: str) -> str:
         """Escape text so it reads as plain text in a Markdown table cell.
 
         Args:

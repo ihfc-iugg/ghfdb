@@ -11,6 +11,17 @@ schema and need nothing beyond the standard library.
    :members:
 ```
 
+## Upload template
+
+`ghfdb.template` provides `UploadTemplate`, which generates the upload template from the
+field schema, and `TemplateError`, raised when a field cannot be written to it. The module
+needs openpyxl, which `ghfdb` installs.
+
+```{eval-rst}
+.. automodule:: ghfdb.template
+   :members:
+```
+
 ## Adopting a vocabulary release
 
 `ghfdb.fields.release`, with `ReleaseFiles`, `ReleaseMove`, `FieldChange`,

@@ -37,6 +37,9 @@ print(schema["tc_method"].allowed_values[0].term)  # or schema["C43"]
 
 See the [developer guide](https://ihfc-iugg.github.io/ghfdb/developer/field-definitions.html).
 
+To fill in the upload template, download the one for your version from the
+[contributor guide](https://ihfc-iugg.github.io/ghfdb/upload-template/).
+
 ## Why
 
 Data assessors prepare heat-flow datasets in the GHFDB data template before they are

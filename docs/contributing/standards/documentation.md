@@ -257,6 +257,13 @@ empty when there are none. -->
 - **The specification is user documentation.** The pages that state the validation rules and the
   quality scheme are reference pages, and the reasoning behind them is explanation.
 
+### Guides
+
+| Guide | Lives in | Reader | Covers |
+|---|---|---|---|
+| Developer guide | `developer/` | A developer using ghfdb from Python | Loading the field definitions, generating the upload template |
+| Contributor guide | `upload-template/` | A data assessor or contributor filling in the upload template | Downloading the template, its sheets, what changed from the hand-maintained template |
+
 ---
 
 **Version**: 2.0.0

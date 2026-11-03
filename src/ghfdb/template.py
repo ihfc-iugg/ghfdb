@@ -6,9 +6,11 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.worksheet import Worksheet
 
+from ghfdb import __version__
 from ghfdb.fields import Field, FieldSchema
 
 NONE = "-"
+FIELD_REFERENCE = "https://ihfc-iugg.github.io/ghfdb/reference/fields/index.html"
 LAST_ROW = 1048576
 FIRST_DATA_ROW = 9
 FIRST_TERM_ROW = 3
@@ -38,10 +40,12 @@ class UploadTemplate:
 
     Attributes:
         schema: The field schema the template is built from.
+        version: The ghfdb version that generates the template.
     """
 
     def __init__(self, schema: FieldSchema | None = None) -> None:
         self.schema = FieldSchema.load() if schema is None else schema
+        self.version = __version__
 
     def workbook(self) -> Workbook:
         """Build the template workbook.
@@ -56,9 +60,28 @@ class UploadTemplate:
         readme.title = "readme"
         data_list = workbook.create_sheet("data list")
         vocabulary = workbook.create_sheet("controlled vocabulary")
+        self.fill_readme(readme)
         self.fill_data_list(data_list)
         self.fill_vocabulary(vocabulary, data_list)
         return workbook
+
+    def fill_readme(self, sheet: Worksheet) -> None:
+        """Write what the workbook is, where it came from and how to fill it in.
+
+        Args:
+            sheet: The ``readme`` sheet to write to.
+        """
+        release = self.schema.release
+        lines = (
+            "Upload template for the Global Heat Flow Database.",
+            f"Package version: {self.version}",
+            f"Vocabulary release: {release.version} (https://doi.org/{release.doi})",
+            f"Field reference: {FIELD_REFERENCE}",
+            "Enter your data on the 'data list' sheet, one row per record from row 9.",
+            "Cells with a choice list offer the allowed terms and accept any value.",
+        )
+        for row, line in enumerate(lines, start=1):
+            sheet.cell(row, 1, line)
 
     def fill_data_list(self, sheet: Worksheet) -> None:
         """Write the header row and the row labels of the ``data list`` sheet.

@@ -9,6 +9,7 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
+import ghfdb
 from ghfdb.fields import Field, FieldSchema
 from ghfdb.template import TemplateError, UploadTemplate
 
@@ -230,3 +231,19 @@ class TestChoiceLists:
 
         with pytest.raises(TemplateError, match=bound.code):
             template.workbook()
+
+
+class TestReadme:
+    def test_states_the_package_version_and_the_vocabulary_release(
+        self, workbook: Workbook, schema: FieldSchema
+    ) -> None:
+        sheet = workbook["readme"]
+
+        lines = [str(row[0].value or "") for row in sheet.iter_rows()]
+
+        assert any(ghfdb.__version__ in line for line in lines)
+        assert any(schema.release.version in line for line in lines)
+        assert any(f"https://doi.org/{schema.release.doi}" in line for line in lines)
+
+    def test_exposes_the_version_it_states(self) -> None:
+        assert UploadTemplate().version == ghfdb.__version__

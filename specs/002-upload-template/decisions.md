@@ -25,9 +25,10 @@
 2. **Choice lists cover every data row from row 9 down, with no pre-numbered rows.** Pre-numbered
    empty rows are something R3 has to tolerate in old workbooks, not something to keep producing.
    A list that stops at a fixed row leaves contributors with large datasets without it.
-3. **The `readme` sheet states the package version and the vocabulary release.** A downloaded file
-   outlives the page it came from. Without the two, nobody can tell which rules a filled-in
-   workbook was prepared against.
+3. **The `readme` sheet states the package version and where the vocabularies are published.** A
+   downloaded file outlives the page it came from. Without the version, nobody can tell which
+   rules a filled-in workbook was prepared against. The vocabularies have no version of their
+   own to state: they are the ones currently published.
 4. **"Each version downloadable" means the site links the template for the version it documents.**
    The site is deployed from the default branch only. A permanent address for every earlier
    version is G12 and R13. Attaching each release's template to its GitHub release would need a
@@ -41,7 +42,7 @@
    written once, against the template the GHFDB portal distributes today.
 7. **Generation is reproducible.** The same version always produces the same content, so the
    published template and a developer's copy can be compared, and a change to the template is
-   always a change to the field schema or the vocabulary release.
+   always a change to the field schema or to the published vocabularies.
 8. **A field fact the template needs but the field schema lacks is FS-001's to add.** The
    description rows include domain and quality relevance, which the field reference issue does
    not name. The template never supplies them itself, so the field schema stays the single

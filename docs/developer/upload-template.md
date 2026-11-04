@@ -5,7 +5,8 @@ field schema. It has three sheets: `readme`, `data list` and `controlled vocabul
 `data list` sheet has a header row of field codes and a description row for each of the
 obligation, domain, quality relevance, name, published column name, unit and allowed range of
 values. Fields with a fixed list of allowed values get a choice list. Generating the
-template needs no network access.
+template reads the vocabularies from the cache, which downloads them on first use (see
+[Field definitions](field-definitions.md)).
 
 ## Generate the template
 
@@ -59,18 +60,16 @@ path, and leaves the file as it was.
    template.write(path, replace=True)
    ```
 
-## Find the version and vocabulary release a template came from
+## Find the version a template came from
 
 1. Open the template and read its `readme` sheet. It states the package version that
-   generated the workbook, the version of the IHFC Controlled Vocabularies release the
-   choice lists come from, and a link to the field reference.
+   generated the workbook, where the IHFC Controlled Vocabularies the choice lists come
+   from are published, and a link to the field reference.
 
-2. Or read the same facts from the template before writing it. `version` is the package
-   version, and the schema names the release.
+2. Or read the package version from the template before writing it.
 
    ```python
    template.version
-   template.schema.release.version
    ```
 
 ## Why the file is never replaced by default

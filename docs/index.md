@@ -34,7 +34,7 @@ reference/index
 :caption: Maintainers
 
 developer/brainstorm
-contributing/vocabulary-release
+contributing/vocabularies
 contributing/standards/testing
 contributing/standards/documentation
 contributing/standards/code-documentation

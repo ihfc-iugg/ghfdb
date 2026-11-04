@@ -8,12 +8,12 @@ The investigation behind `plan.md`. Every answer below was read from the source 
 |---|---|
 | The current upload template, `template.xlsx` as distributed with the GHFDB portal, sheet `data list` | Rows 1–8 of the 70 field columns: field code, obligation, domain, quality relevance, name, published column name, unit, allowed range. The sheet `controlled vocabulary` shows how terms are written in a cell. |
 | Fuchs et al. (2023), Appendix A, as the spreadsheet `Appendix_A.XLSX` | Every field's type, meaning (`Field Description`), and the paper's own name, unit, obligation, domain, quality relevance and range, for comparison with the template. It covers all 70 fields, `A1`–`A8` included, with codes written `P01`, `C01`. |
-| IHFC Controlled Vocabularies v2026.1, the GitHub release `v2026.1` of `ihfc-iugg/controlled-vocabularies` (DOI 10.5880/fidgeo.2026.065) | 15 concept schemes, one Turtle file each, with labels, notations, collections and a scope note naming the fields each scheme serves. |
+| IHFC Controlled Vocabularies, published at `https://w3id.org/ihfc-iugg/vocabularies/<scheme>` (read in the release v2026.1, DOI 10.5880/fidgeo.2026.065, and as currently published) | 15 concept schemes, one Turtle file each, with labels, notations, collections and a scope note naming the fields each scheme serves. |
 | FS-002, `specs/002-upload-template/spec.md` | What the generated template reads from the field definitions. |
 
-## The vocabulary release
+## The vocabularies
 
-- **Which schemes serve which fields is stated in the release.** Every scheme's `skos:scopeNote`
+- **Which schemes serve which fields is stated in the vocabularies.** Every scheme's `skos:scopeNote`
   reads "Lists the values allowed in the field(s) … of the Global Heat Flow Database", naming the
   published column names. All 25 vocabulary fields are named, and every scheme serves at least one:
 
@@ -40,23 +40,26 @@ The investigation behind `plan.md`. Every answer below was read from the source 
   (C12), `generic` serves C13–C19. The other schemes' collections (laboratory methods, pressure or
   temperature functions) group concepts by kind and name no field, so those fields take the whole
   scheme.
-- **Concept URIs** in v2026.1 are under `https://portal.heatflow.world/vocabularies/`. The
-  vocabularies' main branch has since moved to `w3id.org` addresses, unreleased. The field schema
-  records the URIs of the stated release, never of the main branch.
-- **No version inside the files.** The release's Turtle files carry the DOI (`dcterms:isPartOf` on
-  every scheme) but no version string. The version is named by whoever adopts the release, and the
-  DOI is read from the files.
+- **Identifiers.** A scheme is published at `https://w3id.org/ihfc-iugg/vocabularies/<scheme>`,
+  which redirects to the scheme's Turtle file when `.ttl` is added. A collection or ordered
+  collection is defined inside that file at `<scheme>/<collection>`. The concept URIs in the
+  current files are under the same address. The release v2026.1 used
+  `https://portal.heatflow.world/vocabularies/` addresses, which the permanent identifiers
+  replace.
+- **No version inside the files.** The Turtle files carry the DOI (`dcterms:isPartOf` on every
+  scheme) but no version string. The field schema states neither, because data assessors do not
+  choose which version of the vocabularies they use.
 - **How a term is written in a cell.** The template writes most terms as the concept's label in
   square brackets (`[Bullard method]`), and the temperature methods by their notation (`[LOGeq]`).
   `conductivity-saturation` also publishes notations (`drymeas`), but the template writes its
   labels (`[Recovered]`). Two concepts of `temperature-method`, `Other` and `Unspecified`, have no
   notation. So the form is a property of the field, read from the template, and a concept with no
   notation is written by its label.
-- **Labels changed between the template and v2026.1.** The template's own choice lists hold older
-  labels (`[Considered – p]`, `[Bullard plot]`, `[Lab - line source / full space]`). v2026.1 keeps
+- **Labels changed between the template and the vocabularies.** The template's own choice lists hold older
+  labels (`[Considered – p]`, `[Bullard plot]`, `[Lab - line source / full space]`). the vocabularies keep
   them as `skos:altLabel` or `skos:hiddenLabel` and publishes new preferred labels
   (`Pressure considered`, `Bullard method`, `Lab - line source - full space`). The allowed term is
-  the preferred label of the stated release. The older forms are the release's business, read by
+  the preferred label as published. The older forms are the vocabularies' business, read by
   the later checks (R3) when they suggest a term.
 
 ## Where the template and Appendix A disagree
@@ -91,12 +94,13 @@ field`. Appendix A gives no meaning for `A1`–`A8`.
 
 ### How the field schema is held and who writes which part
 
-The field schema is one JSON file, `src/ghfdb/fields/schema.json`, a Frictionless Table Schema,
-shipped inside the package. Every fact except the allowed values of a vocabulary field and the
-stated release is written by hand in it, each with its source. The allowed values and the stated
-release are only ever written by the step that adopts a vocabulary release. That split is what
-makes FR-005, FR-015 and FR-017 checkable: the step can only touch its own part, and a check
-regenerates that part from the stored release and compares.
+The field schema is one JSON file, `ghfdb/fields/schema.json`, a Frictionless Table Schema,
+shipped inside the package and written entirely by hand, each fact with its source. Each
+vocabulary field links to the permanent identifier of its concept scheme and collection and holds
+no term and no `enum`. No release, version or DOI is stated. The allowed values are read from the
+published files when the schema is loaded. That is what makes FR-005, FR-015 and FR-017
+checkable: there is no copy of the terms to fall out of step, and a check against the real files
+can only fail because the vocabularies changed.
 
 A separate hand-written source file (YAML or TOML) generating the JSON was weighed. It would hold
 the same facts in a second format and add a build step between the source and what ships, for no
@@ -113,8 +117,7 @@ reader who needs it.
 - Facts with no Frictionless property are recorded as additional properties, which the Table Schema
   specification permits on a field descriptor: the published column name and its earlier spelling,
   group, unit, obligation, domain, quality relevance, decimal places, vocabulary binding, allowed
-  values, separator for several values, guidance, and the source of each fact. The stated release
-  is an additional property of the schema.
+  values, separator for several values, guidance, and the source of each fact.
 - `required` is not set on any field: obligation depends on the domain, and which domain a child is
   in is a cross-field rule (R4).
 
@@ -125,19 +128,20 @@ read it too, but it is a large runtime dependency with its own field classes, an
 needs none of its behaviour to look a field up. It is a development dependency, used to validate
 the shipped schema independently (SC-006).
 
-### Reading a vocabulary release
+### Reading the vocabularies
 
 `rdflib` parses the Turtle files and answers the SKOS questions (scheme, collection members,
-labels, notations, `isPartOf`). Only the step that adopts a release and the check that compares
-against it need it, so it is an optional dependency, `ghfdb[vocabularies]`, and part of the
-development environment. A user loading the field definitions never installs it.
+ordered collection lists, labels, notations). Loading the field schema needs it, so it is a
+runtime dependency.
 
-### The stored release
+### The stored vocabularies
 
-The Turtle files of the stated release are kept in the repository under `vocabularies/<version>/`
-with the release's `LICENSE` (CC BY 4.0), so the checks compare against it without the network. They
-are not part of the installed package: the allowed values the package needs are already in the
-field schema.
+The Turtle files are not kept in the repository or in the package. Each scheme's file is
+published at its identifier with `.ttl` added. The package downloads it on first use, keeps it
+in a cache directory, and asks the server whether it changed before using it again. GitHub
+Pages sends `ETag`, `Last-Modified` and `Cache-Control: max-age=600`, so an unchanged file costs
+a `304`. Hand-written expiry or cache code would only repeat what `requests-cache` does. A reader who
+wants the vocabularies' terms of use finds them with the vocabularies.
 
 ### The template as a test source
 
@@ -161,14 +165,14 @@ The specification directory has no `planning-notes.md`.
 ## What already exists
 
 ```
-field definitions loader          · 4, standard library · json, dataclasses
+field definitions loader          · 4, standard library · json, dataclasses, importlib.resources
 schema validity check             · 6, maintained package · frictionless (development only)
-reading a vocabulary release      · 6, maintained package · rdflib (optional extra)
+reading the vocabularies          · 6, maintained package · rdflib
 reading the template in tests     · 6, maintained package · openpyxl (development only)
 markdown entries for the docs     · 7, new · searched myst-parser and sphinx for a table-schema renderer; none
 diagrams in the docs              · 6, maintained package · sphinxcontrib-mermaid
 python API page                   · 3, package · sphinx.ext.autodoc
-adopting a release and its report · 7, new · searched the vocabularies repository; it publishes files, no client
+downloading and caching a file      · 6, maintained package · requests, requests-cache; the vocabularies publish files, no client
 ```
 
 This repository holds no code yet beyond two empty packages, so nothing under 2 applies.

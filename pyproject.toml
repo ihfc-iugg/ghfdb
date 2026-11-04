@@ -15,10 +15,7 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering",
 ]
-dependencies = ["openpyxl>=3.1"]
-
-[project.optional-dependencies]
-vocabularies = ["rdflib>=7"]
+dependencies = ["openpyxl>=3.1", "rdflib>=7", "requests>=2.32", "requests-cache>=1.2"]
 
 [project.urls]
 Repository = "https://github.com/ihfc-iugg/ghfdb"
@@ -34,7 +31,7 @@ dev = [
   "mypy>=1.15",
   "frictionless>=5",
   "types-openpyxl",
-  "rdflib>=7",
+  "types-requests",
 ]
 docs = ["sphinx>=8", "myst-parser>=4", "furo>=2025.1", "sphinxcontrib-mermaid>=1"]
 
@@ -50,11 +47,11 @@ packages = ["ghfdb"]
 
 # Without an explicit list, hatchling puts the whole working tree in the sdist.
 [tool.hatch.build.targets.sdist]
-include = ["/ghfdb", "/tests", "/README.md", "/LICENSE", "/CHANGELOG.md", "/vocabularies"]
+include = ["/ghfdb", "/tests", "/README.md", "/LICENSE", "/CHANGELOG.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["docs"]
+pythonpath = ["docs", "tests"]
 addopts = "--import-mode=importlib"
 
 [tool.mypy]

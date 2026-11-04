@@ -1,6 +1,6 @@
 # ADR 0001 — The field schema keeps hand-written and generated facts apart
 
-**Status:** accepted
+**Status:** superseded by [ADR 0003](0003-vocabularies-are-read-from-their-permanent-identifiers.md)
 
 ## Decision
 

@@ -61,7 +61,7 @@ class TestWriteTemplate:
         bound = next(field for field in schema if field.vocabulary is not None)
         emptied = replace(bound, allowed_values=())
         fields = tuple(emptied if f is bound else f for f in schema)
-        template = UploadTemplate(FieldSchema(schema.path, schema.release, fields))
+        template = UploadTemplate(FieldSchema(fields, schema.data))
 
         with pytest.raises(TemplateError, match=bound.code):
             write_template(template, tmp_path)

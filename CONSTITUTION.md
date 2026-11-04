@@ -57,10 +57,10 @@ A change to a validation rule or to the quality scheme changes, in one pull requ
 documentation that states the rule, the worked examples that test it, and the code. The pull
 request records the change in `CHANGELOG.md` under a **Scheme changes** heading.
 
-### Article XI — The vocabulary comes from the published release
+### Article XI — The vocabulary comes from the published vocabularies
 No vocabulary term is typed into the code or the field schema by hand. Allowed values come from
-a stated release of the IHFC Controlled Vocabularies. Moving to a newer release is a change of its
-own.
+the IHFC Controlled Vocabularies as published at their permanent identifiers, which the field
+schema links to.
 
 ### Article XII — Report, never modify
 No code path writes to a workbook it was given to check. Every problem is reported as what it is:

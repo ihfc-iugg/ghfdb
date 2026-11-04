@@ -1,9 +1,16 @@
+import os
+import tempfile
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 import pytest
 from openpyxl import load_workbook
+
+# Tests always read the vocabularies as currently published, never a copy kept from an
+# earlier run, so the cache of a test session starts empty. This runs when pytest loads
+# this file, before any test module loads the shipped schema.
+os.environ["GHFDB_VOCABULARY_CACHE"] = tempfile.mkdtemp(prefix="ghfdb-vocabularies-")
 
 
 def read_content(path: Path) -> dict[str, Any]:

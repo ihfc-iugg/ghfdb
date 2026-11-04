@@ -17,7 +17,7 @@ Importance is a tag on each goal, not a ranking:
 | ID | Goal | Importance | Status | Notes |
 |----|------|------------|--------|-------|
 | G1 | An assessor can check an upload template workbook and get every problem reported exactly as it is, with its Excel row and field | Essential | | |
-| G2 | Allowed values are always those of a stated release of the IHFC Controlled Vocabularies | Essential | | |
+| G2 | Allowed values are always those the IHFC Controlled Vocabularies currently publish at their permanent identifiers | Essential | | |
 | G3 | Preview quality scores agree with the GHFDB portal's for the same data | Essential | | |
 | G4 | Every validation rule and quality rule is documented and traceable to its source | Essential | | |
 | G5 | The documentation is the reference for the GHFDB validation rules and quality scheme, superseding Fuchs et al. (2023) | Essential | | |

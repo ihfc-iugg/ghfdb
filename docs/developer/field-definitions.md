@@ -4,8 +4,10 @@ The package ships what the GHFDB upload template records about each of its 70 fi
 field code and published column name, the title and meaning, the type, unit and range, the
 obligation, the domain, how the field enters the quality score, and the allowed values of
 every field that takes terms from a controlled vocabulary. Every fact names the source it was
-taken from. The definitions are read from a file inside the package, so loading them needs no
-network access.
+taken from. The definitions are read from a file inside the package. The allowed values of the
+vocabulary fields are read from the IHFC Controlled Vocabularies that the file links to. Their
+files are downloaded the first time you load the definitions and kept in a cache directory
+after that, so only the first load needs network access.
 
 ## Load the field definitions
 
@@ -25,8 +27,28 @@ network access.
    [field.code for field in schema][:3]         # ['P1', 'P2', 'P3']
    ```
 
-The result is a {py:class}`~ghfdb.fields.FieldSchema`. Its `release` attribute says which
-version of the IHFC Controlled Vocabularies the allowed values come from.
+The result is a {py:class}`~ghfdb.fields.FieldSchema`.
+
+Each vocabulary field links to the permanent identifier of its concept scheme, such as
+`https://w3id.org/ihfc-iugg/vocabularies/exploration-methods`. The scheme's file, at the
+identifier with `.ttl` added, is downloaded into `~/.cache/ghfdb/vocabularies` (or
+`$XDG_CACHE_HOME/ghfdb/vocabularies`) the first time it is needed. After that the server's
+`ETag` and `Cache-Control` decide whether the cached file is still current, so a change in the
+vocabularies reaches you without a fixed delay, and a cached file is used when you are offline. Set `GHFDB_VOCABULARY_CACHE` to keep the downloads in another directory, and
+delete the directory to refresh everything now. Call
+`ghfdb.fields.vocabularies.cache_directory()` to see which directory is in use.
+
+The downloads use the session `ghfdb.fields.vocabularies.caching_session()` builds. To use
+your own session, for example one behind a proxy, pass it in:
+
+```python
+from ghfdb.fields import FieldSchema, Vocabularies
+
+schema = FieldSchema.load(vocabularies=Vocabularies(my_session))
+```
+
+To get the whole schema as a Frictionless Table Schema, with an `enum` on every field that
+has allowed values, call `schema.descriptor()`. It builds the dictionary on each call.
 
 ## Look a field up
 
@@ -45,7 +67,7 @@ version of the IHFC Controlled Vocabularies the allowed values come from.
    field.name                      # 'Thermal conductivity method'
    field.obligation                # 'M'
    field.domain                    # ('B', 'S')
-   field.vocabulary.scheme_name    # 'conductivity-methods'
+   field.vocabulary.scheme  # 'https://w3id.org/ihfc-iugg/vocabularies/conductivity-methods'
    field.allowed_values[0].term    # the first term, as written in a cell
    field.sources["obligation"]     # 'upload-template'
    ```

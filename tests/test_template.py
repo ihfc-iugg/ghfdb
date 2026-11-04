@@ -12,7 +12,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 import ghfdb
 from ghfdb.fields import Field, FieldSchema
-from ghfdb.template import FIELD_REFERENCE, TemplateError, UploadTemplate
+from ghfdb.template import FIELD_REFERENCE, VOCABULARIES, TemplateError, UploadTemplate
 
 SOURCE = Path(__file__).parent / "sources" / "upload-template.xlsx"
 
@@ -244,14 +244,14 @@ class TestChoiceLists:
         bound = first_field(schema, lambda f: f.vocabulary is not None)
         broken = replace(bound, allowed_values=())
         fields = tuple(broken if f is bound else f for f in schema)
-        template = UploadTemplate(FieldSchema(schema.path, schema.release, fields))
+        template = UploadTemplate(FieldSchema(fields, schema.data))
 
         with pytest.raises(TemplateError, match=bound.code):
             template.workbook()
 
 
 class TestReadme:
-    def test_states_the_package_version_and_the_vocabulary_release(
+    def test_states_the_package_version_and_where_the_vocabularies_are(
         self, workbook: Workbook, schema: FieldSchema
     ) -> None:
         sheet = workbook["readme"]
@@ -259,8 +259,7 @@ class TestReadme:
         lines = [str(row[0].value or "") for row in sheet.iter_rows()]
 
         assert any(ghfdb.__version__ in line for line in lines)
-        assert any(schema.release.version in line for line in lines)
-        assert any(f"https://doi.org/{schema.release.doi}" in line for line in lines)
+        assert any(VOCABULARIES in line for line in lines)
         assert any(FIELD_REFERENCE in line for line in lines)
 
     def test_exposes_the_version_it_states(self) -> None:
@@ -311,7 +310,7 @@ class TestWrite:
         bound = first_field(schema, lambda f: f.vocabulary is not None)
         broken = replace(bound, allowed_values=())
         fields = tuple(broken if f is bound else f for f in schema)
-        template = UploadTemplate(FieldSchema(schema.path, schema.release, fields))
+        template = UploadTemplate(FieldSchema(fields, schema.data))
         path = tmp_path / "template.xlsx"
 
         with pytest.raises(TemplateError):

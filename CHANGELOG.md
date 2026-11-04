@@ -14,13 +14,17 @@ All notable changes to this project are recorded here. The format follows
   unit, range, obligation, domain, quality relevance and allowed values, each fact with its
   source. `FieldSchema.load()` reads them from a file shipped in the package, and a field is
   looked up by its code or its published column name.
-- The allowed values of the 25 fields that take terms from a controlled vocabulary, taken
-  from release 2026.1 of the IHFC Controlled Vocabularies.
-- `ghfdb.fields.release`, for maintainers, behind the optional `vocabularies` extra: it
-  reads a vocabulary release and rewrites the allowed values of the field definitions from it.
-- `python -m ghfdb.fields.release <version> <directory>`, which moves the field definitions
-  onto a newer vocabulary release, prints what changed in each field and adds a changelog
-  line. A test fails when the allowed values differ from the release the schema states.
+- The allowed values of the 25 fields that take terms from a controlled vocabulary, read
+  from the IHFC Controlled Vocabularies as currently published when the field definitions are
+  loaded. The field schema links each of these fields to the permanent identifier of its
+  concept scheme and, where it narrows the choice, its collection, and holds no term and no
+  version. Each scheme's file is downloaded from its identifier the first time it is needed and
+  downloaded again only when the server says it changed (`GHFDB_VOCABULARY_CACHE` changes where the
+  cache is). `requests` and `requests-cache` are now runtime dependencies.
+  `FieldSchema.descriptor()` builds the complete Frictionless Table Schema, with the allowed
+  values as `enum`, in memory.
+- `ghfdb.fields.Vocabularies`, which downloads and reads the vocabulary files. The tests read
+  the files as currently published, so they fail when the vocabularies change.
 - `ghfdb.template.UploadTemplate`, which generates the upload template from the field schema
   (the three sheets, description rows and choice lists) and writes it to a path without
   replacing an existing file unless asked.

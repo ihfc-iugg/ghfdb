@@ -1,3 +1,4 @@
+import json
 import re
 from dataclasses import replace
 from pathlib import Path
@@ -10,6 +11,7 @@ from extensions.field_reference import (
 )
 
 from ghfdb.fields import Field, FieldSchema
+from ghfdb.template import VOCABULARIES
 
 GITHUB_DECISIONS = "https://github.com/ihfc-iugg/ghfdb/blob/main/specs/001-field-reference/decisions.md"
 ALWAYS_SHOWN = (
@@ -112,15 +114,14 @@ class TestFieldReferenceEntries:
 
         assert "| Unit | — |" in section
 
-    def test_vocabulary_sources_name_the_release_and_link_its_doi(
+    def test_vocabulary_sources_link_the_published_vocabularies(
         self, schema: FieldSchema, reference: FieldReference
     ) -> None:
         field = schema["C43"]
 
         section = section_of(reference.entries(field.group), field)
 
-        label = f"[IHFC Controlled Vocabularies v{schema.release.version}]"
-        assert f"{label}(https://doi.org/{schema.release.doi})" in section
+        assert f"[IHFC Controlled Vocabularies]({VOCABULARIES})" in section
 
     def test_the_decision_source_links_to_the_recorded_decisions(
         self, schema: FieldSchema, reference: FieldReference
@@ -151,7 +152,7 @@ class TestVocabularyEntries:
     def vocabulary_fields(self, schema: FieldSchema) -> list[Field]:
         return [f for f in schema if f.vocabulary is not None]
 
-    def test_scheme_and_release_and_collection_are_named_and_linked(
+    def test_scheme_and_collection_are_named_and_linked(
         self, schema: FieldSchema, reference: FieldReference
     ) -> None:
         fields = self.vocabulary_fields(schema)
@@ -164,8 +165,6 @@ class TestVocabularyEntries:
             assert f"<{field.vocabulary.scheme}>" in section, field.code
             if field.vocabulary.collection is not None:
                 assert f"<{field.vocabulary.collection}>" in section, field.code
-            assert schema.release.version in section, field.code
-            assert f"https://doi.org/{schema.release.doi}" in section, field.code
 
     def test_every_allowed_term_is_linked_to_its_concept(
         self, schema: FieldSchema, reference: FieldReference
@@ -337,7 +336,7 @@ class TestCopySchema:
         copy_schema(schema, tmp_path)
 
         copied = tmp_path / "reference" / "fields" / "ghfdb-field-schema.json"
-        assert copied.read_bytes() == schema.path.read_bytes()
+        assert json.loads(copied.read_text(encoding="utf-8")) == schema.descriptor()
 
     def test_the_copy_is_ignored_by_git(self) -> None:
         root = Path(__file__).parents[3]

@@ -5,7 +5,7 @@ PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
 ex:colours
     a skos:ConceptScheme ;
-    dcterms:isPartOf <https://doi.org/10.0000/test.3> ;
+    dcterms:isPartOf <https://doi.org/10.0000/test.1> ;
     skos:prefLabel "Colours"@en ;
 .
 
@@ -13,6 +13,12 @@ ex:colours
     a skos:Collection ;
     skos:member :red , :orange ;
     skos:prefLabel "Warm colours"@en ;
+.
+
+:spectrum
+    a skos:OrderedCollection ;
+    skos:memberList ( :red :orange :green ) ;
+    skos:prefLabel "Spectrum"@en ;
 .
 
 :red

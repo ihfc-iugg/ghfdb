@@ -27,7 +27,7 @@ Everything needed for an assessor to check a workbook and preview its scores wit
 
 ### R1 — A field reference built from the published vocabularies
 
-*feature · advances G2, G4*
+*delivered in [#4](https://github.com/ihfc-iugg/ghfdb/issues/4) · advances G2, G4*
 
 Every field of the upload template is described once, in a form both people and software can
 read: its code, its published column name, what it means, its unit, whether it is mandatory, the
@@ -47,7 +47,7 @@ Serves G2 and G4. Out of scope: checking workbooks (R3), and the template itself
 
 ### R2 — A generated upload template
 
-*feature · advances G7, G2*
+*delivered in [#5](https://github.com/ihfc-iugg/ghfdb/issues/5) · advances G7, G2*
 
 The upload template is generated from the field reference rather than maintained by hand: its
 header of field codes, its description rows and a choice list for every vocabulary field. It

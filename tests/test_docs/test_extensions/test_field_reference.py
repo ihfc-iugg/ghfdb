@@ -1,16 +1,12 @@
 import json
 import re
-from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from extensions.field_reference import (
-    FieldReference,
-    copy_schema,
-    replace_markers,
-)
+from extensions.field_reference import FieldReference, copy_schema
+from frictionless import Field, Schema
 
-from ghfdb.fields import Field, FieldSchema
+from ghfdb.fields import Vocabularies, allowed_values
 from ghfdb.template import VOCABULARIES
 
 GITHUB_DECISIONS = "https://github.com/ihfc-iugg/ghfdb/blob/main/specs/001-field-reference/decisions.md"
@@ -28,18 +24,27 @@ ALWAYS_SHOWN = (
 
 
 @pytest.fixture(scope="module")
-def schema() -> FieldSchema:
-    return FieldSchema.load()
+def reference(schema: Schema, published_vocabularies: Vocabularies) -> FieldReference:
+    return FieldReference(schema, published_vocabularies)
 
 
-@pytest.fixture(scope="module")
-def reference(schema: FieldSchema) -> FieldReference:
-    return FieldReference(schema)
+def column_name(field: Field) -> str:
+    return str(field.custom["columnName"])
+
+
+def sources_of(field: Field) -> dict[str, str]:
+    sources: dict[str, str] = field.custom["sources"]
+    return sources
+
+
+def entries_of(reference: FieldReference, field: Field) -> str:
+    """Render the entries of the group a field belongs to."""
+    return reference.entries(field.custom["group"])
 
 
 def section_of(markdown: str, field: Field) -> str:
     """Return the text of one field's entry on a group's page."""
-    marker = f"(field-{field.code.lower()})=\n"
+    marker = f"(field-{field.name.lower()})=\n"
     start = markdown.index(marker)
     following = markdown.find("\n\n(field-", start + len(marker))
     return markdown[start:] if following == -1 else markdown[start:following]
@@ -48,89 +53,89 @@ def section_of(markdown: str, field: Field) -> str:
 class TestFieldReferenceEntries:
     @pytest.mark.parametrize("group", ["parent", "child", "assessment"])
     def test_each_field_has_one_entry_on_its_group_page_in_code_order(
-        self, schema: FieldSchema, reference: FieldReference, group: str
+        self, schema: Schema, reference: FieldReference, group: str
     ) -> None:
         markdown = reference.entries(group)
 
         codes = re.findall(r"^\(field-([a-z]\d+)\)=$", markdown, re.MULTILINE)
-        expected = [f.code.lower() for f in schema if f.group == group]
+        expected = [f.name.lower() for f in schema.fields if f.custom["group"] == group]
         assert codes == expected
 
     def test_the_three_groups_hold_all_seventy_fields(
-        self, schema: FieldSchema, reference: FieldReference
+        self, schema: Schema, reference: FieldReference
     ) -> None:
         total = sum(
             len(re.findall(r"^\(field-[a-z]\d+\)=$", reference.entries(g), re.M))
             for g in ("parent", "child", "assessment")
         )
 
-        assert total == len(schema) == 70
+        assert total == len(schema.fields) == 70
 
     def test_each_entry_has_a_target_for_its_code_and_for_its_column_name(
-        self, schema: FieldSchema, reference: FieldReference
+        self, schema: Schema, reference: FieldReference
     ) -> None:
-        for field in schema:
-            section = section_of(reference.entries(field.group), field)
+        for field in schema.fields:
+            section = section_of(entries_of(reference, field), field)
 
-            assert f"(field-{field.code.lower()})=\n" in section, field.code
-            assert f"(field-{field.column_name.lower()})=\n" in section, field.code
+            assert f"(field-{field.name.lower()})=\n" in section, field.name
+            assert f"(field-{column_name(field).lower()})=\n" in section, field.name
 
-    def test_no_two_fields_share_a_target(self, schema: FieldSchema) -> None:
-        targets = [f.code.lower() for f in schema]
-        targets += [f.column_name.lower() for f in schema]
+    def test_no_two_fields_share_a_target(self, schema: Schema) -> None:
+        targets = [f.name.lower() for f in schema.fields]
+        targets += [column_name(f).lower() for f in schema.fields]
 
         assert len(set(targets)) == len(targets)
 
     def test_the_heading_sits_one_level_below_the_page_title(
-        self, schema: FieldSchema, reference: FieldReference
+        self, schema: Schema, reference: FieldReference
     ) -> None:
-        for field in schema:
-            section = section_of(reference.entries(field.group), field)
+        for field in schema.fields:
+            section = section_of(entries_of(reference, field), field)
 
             headings = re.findall(r"^(#+) ", section, re.MULTILINE)
-            assert headings == ["##"], field.code
-            assert field.code in section.split("\n## ", 1)[1].split("\n", 1)[0]
+            assert headings == ["##"], field.name
+            assert field.name in section.split("\n## ", 1)[1].split("\n", 1)[0]
 
     def test_every_entry_names_its_column_name_and_links_each_decision_it_cites(
-        self, schema: FieldSchema, reference: FieldReference
+        self, schema: Schema, reference: FieldReference
     ) -> None:
-        for field in schema:
-            section = section_of(reference.entries(field.group), field)
+        for field in schema.fields:
+            section = section_of(entries_of(reference, field), field)
 
-            assert f"`{field.column_name}`" in section, field.code
+            assert f"`{column_name(field)}`" in section, field.name
             for key in ALWAYS_SHOWN:
-                source = field.sources[key]
+                source = sources_of(field)[key]
                 if source.startswith("decision:"):
                     label = source.removeprefix("decision:")
                     assert f"[Decision {label}]({GITHUB_DECISIONS})" in section
 
     def test_a_missing_fact_shows_an_em_dash(
-        self, schema: FieldSchema, reference: FieldReference
+        self, schema: Schema, reference: FieldReference
     ) -> None:
-        field = schema["C25"]
-        assert field.unit is None
+        field = schema.get_field("C25")
+        assert field.custom["unit"] is None
 
-        section = section_of(reference.entries(field.group), field)
+        section = section_of(entries_of(reference, field), field)
 
         assert "| Unit | — |" in section
 
     def test_vocabulary_sources_link_the_published_vocabularies(
-        self, schema: FieldSchema, reference: FieldReference
+        self, schema: Schema, reference: FieldReference
     ) -> None:
-        field = schema["C43"]
+        field = schema.get_field("C43")
 
-        section = section_of(reference.entries(field.group), field)
+        section = section_of(entries_of(reference, field), field)
 
         assert f"[IHFC Controlled Vocabularies]({VOCABULARIES})" in section
 
     def test_the_decision_source_links_to_the_recorded_decisions(
-        self, schema: FieldSchema, reference: FieldReference
+        self, schema: Schema, reference: FieldReference
     ) -> None:
-        field = schema["P1"]
-        decision = field.sources["type"]
+        field = schema.get_field("P1")
+        decision = sources_of(field)["type"]
         assert decision.startswith("decision:")
 
-        section = section_of(reference.entries(field.group), field)
+        section = section_of(entries_of(reference, field), field)
 
         label = decision.removeprefix("decision:")
         assert f"[Decision {label}]({GITHUB_DECISIONS})" in section
@@ -138,57 +143,68 @@ class TestFieldReferenceEntries:
 
 class TestFactOrder:
     def test_every_entry_opens_with_code_column_name_and_name_in_that_order(
-        self, reference: FieldReference, schema: FieldSchema
+        self, reference: FieldReference, schema: Schema
     ) -> None:
-        for field in schema:
-            values = [value for _, value, _ in reference.rows(field)[:3]]
+        for field in schema.fields:
+            section = section_of(entries_of(reference, field), field)
 
-            assert field.code in values[0], field.code
-            assert field.column_name in values[1], field.code
-            assert reference.cell(field.name) == values[2], field.code
+            rows = [line for line in section.splitlines() if line.startswith("| ")]
+            fact_names = [row.split(" | ")[0].removeprefix("| ") for row in rows]
+            assert fact_names[1:4] == ["Field code", "Published column name", "Name"]
+            code, column, name = (row.split(" | ")[1] for row in rows[1:4])
+            assert code == f"`{field.name}`", field.name
+            assert f"`{column_name(field)}`" in column, field.name
+            assert reference.cell(str(field.title)) == name, field.name
 
 
 class TestVocabularyEntries:
-    def vocabulary_fields(self, schema: FieldSchema) -> list[Field]:
-        return [f for f in schema if f.vocabulary is not None]
+    def vocabulary_fields(self, schema: Schema) -> list[Field]:
+        return [f for f in schema.fields if f.custom["vocabulary"] is not None]
 
     def test_scheme_and_collection_are_named_and_linked(
-        self, schema: FieldSchema, reference: FieldReference
+        self, schema: Schema, reference: FieldReference
     ) -> None:
         fields = self.vocabulary_fields(schema)
         assert fields
 
         for field in fields:
-            assert field.vocabulary is not None
-            section = section_of(reference.entries(field.group), field)
+            named = field.custom["vocabulary"]
+            section = section_of(entries_of(reference, field), field)
 
-            assert f"<{field.vocabulary.scheme}>" in section, field.code
-            if field.vocabulary.collection is not None:
-                assert f"<{field.vocabulary.collection}>" in section, field.code
+            assert f"<{named['scheme']}>" in section, field.name
+            if named["collection"] is not None:
+                assert f"<{named['collection']}>" in section, field.name
 
     def test_every_allowed_term_is_linked_to_its_concept(
-        self, schema: FieldSchema, reference: FieldReference
+        self,
+        schema: Schema,
+        reference: FieldReference,
+        published_vocabularies: Vocabularies,
     ) -> None:
         for field in self.vocabulary_fields(schema):
-            section = section_of(reference.entries(field.group), field)
+            section = section_of(entries_of(reference, field), field)
+            values = allowed_values(field, published_vocabularies)
 
-            assert field.allowed_values, field.code
-            for value in field.allowed_values:
+            assert values, field.name
+            for value in values:
                 assert value.uri is not None
                 assert f"[`{value.term}`]({value.uri})" in section, (
-                    field.code,
+                    field.name,
                     value.term,
                 )
 
     def test_a_fixed_value_is_listed_with_its_source(
-        self, schema: FieldSchema, reference: FieldReference
+        self,
+        schema: Schema,
+        reference: FieldReference,
+        published_vocabularies: Vocabularies,
     ) -> None:
         for code in ("P9", "C9"):
-            field = schema[code]
-            assert field.vocabulary is None
-            section = section_of(reference.entries(field.group), field)
+            field = schema.get_field(code)
+            assert field.custom["vocabulary"] is None
+            section = section_of(entries_of(reference, field), field)
 
-            for value in field.allowed_values:
+            for value in allowed_values(field, published_vocabularies):
                 assert f"`{value.term}`" in section, code
                 assert f"[`{value.term}`](" not in section, code
             assert "Fuchs et al. (2023), Appendix A" in section
@@ -197,74 +213,80 @@ class TestVocabularyEntries:
 class TestSeparatorsAndEarlierSpellings:
     @pytest.mark.parametrize("code", ["C25", "C26", "C49"])
     def test_a_field_with_a_separator_gives_it(
-        self, schema: FieldSchema, reference: FieldReference, code: str
+        self, schema: Schema, reference: FieldReference, code: str
     ) -> None:
-        field = schema[code]
-        assert field.separator is not None
+        field = schema.get_field(code)
+        assert field.custom["separator"] is not None
 
-        section = section_of(reference.entries(field.group), field)
+        section = section_of(entries_of(reference, field), field)
 
-        assert f"`{field.separator}`" in section
+        assert f"`{field.custom['separator']}`" in section
 
     def test_a_field_without_a_separator_says_nothing_of_one(
-        self, schema: FieldSchema, reference: FieldReference
+        self, schema: Schema, reference: FieldReference
     ) -> None:
-        field = schema["P1"]
-        assert field.separator is None
+        field = schema.get_field("P1")
+        assert field.custom["separator"] is None
 
-        section = section_of(reference.entries(field.group), field)
+        section = section_of(entries_of(reference, field), field)
 
         assert "separat" not in section.lower()
 
     @pytest.mark.parametrize("code", ["C46", "C49"])
     def test_an_earlier_spelling_is_given(
-        self, schema: FieldSchema, reference: FieldReference, code: str
+        self, schema: Schema, reference: FieldReference, code: str
     ) -> None:
-        field = schema[code]
-        assert field.earlier_column_names
+        field = schema.get_field(code)
+        assert field.custom["earlierColumnNames"]
 
-        section = section_of(reference.entries(field.group), field)
+        section = section_of(entries_of(reference, field), field)
 
-        for earlier in field.earlier_column_names:
+        for earlier in field.custom["earlierColumnNames"]:
             assert f"`{earlier}`" in section
 
     def test_guidance_is_given_when_the_field_has_it(
-        self, schema: FieldSchema, reference: FieldReference
+        self, schema: Schema, reference: FieldReference
     ) -> None:
-        field = schema["C25"]
-        assert field.guidance is not None
+        field = schema.get_field("C25")
+        assert field.custom["guidance"] is not None
 
-        section = section_of(reference.entries(field.group), field)
+        section = section_of(entries_of(reference, field), field)
 
         assert "http://resource.geosciml.org/classifier/cgi/lithology" in section
 
     def test_range_is_shown_for_a_bounded_number(
-        self, schema: FieldSchema, reference: FieldReference
+        self, schema: Schema, reference: FieldReference
     ) -> None:
-        field = schema["P1"]
+        field = schema.get_field("P1")
+        low, high = field.constraints["minimum"], field.constraints["maximum"]
 
-        section = section_of(reference.entries(field.group), field)
+        section = section_of(entries_of(reference, field), field)
 
-        assert f"{field.minimum} to {field.maximum}" in section
+        assert f"{low} to {high}" in section
 
     def test_value_format_is_shown(
-        self, schema: FieldSchema, reference: FieldReference
+        self, schema: Schema, reference: FieldReference
     ) -> None:
-        field = schema["C38"]
-        assert field.value_format is not None
+        field = schema.get_field("C38")
+        assert field.custom["valueFormat"] is not None
 
-        section = section_of(reference.entries(field.group), field)
+        section = section_of(entries_of(reference, field), field)
 
-        assert f"`{field.value_format}`" in section
+        assert f"`{field.custom['valueFormat']}`" in section
 
 
 class TestTableCells:
     def test_a_pipe_in_a_fact_is_escaped_once(
-        self, reference: FieldReference, schema: FieldSchema
+        self, schema: Schema, published_vocabularies: Vocabularies
     ) -> None:
-        field = replace(schema["C43"], meaning="left | right")
+        descriptor = schema.to_descriptor()
+        entry = next(f for f in descriptor["fields"] if f["name"] == "C43")
+        entry["description"] = "left | right"
+        reference = FieldReference(
+            Schema.from_descriptor(descriptor), published_vocabularies
+        )
 
-        markdown = reference.entry(field)
+        markdown = reference.entries("child")
 
         assert "left \\| right" in markdown
         assert "\\\\|" not in markdown
@@ -272,7 +294,7 @@ class TestTableCells:
 
 class TestFieldIndex:
     def test_one_row_per_field_in_order_linking_code_and_column_name(
-        self, schema: FieldSchema, reference: FieldReference
+        self, schema: Schema, reference: FieldReference
     ) -> None:
         rows = [
             line
@@ -280,63 +302,57 @@ class TestFieldIndex:
             if line.startswith("| {ref}")
         ]
 
-        assert len(rows) == len(schema) == 70
-        for field, row in zip(schema, rows, strict=True):
-            code = f"{{ref}}`{field.code} <field-{field.code.lower()}>`"
-            column = f"{{ref}}`{field.column_name} <field-{field.column_name.lower()}>`"
-            assert code in row, field.code
-            assert column in row, field.code
-            assert field.name in row.replace("\\", ""), field.code
+        assert len(rows) == len(schema.fields) == 70
+        for field, row in zip(schema.fields, rows, strict=True):
+            name = column_name(field)
+            code = f"{{ref}}`{field.name} <field-{field.name.lower()}>`"
+            column = f"{{ref}}`{name} <field-{name.lower()}>`"
+            assert code in row, field.name
+            assert column in row, field.name
+            assert str(field.title) in row.replace("\\", ""), field.name
 
     def test_a_pipe_in_a_cell_is_escaped(self, reference: FieldReference) -> None:
         assert reference.cell("a|b") == "a\\|b"
 
 
-class TestReplaceMarkers:
-    def test_the_index_marker_line_is_replaced(self, reference: FieldReference) -> None:
-        text = "# Title\n\n{field-index}\n\nafter\n"
+class TestRender:
+    def test_the_index_call_is_replaced_by_the_index(
+        self, reference: FieldReference
+    ) -> None:
+        text = "# Title\n\n{{ index() }}\n\nafter\n"
 
-        result = replace_markers(text, reference)
+        result = reference.render(text)
 
-        assert "{field-index}" not in result
+        assert "index()" not in result
         assert result.startswith("# Title\n")
         assert result.endswith("\nafter\n")
         assert reference.index() in result
 
     @pytest.mark.parametrize("group", ["parent", "child", "assessment"])
-    def test_an_entries_marker_is_replaced_by_that_groups_entries(
+    def test_an_entries_call_is_replaced_by_that_groups_entries(
         self, reference: FieldReference, group: str
     ) -> None:
-        text = f"# Title\n\n{{field-entries}} {group}\n"
+        text = f'# Title\n\n{{{{ entries("{group}") }}}}\n'
 
-        result = replace_markers(text, reference)
+        result = reference.render(text)
 
-        assert "{field-entries}" not in result
+        assert "entries(" not in result
         assert reference.entries(group) in result
 
-    def test_a_marker_inside_a_line_is_left_alone(
-        self, reference: FieldReference
-    ) -> None:
-        text = "Write `{field-index}` where the table goes.\n"
-
-        assert replace_markers(text, reference) == text
-
-    def test_a_page_without_markers_is_unchanged(
-        self, reference: FieldReference
-    ) -> None:
+    def test_a_page_without_calls_is_unchanged(self, reference: FieldReference) -> None:
         text = "# Plain\n\nNothing to do.\n"
 
-        assert replace_markers(text, reference) == text
+        assert reference.render(text) == text
 
 
 class TestCopySchema:
     def test_the_schema_file_is_copied_into_the_documentation_source(
-        self, schema: FieldSchema, tmp_path: Path
+        self, schema: Schema, tmp_path: Path
     ) -> None:
         copy_schema(schema, tmp_path)
 
         copied = tmp_path / "reference" / "fields" / "ghfdb-field-schema.json"
-        assert json.loads(copied.read_text(encoding="utf-8")) == schema.descriptor()
+        assert json.loads(copied.read_text(encoding="utf-8")) == schema.to_descriptor()
 
     def test_the_copy_is_ignored_by_git(self) -> None:
         root = Path(__file__).parents[3]

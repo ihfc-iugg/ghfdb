@@ -30,10 +30,10 @@ fact with its source. The first load downloads the vocabularies the definitions 
 and keeps them in a cache directory.
 
 ```python
-from ghfdb.fields import FieldSchema
+from ghfdb.fields import field_for_column, load_schema
 
-schema = FieldSchema.load()
-print(schema["tc_method"].allowed_values[0].term)  # or schema["C43"]
+schema = load_schema()  # a frictionless.Schema
+print(field_for_column(schema, "tc_method").constraints["enum"][0])  # or "C43"
 ```
 
 See the [developer guide](https://ihfc-iugg.github.io/ghfdb/developer/field-definitions.html).

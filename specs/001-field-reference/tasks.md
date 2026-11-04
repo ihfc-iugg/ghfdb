@@ -15,7 +15,7 @@ leaves the tree green.
 
 ## Phase 1: User Story 2 - A developer loads the field definitions (Priority: P1)
 
-**Goal**: `FieldSchema.load()` returns all 70 fields, looked up by field code or published column
+**Goal**: `load_schema()` returns all 70 fields, looked up by field code or published column
 name, with every fact and its source, from a valid Frictionless Table Schema shipped in the package.
 
 **Independent Test**: load the field definitions, look fields up by code and by
@@ -23,17 +23,17 @@ column name, and validate the complete Table Schema built from `schema.json` wit
 
 ### Group 1 — dependencies, the test sources, and reading the vocabularies
 
-- [ ] T001 [US2] `pyproject.toml`: runtime dependency `rdflib>=7`; development
-  dependencies `frictionless>=5`, `openpyxl>=3.1`; documentation dependency
-  `types-openpyxl`; documentation dependency `sphinxcontrib-mermaid>=1`; `docs` added to mypy's `files` and to pytest's `pythonpath`; `uv lock`.
+- [ ] T001 [US2] `pyproject.toml`: runtime dependencies `frictionless>=5`, `platformdirs>=4`,
+  `rdflib>=7`; development dependencies `openpyxl>=3.1`, `responses>=0.25`, `types-openpyxl`;
+  documentation dependencies `jinja2>=3.1`, `sphinxcontrib-mermaid>=1`; `docs` added to mypy's `files` and to pytest's `pythonpath`; `uv lock`.
   deptry stays clean.
 - [ ] T002 [US2] Copy the current upload template into `tests/sources/upload-template.xlsx`. The
   vocabulary files are never copied into the repository.
-- [ ] T003 [US2] `ghfdb/fields/vocabularies.py`: the frozen dataclasses `VocabularyBinding` and
-  `AllowedValue` (plan.md, "`ghfdb.fields.vocabularies`").
+- [ ] T003 [US2] `ghfdb/fields/vocabularies.py`: the frozen dataclass `AllowedValue`
+  (plan.md, "`ghfdb.fields.schema`").
 - [ ] T004 [US2] `ghfdb/fields/vocabularies.py`: `Vocabularies`, `MissingSchemeError`, the cache
   directory and the download of `<scheme>.ttl` through a `requests-cache` session that
-  revalidates with the server's `ETag` and `Cache-Control`. `allowed_values(binding)` reads the file named for the scheme,
+  revalidates with the server's `ETag` and `Cache-Control`. `allowed_values(vocabulary)` reads the file named for the scheme,
   checks the scheme and collection identifiers are defined in it, and returns the scheme's
   concepts, or the collection's members, each as an `AllowedValue` with its term written per D-20
   and sorted per D-21 (an ordered collection keeps its order). It raises `MissingSchemeError`
@@ -42,10 +42,11 @@ column name, and validate the complete Table Schema built from `schema.json` wit
 
 ### Group 2 — loading and looking up
 
-- [ ] T006 [US2] `FieldSchema.load(path=None, vocabularies=None)` reading the packaged `schema.json` through
-  `importlib.resources` and resolving each vocabulary field against the vocabularies, `fields` in file order, iteration, `len`, and `__getitem__` by field code
-  or published column name. `UnknownFieldError(KeyError)` names the key. `descriptor()` builds the complete Table Schema in
-  memory. Tested on a small test schema file and small test vocabularies.
+- [ ] T006 [US2] `load_schema(path=None, vocabularies=None)` reading the packaged `schema.json` through
+  `importlib.resources` and `Schema.from_descriptor`, and giving each field that has allowed values an `enum`
+  from the vocabularies; `allowed_values(field, vocabularies)`; and `field_for_column(schema, name)`, which
+  raises `KeyError` naming the name. The complete Table Schema is the loaded schema. Tested on a small test
+  schema file and small test vocabularies.
 - [ ] T007 [US2] `ghfdb/fields/__init__.py` re-exports the public names.
 
 ### Group 3 — the 70 fields
@@ -58,7 +59,7 @@ column name, and validate the complete Table Schema built from `schema.json` wit
 - [ ] T009 [US2] Tests on the shipped schema: 70 fields, field-code order, unique codes and
   column names; every fact sourced to the template equals `tests/sources/upload-template.xlsx`
   (with D-2, D-12, D-13, D-16 and D-17 applied); the `sources` keys of every field are exactly the keys of plan.md's
-  source table, iterated from that table and not from the file, every source is a known code, and every `decision:D-<n>` exists in `decisions.md`; `missingValues` is `[""]`; the file holds no `enum` and the complete descriptor's `enum` equals
+  source table, iterated from that table and not from the file, every source is a known code, and every `decision:D-<n>` exists in `decisions.md`; `missingValues` is `[""]`; the file holds no `enum` and the loaded schema's `enum` equals
   the allowed terms wherever a field has allowed values; the file equals its own serialization;
   the file and the complete descriptor are valid Table Schemas to `frictionless`.
 - [ ] T010 [US2] Documentation: `sphinx.ext.autodoc` and `sphinxcontrib.mermaid` registered in

@@ -8,22 +8,25 @@
 ## Summary
 
 A new subpackage, `ghfdb.fields`, ships the field schema as one hand-written Frictionless Table
-Schema file and loads it into frozen dataclasses. Every fact in the file is written by hand with
+Schema file and loads it with Frictionless into a `frictionless.Schema`. Every fact in the file is written by hand with
 its source. The file states no release or version of the vocabularies. Each of the 25 vocabulary
 fields links to the permanent identifier of its concept scheme, and of its collection where there
 is one, and holds no term. When the schema is loaded, each scheme's Turtle file is downloaded from
 its identifier with `.ttl` added into a cache directory outside the repository, read with
-`rdflib`, and each vocabulary field gets its allowed values from it. The complete Table Schema with
-an `enum` on each field is built in memory. A Sphinx extension renders the field reference from
-the loaded schema while the documentation builds, so the two cannot disagree.
+`rdflib`, and each vocabulary field gets its allowed values from it. The loaded schema has an
+`enum` on each field that has allowed values, in memory only. A Sphinx extension renders the field
+reference from the loaded schema with Jinja2 templates while the documentation builds, so the two
+cannot disagree.
 
 ## Technical Context
 
 **Language/Version**: Python 3.12+
 
-**Primary Dependencies**: `rdflib>=7` (reading the vocabularies). Development:
-`frictionless>=5` (independent schema validation), `openpyxl>=3.1` (reading the template in
-tests). Documentation: `sphinxcontrib-mermaid>=1`.
+**Primary Dependencies**: `frictionless>=5` (reading and validating the schema), `rdflib>=7`
+(reading the vocabularies), `requests` and `requests-cache` (downloading them), `platformdirs`
+(the cache directory). Development: `openpyxl>=3.1` (reading the template in tests), `responses`
+(a stand-in for the web). Documentation: `jinja2>=3.1` (the field reference templates),
+`sphinxcontrib-mermaid>=1`.
 
 **Storage**: `ghfdb/fields/schema.json` (package data); the vocabulary files, downloaded into a
 cache directory outside the repository, one per scheme; `tests/sources/upload-template.xlsx`
@@ -45,13 +48,13 @@ warnings as errors.
 | Article | How this plan meets it |
 |---|---|
 | I Testing | Test-first per `docs/contributing/standards/testing.md`. No test asserts wording or layout. |
-| II Simplicity | One JSON file, read with `json`. No second source format, no build step for the schema. |
-| III Anti-Abstraction | No base classes. `FieldSchema` and `Vocabularies` are the classes with behaviour; the rest are frozen dataclasses. |
+| II Simplicity | One JSON file, read by Frictionless. No second source format, no build step for the schema, and no class restating Frictionless's own. |
+| III Anti-Abstraction | No base classes and no wrapper around the Frictionless schema. `Vocabularies` is the class with behaviour; the functions that work on a `frictionless.Schema` are module-level because the type is not ours to extend. |
 | IV Integration-First | The field definitions are tested the way a developer meets them: load, look up, read. The reading is tested on small test vocabularies and on the real published ones. |
 | V Security & data-safety | No workbook is read. A file is downloaded over HTTPS from the scheme's identifier. The template copy in `tests/sources/` is opened read-only, formulas not evaluated (`data_only=True`). |
 | VI Documentation | README, `CHANGELOG.md`, `CONTEXT.md` and the documentation change in the same pull request. |
-| VII Dependency discipline | `rdflib` is a runtime dependency, because loading the field schema reads the vocabularies; the reason is stated in the pull request. |
-| VIII Cohesion | Lookup and loading live on `FieldSchema`; reading the vocabularies and computing allowed values live on `Vocabularies`. |
+| VII Dependency discipline | `frictionless` reads the schema, `rdflib` reads the vocabularies, and `requests-cache` and `platformdirs` download and place them, each in place of code this repository would otherwise own. deptry passes. |
+| VIII Cohesion | Reading the vocabularies and computing allowed values live on `Vocabularies`. The three functions that work on a `frictionless.Schema` (load, allowed values of a field, find by column name) are standalone because Frictionless's classes are not ours. |
 | IX Every rule names its source | Every fact of every field carries its source; a test fails a fact without one. |
 | X Rules, examples, code together | Not a validation rule or scoring change; no **Scheme changes** entry. |
 | XI Vocabulary from the published vocabularies | Allowed values are read from the published vocabularies at load time and never written to a file; tests start with an empty cache, so they read the files as currently published and fail when the vocabularies change. |
@@ -77,12 +80,14 @@ specs/001-field-reference/
 ```text
 ghfdb/fields/
 ├── __init__.py        # re-exports the public names
-├── schema.py          # FieldSchema, Field
+├── schema.py          # load_schema, allowed_values, field_for_column
 ├── schema.json        # the field schema, written by hand
-└── vocabularies.py    # VocabularyBinding, AllowedValue, Vocabularies, MissingSchemeError
+└── vocabularies.py    # AllowedValue, Vocabularies, caching_session, MissingSchemeError
 
 docs/
-├── extensions/field_reference.py
+├── extensions/
+│   ├── field_reference.py
+│   └── templates/field_reference.md.jinja
 ├── reference/
 │   ├── index.md
 │   ├── python-api.md
@@ -96,6 +101,7 @@ docs/
 
 tests/
 ├── sources/upload-template.xlsx
+├── example_site.py       # the example site that serves the test vocabularies
 ├── test_fields/
 │   ├── __init__.py
 │   ├── test_schema.py
@@ -158,26 +164,26 @@ A Frictionless Table Schema (research.md, "Frictionless Table Schema shape"):
   `allowedValues` (only the hand-written values of P9 and C9), `separator` (D-23), `guidance` (D-5, D-22), `sources`.
 - **`constraints`** holds `minimum`/`maximum` from the template's range (D-17), `maxLength: 255`
   for `Char (255)` fields, `pattern` for a format, and `enum` for a single-valued field with
-  allowed values (the vocabulary fields and P9, C9), which `FieldSchema.descriptor()` adds in
+  allowed values (the vocabulary fields and P9, C9), which `load_schema()` adds in
   memory and the file never holds. For C38, `pattern` accepts `YYYY-MM` or
   `[Unspecified]` (D-18).
 - **`sources`** has exactly one key per fact, every field, each a source code: `upload-template`,
   `fuchs-2023-appendix-a`, `vocabularies`, or `decision:D-<n>`. A fact the field does not
-  record (`unit: null`) still names where its absence comes from. The keys, one per `Field`
-  attribute other than `sources`, are fixed by this table, which the source test iterates:
+  record (`unit: null`) still names where its absence comes from. The keys, one per property of
+  the field other than `sources`, are fixed by this table, which the source test iterates:
 
-  | `Field` attribute | `sources` key |
+  | Property | `sources` key |
   |---|---|
-  | `code` | `code` |
-  | `column_name`, `earlier_column_names` | `columnName`, `earlierColumnNames` |
+  | `name` (the field code) | `code` |
+  | `columnName`, `earlierColumnNames` | `columnName`, `earlierColumnNames` |
   | `group` | `group` |
-  | `name`, `meaning` | `name`, `meaning` |
-  | `type`, `decimal_places`, `max_length` | `type`, `decimalPlaces`, `maxLength` |
-  | `unit`, `value_format` | `unit`, `valueFormat` |
-  | `obligation`, `domain`, `quality_relevance` | `obligation`, `domain`, `qualityRelevance` |
-  | `minimum`, `maximum` | `range` |
+  | `title`, `description` | `name`, `meaning` |
+  | `type`, `decimalPlaces`, `constraints.maxLength` | `type`, `decimalPlaces`, `maxLength` |
+  | `unit`, `valueFormat` | `unit`, `valueFormat` |
+  | `obligation`, `domain`, `qualityRelevance` | `obligation`, `domain`, `qualityRelevance` |
+  | `constraints.minimum`, `constraints.maximum` | `range` |
   | `vocabulary` | `vocabulary` (the binding) and `termForm` |
-  | `allowed_values` | `allowedValues` |
+  | `allowedValues`, `constraints.enum` | `allowedValues` |
   | `separator`, `guidance` | `separator`, `guidance` |
 - **Fixed allowed values** (P9, C9) are `{"term": "[Yes]", "uri": null, "label": "Yes",
   "notation": null}` and the field's `vocabulary` is `null`; their source is
@@ -196,13 +202,15 @@ A Frictionless Table Schema (research.md, "Frictionless Table Schema shape"):
 
 ### `ghfdb.fields.schema`
 
-```python
-@dataclass(frozen=True)
-class VocabularyBinding:
-    scheme: str                        # permanent identifier of the concept scheme
-    collection: str | None             # permanent identifier of the collection, or None
-    term_form: Literal["label", "notation"]
+The loaded schema is a `frictionless.Schema`. Its fields are Frictionless fields: `name` is the
+field code, `title` the name, `description` the meaning, `type`, and `constraints` hold the range,
+length, pattern and `enum`. Every other fact is in the field's `custom` dictionary under the key
+the file gives it (`columnName`, `earlierColumnNames`, `group`, `decimalPlaces`, `unit`,
+`valueFormat`, `obligation`, `domain`, `qualityRelevance`, `vocabulary`, `separator`, `guidance`,
+`sources`). The vocabulary object is read as it is written in the file: `scheme`, `collection` and
+`termForm`.
 
+```python
 @dataclass(frozen=True)
 class AllowedValue:
     term: str
@@ -210,62 +218,37 @@ class AllowedValue:
     uri: str | None
     notation: str | None
 
-@dataclass(frozen=True)
-class Field:
-    code: str
-    column_name: str
-    earlier_column_names: tuple[str, ...]
-    group: Literal["parent", "child", "assessment"]
-    name: str
-    meaning: str
-    type: str
-    decimal_places: int | None
-    unit: str | None
-    value_format: str | None
-    obligation: Literal["M", "R", "O"] | None
-    domain: tuple[str, ...]
-    quality_relevance: str | None
-    minimum: float | None
-    maximum: float | None
-    max_length: int | None
-    vocabulary: VocabularyBinding | None
-    allowed_values: tuple[AllowedValue, ...]
-    separator: str | None
-    guidance: str | None
-    sources: Mapping[str, str]
+def load_schema(path: Path | None = None,
+                vocabularies: Vocabularies | None = None) -> Schema: ...
+    # default: the packaged file; gives each field that has allowed values an enum
 
-class UnknownFieldError(KeyError):
-    """Raised for a field code or published column name the schema does not hold."""
+def allowed_values(field: Field, vocabularies: Vocabularies) -> tuple[AllowedValue, ...]: ...
+    # the values of the field's vocabulary, else the hand-written ones, else ()
 
-class FieldSchema:
-    data: Mapping[str, Any]            # the schema file as written, without allowed values
-    fields: tuple[Field, ...]          # field-code order
-
-    @classmethod
-    def load(cls, path: Path | None = None,
-             vocabularies: Vocabularies | None = None) -> FieldSchema: ...  # default: the packaged file
-    def __getitem__(self, key: str) -> Field: ...   # field code or published column name
-    def __iter__(self) -> Iterator[Field]: ...
-    def __len__(self) -> int: ...
+def field_for_column(schema: Schema, column_name: str) -> Field: ...   # KeyError naming the name
 ```
 
-- `load()` reads the packaged file with `importlib.resources`, so it works from a wheel. It takes
-  the vocabulary files from the cache, downloading them on first use, or from the `Vocabularies`
-  it is given (FR-010).
-- `descriptor()` builds the complete Table Schema in memory (FR-019).
-- `__getitem__` raises `UnknownFieldError` whose message names the key asked for (US2 scenario 3).
-- `ghfdb.fields` re-exports `FieldSchema`, `Field`, `AllowedValue`, `VocabularyBinding`,
-  `Vocabularies`, `MissingSchemeError` and `UnknownFieldError`.
+- `load_schema()` reads the packaged file with `importlib.resources`, so it works from a wheel,
+  passes it to `Schema.from_descriptor`, and takes the vocabulary files from the cache,
+  downloading them on first use, or from the `Vocabularies` it is given (FR-010).
+- The complete Table Schema (FR-019) is the loaded schema: `schema.to_descriptor()` and
+  `schema.to_json(path)` write it with the `enum` on every field that has allowed values.
+- A field is looked up by its code with `Schema.get_field`, and by its published column name with
+  `field_for_column`.
+- `ghfdb.fields` re-exports `load_schema`, `allowed_values`, `field_for_column`, `AllowedValue`,
+  `Vocabularies`, `caching_session` and `MissingSchemeError`.
 
 ### `ghfdb.fields.vocabularies`
 
 ```python
 class Vocabularies:
     """The vocabulary files a field schema points at, cached on disk."""
-    def __init__(self, cache: Path | None = None) -> None: ...
-    def allowed_values(self, binding: VocabularyBinding) -> tuple[AllowedValue, ...]: ...
+    def __init__(self, session: Session | None = None) -> None: ...
+    def allowed_values(self, vocabulary: Mapping[str, str | None]) -> tuple[AllowedValue, ...]: ...
         # raises MissingSchemeError(scheme or collection identifier) when the file lacks it
     def graph(self, scheme: str) -> Graph: ...     # downloads <scheme>.ttl when absent or old
+
+def caching_session(directory: Path | None = None) -> Session: ...
 
 class MissingSchemeError(LookupError):
     """Names the field code and the scheme or collection that is not defined."""
@@ -277,28 +260,28 @@ class MissingSchemeError(LookupError):
   `CachedSession` (filesystem backend, `cache_control=True`, `expire_after=0`,
   `stale_if_error=True`, two retries on 502, 503 and 504). The server's `ETag`, `Last-Modified`
   and `Cache-Control` decide freshness, so an unchanged file costs a `304` and no fixed expiry
-  hides a change. The cache is `$GHFDB_VOCABULARY_CACHE`, else `ghfdb/vocabularies` in the
-  user's cache directory. `Vocabularies` takes a session, so tests use an in-memory one.
+  hides a change. The cache is `vocabularies` in `platformdirs.user_cache_dir("ghfdb")`, or the
+  directory passed to `caching_session`. `Vocabularies` takes a session.
 - `rdflib` is imported by this module, which `ghfdb.fields` imports.
 
 ### The vocabulary checks (FR-017)
 
-The test session's cache starts empty (`tests/conftest.py`), so the tests load the shipped schema
-against the files as currently published. One test checks that every scheme and collection the
+The cache of the test session starts empty, in a temporary directory (`tests/conftest.py`), so the
+tests load the shipped schema against the files as currently published. One test checks that every scheme and collection the
 schema links to is defined in its file. Small synthetic vocabularies under
-`tests/test_fields/vocabularies/` cover the reading itself, including ordered collections, and a
-fake site (a transport adapter on an in-memory cached session) stands in for the web to cover the
-download, revalidation with the `ETag`, a changed file, an unreachable server and a failed or
-non-Turtle download.
+`tests/test_fields/vocabularies/` cover the reading itself, including ordered collections, and `responses`
+stands in for the web to cover the download, revalidation with the `ETag`, a changed file, an
+unreachable server and a failed or non-Turtle download.
 
 ### The documentation
 
 - `docs/conf.py` puts `docs` on `sys.path` and lists `extensions.field_reference`,
   `sphinx.ext.autodoc` and `sphinxcontrib.mermaid`.
-- `docs/extensions/field_reference.py` connects to `source-read` and
-  replaces a marker line in a page (`{field-index}`, `{field-entries} parent`) with Markdown
-  generated from `FieldSchema.load()`. On `builder-inited` it writes the complete Table Schema,
-  `FieldSchema.descriptor()`, into the
+- `docs/extensions/field_reference.py` connects to `source-read` and renders the pages under
+  `reference/fields/` as Jinja2 templates. A page calls `index()` or `entries("parent")`, which
+  are macros in `docs/extensions/templates/field_reference.md.jinja`, and the Markdown comes from
+  the schema `load_schema()` returns. On `builder-inited` it writes the complete Table Schema,
+  `schema.to_json()`, into the
   documentation source as a download (`docs/reference/fields/ghfdb-field-schema.json`, listed in `.gitignore`), and the opening
   page links to it with `{download}`.
 - **Each entry** is a section headed with the field code, column name and name, preceded by two
@@ -331,12 +314,14 @@ non-Turtle download.
 - `README.md`: one paragraph and a three-line example of loading the field definitions, linking
   to the reference.
 - `CHANGELOG.md`: under Unreleased → Added.
-- `pyproject.toml`: the `rdflib` dependency, the development and documentation dependencies,
-  `docs` in mypy's files and pytest's `pythonpath`, `types-openpyxl`.
+- `pyproject.toml`: the `frictionless`, `platformdirs`, `rdflib`, `requests` and `requests-cache`
+  dependencies, the development and documentation dependencies, `docs` in mypy's files and
+  pytest's `pythonpath`, `types-openpyxl`.
 
 ## Complexity Tracking
 
 | Choice | Why it is needed | Simpler alternative rejected because |
 |---|---|---|
+| Dependency `frictionless` | It reads the schema into types that already exist, validates it, and writes it back out | Dataclasses restating its fields, and a loader, would be code to keep in step with the file |
 | Dependency `rdflib` | Parsing Turtle and SKOS by hand is a parser this repository would own | Parsing N-Triples with a regular expression handles one format, and every SKOS query would be hand-written |
 | A Sphinx extension | The reference must never disagree with the schema (FR-013) | Committed generated pages need a second check that they are current, and can drift between runs |

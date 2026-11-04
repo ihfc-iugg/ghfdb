@@ -13,8 +13,10 @@ A concept scheme is published at its identifier with `.ttl` added. For
 `https://w3id.org/ihfc-iugg/vocabularies/exploration-methods.ttl`. The package downloads the file
 the first time a field needs it and keeps it in a cache directory outside the repository:
 
-- `$GHFDB_VOCABULARY_CACHE` when that variable is set
-- otherwise `$XDG_CACHE_HOME/ghfdb/vocabularies`, or `~/.cache/ghfdb/vocabularies`
+- the `vocabularies` directory in the user cache directory for `ghfdb`, which
+  [platformdirs](https://platformdirs.readthedocs.io) finds for the operating system
+  (`~/.cache/ghfdb/vocabularies` on Linux)
+- or the directory you pass to `ghfdb.fields.caching_session()`
 
 The downloads go through a caching HTTP session (`requests-cache`). The server's `ETag`,
 `Last-Modified` and `Cache-Control` headers decide freshness, and no fixed expiry hides a change:

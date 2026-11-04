@@ -1,3 +1,3 @@
 # Child fields
 
-{field-entries} child
+{{ entries("child") }}

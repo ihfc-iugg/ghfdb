@@ -9,8 +9,9 @@ FS-001 was delivered after this specification was written. Read side by side:
 
 - **The open risk is closed.** The field schema carries obligation, domain, quality relevance,
   name, published column name, unit and range for every field, so every description row can be
-  generated (`Field.obligation`, `Field.domain`, `Field.quality_relevance`, `Field.name`,
-  `Field.column_name`, `Field.unit`, `Field.minimum`/`maximum`, `Field.value_format`).
+  generated (`custom["obligation"]`, `custom["domain"]`, `custom["qualityRelevance"]`, `title`,
+  `custom["columnName"]`, `custom["unit"]`, `constraints["minimum"]`/`["maximum"]`,
+  `custom["valueFormat"]` of each Frictionless field).
 - **70 fields, not 62.** The schema holds the assessment fields `A1`–`A8` (FS-001 D-1), so row 1
   of `data list` holds `ID` and 70 field codes. The assessment fields have no obligation (D-14).
 - **Two fields have a fixed set of values and no vocabulary.** P9 and C9 take `[Yes]`, `[No]` or
@@ -24,8 +25,8 @@ FS-001 was delivered after this specification was written. Read side by side:
 - **Two published column names are spelled correctly** (`tc_pT_function`, `Ref_IGSN`, D-2), and
   quality relevance is written `U-score`, `M-score`, `perturbation flags` (D-16). The description
   rows show the schema's values, and the differences page lists each change.
-- **A term is written as `AllowedValue.term`**, which already carries the square brackets and the
-  label or notation the field records (D-20). Allowed values are already sorted (D-21), so the
+- **A term is written as the field's `enum` holds it**, which already carries the square brackets
+  and the label or notation the field records (D-20). Allowed values are already sorted (D-21), so the
   choice lists come out in a stable order.
 
 Read literally, FR-005 and AS 1.5 would give P9 and C9 no choice list, because neither has a
@@ -61,8 +62,7 @@ reference for layout (SC-004) and for the differences page (FR-009).
 | The standard library (`zipfile` and hand-written SpreadsheetML) | Several hundred lines of XML to keep correct for three sheets and one validation type. |
 
 openpyxl becomes a runtime dependency (`CONSTITUTION.md` Article VII: the reason is above).
-`ghfdb.fields` keeps needing nothing but the standard library, because the template is a module
-of its own.
+`ghfdb.template` is a module of its own, so `ghfdb.fields` does not import it.
 
 ### Choice lists reference the `controlled vocabulary` sheet
 
@@ -130,11 +130,11 @@ tables, so the page is right whenever the build runs.
 
 | Piece | Where the search stopped |
 |---|---|
-| Field facts, allowed terms, term form, sort order | this repo: `ghfdb.fields.FieldSchema`, `Field`, `AllowedValue.term` |
+| Field facts, allowed terms, term form, sort order | this repo: `ghfdb.fields.load_schema()`, the Frictionless fields it returns and their `enum` |
 | Package version | this repo: `ghfdb.__version__` |
 | Column letters | an installed package: `openpyxl.utils.get_column_letter` |
 | Writing sheets and list validations | an installed package: `openpyxl.Workbook`, `openpyxl.worksheet.datavalidation.DataValidation` |
-| Copying a generated file next to its page and linking it | this repo: the pattern in `docs/extensions/field_reference.py` (`copy_schema`, marker replacement in `source-read`) |
+| Copying a generated file next to its page and linking it | this repo: the pattern in `docs/extensions/field_reference.py` (`copy_schema`, `source-read`) |
 | Download link in the page | Sphinx: the `{download}` role |
 | Comparing two workbooks | new code: no installed package compares workbooks cell by cell and term by term |
 | Refusing to replace a file | the standard library: `open(path, "xb")` raises `FileExistsError`, and openpyxl's `save` accepts an open file |

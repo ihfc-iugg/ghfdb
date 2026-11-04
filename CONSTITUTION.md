@@ -10,8 +10,12 @@ Every change follows [`docs/contributing/standards/testing.md`](docs/contributin
 and what does not, the test-first cycle, test structure and the coverage floor.
 
 ### Article II — Simplicity
-Start with the simplest design that does the job. A new dependency, abstraction or piece of
-infrastructure needs a stated reason in the pull request.
+Simplicity means less custom code and more reliance on established, maintained packages. Where
+such a package does the job, use it, and use its own types: do not write a wrapper around it, a
+copy of its types or a hand-built version of what it does. A package's size, and the packages it
+brings in, are never a reason against it. Where no package does the job, start with the simplest
+design that does. A new abstraction or piece of infrastructure needs a stated reason in the pull
+request.
 
 ### Article III — Anti-Abstraction
 No wrapper layers, base classes or indirection without a present, concrete second use. Prefer
@@ -34,8 +38,11 @@ A change to what a user sees, runs or reads in a report updates the README, the 
 documentation builds with warnings treated as errors.
 
 ### Article VII — Dependency discipline
-A new runtime dependency needs a stated reason. `deptry` passes: no unused, missing or
-transitively relied-upon dependencies.
+Prefer an established, maintained package to custom code. A package is turned down only if it is
+unmaintained, is not established, or does not do the job. Its size and its own dependencies are not
+reasons. The pull request that adds a package says which custom code it replaces, or why no package
+does the job. `deptry` passes: no unused, missing or transitively relied-upon dependencies, so every
+package the code imports is declared in the group that uses it.
 
 ### Article VIII — Cohesion
 Related behaviour is grouped in a class, not scattered across module-level functions. Two or more
@@ -105,4 +112,4 @@ Read at plan and review; applies to every change.
 
 ---
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-03
+**Version**: 1.1.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-04

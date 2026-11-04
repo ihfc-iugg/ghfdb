@@ -42,9 +42,9 @@ and the field's name.
 
 ## Why the template is generated
 
-The template is generated from the field reference, so the two cannot disagree. A field
-schema and the published vocabularies go into the package's upload template generator, and the
-documentation build writes the result beside this page.
+The template is generated from the same field schema the field reference is built from, so the
+two cannot disagree. The field schema and the published vocabularies go into the package's upload
+template generator, and the documentation build writes the result beside this page.
 
 ```{mermaid}
 flowchart LR

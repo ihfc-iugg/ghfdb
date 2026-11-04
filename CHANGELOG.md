@@ -43,3 +43,7 @@ All notable changes to this project are recorded here. The format follows
   field reference is an `http` or `https` address and encodes the brackets and parentheses that
   could end a Markdown link. An address that is anything else stops the build with a message
   naming it. The check uses the `validators` package, a new documentation dependency.
+- The documentation loads mermaid 11.12.1 as a single script with a subresource integrity hash,
+  so a browser refuses the file if the CDN serves anything other than the published build. It
+  was loaded without one before. The diagrams are drawn as before. `docs/conf.py` holds the
+  version and hash, with the command that produces a new hash for an upgrade.

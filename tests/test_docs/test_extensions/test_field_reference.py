@@ -9,7 +9,7 @@ from extensions.field_reference import (
     replace_markers,
 )
 
-from ghfdb.fields import Field, FieldSchema
+from ghfdb.fields import AllowedValue, Field, FieldSchema, VocabularyRelease
 
 GITHUB_DECISIONS = "https://github.com/ihfc-iugg/ghfdb/blob/main/specs/001-field-reference/decisions.md"
 ALWAYS_SHOWN = (
@@ -193,6 +193,60 @@ class TestVocabularyEntries:
                 assert f"`{value.term}`" in section, code
                 assert f"[`{value.term}`](" not in section, code
             assert "Fuchs et al. (2023), Appendix A" in section
+
+
+class TestReleaseAddresses:
+    def test_brackets_and_parentheses_in_a_concept_uri_cannot_end_its_link(
+        self, schema: FieldSchema, reference: FieldReference
+    ) -> None:
+        field = schema["C43"]
+        value = AllowedValue(
+            term="x", label="x", uri="https://example.org/a)[b](https://evil.example/", notation=None
+        )
+
+        markdown = reference.entry(replace(field, allowed_values=(value,)))
+
+        assert "https://example.org/a%29%5Bb%5D%28https://evil.example/" in markdown
+        assert "](https://evil.example/" not in markdown
+
+    @pytest.mark.parametrize(
+        "uri",
+        [
+            "javascript:alert(1)",
+            "https://example.org/a b",
+            "https://example.org/><script>",
+            "https://example.org/`x`",
+        ],
+    )
+    def test_a_concept_uri_that_is_not_a_web_address_is_refused(
+        self, schema: FieldSchema, reference: FieldReference, uri: str
+    ) -> None:
+        field = schema["C43"]
+        value = AllowedValue(term="x", label="x", uri=uri, notation=None)
+
+        with pytest.raises(ValueError, match="Not a web address"):
+            reference.entry(replace(field, allowed_values=(value,)))
+
+    def test_a_scheme_uri_that_would_close_its_autolink_is_refused(
+        self, schema: FieldSchema, reference: FieldReference
+    ) -> None:
+        field = schema["C43"]
+        assert field.vocabulary is not None
+        vocabulary = replace(field.vocabulary, scheme="https://example.org/a> <b")
+
+        with pytest.raises(ValueError, match="Not a web address"):
+            reference.entry(replace(field, vocabulary=vocabulary))
+
+    def test_a_release_doi_cannot_end_its_link_or_inject_markup(
+        self, schema: FieldSchema
+    ) -> None:
+        release = VocabularyRelease(version="2026.1_*", doi="10.1/a)[b](https://evil.example/")
+        hostile = FieldSchema(schema.path, release, tuple(schema))
+
+        markdown = FieldReference(hostile).entry(schema["C43"])
+
+        assert not re.search(r"(?<!\\)\]\(https://evil", markdown)
+        assert "v2026.1\\_\\*" in markdown
 
 
 class TestSeparatorsAndEarlierSpellings:

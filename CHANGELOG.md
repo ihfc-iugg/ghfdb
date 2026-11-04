@@ -32,3 +32,7 @@ All notable changes to this project are recorded here. The format follows
 ### Changed
 
 - openpyxl is now a runtime dependency, because `ghfdb.template` writes the upload template.
+- The documentation build now checks that every concept, scheme and collection address in the
+  field reference is a web address and encodes the characters that could end a Markdown link,
+  and it escapes the vocabulary release version and DOI. A release holding anything else stops
+  the build with a message naming the value.

@@ -4,11 +4,13 @@ import re
 import shutil
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from sphinx.application import Sphinx
 
 from ghfdb.fields import Field, FieldSchema
 
+DOI_ADDRESS = "https://doi.org/"
 DECISIONS_URL = "https://github.com/ihfc-iugg/ghfdb/blob/main/specs/001-field-reference/decisions.md"
 SCHEMA_COPY = Path("reference") / "fields" / "ghfdb-field-schema.json"
 MISSING = "—"
@@ -16,6 +18,7 @@ INDEX_MARKER = re.compile(r"^\{field-index\}$", re.MULTILINE)
 ENTRIES_MARKER = re.compile(
     r"^\{field-entries\} (parent|child|assessment)$", re.MULTILINE
 )
+WEB_ADDRESS = re.compile(r"https?://[^\s<>\"`\\^{|}]+")
 OBLIGATIONS = {"M": "Mandatory (M)", "R": "Recommended (R)", "O": "Optional (O)"}
 DOMAINS = {"B": "Borehole and mine (B)", "S": "Probe sensing (S)"}
 
@@ -41,6 +44,25 @@ class FieldReference:
             The text with Markdown's special characters escaped.
         """
         return re.sub(r"([\\`*_\[\]<>|])", r"\\\1", text)
+
+    @staticmethod
+    def address(text: str) -> str:
+        """Check a web address from the schema and make it safe to put in Markdown.
+
+        Args:
+            text: A concept, scheme or collection URI, or a DOI link.
+
+        Returns:
+            The address with brackets and parentheses percent-encoded, so it cannot end
+            a link or an autolink early.
+
+        Raises:
+            ValueError: The text is not an ``http`` or ``https`` address, or it holds
+                whitespace or a character that cannot appear in one.
+        """
+        if not WEB_ADDRESS.fullmatch(text):
+            raise ValueError(f"Not a web address: {text!r}")
+        return quote(text, safe=":/?#@!$&'*+,;=-._~%")
 
     def code(self, text: str) -> str:
         """Write text as an inline code span, which keeps it exactly as given.
@@ -74,8 +96,8 @@ class FieldReference:
             return "Fuchs et al. (2023), Appendix A"
         if key == "vocabulary-release":
             return (
-                f"[IHFC Controlled Vocabularies v{release.version}]"
-                f"(https://doi.org/{release.doi})"
+                f"[IHFC Controlled Vocabularies v{self.cell(release.version)}]"
+                f"({self.address(DOI_ADDRESS + release.doi)})"
             )
         if key.startswith("decision:"):
             return f"[Decision {key.removeprefix('decision:')}]({DECISIONS_URL})"
@@ -170,19 +192,23 @@ class FieldReference:
         binding = field.vocabulary
         if binding is not None:
             release = self.schema.release
-            where = f"the concept scheme <{binding.scheme}>"
+            where = f"the concept scheme <{self.address(binding.scheme)}>"
             if binding.collection is not None:
-                where += f", limited to the collection <{binding.collection}>"
+                where += (
+                    f", limited to the collection <{self.address(binding.collection)}>"
+                )
             blocks.append(
                 f"The allowed values come from {where}, in the "
-                f"IHFC Controlled Vocabularies v{release.version} "
-                f"([DOI {release.doi}](https://doi.org/{release.doi}))."
+                f"IHFC Controlled Vocabularies v{self.cell(release.version)} "
+                f"([DOI {self.cell(release.doi)}]"
+                f"({self.address(DOI_ADDRESS + release.doi)}))."
             )
         if field.allowed_values:
             items = []
             for value in field.allowed_values:
                 term = self.code(value.term)
-                items.append(f"- [{term}]({value.uri})" if value.uri else f"- {term}")
+                link = f"- [{term}]({self.address(value.uri)})" if value.uri else None
+                items.append(link or f"- {term}")
             blocks.append("\n".join(items))
         if field.separator is not None:
             blocks.append(

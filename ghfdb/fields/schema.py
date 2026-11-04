@@ -1,225 +1,94 @@
-"""The field schema: the facts the upload template records about each field."""
+"""The field schema: a Frictionless Table Schema with the vocabulary values added.
+
+The packaged ``schema.json`` is read by Frictionless. The facts the upload template
+records that Table Schema has no property for, such as the published column name and
+the obligation, stay in each field's ``custom`` dictionary.
+"""
 
 import json
-from collections.abc import Iterator, Mapping
-from copy import deepcopy
-from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
-from types import MappingProxyType
-from typing import Any, Literal, Self
 
-from ghfdb.fields.vocabularies import (
-    AllowedValue,
-    MissingSchemeError,
-    Vocabularies,
-    VocabularyBinding,
-)
+from frictionless import Field, Schema
+
+from ghfdb.fields.vocabularies import AllowedValue, MissingSchemeError, Vocabularies
 
 
-@dataclass(frozen=True)
-class Field:
-    """One field of the upload template and everything recorded about it.
+def allowed_values(
+    field: Field, vocabularies: Vocabularies
+) -> tuple[AllowedValue, ...]:
+    """Find the values a field accepts.
 
-    Attributes:
-        code: The field code, such as ``C43``.
-        column_name: The column name published in the upload template.
-        earlier_column_names: Names the column had in earlier templates.
-        group: Whether the field belongs to the parent, child or assessment table.
-        name: The field's title.
-        meaning: What the field holds.
-        type: The Table Schema type of the value.
-        decimal_places: The number of decimal places, or None.
-        unit: The unit of the value, or None.
-        value_format: The text format of the value, such as ``YYYY-MM``, or None.
-        obligation: ``M`` (mandatory), ``R`` (recommended), ``O`` (optional), or
-            None when the template does not say.
-        domain: The data domains the field applies to.
-        quality_relevance: How the field enters the quality score, or None.
-        minimum: The smallest accepted value, or None.
-        maximum: The largest accepted value, or None.
-        max_length: The longest accepted text, or None.
-        vocabulary: The controlled vocabulary the field draws on, or None.
-        allowed_values: The values the field accepts, empty when it is free.
-        separator: The separator between several values in one cell, or None.
-        guidance: Advice on filling the field in, or None.
-        sources: For each fact, the source it was taken from. Read only.
+    Args:
+        field: A field of the schema file.
+        vocabularies: Where a vocabulary field takes its values from.
+
+    Returns:
+        The values of the field's controlled vocabulary, else the values written in
+        the schema file, else an empty tuple for a free field.
+
+    Raises:
+        MissingSchemeError: The vocabularies lack the scheme or collection the field
+            names. The message starts with the field's code.
     """
-
-    code: str
-    column_name: str
-    earlier_column_names: tuple[str, ...]
-    group: Literal["parent", "child", "assessment"]
-    name: str
-    meaning: str
-    type: str
-    decimal_places: int | None
-    unit: str | None
-    value_format: str | None
-    obligation: Literal["M", "R", "O"] | None
-    domain: tuple[str, ...]
-    quality_relevance: str | None
-    minimum: float | None
-    maximum: float | None
-    max_length: int | None
-    vocabulary: VocabularyBinding | None
-    allowed_values: tuple[AllowedValue, ...]
-    separator: str | None
-    guidance: str | None
-    sources: Mapping[str, str]
-
-    @classmethod
-    def from_json(cls, data: Mapping[str, Any], vocabularies: Vocabularies) -> Self:
-        """Build a field from its entry in the schema file.
-
-        Args:
-            data: The decoded JSON object of one entry in ``fields``.
-            vocabularies: Where a vocabulary field takes its values from.
-
-        Returns:
-            The field, with the allowed values its vocabulary gives it.
-
-        Raises:
-            MissingSchemeError: The vocabularies lack the scheme or collection the
-                field names. The message starts with the field's code.
-        """
-        constraints = data["constraints"]
-        entry = data["vocabulary"]
-        binding = (
-            None
-            if entry is None
-            else VocabularyBinding(
-                entry["scheme"], entry["collection"], entry["termForm"]
-            )
+    vocabulary = field.custom["vocabulary"]
+    if vocabulary is None:
+        return tuple(
+            AllowedValue(**value) for value in field.custom.get("allowedValues", ())
         )
-        try:
-            allowed_values = (
-                tuple(AllowedValue(**value) for value in data.get("allowedValues", ()))
-                if binding is None
-                else vocabularies.allowed_values(binding)
-            )
-        except MissingSchemeError as error:
-            raise MissingSchemeError(f"{data['name']}: {error}") from error
-        return cls(
-            code=data["name"],
-            column_name=data["columnName"],
-            earlier_column_names=tuple(data["earlierColumnNames"]),
-            group=data["group"],
-            name=data["title"],
-            meaning=data["description"],
-            type=data["type"],
-            decimal_places=data["decimalPlaces"],
-            unit=data["unit"],
-            value_format=data["valueFormat"],
-            obligation=data["obligation"],
-            domain=tuple(data["domain"]),
-            quality_relevance=data["qualityRelevance"],
-            minimum=constraints.get("minimum"),
-            maximum=constraints.get("maximum"),
-            max_length=constraints.get("maxLength"),
-            vocabulary=binding,
-            allowed_values=allowed_values,
-            separator=data["separator"],
-            guidance=data["guidance"],
-            sources=MappingProxyType(dict(data["sources"])),
-        )
+    try:
+        return vocabularies.allowed_values(vocabulary)
+    except MissingSchemeError as error:
+        raise MissingSchemeError(f"{field.name}: {error}") from error
 
 
-class UnknownFieldError(KeyError):
-    """Raised for a field code or published column name the schema does not hold."""
+def load_schema(
+    path: Path | None = None, vocabularies: Vocabularies | None = None
+) -> Schema:
+    """Read a schema file and give each vocabulary field its allowed values.
 
+    Args:
+        path: The file to read. Without one, the file packaged with ghfdb.
+        vocabularies: Where the vocabulary files are kept. Without it, the cache
+            directory, from which a missing file is downloaded.
 
-class FieldSchema:
-    """The fields of the upload template, read from a schema file.
+    Returns:
+        The schema, with an ``enum`` constraint on every field that has allowed
+        values. The enum lives in memory only and is never written back to the file.
 
-    Attributes:
-        fields: Every field, in the order of the file.
-        data: The schema file as written, without any allowed values from the
-            vocabularies.
+    Raises:
+        MissingSchemeError: A scheme or collection a field names is not defined where
+            it is published. The message starts with the field's code.
+        OSError: A vocabulary file is not cached and cannot be downloaded.
     """
+    if path is None:
+        text = (
+            resources.files("ghfdb.fields").joinpath("schema.json").read_text("utf-8")
+        )
+    else:
+        text = path.read_text(encoding="utf-8")
+    schema = Schema.from_descriptor(json.loads(text))
+    files = Vocabularies() if vocabularies is None else vocabularies
+    for field in schema.fields:
+        if values := allowed_values(field, files):
+            field.constraints["enum"] = [value.term for value in values]
+    return schema
 
-    def __init__(self, fields: tuple[Field, ...], data: Mapping[str, Any]) -> None:
-        """Hold the fields and index them by code and by published column name.
 
-        Args:
-            fields: Every field, in file order.
-            data: The decoded schema file the fields were read from.
-        """
-        self.fields = fields
-        self.data = data
-        self.index = {field.column_name: field for field in fields}
-        self.index.update({field.code: field for field in fields})
+def field_for_column(schema: Schema, column_name: str) -> Field:
+    """Find a field by the column name published in the upload template.
 
-    @classmethod
-    def load(
-        cls, path: Path | None = None, vocabularies: Vocabularies | None = None
-    ) -> Self:
-        """Read a schema file and resolve its vocabulary fields.
+    Args:
+        schema: The schema to search.
+        column_name: A column name exactly as published, including its casing.
 
-        Args:
-            path: The file to read. Without one, the file packaged with ghfdb.
-            vocabularies: Where the vocabulary files are kept. Without it, the
-                cache directory, from which a missing file is downloaded.
+    Returns:
+        The field.
 
-        Returns:
-            The schema.
-
-        Raises:
-            MissingSchemeError: A scheme or collection a field names is not defined
-                where it is published. The message starts with the field's code.
-            OSError: A vocabulary file is not cached and cannot be downloaded.
-        """
-        if path is None:
-            text = (
-                resources.files("ghfdb.fields")
-                .joinpath("schema.json")
-                .read_text("utf-8")
-            )
-        else:
-            text = path.read_text(encoding="utf-8")
-        data = json.loads(text)
-        files = Vocabularies() if vocabularies is None else vocabularies
-        fields = tuple(Field.from_json(entry, files) for entry in data["fields"])
-        return cls(fields, data)
-
-    def descriptor(self) -> dict[str, Any]:
-        """Build the complete Frictionless Table Schema.
-
-        Returns:
-            The schema file with an ``enum`` constraint added to every field that has
-            allowed values. It is built on each call and never written back.
-        """
-        descriptor = deepcopy(dict(self.data))
-        for entry, field in zip(descriptor["fields"], self.fields, strict=True):
-            if field.allowed_values:
-                terms = [value.term for value in field.allowed_values]
-                entry["constraints"]["enum"] = terms
-        return descriptor
-
-    def __getitem__(self, key: str) -> Field:
-        """Find a field by its code or its published column name.
-
-        Args:
-            key: A field code such as ``C43``, or a column name exactly as
-                published, including its casing.
-
-        Returns:
-            The field.
-
-        Raises:
-            UnknownFieldError: If no field has that code or column name.
-        """
-        try:
-            return self.index[key]
-        except KeyError:
-            raise UnknownFieldError(
-                f"No field has the code or column name {key!r}"
-            ) from None
-
-    def __iter__(self) -> Iterator[Field]:
-        """Iterate the fields in file order."""
-        return iter(self.fields)
-
-    def __len__(self) -> int:
-        """Count the fields."""
-        return len(self.fields)
+    Raises:
+        KeyError: If no field has that column name.
+    """
+    for field in schema.fields:
+        if field.custom["columnName"] == column_name:
+            return field
+    raise KeyError(f"No field has the column name {column_name!r}")

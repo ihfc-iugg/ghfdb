@@ -586,7 +586,9 @@ version = "0.0.1"
 source = { editable = "." }
 default-groups = ["dev", "docs"]
 dependencies = [
+    { name = "frictionless" },
     { name = "openpyxl" },
+    { name = "platformdirs" },
     { name = "rdflib" },
     { name = "requests" },
     { name = "requests-cache" },
@@ -595,16 +597,17 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "deptry" },
-    { name = "frictionless" },
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "responses" },
     { name = "types-openpyxl" },
     { name = "types-requests" },
 ]
 docs = [
     { name = "furo" },
+    { name = "jinja2" },
     { name = "myst-parser" },
     { name = "sphinx", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13'" },
     { name = "sphinx", version = "9.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13'" },
@@ -613,7 +616,9 @@ docs = [
 
 [package.metadata]
 requires-dist = [
+    { name = "frictionless", specifier = ">=5" },
     { name = "openpyxl", specifier = ">=3.1" },
+    { name = "platformdirs", specifier = ">=4" },
     { name = "rdflib", specifier = ">=7" },
     { name = "requests", specifier = ">=2.32" },
     { name = "requests-cache", specifier = ">=1.2" },
@@ -622,16 +627,17 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "deptry", specifier = ">=0.23" },
-    { name = "frictionless", specifier = ">=5" },
     { name = "mypy", specifier = ">=1.15" },
     { name = "pre-commit", specifier = ">=4" },
     { name = "pytest", specifier = ">=8" },
     { name = "pytest-cov", specifier = ">=6" },
+    { name = "responses", specifier = ">=0.25" },
     { name = "types-openpyxl" },
     { name = "types-requests" },
 ]
 docs = [
     { name = "furo", specifier = ">=2025.1" },
+    { name = "jinja2", specifier = ">=3.1" },
     { name = "myst-parser", specifier = ">=4" },
     { name = "sphinx", specifier = ">=8" },
     { name = "sphinxcontrib-mermaid", specifier = ">=1" },
@@ -1468,6 +1474,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/89/1a/5f3c22d38bf1d87d1f4a961489d9eba35c4370a21395562d94410cdd0e73/requirements_parser-0.13.1.tar.gz", hash = "sha256:78811383b2089b6c5197a1431bc2c12ff950245edca39a23eea3460782038dd3", size = 22783, upload-time = "2026-06-18T07:52:25.291Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bb/f9/15b44d5e4401b0013bbcefe3c09d7bfddcce28cc3d41b1d3077bcedf5b1f/requirements_parser-0.13.1-py3-none-any.whl", hash = "sha256:6e385663eb32589d16e5b22bb6e5251a57908e73803ffff438b53cd6ea2056e0", size = 14926, upload-time = "2026-06-18T07:52:24.171Z" },
+]
+
+[[package]]
+name = "responses"
+version = "0.26.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyyaml" },
+    { name = "requests" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9f/47/f216a33221db8eff328987661cf18371afee89c62a62b434b963d6b509c9/responses-0.26.3.tar.gz", hash = "sha256:b0c11ca8131b8b227b8d5108e6ed39772222bd5aab030ed430e8f99057c4c409", size = 86335, upload-time = "2026-08-26T19:17:24.373Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6d/86/ca7958de70cb0752350575e98229368a3a2f746a2942034b3364e17312bb/responses-0.26.3-py3-none-any.whl", hash = "sha256:74474f799334ac4f37d93b6437ecc3bb1bb5c77a8d31780a338643be2dce0af8", size = 36289, upload-time = "2026-08-26T19:17:23.176Z" },
 ]
 
 [[package]]

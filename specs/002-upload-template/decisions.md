@@ -75,8 +75,8 @@ reverse; reversing it is one condition in the generator.
 
 **Chosen:** openpyxl writes the workbook. It writes list validations that reference another
 sheet and accept any value, is typed, and is the reader checking (R3) will need. XlsxWriter only
-writes, and hand-written SpreadsheetML would be several hundred lines. `ghfdb.fields` still
-needs only the standard library, because the template is a module of its own.
+writes, and hand-written SpreadsheetML would be several hundred lines. `ghfdb.template` is a
+module of its own, so `ghfdb.fields` does not import it.
 
 **ADR:** docs/adr/0002-upload-template-is-generated-never-stored.md
 

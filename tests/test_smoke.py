@@ -23,12 +23,12 @@ class TestFieldsPublicSurface:
     def test_exports_the_public_names(self) -> None:
         from ghfdb.fields import (  # noqa: F401
             AllowedValue,
-            Field,
-            FieldSchema,
             MissingSchemeError,
-            UnknownFieldError,
             Vocabularies,
-            VocabularyBinding,
+            allowed_values,
+            caching_session,
+            field_for_column,
+            load_schema,
         )
 
 

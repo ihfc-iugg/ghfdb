@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from frictionless import Field, Schema
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
@@ -9,7 +10,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.worksheet import Worksheet
 
 from ghfdb import __version__
-from ghfdb.fields import Field, FieldSchema
+from ghfdb.fields import load_schema
 
 NONE = "-"
 VOCABULARIES = "https://w3id.org/ihfc-iugg/vocabularies"
@@ -38,16 +39,16 @@ class UploadTemplate:
     """The upload template, generated from a field schema.
 
     Args:
-        schema: The fields to build the template from. Without one, the schema
-            packaged with ghfdb.
+        schema: The fields to build the template from, as a Frictionless Table
+            Schema. Without one, the schema packaged with ghfdb.
 
     Attributes:
         schema: The field schema the template is built from.
         version: The ghfdb version that generates the template.
     """
 
-    def __init__(self, schema: FieldSchema | None = None) -> None:
-        self.schema = FieldSchema.load() if schema is None else schema
+    def __init__(self, schema: Schema | None = None) -> None:
+        self.schema = load_schema() if schema is None else schema
         self.version = __version__
 
     def workbook(self) -> Workbook:
@@ -119,8 +120,8 @@ class UploadTemplate:
         sheet["A1"] = "ID"
         for row, label in enumerate(ROW_LABELS, start=2):
             sheet.cell(row, 1, label)
-        for index, field in enumerate(self.schema):
-            sheet.cell(1, index + 2, field.code)
+        for index, field in enumerate(self.schema.fields):
+            sheet.cell(1, index + 2, field.name)
             for row, value in enumerate(self.describe(field), start=2):
                 sheet.cell(row, index + 2, value)
         for cell in sheet[1]:
@@ -144,24 +145,25 @@ class UploadTemplate:
         """
         vocabulary["A1"] = "Field code"
         vocabulary["A2"] = "Name"
-        for index, field in enumerate(self.schema):
-            if not field.allowed_values:
-                if field.vocabulary is not None:
+        for index, field in enumerate(self.schema.fields):
+            terms: list[str] = field.constraints.get("enum", [])
+            if not terms:
+                if field.custom["vocabulary"] is not None:
                     raise TemplateError(
-                        f"Field {field.code} names a controlled vocabulary "
+                        f"Field {field.name} names a controlled vocabulary "
                         "but has no allowed values"
                     )
                 continue
             letter = self.column_letter(index)
-            vocabulary[f"{letter}1"] = field.code
-            vocabulary[f"{letter}2"] = field.name
-            for row, value in enumerate(field.allowed_values, start=FIRST_TERM_ROW):
-                vocabulary[f"{letter}{row}"] = value.term
-            last = FIRST_TERM_ROW + len(field.allowed_values) - 1
-            terms = f"${letter}${FIRST_TERM_ROW}:${letter}${last}"
+            vocabulary[f"{letter}1"] = field.name
+            vocabulary[f"{letter}2"] = field.title
+            for row, term in enumerate(terms, start=FIRST_TERM_ROW):
+                vocabulary[f"{letter}{row}"] = term
+            last = FIRST_TERM_ROW + len(terms) - 1
+            cells = f"${letter}${FIRST_TERM_ROW}:${letter}${last}"
             choices = DataValidation(
                 type="list",
-                formula1=f"'controlled vocabulary'!{terms}",
+                formula1=f"'controlled vocabulary'!{cells}",
                 allow_blank=True,
                 showErrorMessage=False,
             )
@@ -180,12 +182,12 @@ class UploadTemplate:
             value the field does not have.
         """
         return (
-            field.obligation or NONE,
-            ",".join(field.domain) or NONE,
-            field.quality_relevance or NONE,
-            field.name,
-            field.column_name,
-            field.unit or NONE,
+            field.custom["obligation"] or NONE,
+            ",".join(field.custom["domain"]) or NONE,
+            field.custom["qualityRelevance"] or NONE,
+            field.title or NONE,
+            field.custom["columnName"],
+            field.custom["unit"] or NONE,
             UploadTemplate.allowed_range(field),
         )
 
@@ -201,12 +203,14 @@ class UploadTemplate:
             else its value format, else ``-``. A field with allowed values has a
             choice list instead, so it also shows ``-``.
         """
-        if field.allowed_values:
+        if field.constraints.get("enum"):
             return NONE
-        if field.minimum is not None and field.maximum is not None:
-            places = field.decimal_places or 0
-            return f"{field.minimum:,.{places}f} \u2013 {field.maximum:,.{places}f}"
-        return field.value_format or NONE
+        minimum = field.constraints.get("minimum")
+        maximum = field.constraints.get("maximum")
+        if minimum is not None and maximum is not None:
+            places = field.custom["decimalPlaces"] or 0
+            return f"{minimum:,.{places}f} \u2013 {maximum:,.{places}f}"
+        return field.custom["valueFormat"] or NONE
 
     @staticmethod
     def column_letter(index: int) -> str:

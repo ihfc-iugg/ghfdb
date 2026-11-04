@@ -17,7 +17,7 @@ the differences from the hand-maintained template by comparing the two workbooks
 - **New runtime dependency**: `openpyxl>=3.1` (research.md, "Writing the workbook"). It moves
   from the development group to `[project] dependencies`. `types-openpyxl` stays a development
   dependency.
-- **Reads**: `ghfdb.fields.FieldSchema` (FS-001). No field fact is written into the new code.
+- **Reads**: `ghfdb.fields.load_schema()` (FS-001), a `frictionless.Schema`. No field fact is written into the new code.
 - **Documentation**: Sphinx with MyST, built with `-W`. A second extension beside
   `docs/extensions/field_reference.py`.
 - **Tests**: pytest. Workbooks are written to `tmp_path` and read back with openpyxl.
@@ -36,7 +36,7 @@ the differences from the hand-maintained template by comparing the two workbooks
 | VII Dependencies | openpyxl becomes a runtime dependency, reason in research.md. deptry passes. |
 | VIII Cohesion | `UploadTemplate` holds every step of building the workbook. `TemplateChanges` holds every comparison. |
 | IX Sources | No rule is added. Every value the template shows is one the field schema sources. |
-| XI Vocabulary | Every term comes from `AllowedValue.term`. The differences page is computed, so no term is typed into a page. |
+| XI Vocabulary | Every term comes from the field's `enum`. The differences page is computed, so no term is typed into a page. |
 | XII Report, never modify | The hand-maintained template is read, never written. |
 | XIII Whole columns | Not a check or a score. The generator writes one column per field, and the comparison iterates fields and rows of a 70 × 8 grid, which is not data. |
 | Mermaid | The template page shows the generation as a flowchart. |
@@ -78,12 +78,12 @@ class TemplateError(ValueError):
     """A field the template cannot be written for, named in the message."""
 
 class UploadTemplate:
-    def __init__(self, schema: FieldSchema | None = None) -> None: ...
+    def __init__(self, schema: Schema | None = None) -> None: ...
     def workbook(self) -> Workbook: ...
     def write(self, path: Path, replace: bool = False) -> None: ...
 ```
 
-- `schema` defaults to `FieldSchema.load()`. The package version is `ghfdb.__version__`, which
+- `schema` defaults to `load_schema()`. The package version is `ghfdb.__version__`, which
   already exists.
 - `workbook()` builds the three sheets in the order `readme`, `data list`,
   `controlled vocabulary`, and nothing else (openpyxl's default sheet is renamed, not left).
@@ -93,19 +93,19 @@ class UploadTemplate:
   them (SC-004). Rows 2–8 under a field hold the values in research.md, "Description rows", all
   as strings, `-` for none. Row 1 bold, panes frozen at `B9`. Nothing from row 9 down.
 - **Range formatting**: `minimum` and `maximum` both set → each formatted with a thousands
-  separator and `decimal_places` digits (`0` when `decimal_places` is None), joined by
-  `" – "` (space, en dash, space). Otherwise `value_format` when set. Otherwise `-`. A field with
+  separator and `decimalPlaces` digits (`0` when it is None), joined by
+  `" – "` (space, en dash, space). Otherwise `valueFormat` when set. Otherwise `-`. A field with
   allowed values always shows `-`.
 - **`controlled vocabulary`**: A1 `Field code`, A2 `Name`. For each field with allowed values, in
   the same column letter as on `data list`: row 1 the code, row 2 the name, from row 3 each
-  `AllowedValue.term` in schema order.
+  term of the field's `enum` in schema order.
 - **Choice lists**: for each field with allowed values, one `DataValidation(type="list",
   formula1="'controlled vocabulary'!$X$3:$X$<2 + n>", allow_blank=True,
   showErrorMessage=False)` added to `data list`, its range `X9:X1048576`. A field with no allowed
   values gets none.
-- **Failure**: a field whose `vocabulary` is set but whose `allowed_values` is empty raises
+- **Failure**: a field whose `vocabulary` is set but that has no `enum` raises
   `TemplateError` naming the field code, from `workbook()`. (The schema loader already fails on a
-  file that cannot be read, and `FieldSchema.load()` is called in `__init__`, so that failure is
+  file that cannot be read, and `load_schema()` is called in `__init__`, so that failure is
   raised with the file named.)
 - **`readme`**: column A, one line per row: what the workbook is, the package version, the
   the address of the published vocabularies, the field reference URL
@@ -182,7 +182,7 @@ Mirrors `field_reference.py`.
 ## Tests
 
 - `tests/test_template.py`, against the packaged schema unless a test needs a small one (built by
-  `dataclasses.replace` on loaded fields, never by typing terms):
+  copying a loaded schema and removing one field's `enum`, never by typing terms):
   - sheet names and order; row 1 of `data list` is `ID` plus every code in schema order;
   - every description cell equals the value computed from its field (a test-local function from
     the field to the seven expected strings would restate the generator; instead assert per row

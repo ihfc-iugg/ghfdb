@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -13,16 +12,11 @@ from extensions.upload_template import (
     template_name,
     write_template,
 )
+from frictionless import Schema
 from openpyxl import Workbook
 
 import ghfdb
-from ghfdb.fields import FieldSchema
 from ghfdb.template import ROW_LABELS, TemplateError, UploadTemplate
-
-
-@pytest.fixture(scope="module")
-def schema() -> FieldSchema:
-    return FieldSchema.load()
 
 
 class TestTemplateName:
@@ -31,8 +25,10 @@ class TestTemplateName:
 
 
 class TestWriteTemplate:
-    def test_writes_the_versioned_file_beside_the_page(self, tmp_path: Path) -> None:
-        path = write_template(UploadTemplate(), tmp_path)
+    def test_writes_the_versioned_file_beside_the_page(
+        self, tmp_path: Path, schema: Schema
+    ) -> None:
+        path = write_template(UploadTemplate(schema), tmp_path)
 
         assert path == tmp_path / "upload-template" / template_name(ghfdb.__version__)
         assert path.is_file()
@@ -40,30 +36,34 @@ class TestWriteTemplate:
     def test_content_equals_what_a_developer_writes(
         self,
         tmp_path: Path,
+        schema: Schema,
         workbook_content: Callable[[Path], dict[str, Any]],
     ) -> None:
-        published = write_template(UploadTemplate(), tmp_path)
+        published = write_template(UploadTemplate(schema), tmp_path)
         developer = tmp_path / "developer.xlsx"
-        UploadTemplate().write(developer)
+        UploadTemplate(schema).write(developer)
 
         assert workbook_content(published) == workbook_content(developer)
 
-    def test_replaces_the_file_of_an_earlier_build(self, tmp_path: Path) -> None:
-        write_template(UploadTemplate(), tmp_path)
+    def test_replaces_the_file_of_an_earlier_build(
+        self, tmp_path: Path, schema: Schema
+    ) -> None:
+        write_template(UploadTemplate(schema), tmp_path)
 
-        path = write_template(UploadTemplate(), tmp_path)
+        path = write_template(UploadTemplate(schema), tmp_path)
 
         assert path.is_file()
 
     def test_a_generation_error_propagates(
-        self, tmp_path: Path, schema: FieldSchema
+        self,
+        tmp_path: Path,
+        schema: Schema,
+        without_allowed_values: Callable[[Schema, str], Schema],
     ) -> None:
-        bound = next(field for field in schema if field.vocabulary is not None)
-        emptied = replace(bound, allowed_values=())
-        fields = tuple(emptied if f is bound else f for f in schema)
-        template = UploadTemplate(FieldSchema(fields, schema.data))
+        bound = next(f for f in schema.fields if f.custom["vocabulary"] is not None)
+        template = UploadTemplate(without_allowed_values(schema, bound.name))
 
-        with pytest.raises(TemplateError, match=bound.code):
+        with pytest.raises(TemplateError, match=bound.name):
             write_template(template, tmp_path)
 
 
@@ -294,13 +294,13 @@ class TestTemplateChangesMarkdown:
 
 
 @pytest.fixture(scope="module")
-def changes() -> TemplateChanges:
-    return TemplateChanges(read_hand_maintained(), UploadTemplate().workbook())
+def changes(schema: Schema) -> TemplateChanges:
+    return TemplateChanges(read_hand_maintained(), UploadTemplate(schema).workbook())
 
 
 class TestTemplateChangesOnTheRealPair:
     def test_finds_the_short_name_of_c46_changed(
-        self, changes: TemplateChanges, schema: FieldSchema
+        self, changes: TemplateChanges, schema: Schema
     ) -> None:
         sheet = changes.previous["data list"]
         column = next(cell.column for cell in sheet[1] if cell.value == "C46")
@@ -312,20 +312,24 @@ class TestTemplateChangesOnTheRealPair:
             if row[:2] == ("C46", "Short Name")
         ]
 
-        assert found == [("C46", "Short Name", before, schema["C46"].column_name)]
+        assert found == [
+            ("C46", "Short Name", before, schema.get_field("C46").custom["columnName"])
+        ]
 
     def test_finds_the_choice_list_of_c20_lost(
-        self, changes: TemplateChanges, schema: FieldSchema
+        self, changes: TemplateChanges, schema: Schema
     ) -> None:
         _, gained, lost = changes.choice_lists()
 
-        assert not schema["C20"].allowed_values
+        assert not schema.get_field("C20").constraints.get("enum")
         assert "C20" in lost
         assert "C20" not in gained
 
-    def test_never_writes_the_hand_maintained_workbook(self) -> None:
+    def test_never_writes_the_hand_maintained_workbook(self, schema: Schema) -> None:
         before = HAND_MAINTAINED.stat().st_mtime_ns
 
-        TemplateChanges(read_hand_maintained(), UploadTemplate().workbook()).markdown()
+        TemplateChanges(
+            read_hand_maintained(), UploadTemplate(schema).workbook()
+        ).markdown()
 
         assert HAND_MAINTAINED.stat().st_mtime_ns == before

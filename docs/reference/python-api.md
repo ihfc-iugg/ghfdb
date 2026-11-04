@@ -2,9 +2,9 @@
 
 ## Field definitions
 
-The names `ghfdb.fields` provides: `FieldSchema`, `Field`, `AllowedValue`,
-`VocabularyBinding`, `Vocabularies`, `MissingSchemeError` and
-`UnknownFieldError`. They read the packaged field schema and the vocabularies it links to.
+The names `ghfdb.fields` provides: `load_schema`, `field_for_column`, `allowed_values`,
+`AllowedValue`, `Vocabularies`, `caching_session` and `MissingSchemeError`. They read the
+packaged field schema, which is a `frictionless.Schema`, and the vocabularies it links to.
 
 ```{eval-rst}
 .. automodule:: ghfdb.fields

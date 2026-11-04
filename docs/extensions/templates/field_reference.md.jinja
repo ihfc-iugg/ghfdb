@@ -1,0 +1,110 @@
+{#- The Markdown of the field reference. field_reference.py supplies what is used here:
+    the schema, the filters cell, code and pipes, and the functions sources and
+    allowed_values. -#}
+{%- set MISSING = "—" -%}
+{%- set OBLIGATIONS = {"M": "Mandatory (M)", "R": "Recommended (R)", "O": "Optional (O)"} -%}
+{%- set DOMAINS = {"B": "Borehole and mine (B)", "S": "Probe sensing (S)"} -%}
+
+{#- One table row, which starts on a new line. -#}
+{% macro row(fact, value, source) %}
+| {{ fact }} | {{ value | pipes }} | {{ source }} |{% endmacro %}
+
+{#- The table of facts about one field. -#}
+{% macro facts(field, values) -%}
+{%- set custom = field.custom -%}
+{%- set constraints = field.constraints -%}
+{%- set earlier = custom.earlierColumnNames -%}
+{%- set unit = custom.unit or MISSING -%}
+{%- set quality = custom.qualityRelevance or MISSING -%}
+{%- set domain -%}
+{%- for code in custom.domain -%}
+{{ DOMAINS[code] }}{{ ", " if not loop.last }}
+{%- else -%}
+{{ MISSING }}
+{%- endfor -%}
+{%- endset -%}
+{%- set has_places = custom.decimalPlaces is not none -%}
+{%- set has_length = constraints.maxLength is defined -%}
+{%- set has_range = constraints.minimum is defined or constraints.maximum is defined -%}
+| Fact | Value | Source |
+|---|---|---|
+{{- row("Field code", field.name | code, sources(field, ["code"])) -}}
+{{- row("Published column name",
+        custom.columnName | code
+        ~ (" (earlier spelling: " ~ (earlier | map("code") | join(", ")) ~ ")" if earlier else ""),
+        sources(field, ["columnName", "earlierColumnNames"] if earlier else ["columnName"])) -}}
+{{- row("Name", field.title | cell, sources(field, ["name"])) -}}
+{{- row("Meaning", field.description | cell, sources(field, ["meaning"])) -}}
+{{- row("Type",
+        field.type | cell
+        ~ (", " ~ custom.decimalPlaces ~ " decimal places" if has_places else "")
+        ~ (", up to " ~ constraints.maxLength ~ " characters" if has_length else ""),
+        sources(field, ["type"] + (["decimalPlaces"] if has_places else []) + (["maxLength"] if has_length else []))) -}}
+{{- row("Unit", unit | cell, sources(field, ["unit"])) -}}
+{{- row("Obligation", OBLIGATIONS.get(custom.obligation, MISSING), sources(field, ["obligation"])) -}}
+{{- row("Domain", domain, sources(field, ["domain"])) -}}
+{{- row("Quality relevance", quality | cell, sources(field, ["qualityRelevance"])) -}}
+{%- if has_range -%}
+{{- row("Range",
+        (constraints.minimum if constraints.minimum is defined else MISSING)
+        ~ " to " ~ (constraints.maximum if constraints.maximum is defined else MISSING),
+        sources(field, ["range"])) -}}
+{%- endif -%}
+{%- if custom.valueFormat is not none -%}
+{{- row("Format", custom.valueFormat | code, sources(field, ["valueFormat"])) -}}
+{%- endif -%}
+{%- if values -%}
+{{- row("Allowed values", values | length ~ " values, listed below", sources(field, ["allowedValues"])) -}}
+{%- endif -%}
+{% endmacro %}
+
+{#- One field: two link targets, a heading, its facts and what follows them. -#}
+{% macro entry(field) -%}
+{%- set custom = field.custom -%}
+{%- set values = allowed_values(field) -%}
+(field-{{ field.name | lower }})=
+(field-{{ custom.columnName | lower }})=
+## {{ field.name }} · {{ custom.columnName | cell }} — {{ field.title | cell }}
+
+{{ facts(field, values) }}
+{%- if custom.vocabulary %}
+
+The allowed values come from the concept scheme <{{ custom.vocabulary.scheme }}>
+{%- if custom.vocabulary.collection %}, limited to the collection <{{ custom.vocabulary.collection }}>{% endif %}, in the IHFC Controlled Vocabularies as currently published.
+{%- endif %}
+{%- if values %}
+
+{% for value in values -%}
+{%- if value.uri -%}
+- [{{ value.term | code }}]({{ value.uri }})
+{%- else -%}
+- {{ value.term | code }}
+{%- endif -%}
+{{ "\n" if not loop.last }}
+{%- endfor %}
+{%- endif %}
+{%- if custom.separator is not none %}
+
+Several values may be given in one cell, separated by {{ custom.separator | code }}. Source: {{ sources(field, ["separator"]) }}.
+{%- endif %}
+{%- if custom.guidance is not none %}
+
+Guidance: {{ custom.guidance | cell }} Source: {{ sources(field, ["guidance"]) }}.
+{%- endif %}
+{%- endmacro %}
+
+{#- The entries of every field in one group, in schema order. -#}
+{% macro entries(group) -%}
+{%- for field in schema.fields if field.custom.group == group -%}
+{{ "\n\n" if not loop.first }}{{ entry(field) }}
+{%- endfor -%}
+{% endmacro %}
+
+{#- The table that lists every field, each linked to its entry. -#}
+{% macro index() -%}
+| Field code | Published column name | Name |
+|---|---|---|
+{%- for field in schema.fields %}
+| {{ "{ref}" }}`{{ field.name }} <field-{{ field.name | lower }}>` | {{ "{ref}" }}`{{ field.custom.columnName }} <field-{{ field.custom.columnName | lower }}>` | {{ field.title | cell }} |
+{%- endfor -%}
+{% endmacro %}

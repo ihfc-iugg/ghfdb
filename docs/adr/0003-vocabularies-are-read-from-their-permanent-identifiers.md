@@ -1,6 +1,7 @@
 # ADR 0003 — Vocabulary terms are read from the vocabularies' permanent identifiers
 
-**Status:** accepted
+**Status:** accepted. [ADR 0004](0004-the-field-schema-is-read-with-frictionless.md) replaces how the
+schema file is read and where the cache is kept; the rest stands.
 
 ## Decision
 
@@ -17,17 +18,17 @@ The field schema, `ghfdb/fields/schema.json`, is written by hand and holds no vo
 - The vocabulary files are not stored in this repository or in the package. A scheme is published
   at its identifier with `.ttl` added, so the package downloads that file the first time it needs
   the scheme through a `requests-cache` session whose cache is a directory outside the
-  repository, in the user's cache directory or where `GHFDB_VOCABULARY_CACHE` points. The
+  repository, in the user's cache directory. The
   server's `ETag`, `Last-Modified` and `Cache-Control` decide freshness: within the time the
   server allows the cached file is used, after that the server is asked, and an unchanged file
   costs a `304`. There is no fixed expiry, because one could hide a change. The cached file is
   used when the server cannot be reached, and a server error is tried again twice. Deleting the
   directory forces a fresh download.
-- `FieldSchema.load()` reads the allowed values from the cached files. The members of a
+- Loading the schema reads the allowed values from the cached files. The members of a
   `skos:OrderedCollection` keep the collection's order. Every other list is sorted by term.
-- A Frictionless Table Schema with an `enum` on each field is built in memory by
-  `FieldSchema.descriptor()`. It is never written back to `schema.json`. The documentation's
-  downloadable schema and the validation of the schema file both use it.
+- The loaded schema is a Frictionless Table Schema with an `enum` on each field that has allowed
+  values, in memory. It is never written back to `schema.json`. The documentation's downloadable
+  schema and the validation of the schema file both use it.
 - The cache of a test session starts empty, so the tests always read the files as currently
   published, and CI does the same. A test checks that every scheme and collection the schema links
   to is defined in the file downloaded from its identifier.

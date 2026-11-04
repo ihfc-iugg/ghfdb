@@ -115,18 +115,28 @@ reader who needs it.
   for a single-valued field with a fixed list, `enum`.
 - The schema's `missingValues` is `[""]`: an empty cell and nothing else (FR-008, D-4).
 - Facts with no Frictionless property are recorded as additional properties, which the Table Schema
-  specification permits on a field descriptor: the published column name and its earlier spelling,
-  group, unit, obligation, domain, quality relevance, decimal places, vocabulary binding, allowed
-  values, separator for several values, guidance, and the source of each fact.
+  specification permits on a field descriptor and Frictionless keeps in the field's `custom`
+  dictionary: the published column name and its earlier spelling, group, unit, obligation,
+  domain, quality relevance, decimal places, vocabulary binding, allowed values, separator for
+  several values, guidance, and the source of each fact.
 - `required` is not set on any field: obligation depends on the domain, and which domain a child is
   in is a cross-field rule (R4).
 
-### Loading the schema needs no dependency
+### Loading the schema: Frictionless
 
-The standard library reads JSON, and frozen dataclasses hold the result. `frictionless` would
-read it too, but it is a large runtime dependency with its own field classes, and the package
-needs none of its behaviour to look a field up. It is a development dependency, used to validate
-the shipped schema independently (SC-006).
+`frictionless` is an established, maintained package that reads a Table Schema into its own
+`Schema` and field classes, keeps the facts it has no property for in each field's `custom`
+dictionary, and writes the schema back out. It is a runtime dependency, and the package uses its
+types as they are: ghfdb defines no field class. Its size and the packages it brings in are no
+reason against it. A hand-written loader and a set of dataclasses restating the same types would
+be code this repository has to keep in step with the schema file for no gain. Frictionless
+also validates the shipped schema, so the same package checks it (SC-006).
+
+Two things Frictionless cannot do stay in this repository: resolving each vocabulary field's
+allowed values from the vocabularies into its `enum` constraint, and finding a field by its
+published column name. Table Schema has no place for the label, URI or notation of an allowed
+value, so a small type, `AllowedValue`, holds them for the callers that need them: the field
+reference links every term to its concept.
 
 ### Reading the vocabularies
 
@@ -140,7 +150,8 @@ The Turtle files are not kept in the repository or in the package. Each scheme's
 published at its identifier with `.ttl` added. The package downloads it on first use, keeps it
 in a cache directory, and asks the server whether it changed before using it again. GitHub
 Pages sends `ETag`, `Last-Modified` and `Cache-Control: max-age=600`, so an unchanged file costs
-a `304`. Hand-written expiry or cache code would only repeat what `requests-cache` does. A reader who
+a `304`. Hand-written expiry or cache code would only repeat what `requests-cache` does. The cache
+directory is the user cache directory `platformdirs` finds for the operating system. A reader who
 wants the vocabularies' terms of use finds them with the vocabularies.
 
 ### The template as a test source
@@ -153,7 +164,9 @@ publisher's supplementary material. Facts sourced to it are checked in review.
 ### The field reference in the documentation
 
 A Sphinx extension in `docs/extensions/` renders the field entries from the loaded field schema while the
-documentation builds, so the reference cannot disagree with the schema (FR-013). It also copies
+documentation builds, so the reference cannot disagree with the schema (FR-013). The Markdown is
+written as Jinja2 templates, which Sphinx itself uses for templating and which is already
+installed with it. It also copies
 the schema file into the built site, so the page links to the exact file it documents. Diagrams
 use `sphinxcontrib-mermaid`. The Python API page is generated from docstrings with
 `sphinx.ext.autodoc`, as the documentation standard requires.
@@ -165,11 +178,14 @@ The specification directory has no `planning-notes.md`.
 ## What already exists
 
 ```
-field definitions loader          · 4, standard library · json, dataclasses, importlib.resources
-schema validity check             · 6, maintained package · frictionless (development only)
+field definitions loader          · 6, maintained package · frictionless (Schema.from_descriptor; importlib.resources for the packaged file)
+schema validity check             · 6, maintained package · frictionless
+cache directory                   · 6, maintained package · platformdirs (user_cache_dir)
 reading the vocabularies          · 6, maintained package · rdflib
 reading the template in tests     · 6, maintained package · openpyxl (development only)
-markdown entries for the docs     · 7, new · searched myst-parser and sphinx for a table-schema renderer; none
+markdown entries for the docs     · 6, maintained package · Jinja2 templates; searched myst-parser, sphinx-jinja (last release 2022) and sphinx-jinja2 (v0.0.1); none renders a table schema
+escaping text for a Markdown cell · 7, new · searched markdown-it-py, myst-parser, mdformat; none exposes an escaper
+fake web in tests                 · 6, maintained package · responses (requests-mock has had no release since 2024)
 diagrams in the docs              · 6, maintained package · sphinxcontrib-mermaid
 python API page                   · 3, package · sphinx.ext.autodoc
 downloading and caching a file      · 6, maintained package · requests, requests-cache; the vocabularies publish files, no client

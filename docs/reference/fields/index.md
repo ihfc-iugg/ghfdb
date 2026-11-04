@@ -24,7 +24,7 @@ child
 assessment
 ```
 
-{field-index}
+{{ index() }}
 
 ## Where the facts and allowed values come from
 

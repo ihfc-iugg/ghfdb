@@ -5,40 +5,39 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from fakes import FakeSite, fake_session
+import responses
+from example_site import publish
 from frictionless import Schema
 from openpyxl import load_workbook
 
 from ghfdb.fields import (
     AllowedValue,
-    FieldSchema,
     MissingSchemeError,
-    UnknownFieldError,
     Vocabularies,
-    VocabularyBinding,
+    allowed_values,
+    caching_session,
+    field_for_column,
+    load_schema,
 )
 
 COLOURS = "https://example.test/vocabularies/colours"
 HERE = Path(__file__).parent
 THREE_FIELDS = HERE / "schemas" / "three_fields.json"
-TEST_VOCABULARIES = Vocabularies(fake_session(FakeSite()))
 
 
-def load_three_fields() -> FieldSchema:
-    return FieldSchema.load(THREE_FIELDS, TEST_VOCABULARIES)
+@pytest.fixture
+def three_fields(web: responses.RequestsMock, tmp_path: Path) -> Schema:
+    publish(web, "colours")
+    return load_schema(THREE_FIELDS, Vocabularies(caching_session(tmp_path / "cache")))
 
 
-class TestVocabularyBinding:
-    def test_has_exactly_the_planned_attributes(self) -> None:
-        names = [field.name for field in fields(VocabularyBinding)]
-
-        assert names == ["scheme", "collection", "term_form"]
-
-    def test_is_frozen(self) -> None:
-        binding = VocabularyBinding(COLOURS, None, "label")
-
-        with pytest.raises(FrozenInstanceError):
-            binding.scheme = "shapes"  # type: ignore[misc]
+def write_variant(tmp_path: Path, change: Any) -> Path:
+    """Write the three fields with a change applied to the decoded file."""
+    data = json.loads(THREE_FIELDS.read_text())
+    change(data)
+    path = tmp_path / "schema.json"
+    path.write_text(json.dumps(data))
+    return path
 
 
 class TestAllowedValue:
@@ -54,104 +53,74 @@ class TestAllowedValue:
             value.term = "[Blue]"  # type: ignore[misc]
 
 
-class TestFieldSchema:
-    def test_reads_fields_in_file_order(self) -> None:
-        schema = load_three_fields()
+class TestLoadSchema:
+    def test_returns_a_frictionless_schema_with_the_fields_in_file_order(
+        self, three_fields: Schema
+    ) -> None:
+        assert isinstance(three_fields, Schema)
+        assert three_fields.field_names == ["X1", "X2", "X3"]
 
-        assert [field.code for field in schema] == ["X1", "X2", "X3"]
-        assert schema.fields == tuple(schema)
-        assert len(schema) == 3
+    def test_reads_the_table_schema_properties_of_a_field(
+        self, three_fields: Schema
+    ) -> None:
+        field = three_fields.get_field("X1")
 
-    def test_reads_every_attribute_of_a_vocabulary_field(self) -> None:
-        field = load_three_fields()["X1"]
-
-        assert field.column_name == "shade"
-        assert field.earlier_column_names == ("Shade_old",)
-        assert field.group == "parent"
-        assert field.name == "Shade"
-        assert field.meaning == "The shade of a made-up thing."
+        assert field.title == "Shade"
+        assert field.description == "The shade of a made-up thing."
         assert field.type == "string"
-        assert field.decimal_places is None
-        assert field.unit is None
-        assert field.value_format is None
-        assert field.obligation == "M"
-        assert field.domain == ("B", "S")
-        assert field.quality_relevance == "M-score"
-        assert (field.minimum, field.maximum, field.max_length) == (None, None, None)
-        assert field.separator == ";"
-        assert field.guidance == "Pick one."
-        assert field.sources == {
+
+    def test_keeps_the_facts_table_schema_has_no_property_for_in_custom(
+        self, three_fields: Schema
+    ) -> None:
+        field = three_fields.get_field("X1")
+
+        assert field.custom["columnName"] == "shade"
+        assert field.custom["earlierColumnNames"] == ["Shade_old"]
+        assert field.custom["group"] == "parent"
+        assert field.custom["obligation"] == "M"
+        assert field.custom["domain"] == ["B", "S"]
+        assert field.custom["qualityRelevance"] == "M-score"
+        assert field.custom["separator"] == ";"
+        assert field.custom["guidance"] == "Pick one."
+        assert field.custom["sources"] == {
             "code": "upload-template",
             "columnName": "upload-template",
         }
-        assert field.vocabulary == VocabularyBinding(
-            COLOURS, f"{COLOURS}/warm", "label"
-        )
-        assert field.allowed_values == (
-            AllowedValue("[Orange]", "Orange", f"{COLOURS}/orange", "or"),
-            AllowedValue("[red]", "red", f"{COLOURS}/red", "rd"),
-        )
+        assert field.custom["vocabulary"] == {
+            "scheme": COLOURS,
+            "collection": f"{COLOURS}/warm",
+            "termForm": "label",
+        }
 
-    def test_reads_numeric_and_text_constraints(self) -> None:
-        schema = load_three_fields()
-        width, label = schema["X2"], schema["X3"]
+    def test_gives_a_vocabulary_field_an_enum_of_its_terms(
+        self, three_fields: Schema
+    ) -> None:
+        assert three_fields.get_field("X1").constraints["enum"] == ["[Orange]", "[red]"]
 
-        assert (width.decimal_places, width.unit) == (2, "mm")
-        assert (width.minimum, width.maximum) == (0, 99.5)
-        assert width.vocabulary is None
-        assert width.allowed_values == ()
-        assert (label.max_length, label.value_format) == (255, "YYYY-MM")
-        assert (label.obligation, label.domain) == (None, ())
+    def test_reads_numeric_and_text_constraints(self, three_fields: Schema) -> None:
+        width, label = three_fields.get_field("X2"), three_fields.get_field("X3")
 
-    def test_sources_cannot_be_changed(self) -> None:
-        field = load_three_fields()["X2"]
+        assert width.custom["decimalPlaces"] == 2
+        assert width.custom["unit"] == "mm"
+        assert width.constraints == {"minimum": 0, "maximum": 99.5}
+        assert label.constraints == {"maxLength": 255}
+        assert label.custom["valueFormat"] == "YYYY-MM"
 
-        with pytest.raises(TypeError):
-            field.sources["code"] = "x"  # type: ignore[index]
-
-    def test_looks_up_by_code_or_published_column_name(self) -> None:
-        schema = load_three_fields()
-
-        assert schema["X2"] is schema["Width_mm"]
-        assert schema["X2"].code == "X2"
-
-    def test_column_name_casing_is_part_of_the_name(self) -> None:
-        schema = load_three_fields()
-
-        with pytest.raises(UnknownFieldError):
-            schema["width_mm"]
-
-    def test_earlier_column_names_are_not_lookup_keys(self) -> None:
-        schema = load_three_fields()
-
-        with pytest.raises(UnknownFieldError):
-            schema["Shade_old"]
-
-    def test_an_unknown_key_raises_an_error_naming_it(self) -> None:
-        schema = load_three_fields()
-
-        with pytest.raises(UnknownFieldError, match="nope") as caught:
-            schema["nope"]
-        assert isinstance(caught.value, KeyError)
-
-    def test_loads_the_packaged_file_without_an_argument(self) -> None:
-        schema = FieldSchema.load()
-
-        assert len(schema) == 70
+    def test_loads_the_packaged_file_without_a_path(self, schema: Schema) -> None:
+        assert len(schema.fields) == 70
 
     def test_a_field_that_is_not_a_vocabulary_field_keeps_its_hand_written_values(
-        self, tmp_path: Path
+        self, tmp_path: Path, three_fields: Schema
     ) -> None:
-        data = json.loads(THREE_FIELDS.read_text())
-        data["fields"][1]["allowedValues"] = [
-            {"term": "[Yes]", "uri": None, "label": "Yes", "notation": None}
-        ]
-        path = tmp_path / "schema.json"
-        path.write_text(json.dumps(data))
+        def add(data: dict[str, Any]) -> None:
+            data["fields"][1]["allowedValues"] = [
+                {"term": "[Yes]", "uri": None, "label": "Yes", "notation": None}
+            ]
 
-        field = FieldSchema.load(path, TEST_VOCABULARIES)["X2"]
+        path = write_variant(tmp_path, add)
+        schema = load_schema(path, Vocabularies(caching_session(tmp_path / "cache")))
 
-        assert field.allowed_values == (AllowedValue("[Yes]", "Yes", None, None),)
+        assert schema.get_field("X2").constraints["enum"] == ["[Yes]"]
 
     @pytest.mark.parametrize(
         ("key", "value", "missing"),
@@ -161,38 +130,93 @@ class TestFieldSchema:
         ],
     )
     def test_a_name_the_vocabularies_do_not_define_is_reported_with_the_field(
-        self, tmp_path: Path, key: str, value: str, missing: str
+        self,
+        web: responses.RequestsMock,
+        tmp_path: Path,
+        key: str,
+        value: str,
+        missing: str,
     ) -> None:
-        data = json.loads(THREE_FIELDS.read_text())
-        data["fields"][0]["vocabulary"][key] = value
-        path = tmp_path / "schema.json"
-        path.write_text(json.dumps(data))
+        publish(web, "colours")
+        publish(web, "colours", base="https://example.test/other")
+        path = write_variant(
+            tmp_path, lambda data: data["fields"][0]["vocabulary"].update({key: value})
+        )
 
         with pytest.raises(MissingSchemeError, match=f"X1.*{missing}"):
-            FieldSchema.load(path, TEST_VOCABULARIES)
+            load_schema(path, Vocabularies(caching_session(tmp_path / "cache")))
 
 
-class TestDescriptor:
-    def test_adds_an_enum_of_the_allowed_terms_to_a_vocabulary_field(self) -> None:
-        schema = load_three_fields()
-
-        entry = schema.descriptor()["fields"][0]
+class TestToDescriptor:
+    def test_adds_an_enum_of_the_allowed_terms_to_a_vocabulary_field(
+        self, three_fields: Schema
+    ) -> None:
+        entry = three_fields.to_descriptor()["fields"][0]
 
         assert entry["constraints"]["enum"] == ["[Orange]", "[red]"]
 
-    def test_leaves_a_field_without_allowed_values_as_written(self) -> None:
-        schema = load_three_fields()
-
-        entry = schema.descriptor()["fields"][1]
+    def test_leaves_a_field_without_allowed_values_as_written(
+        self, three_fields: Schema
+    ) -> None:
+        entry = three_fields.to_descriptor()["fields"][1]
 
         assert "enum" not in entry["constraints"]
 
-    def test_never_changes_the_schema_it_is_built_from(self) -> None:
-        schema = load_three_fields()
+    def test_keeps_the_custom_facts(self, three_fields: Schema) -> None:
+        entry = three_fields.to_descriptor()["fields"][1]
 
-        schema.descriptor()
+        assert entry["columnName"] == "Width_mm"
+        assert entry["sources"] == {"code": "upload-template"}
 
-        assert "enum" not in schema.data["fields"][0]["constraints"]
+
+class TestAllowedValues:
+    def test_a_vocabulary_field_gives_the_values_of_its_vocabulary(
+        self, three_fields: Schema, tmp_path: Path
+    ) -> None:
+        values = allowed_values(
+            three_fields.get_field("X1"), Vocabularies(caching_session(tmp_path))
+        )
+
+        assert values == (
+            AllowedValue("[Orange]", "Orange", f"{COLOURS}/orange", "or"),
+            AllowedValue("[red]", "red", f"{COLOURS}/red", "rd"),
+        )
+
+    def test_a_free_field_gives_none(
+        self, three_fields: Schema, tmp_path: Path
+    ) -> None:
+        values = allowed_values(
+            three_fields.get_field("X2"), Vocabularies(caching_session(tmp_path))
+        )
+
+        assert values == ()
+
+
+class TestFieldForColumn:
+    def test_finds_a_field_by_its_published_column_name(
+        self, three_fields: Schema
+    ) -> None:
+        assert field_for_column(three_fields, "Width_mm") is three_fields.get_field(
+            "X2"
+        )
+
+    def test_the_casing_of_the_column_name_is_part_of_the_name(
+        self, three_fields: Schema
+    ) -> None:
+        with pytest.raises(KeyError):
+            field_for_column(three_fields, "width_mm")
+
+    def test_an_earlier_column_name_does_not_find_a_field(
+        self, three_fields: Schema
+    ) -> None:
+        with pytest.raises(KeyError):
+            field_for_column(three_fields, "Shade_old")
+
+    def test_an_unknown_name_raises_an_error_naming_it(
+        self, three_fields: Schema
+    ) -> None:
+        with pytest.raises(KeyError, match="nope"):
+            field_for_column(three_fields, "nope")
 
 
 ROOT = Path(__file__).parents[2]
@@ -286,8 +310,6 @@ def load_entries() -> list[dict[str, Any]]:
 
 
 ENTRIES = {entry["name"]: entry for entry in load_entries()}
-SHIPPED = FieldSchema.load()
-DESCRIPTOR = {entry["name"]: entry for entry in SHIPPED.descriptor()["fields"]}
 TEMPLATE_CELLS = read_template()
 DECISION_IDS = set(re.findall(r"^### (D-\d+) ", DECISIONS.read_text(), re.MULTILINE))
 
@@ -312,10 +334,8 @@ class TestShippedSchemaShape:
 
         assert text == json.dumps(json.loads(text), indent=2, ensure_ascii=False) + "\n"
 
-    def test_loads_through_the_public_class(self) -> None:
-        schema = FieldSchema.load()
-
-        assert [field.code for field in schema] == CODES
+    def test_loads_through_the_public_function(self, schema: Schema) -> None:
+        assert schema.field_names == CODES
 
     def test_is_a_valid_table_schema(self) -> None:
         descriptor = json.loads(SCHEMA_FILE.read_text(encoding="utf-8"))
@@ -324,8 +344,10 @@ class TestShippedSchemaShape:
 
         assert report.valid, report.flatten(["type", "note"])
 
-    def test_the_complete_descriptor_is_a_valid_table_schema(self) -> None:
-        report = Schema.validate_descriptor(FieldSchema.load().descriptor())
+    def test_the_complete_descriptor_is_a_valid_table_schema(
+        self, schema: Schema
+    ) -> None:
+        report = Schema.validate_descriptor(schema.to_descriptor())
 
         assert report.valid, report.flatten(["type", "note"])
 
@@ -373,19 +395,28 @@ class TestShippedField:
             else:
                 assert source in SOURCE_CODES, (key, source)
 
-    def test_enum_of_the_descriptor_equals_the_allowed_terms(self, code: str) -> None:
-        field = SHIPPED[code]
-        enum = DESCRIPTOR[code]["constraints"].get("enum", [])
+    def test_enum_of_the_descriptor_equals_the_allowed_terms(
+        self, schema: Schema, published_vocabularies: Vocabularies, code: str
+    ) -> None:
+        field = schema.get_field(code)
+        enum = schema.to_descriptor()["fields"][CODES.index(code)]["constraints"].get(
+            "enum", []
+        )
 
-        assert enum == [value.term for value in field.allowed_values]
+        values = allowed_values(field, published_vocabularies)
 
-    def test_vocabulary_fields_have_allowed_values_with_uris(self, code: str) -> None:
-        field = SHIPPED[code]
+        assert enum == [value.term for value in values]
 
-        if field.vocabulary is None:
+    def test_vocabulary_fields_have_allowed_values_with_uris(
+        self, schema: Schema, published_vocabularies: Vocabularies, code: str
+    ) -> None:
+        field = schema.get_field(code)
+
+        if field.custom["vocabulary"] is None:
             return
-        assert field.allowed_values
-        assert all(value.uri for value in field.allowed_values)
+        values = allowed_values(field, published_vocabularies)
+        assert values
+        assert all(value.uri for value in values)
 
     def test_template_facts_equal_the_template(self, code: str) -> None:
         entry, cells = ENTRIES[code], TEMPLATE_CELLS[code]

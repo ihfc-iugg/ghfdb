@@ -1,3 +1,3 @@
 # Assessment fields
 
-{field-entries} assessment
+{{ entries("assessment") }}

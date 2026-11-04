@@ -3,8 +3,8 @@
 ## Field definitions
 
 The names `ghfdb.fields` provides: `FieldSchema`, `Field`, `AllowedValue`,
-`VocabularyBinding`, `VocabularyRelease`, `ReleaseFiles`, `MissingSchemeError` and
-`UnknownFieldError`. They read the packaged field schema and the vocabulary release it names.
+`VocabularyBinding`, `Vocabularies`, `MissingSchemeError` and
+`UnknownFieldError`. They read the packaged field schema and the vocabularies it links to.
 
 ```{eval-rst}
 .. automodule:: ghfdb.fields

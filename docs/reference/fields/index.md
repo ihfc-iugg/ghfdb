@@ -36,38 +36,37 @@ Every fact in an entry comes from one of four places, named in the Source column
 - **A recorded decision**: where the two disagree, or neither says, a decision was recorded and
   is linked from the entry.
 - **IHFC Controlled Vocabularies**: the allowed values of a field that takes terms from a
-  controlled vocabulary come from one stated release of the vocabularies, named in the entry
-  together with its DOI.
+  controlled vocabulary come from the vocabularies as currently published. The entry links to the
+  permanent identifier of the concept scheme, and of the collection where there is one.
 
 ```{mermaid}
 flowchart LR
     template[Upload template] --> facts[Facts about each field]
     appendix[Fuchs et al. 2023, Appendix A] --> facts
     decisions[Recorded decisions] --> facts
-    release[Stated vocabulary release] --> values[Allowed values]
+    vocabularies[Published vocabularies] --> values[Allowed values]
     facts --> reference[Field reference]
     values --> reference
 ```
 
-## How a newer vocabulary release is adopted
+## How the allowed values stay current
 
-The field schema names one release of the IHFC Controlled Vocabularies and, for each
-vocabulary field, the concept scheme and the collection it takes its terms from. It holds no
-term. The terms are read from the named release when the schema is loaded, so this reference
-always shows exactly what that release publishes. When the vocabularies publish a new
-release, a maintainer changes the release the schema names, and the tests show what depends
-on the terms that moved. The steps are in
-[Adopt a new vocabulary release](../../contributing/vocabulary-release.md).
+The field schema links each vocabulary field to the permanent identifier of its concept scheme
+and, where it narrows the choice, of a collection. It holds no term. The terms are read from the
+file published at the identifier when the schema is loaded, so this reference shows what the
+vocabularies publish when the documentation is built. When the vocabularies change, the tests
+show what depends on the terms that moved. See
+[How the vocabularies are fetched](../../contributing/vocabularies.md).
 
 ```{mermaid}
 flowchart LR
-    named[Maintainer names the new release] --> downloaded[The release is downloaded]
+    identifier[Field links to a vocabulary identifier] --> downloaded[The published file is downloaded]
     downloaded --> read[Allowed values are read from it]
-    read --> pages[This reference shows the new terms]
+    read --> pages[This reference shows the terms]
 ```
 
 ## Download the schema
 
 The facts on these pages are also available as a machine-readable file:
 {download}`ghfdb-field-schema.json <ghfdb-field-schema.json>`. It is a Frictionless Table
-Schema that lists the allowed values of each vocabulary field, as read from the release.
+Schema that lists the allowed values of each vocabulary field, as read from the published vocabularies.

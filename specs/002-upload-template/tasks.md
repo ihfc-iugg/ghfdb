@@ -36,7 +36,7 @@ without `replace=True`; compare two generations.
 - [ ] T004 [US2] The `controlled vocabulary` sheet and a choice list on every field with allowed
   values, rows 9 to 1,048,576, no error message; none on any other field. `TemplateError` for a
   vocabulary field with no allowed values (FR-004, FR-005, FR-006, SC-003; decisions.md D-9).
-- [ ] T005 [US2] The `readme` sheet: package version, vocabulary release and DOI, the field
+- [ ] T005 [US2] The `readme` sheet: package version, the address of the published vocabularies, the field
   reference URL, how to fill it in (FR-007).
 
 ### Group 2 — writing to a path
@@ -48,8 +48,7 @@ without `replace=True`; compare two generations.
   compared by the `workbook_content` fixture in `tests/conftest.py` (FR-011).
 - [ ] T008 [US2] `docs/reference/python-api.md`: an "Upload template" section with
   `automodule:: ghfdb.template`. `docs/developer/upload-template.md`, added to the "Developer
-  guide" toctree in `docs/index.md`: generate, choose a path, replace, read the version and
-  release. CHANGELOG `Added` line for
+  guide" toctree in `docs/index.md`: generate, choose a path, replace, read the version. CHANGELOG `Added` line for
   `ghfdb.template` and `Changed` line for openpyxl becoming a runtime dependency (FR-012).
 
 ---

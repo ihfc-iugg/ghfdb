@@ -8,6 +8,7 @@ from typing import Any
 from sphinx.application import Sphinx
 
 from ghfdb.fields import Field, FieldSchema
+from ghfdb.template import VOCABULARIES
 
 DECISIONS_URL = "https://github.com/ihfc-iugg/ghfdb/blob/main/specs/001-field-reference/decisions.md"
 SCHEMA_COPY = Path("reference") / "fields" / "ghfdb-field-schema.json"
@@ -67,16 +68,12 @@ class FieldReference:
         Raises:
             ValueError: The schema holds a source code this page does not know.
         """
-        release = self.schema.release
         if key == "upload-template":
             return "Upload template"
         if key == "fuchs-2023-appendix-a":
             return "Fuchs et al. (2023), Appendix A"
-        if key == "vocabulary-release":
-            return (
-                f"[IHFC Controlled Vocabularies v{release.version}]"
-                f"(https://doi.org/{release.doi})"
-            )
+        if key == "vocabularies":
+            return f"[IHFC Controlled Vocabularies]({VOCABULARIES})"
         if key.startswith("decision:"):
             return f"[Decision {key.removeprefix('decision:')}]({DECISIONS_URL})"
         raise ValueError(f"Unknown source {key!r}")
@@ -169,16 +166,12 @@ class FieldReference:
         blocks = []
         binding = field.vocabulary
         if binding is not None:
-            release = self.schema.release
-            where = f"the concept scheme {self.code(binding.scheme_name)}"
-            if binding.collection_name is not None:
-                where += (
-                    f", limited to the collection {self.code(binding.collection_name)}"
-                )
+            where = f"the concept scheme <{binding.scheme}>"
+            if binding.collection is not None:
+                where += f", limited to the collection <{binding.collection}>"
             blocks.append(
                 f"The allowed values come from {where}, in the "
-                f"IHFC Controlled Vocabularies v{release.version} "
-                f"([DOI {release.doi}](https://doi.org/{release.doi}))."
+                "IHFC Controlled Vocabularies as currently published."
             )
         if field.allowed_values:
             items = []
@@ -270,7 +263,7 @@ def copy_schema(schema: FieldSchema, source_directory: Path) -> None:
     """Write the complete schema into the documentation source, for download.
 
     The copy carries the allowed values of every vocabulary field, which the schema
-    file in the package leaves to the vocabulary release.
+    file in the package leaves to the vocabularies.
 
     Args:
         schema: The schema to write.

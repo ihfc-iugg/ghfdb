@@ -19,7 +19,7 @@ openpyxl, and no copy of it is kept in the repository.
 A hand-maintained template drifts from the rules its contents are checked against, which is the
 problem the template exists to solve. Generating it from the field schema on every build means
 the workbook contributors download and the field reference cannot disagree, and a change to a
-field or a move to a newer vocabulary release reaches the download without a hand edit.
+field or a change in the published vocabularies reaches the download without a hand edit.
 
 openpyxl writes list validations that reference another sheet and accept any value, is typed,
 and reads workbooks too, which checking needs. XlsxWriter only writes, and hand-written

@@ -12,33 +12,32 @@ from ghfdb.fields import (
     AllowedValue,
     FieldSchema,
     MissingSchemeError,
-    ReleaseFiles,
     UnknownFieldError,
+    Vocabularies,
     VocabularyBinding,
-    VocabularyRelease,
 )
 
 COLOURS = "https://example.test/vocabularies/colours"
 HERE = Path(__file__).parent
 THREE_FIELDS = HERE / "schemas" / "three_fields.json"
-TEST_RELEASE = ReleaseFiles(HERE / "releases" / "9999.1")
+TEST_VOCABULARIES = Vocabularies(HERE / "vocabularies")
 
 
 def load_three_fields() -> FieldSchema:
-    return FieldSchema.load(THREE_FIELDS, TEST_RELEASE)
+    return FieldSchema.load(THREE_FIELDS, TEST_VOCABULARIES)
 
 
 class TestVocabularyBinding:
     def test_has_exactly_the_planned_attributes(self) -> None:
         names = [field.name for field in fields(VocabularyBinding)]
 
-        assert names == ["scheme_name", "collection_name", "term_form"]
+        assert names == ["scheme", "collection", "term_form"]
 
     def test_is_frozen(self) -> None:
-        binding = VocabularyBinding("colours", None, "label")
+        binding = VocabularyBinding(COLOURS, None, "label")
 
         with pytest.raises(FrozenInstanceError):
-            binding.scheme_name = "shapes"  # type: ignore[misc]
+            binding.scheme = "shapes"  # type: ignore[misc]
 
 
 class TestAllowedValue:
@@ -62,13 +61,6 @@ class TestFieldSchema:
         assert schema.fields == tuple(schema)
         assert len(schema) == 3
 
-    def test_reads_the_release_and_the_path(self) -> None:
-        schema = load_three_fields()
-
-        assert schema.release == VocabularyRelease(
-            "9999.1", "10.0000/test.1", "https://example.test/vocabularies-repository"
-        )
-
     def test_reads_every_attribute_of_a_vocabulary_field(self) -> None:
         field = load_three_fields()["X1"]
 
@@ -91,7 +83,9 @@ class TestFieldSchema:
             "code": "upload-template",
             "columnName": "upload-template",
         }
-        assert field.vocabulary == VocabularyBinding("colours", "warm", "label")
+        assert field.vocabulary == VocabularyBinding(
+            COLOURS, f"{COLOURS}/warm", "label"
+        )
         assert field.allowed_values == (
             AllowedValue("[Orange]", "Orange", f"{COLOURS}/orange", "or"),
             AllowedValue("[red]", "red", f"{COLOURS}/red", "rd"),
@@ -142,7 +136,7 @@ class TestFieldSchema:
     def test_loads_the_packaged_file_without_an_argument(self) -> None:
         schema = FieldSchema.load()
 
-        assert schema.release.version == "2026.1"
+        assert len(schema) == 70
 
     def test_a_field_that_is_not_a_vocabulary_field_keeps_its_hand_written_values(
         self, tmp_path: Path
@@ -154,20 +148,27 @@ class TestFieldSchema:
         path = tmp_path / "schema.json"
         path.write_text(json.dumps(data))
 
-        field = FieldSchema.load(path, TEST_RELEASE)["X2"]
+        field = FieldSchema.load(path, TEST_VOCABULARIES)["X2"]
 
         assert field.allowed_values == (AllowedValue("[Yes]", "Yes", None, None),)
 
-    def test_a_missing_scheme_names_the_field_and_the_scheme(
-        self, tmp_path: Path
+    @pytest.mark.parametrize(
+        ("key", "value", "missing"),
+        [
+            ("scheme", "https://example.test/other/colours", "other/colours"),
+            ("collection", f"{COLOURS}/cool", "colours/cool"),
+        ],
+    )
+    def test_a_name_the_vocabularies_do_not_define_is_reported_with_the_field(
+        self, tmp_path: Path, key: str, value: str, missing: str
     ) -> None:
         data = json.loads(THREE_FIELDS.read_text())
-        data["fields"][0]["vocabulary"]["schemeName"] = "fabrics"
+        data["fields"][0]["vocabulary"][key] = value
         path = tmp_path / "schema.json"
         path.write_text(json.dumps(data))
 
-        with pytest.raises(MissingSchemeError, match="X1.*fabrics"):
-            FieldSchema.load(path, TEST_RELEASE)
+        with pytest.raises(MissingSchemeError, match=f"X1.*{missing}"):
+            FieldSchema.load(path, TEST_VOCABULARIES)
 
 
 class TestDescriptor:
@@ -225,7 +226,7 @@ SOURCE_KEYS = [
     "separator",
     "guidance",
 ]
-SOURCE_CODES = {"upload-template", "fuchs-2023-appendix-a", "vocabulary-release"}
+SOURCE_CODES = {"upload-template", "fuchs-2023-appendix-a", "vocabularies"}
 QUALITY = {"U score": "U-score", "M score": "M-score", "P Score": "perturbation flags"}
 GROUPS = {"P": "parent", "C": "child", "A": "assessment"}
 NUMBER = r"[\d,]+(?:\.\d+)?"
@@ -327,18 +328,35 @@ class TestShippedSchemaShape:
 
         assert report.valid, report.flatten(["type", "note"])
 
-    def test_holds_no_enum_and_no_generated_vocabulary_fact(self) -> None:
+    def test_declares_no_release_version_or_doi(self) -> None:
+        data = json.loads(SCHEMA_FILE.read_text(encoding="utf-8"))
+
+        assert set(data) == {"missingValues", "fields"}
+
+    def test_holds_no_enum_and_no_vocabulary_term(self) -> None:
         data = json.loads(SCHEMA_FILE.read_text(encoding="utf-8"))
 
         for entry in data["fields"]:
             assert "enum" not in entry["constraints"], entry["name"]
             if entry["vocabulary"] is not None:
                 assert set(entry["vocabulary"]) == {
-                    "schemeName",
-                    "collectionName",
+                    "scheme",
+                    "collection",
                     "termForm",
                 }, entry["name"]
                 assert "allowedValues" not in entry, entry["name"]
+
+    def test_vocabulary_fields_point_at_permanent_identifiers(self) -> None:
+        data = json.loads(SCHEMA_FILE.read_text(encoding="utf-8"))
+        root = "https://w3id.org/ihfc-iugg/vocabularies/"
+
+        for entry in data["fields"]:
+            binding = entry["vocabulary"]
+            if binding is None:
+                continue
+            assert binding["scheme"].startswith(root), entry["name"]
+            if binding["collection"] is not None:
+                assert binding["collection"].startswith(binding["scheme"] + "/")
 
 
 @pytest.mark.parametrize("code", CODES)

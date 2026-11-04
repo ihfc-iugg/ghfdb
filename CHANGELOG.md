@@ -15,14 +15,15 @@ All notable changes to this project are recorded here. The format follows
   source. `FieldSchema.load()` reads them from a file shipped in the package, and a field is
   looked up by its code or its published column name.
 - The allowed values of the 25 fields that take terms from a controlled vocabulary, read
-  from release 2026.1 of the IHFC Controlled Vocabularies when the field definitions are
-  loaded. The field schema names the release and, for each of these fields, the concept
-  scheme and collection, and holds no term. The release is downloaded from its GitHub release
-  the first time it is needed and kept in a cache directory (`GHFDB_VOCABULARY_CACHE` changes
-  where). `FieldSchema.descriptor()` builds the complete Frictionless Table Schema, with the
-  allowed values as `enum`, in memory.
-- `ghfdb.fields.release`, which downloads and reads a vocabulary release. A test fails when the
-  vocabularies have published a release newer than the one the field schema states.
+  from the IHFC Controlled Vocabularies as currently published when the field definitions are
+  loaded. The field schema links each of these fields to the permanent identifier of its
+  concept scheme and, where it narrows the choice, its collection, and holds no term and no
+  version. Each scheme's file is downloaded from its identifier the first time it is needed and
+  kept in a cache directory for a week (`GHFDB_VOCABULARY_CACHE` changes where).
+  `FieldSchema.descriptor()` builds the complete Frictionless Table Schema, with the allowed
+  values as `enum`, in memory.
+- `ghfdb.fields.Vocabularies`, which downloads and reads the vocabulary files. The tests read
+  the files as currently published, so they fail when the vocabularies change.
 - `ghfdb.template.UploadTemplate`, which generates the upload template from the field schema
   (the three sheets, description rows and choice lists) and writes it to a path without
   replacing an existing file unless asked.

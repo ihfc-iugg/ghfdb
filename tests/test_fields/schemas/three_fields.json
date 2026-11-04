@@ -1,10 +1,6 @@
 {
   "missingValues": [""],
-  "vocabularyRelease": {
-    "version": "9999.1",
-    "doi": "10.0000/test.1",
-    "repository": "https://example.test/vocabularies-repository"
-  },
+
   "fields": [
     {
       "name": "X1",
@@ -22,8 +18,8 @@
       "qualityRelevance": "M-score",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "colours",
-        "collectionName": "warm",
+        "scheme": "https://example.test/vocabularies/colours",
+        "collection": "https://example.test/vocabularies/colours/warm",
         "termForm": "label"
       },
       "separator": ";",

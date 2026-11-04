@@ -9,12 +9,11 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Literal, Self
 
-from ghfdb.fields.release import (
+from ghfdb.fields.vocabularies import (
     AllowedValue,
     MissingSchemeError,
-    ReleaseFiles,
+    Vocabularies,
     VocabularyBinding,
-    VocabularyRelease,
 )
 
 
@@ -70,19 +69,19 @@ class Field:
     sources: Mapping[str, str]
 
     @classmethod
-    def from_json(cls, data: Mapping[str, Any], release: ReleaseFiles) -> Self:
+    def from_json(cls, data: Mapping[str, Any], vocabularies: Vocabularies) -> Self:
         """Build a field from its entry in the schema file.
 
         Args:
             data: The decoded JSON object of one entry in ``fields``.
-            release: The vocabulary release a vocabulary field takes its values from.
+            vocabularies: Where a vocabulary field takes its values from.
 
         Returns:
             The field, with the allowed values its vocabulary gives it.
 
         Raises:
-            MissingSchemeError: The release lacks the scheme or collection the field
-                names. The message starts with the field's code.
+            MissingSchemeError: The vocabularies lack the scheme or collection the
+                field names. The message starts with the field's code.
         """
         constraints = data["constraints"]
         entry = data["vocabulary"]
@@ -90,14 +89,14 @@ class Field:
             None
             if entry is None
             else VocabularyBinding(
-                entry["schemeName"], entry["collectionName"], entry["termForm"]
+                entry["scheme"], entry["collection"], entry["termForm"]
             )
         )
         try:
             allowed_values = (
                 tuple(AllowedValue(**value) for value in data.get("allowedValues", ()))
                 if binding is None
-                else release.allowed_values(binding)
+                else vocabularies.allowed_values(binding)
             )
         except MissingSchemeError as error:
             raise MissingSchemeError(f"{data['name']}: {error}") from error
@@ -134,26 +133,18 @@ class FieldSchema:
     """The fields of the upload template, read from a schema file.
 
     Attributes:
-        release: The vocabulary release the allowed values come from.
         fields: Every field, in the order of the file.
         data: The schema file as written, without any allowed values from the
-            vocabulary release.
+            vocabularies.
     """
 
-    def __init__(
-        self,
-        release: VocabularyRelease,
-        fields: tuple[Field, ...],
-        data: Mapping[str, Any],
-    ) -> None:
+    def __init__(self, fields: tuple[Field, ...], data: Mapping[str, Any]) -> None:
         """Hold the fields and index them by code and by published column name.
 
         Args:
-            release: The vocabulary release the allowed values come from.
             fields: Every field, in file order.
             data: The decoded schema file the fields were read from.
         """
-        self.release = release
         self.fields = fields
         self.data = data
         self.index = {field.column_name: field for field in fields}
@@ -161,22 +152,22 @@ class FieldSchema:
 
     @classmethod
     def load(
-        cls, path: Path | None = None, vocabularies: ReleaseFiles | None = None
+        cls, path: Path | None = None, vocabularies: Vocabularies | None = None
     ) -> Self:
-        """Read a schema file and resolve its vocabulary fields against the release.
+        """Read a schema file and resolve its vocabulary fields.
 
         Args:
             path: The file to read. Without one, the file packaged with ghfdb.
-            vocabularies: The files of the vocabulary release the schema names.
-                Without them, the release is taken from the cache, and downloaded
-                into it first when it is not there.
+            vocabularies: Where the vocabulary files are kept. Without it, the
+                cache directory, from which a missing file is downloaded.
 
         Returns:
             The schema.
 
         Raises:
-            MissingSchemeError: The release lacks a scheme or collection a field names.
-            OSError: The release is not cached and cannot be downloaded.
+            MissingSchemeError: A scheme or collection a field names is not defined
+                where it is published. The message starts with the field's code.
+            OSError: A vocabulary file is not cached and cannot be downloaded.
         """
         if path is None:
             text = (
@@ -187,10 +178,9 @@ class FieldSchema:
         else:
             text = path.read_text(encoding="utf-8")
         data = json.loads(text)
-        release = VocabularyRelease(**data["vocabularyRelease"])
-        files = ReleaseFiles.fetch(release) if vocabularies is None else vocabularies
+        files = Vocabularies() if vocabularies is None else vocabularies
         fields = tuple(Field.from_json(entry, files) for entry in data["fields"])
-        return cls(release, fields, data)
+        return cls(fields, data)
 
     def descriptor(self) -> dict[str, Any]:
         """Build the complete Frictionless Table Schema.

@@ -2,11 +2,6 @@
   "missingValues": [
     ""
   ],
-  "vocabularyRelease": {
-    "version": "2026.1",
-    "doi": "10.5880/fidgeo.2026.065",
-    "repository": "https://github.com/ihfc-iugg/controlled-vocabularies"
-  },
   "fields": [
     {
       "name": "P1",
@@ -308,8 +303,8 @@
       "qualityRelevance": null,
       "constraints": {},
       "vocabulary": {
-        "schemeName": "geographic-environments",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/geographic-environments",
+        "collection": null,
         "termForm": "label"
       },
       "separator": null,
@@ -323,16 +318,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -558,8 +553,8 @@
       "qualityRelevance": null,
       "constraints": {},
       "vocabulary": {
-        "schemeName": "exploration-methods",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/exploration-methods",
+        "collection": null,
         "termForm": "label"
       },
       "separator": null,
@@ -573,16 +568,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -605,8 +600,8 @@
       "qualityRelevance": null,
       "constraints": {},
       "vocabulary": {
-        "schemeName": "exploration-purpose",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/exploration-purpose",
+        "collection": null,
         "termForm": "label"
       },
       "separator": null,
@@ -620,16 +615,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -747,8 +742,8 @@
       "qualityRelevance": null,
       "constraints": {},
       "vocabulary": {
-        "schemeName": "heat-flow-method",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-method",
+        "collection": null,
         "termForm": "label"
       },
       "separator": null,
@@ -762,16 +757,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -1136,8 +1131,8 @@
       "qualityRelevance": "M-score",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "heat-flow-corrections",
-        "collectionName": "insitu",
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/insitu",
         "termForm": "label"
       },
       "separator": null,
@@ -1151,16 +1146,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -1184,8 +1179,8 @@
       "qualityRelevance": null,
       "constraints": {},
       "vocabulary": {
-        "schemeName": "heat-flow-corrections",
-        "collectionName": "temperature",
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/temperature",
         "termForm": "label"
       },
       "separator": null,
@@ -1199,16 +1194,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -1232,8 +1227,8 @@
       "qualityRelevance": "perturbation flags",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "heat-flow-corrections",
-        "collectionName": "generic",
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/generic",
         "termForm": "label"
       },
       "separator": null,
@@ -1247,16 +1242,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -1280,8 +1275,8 @@
       "qualityRelevance": "perturbation flags",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "heat-flow-corrections",
-        "collectionName": "generic",
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/generic",
         "termForm": "label"
       },
       "separator": null,
@@ -1295,16 +1290,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -1328,8 +1323,8 @@
       "qualityRelevance": "perturbation flags",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "heat-flow-corrections",
-        "collectionName": "generic",
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/generic",
         "termForm": "label"
       },
       "separator": null,
@@ -1343,16 +1338,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -1376,8 +1371,8 @@
       "qualityRelevance": "perturbation flags",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "heat-flow-corrections",
-        "collectionName": "generic",
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/generic",
         "termForm": "label"
       },
       "separator": null,
@@ -1391,16 +1386,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -1424,8 +1419,8 @@
       "qualityRelevance": "perturbation flags",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "heat-flow-corrections",
-        "collectionName": "generic",
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/generic",
         "termForm": "label"
       },
       "separator": null,
@@ -1439,16 +1434,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -1472,8 +1467,8 @@
       "qualityRelevance": "perturbation flags",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "heat-flow-corrections",
-        "collectionName": "generic",
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/generic",
         "termForm": "label"
       },
       "separator": null,
@@ -1487,16 +1482,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -1520,8 +1515,8 @@
       "qualityRelevance": "perturbation flags",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "heat-flow-corrections",
-        "collectionName": "generic",
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/generic",
         "termForm": "label"
       },
       "separator": null,
@@ -1535,16 +1530,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -1613,8 +1608,8 @@
       "qualityRelevance": null,
       "constraints": {},
       "vocabulary": {
-        "schemeName": "heat-flow-probes",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-probes",
+        "collection": null,
         "termForm": "label"
       },
       "separator": null,
@@ -1628,16 +1623,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -2078,8 +2073,8 @@
       "qualityRelevance": "M-score",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "temperature-method",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/temperature-method",
+        "collection": null,
         "termForm": "notation"
       },
       "separator": null,
@@ -2093,16 +2088,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -2125,8 +2120,8 @@
       "qualityRelevance": "M-score",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "temperature-method",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/temperature-method",
+        "collection": null,
         "termForm": "notation"
       },
       "separator": null,
@@ -2140,16 +2135,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -2264,8 +2259,8 @@
       "qualityRelevance": null,
       "constraints": {},
       "vocabulary": {
-        "schemeName": "temperature-corrections",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/temperature-corrections",
+        "collection": null,
         "termForm": "label"
       },
       "separator": null,
@@ -2279,16 +2274,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -2311,8 +2306,8 @@
       "qualityRelevance": null,
       "constraints": {},
       "vocabulary": {
-        "schemeName": "temperature-corrections",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/temperature-corrections",
+        "collection": null,
         "termForm": "label"
       },
       "separator": null,
@@ -2326,16 +2321,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -2546,8 +2541,8 @@
       "qualityRelevance": "M-score",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "conductivity-sources",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/conductivity-sources",
+        "collection": null,
         "termForm": "label"
       },
       "separator": null,
@@ -2561,16 +2556,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -2594,8 +2589,8 @@
       "qualityRelevance": "M-score",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "conductivity-location",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/conductivity-location",
+        "collection": null,
         "termForm": "label"
       },
       "separator": null,
@@ -2609,16 +2604,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -2642,8 +2637,8 @@
       "qualityRelevance": "M-score",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "conductivity-methods",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/conductivity-methods",
+        "collection": null,
         "termForm": "label"
       },
       "separator": null,
@@ -2657,16 +2652,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -2690,8 +2685,8 @@
       "qualityRelevance": "M-score",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "conductivity-saturation",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/conductivity-saturation",
+        "collection": null,
         "termForm": "label"
       },
       "separator": null,
@@ -2705,16 +2700,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -2738,8 +2733,8 @@
       "qualityRelevance": "M-score",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "conductivity-conditions",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/conductivity-conditions",
+        "collection": null,
         "termForm": "label"
       },
       "separator": null,
@@ -2753,16 +2748,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -2788,8 +2783,8 @@
       "qualityRelevance": "M-score",
       "constraints": {},
       "vocabulary": {
-        "schemeName": "conductivity-pt-function",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/conductivity-pt-function",
+        "collection": null,
         "termForm": "label"
       },
       "separator": null,
@@ -2803,16 +2798,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -2883,8 +2878,8 @@
       "qualityRelevance": null,
       "constraints": {},
       "vocabulary": {
-        "schemeName": "conductivity-strategy",
-        "collectionName": null,
+        "scheme": "https://w3id.org/ihfc-iugg/vocabularies/conductivity-strategy",
+        "collection": null,
         "termForm": "label"
       },
       "separator": null,
@@ -2898,16 +2893,16 @@
         "meaning": "fuchs-2023-appendix-a",
         "type": "decision:D-18",
         "decimalPlaces": "fuchs-2023-appendix-a",
-        "maxLength": "vocabulary-release",
+        "maxLength": "vocabularies",
         "unit": "upload-template",
         "valueFormat": "upload-template",
         "obligation": "upload-template",
         "domain": "upload-template",
         "qualityRelevance": "upload-template",
         "range": "upload-template",
-        "vocabulary": "vocabulary-release",
+        "vocabulary": "vocabularies",
         "termForm": "upload-template",
-        "allowedValues": "vocabulary-release",
+        "allowedValues": "vocabularies",
         "separator": "upload-template",
         "guidance": "upload-template"
       }

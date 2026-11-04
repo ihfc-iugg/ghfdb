@@ -26,10 +26,9 @@ class TestFieldsPublicSurface:
             Field,
             FieldSchema,
             MissingSchemeError,
-            ReleaseFiles,
             UnknownFieldError,
+            Vocabularies,
             VocabularyBinding,
-            VocabularyRelease,
         )
 
 

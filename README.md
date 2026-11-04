@@ -26,8 +26,8 @@ The package is in early development and does not yet check or score anything.
 `ghfdb.fields` holds what the upload template records about each of its 70 fields: the
 published column name, meaning, type, unit, range, obligation, domain and quality relevance,
 and the allowed values of every field that takes terms from a controlled vocabulary, each
-fact with its source. The first load downloads the vocabulary release the definitions name
-and keeps it in a cache directory.
+fact with its source. The first load downloads the vocabularies the definitions link to
+and keeps them in a cache directory.
 
 ```python
 from ghfdb.fields import FieldSchema

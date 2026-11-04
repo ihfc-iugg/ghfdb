@@ -108,10 +108,10 @@ class UploadTemplate:
   file that cannot be read, and `FieldSchema.load()` is called in `__init__`, so that failure is
   raised with the file named.)
 - **`readme`**: column A, one line per row: what the workbook is, the package version, the
-  vocabulary release version and its DOI as `https://doi.org/<doi>`, the field reference URL
+  the address of the published vocabularies, the field reference URL
   `https://ihfc-iugg.github.io/ghfdb/reference/fields/index.html`, and how to fill it in (data
   from row 9 on `data list`, choice lists offer the allowed terms and accept any value).
-  The version and release lines are computed, the rest is fixed wording and untested. It says
+  The version line is computed, the rest is fixed wording and untested. It says
   nothing about checking, which arrives with R3.
 - **`write(path, replace=False)`**: builds the workbook first, then opens `path` with mode `"xb"`,
   or `"wb"` when `replace` is true, and saves the workbook into the open file. A
@@ -163,9 +163,9 @@ Mirrors `field_reference.py`.
   opens by saying who it is for (a data assessor or contributor filling in the template), then
   the three sheets and the description rows, then "Changes from the hand-maintained template"
   holding the changes marker, and closes with the explanation: the choice lists offer the allowed
-  terms and accept any value, the readme names the version and release, and the template is
-  generated from the field reference, with a Mermaid flowchart: field schema and vocabulary
-  release → `UploadTemplate` → documentation build → download. Home page → this page → download
+  terms and accept any value, the readme names the version, and the template is
+  generated from the field reference, with a Mermaid flowchart: field schema and published
+  vocabularies → `UploadTemplate` → documentation build → download. Home page → this page → download
   is two links (SC-005).
 - `docs/contributing/standards/documentation.md`, Project additions: a Guides table with two
   rows, the developer guide (`developer/`, a developer using ghfdb from Python) and the
@@ -173,7 +173,7 @@ Mirrors `field_reference.py`.
   template), as its section 4 requires of a second guide.
 - `docs/developer/upload-template.md`, added to the "Developer guide" toctree in
   `docs/index.md`: generate the template, choose a path, replace an existing file, read the
-  version and release a template came from.
+  version a template came from.
 - `docs/reference/python-api.md`: a section "Upload template" with `automodule:: ghfdb.template`.
 - README: a line under the documentation links pointing at the template page. CHANGELOG: `Added`
   lines for the template, the download and the developer interface, and `Changed` for openpyxl
@@ -192,7 +192,7 @@ Mirrors `field_reference.py`.
   - choice lists: the set of columns with a validation equals the set of fields with allowed
     values; each validation's range starts at row 9 and ends at row 1,048,576; its formula's range
     on `controlled vocabulary` holds exactly the field's terms; `showErrorMessage` is false;
-  - the readme states `ghfdb.__version__` and the schema's release version and DOI;
+  - the readme states `ghfdb.__version__` and where the vocabularies are published;
   - `TemplateError` names the field for a vocabulary field with no allowed values;
   - layout against `tests/sources/upload-template.xlsx`: sheet names, A1, A2–A8, first empty
     row (SC-004);

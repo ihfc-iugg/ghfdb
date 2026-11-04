@@ -12,6 +12,7 @@ from ghfdb import __version__
 from ghfdb.fields import Field, FieldSchema
 
 NONE = "-"
+VOCABULARIES = "https://w3id.org/ihfc-iugg/vocabularies"
 FIELD_REFERENCE = "https://ihfc-iugg.github.io/ghfdb/reference/fields/index.html"
 LAST_ROW = 1048576
 FIRST_DATA_ROW = 9
@@ -98,11 +99,10 @@ class UploadTemplate:
         Args:
             sheet: The ``readme`` sheet to write to.
         """
-        release = self.schema.release
         lines = (
             "Upload template for the Global Heat Flow Database.",
             f"Package version: {self.version}",
-            f"Vocabulary release: {release.version} (https://doi.org/{release.doi})",
+            f"Vocabularies: {VOCABULARIES}",
             f"Field reference: {FIELD_REFERENCE}",
             "Enter your data on the 'data list' sheet, one row per record from row 9.",
             "Cells with a choice list offer the allowed terms and accept any value.",

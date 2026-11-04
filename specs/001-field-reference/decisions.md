@@ -8,7 +8,7 @@ These were settled before the specification was written.
 |---|---|
 | G-1 | The machine-readable field description is one Frictionless Table Schema covering every upload template field. Per-column facts live in it: type, unit, obligation, range, allowed values and missing-value markers. Cross-field rules and scoring are not in it. |
 | G-2 | Every field carries both its field code (`P1`–`P13`, `C1`–`C49`, the header row of the template) and its published column name (row 6 of the template, such as `q` or `lat_NS`). |
-| G-3 | Allowed values of vocabulary fields are read from a stated release of the IHFC Controlled Vocabularies, v2026.1 (DOI [10.5880/fidgeo.2026.065](https://doi.org/10.5880/fidgeo.2026.065)), and never typed by hand or copied into the field schema (`CONSTITUTION.md`, Article XI). Each such field names its concept scheme, and its collection where there is one. Moving to a newer release is a separate, explicit step. |
+| G-3 | Allowed values of vocabulary fields are read from the IHFC Controlled Vocabularies as currently published at their permanent identifiers, and never typed by hand or copied into the field schema (`CONSTITUTION.md`, Article XI). Each such field links to the identifier of its concept scheme, and of its collection where there is one. The field schema states no release, version or DOI, because data assessors do not choose which version they use (maintainer, 2026-11-04). |
 | G-4 | The field list comes from the current published upload template, sheet `data list`. A newer template version is an ordinary change to the field reference. |
 | G-5 | Every rule names its source (`CONSTITUTION.md`, Article IX): Fuchs et al. (2023) Appendix A, the template, or a recorded decision. |
 | G-6 | The field reference in the documentation follows `docs/contributing/standards/documentation.md` for reference pages, with simplified Mermaid diagrams where a process is described. |
@@ -36,7 +36,7 @@ Row 6 of the template spells two names wrongly: `tc_pT_fuction` (C46) and `Ref_I
 
 **Chosen:** the field schema records `tc_pT_function` and `Ref_IGSN`, and keeps the misspelled
 form as the template's earlier spelling. The GHFDB portal uses the correct spellings and rejects
-the misspelled ones, and the v2026.1 vocabulary release names `tc_pT_function`. Recording the
+the misspelled ones, and the vocabularies name `tc_pT_function`. Recording the
 earlier spelling lets a later check recognise an outdated template and say so.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
@@ -76,9 +76,10 @@ value and missing data.
 
 The heat-flow corrections scheme serves nine fields (C11–C19) and groups its concepts into
 collections such as in-situ conditions flags and environmental effect flags. **Chosen:** each
-field names its scheme, and where the release groups concepts into a collection for that field,
-its allowed values are that collection. Which collection serves which field is read from the
-release where it says so, and recorded as a decision where it does not.
+field links to its scheme, and where the vocabularies group concepts into a collection for that
+field, to that collection, whose allowed values are then its members. Which collection serves
+which field is read from the vocabularies where they say so, and recorded as a decision where
+they do not.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 
@@ -86,34 +87,35 @@ release where it says so, and recorded as a decision where it does not.
 
 For vocabulary fields the template's "Allowed range of values" row often holds one example term,
 such as `[Onshore (continental)]` for P7. **Chosen:** these are ignored as rules. The allowed
-values come from the vocabulary release.
+values come from the published vocabulary.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 
-### D-8 — The field schema ships with the package and the vocabulary release is downloaded once
+### D-8 — The field schema ships with the package and the vocabulary files are downloaded when needed
 
 **Chosen:** the field schema is part of the installed package. The vocabulary files are not: the
-package downloads the stated release the first time it is needed, keeps it in a cache directory
-outside the repository, keyed by version, and reads it from there afterwards, so only the first
-load needs the network.
+package downloads each scheme's Turtle file from its identifier with `.ttl` added the first time it
+is needed, keeps it in a cache directory outside the repository, named for the scheme, and reads it
+from there afterwards. A cached file is downloaded again once it is a week old, and the old copy
+stays in use when that fails. Deleting the cache directory refreshes everything.
 
-**ADR:** docs/adr/0003-vocabularies-are-read-from-the-published-release.md
+**ADR:** docs/adr/0003-vocabularies-are-read-from-their-permanent-identifiers.md
 
-### D-9 — Moving to a newer vocabulary release is a change of the stated release
+### D-9 — A change in the vocabularies needs no change to the field schema
 
-**Chosen:** the maintainer changes the release the field schema names. The allowed values are
-read from that release, so nothing is regenerated and nothing can be edited by hand. The
-repository's checks use the real published release and fail when the vocabularies have published
-a newer one than the field schema names. A release that lacks a scheme a field names stops the
-load, naming the field.
+**Chosen:** the allowed values are read from the published files, so nothing is regenerated and
+nothing can be edited by hand. The repository's checks start every run with an empty cache, so they
+read the files as currently published and fail when the vocabularies change beneath the field
+schema. A scheme or collection that is no longer defined where it is published stops the load,
+naming the field.
 
-**ADR:** docs/adr/0003-vocabularies-are-read-from-the-published-release.md
+**ADR:** docs/adr/0003-vocabularies-are-read-from-their-permanent-identifiers.md
 
 ### D-10 — Three stories
 
 The data assessor's lookup and the developer's loading are separate stories, because they are
-different people. Moving to a newer release is a third, because a maintainer sets out to do it on
-its own. Everything else is a scenario under one of them.
+different people. Learning that the vocabularies changed is a third, because a maintainer deals
+with it on its own. Everything else is a scenario under one of them.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 
@@ -205,7 +207,7 @@ The template writes the temperature methods (C31, C32) by notation (`[LOGeq]`) a
 vocabulary field by label (`[Bullard method]`), although `conductivity-saturation` publishes
 notations too. **Chosen:** each vocabulary field records which form its terms take, sourced to the
 template. A concept with no notation (`Other`, `Unspecified` in the temperature methods) is
-written by its label. The label is the release's English preferred label. The template's older
+written by its label. The label is the vocabularies' English preferred label. The template's older
 labels, which v2026.1 keeps as alternative labels, are not allowed values.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
@@ -213,8 +215,8 @@ labels, which v2026.1 keeps as alternative labels, are not allowed values.
 ### D-21 — Allowed values are listed in the order of their terms
 
 A concept scheme has no order of its own. **Chosen:** allowed values are sorted by term, ignoring
-case, so the list is identical whenever the release is. The members of a `skos:OrderedCollection`
-are the exception: they keep the collection's order, because the release gave them one.
+case, so the list is identical whenever the vocabularies are. The members of a `skos:OrderedCollection`
+are the exception: they keep the collection's order, because the vocabularies gave them one.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 
@@ -238,15 +240,15 @@ nor Appendix A says one does.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 
-### D-24 — Vocabulary bindings are written by scheme name
+### D-24 — Vocabulary bindings are the permanent identifiers
 
-**Chosen:** a vocabulary field names its scheme and collection by the last segment of their URI
-(`conductivity-methods`, `insitu`), and the scheme's name is also the name of its file in the
-release. No full URI is written in the field schema. The vocabularies' main branch has already
-moved its URIs to `w3id.org`, so a binding written as a full URI would need a hand edit at the
-first move, which FR-015 rules out.
+**Chosen:** a vocabulary field links to the permanent identifier of its scheme (such as
+`https://w3id.org/ihfc-iugg/vocabularies/conductivity-methods`) and of its collection (such as
+`https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/insitu`), written by hand. The
+identifiers are permanent by promise, so a hand-written one does not go stale, and the scheme's
+file is at the identifier with `.ttl` added.
 
-**ADR:** docs/adr/0003-vocabularies-are-read-from-the-published-release.md
+**ADR:** docs/adr/0003-vocabularies-are-read-from-their-permanent-identifiers.md
 
 ### D-25 — The value format is not called `format`
 
@@ -257,18 +259,18 @@ first move, which FR-015 rules out.
 
 ### D-26 — The explanation stays on the field reference, and the developer gets a guide
 
-FR-014 puts the explanation of where facts come from, and of adopting a release, on the field
+FR-014 puts the explanation of where facts come from, and of how the allowed values stay current, on the field
 reference. **Chosen:** it stays there, as the specification says, and the developer's task of
 loading the field definitions gets a short guide page of its own, as the documentation standard
 asks of every feature.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 
-### D-27 — Reading a vocabulary release ships in the package
+### D-27 — Reading the vocabularies ships in the package
 
-**Chosen:** `ghfdb.fields.release` is part of the package and `rdflib` is a runtime dependency,
-because loading the field schema reads the release. Keeping the reading outside the package would
-leave it untyped and uncovered by the checks every other module passes.
+**Chosen:** `ghfdb.fields.vocabularies` is part of the package and `rdflib` is a runtime
+dependency, because loading the field schema reads the vocabularies. Keeping the reading outside
+the package would leave it untyped and uncovered by the checks every other module passes.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 

@@ -137,8 +137,10 @@ runtime dependency.
 ### The stored vocabularies
 
 The Turtle files are not kept in the repository or in the package. Each scheme's file is
-published at its identifier with `.ttl` added. The package downloads it on first use, keeps it in
-a cache directory named for the scheme, and downloads it again once it is a week old. A reader who
+published at its identifier with `.ttl` added. The package downloads it on first use, keeps it
+in a cache directory, and asks the server whether it changed before using it again. GitHub
+Pages sends `ETag`, `Last-Modified` and `Cache-Control: max-age=600`, so an unchanged file costs
+a `304`. Hand-written expiry or cache code would only repeat what `requests-cache` does. A reader who
 wants the vocabularies' terms of use finds them with the vocabularies.
 
 ### The template as a test source
@@ -170,7 +172,7 @@ reading the template in tests     · 6, maintained package · openpyxl (developm
 markdown entries for the docs     · 7, new · searched myst-parser and sphinx for a table-schema renderer; none
 diagrams in the docs              · 6, maintained package · sphinxcontrib-mermaid
 python API page                   · 3, package · sphinx.ext.autodoc
-downloading a vocabulary file       · 3, standard library · urllib; the vocabularies publish files, no client
+downloading and caching a file      · 6, maintained package · requests, requests-cache; the vocabularies publish files, no client
 ```
 
 This repository holds no code yet beyond two empty packages, so nothing under 2 applies.

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from fakes import FakeSite, fake_session
 from frictionless import Schema
 from openpyxl import load_workbook
 
@@ -20,7 +21,7 @@ from ghfdb.fields import (
 COLOURS = "https://example.test/vocabularies/colours"
 HERE = Path(__file__).parent
 THREE_FIELDS = HERE / "schemas" / "three_fields.json"
-TEST_VOCABULARIES = Vocabularies(HERE / "vocabularies")
+TEST_VOCABULARIES = Vocabularies(fake_session(FakeSite()))
 
 
 def load_three_fields() -> FieldSchema:

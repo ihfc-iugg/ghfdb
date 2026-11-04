@@ -31,7 +31,7 @@ cache directory outside the repository, one per scheme; `tests/sources/upload-te
 
 **Testing**: pytest, mirroring the source tree; coverage floors 90% project and 85% patch.
 
-**Target Platform**: any platform Python runs on; the first load needs the network, later loads (within a week) do not.
+**Target Platform**: any platform Python runs on; the first load needs the network, and a cached file works offline.
 
 **Project Type**: single Python package.
 
@@ -48,7 +48,7 @@ warnings as errors.
 | II Simplicity | One JSON file, read with `json`. No second source format, no build step for the schema. |
 | III Anti-Abstraction | No base classes. `FieldSchema` and `Vocabularies` are the classes with behaviour; the rest are frozen dataclasses. |
 | IV Integration-First | The field definitions are tested the way a developer meets them: load, look up, read. The reading is tested on small test vocabularies and on the real published ones. |
-| V Security & data-safety | No workbook is read. A file is downloaded over HTTPS from the scheme's identifier and cached only once it parses as Turtle. The template copy in `tests/sources/` is opened read-only, formulas not evaluated (`data_only=True`). |
+| V Security & data-safety | No workbook is read. A file is downloaded over HTTPS from the scheme's identifier. The template copy in `tests/sources/` is opened read-only, formulas not evaluated (`data_only=True`). |
 | VI Documentation | README, `CHANGELOG.md`, `CONTEXT.md` and the documentation change in the same pull request. |
 | VII Dependency discipline | `rdflib` is a runtime dependency, because loading the field schema reads the vocabularies; the reason is stated in the pull request. |
 | VIII Cohesion | Lookup and loading live on `FieldSchema`; reading the vocabularies and computing allowed values live on `Vocabularies`. |
@@ -271,13 +271,14 @@ class MissingSchemeError(LookupError):
     """Names the field code and the scheme or collection that is not defined."""
 ```
 
-- The cached file is named for the last segment of the scheme's identifier, so only the files a
-  field needs are read. A collection is found by its identifier in the scheme's file. The members
+- Only the scheme files a field needs are read. A collection is found by its identifier in the scheme's file. The members
   of a `skos:OrderedCollection` keep the collection's order; every other list is sorted by term.
-- The download is the scheme's identifier with `.ttl` added. It is written to the cache only once
-  it parses as Turtle, so a failed download leaves nothing behind. A file older than a week is
-  downloaded again and the old copy is kept when that fails. The cache is
-  `$GHFDB_VOCABULARY_CACHE`, else `ghfdb/vocabularies` in the user's cache directory.
+- The download is the scheme's identifier with `.ttl` added, through a `requests-cache`
+  `CachedSession` (filesystem backend, `cache_control=True`, `expire_after=0`,
+  `stale_if_error=True`, two retries on 502, 503 and 504). The server's `ETag`, `Last-Modified`
+  and `Cache-Control` decide freshness, so an unchanged file costs a `304` and no fixed expiry
+  hides a change. The cache is `$GHFDB_VOCABULARY_CACHE`, else `ghfdb/vocabularies` in the
+  user's cache directory. `Vocabularies` takes a session, so tests use an in-memory one.
 - `rdflib` is imported by this module, which `ghfdb.fields` imports.
 
 ### The vocabulary checks (FR-017)
@@ -286,7 +287,8 @@ The test session's cache starts empty (`tests/conftest.py`), so the tests load t
 against the files as currently published. One test checks that every scheme and collection the
 schema links to is defined in its file. Small synthetic vocabularies under
 `tests/test_fields/vocabularies/` cover the reading itself, including ordered collections, and a
-local directory stands in for the web to cover the download, the week-old cache and a failed or
+fake site (a transport adapter on an in-memory cached session) stands in for the web to cover the
+download, revalidation with the `ETag`, a changed file, an unreachable server and a failed or
 non-Turtle download.
 
 ### The documentation

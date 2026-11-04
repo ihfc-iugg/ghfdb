@@ -32,10 +32,20 @@ The result is a {py:class}`~ghfdb.fields.FieldSchema`.
 Each vocabulary field links to the permanent identifier of its concept scheme, such as
 `https://w3id.org/ihfc-iugg/vocabularies/exploration-methods`. The scheme's file, at the
 identifier with `.ttl` added, is downloaded into `~/.cache/ghfdb/vocabularies` (or
-`$XDG_CACHE_HOME/ghfdb/vocabularies`) the first time it is needed, and downloaded again once it
-is a week old. Set `GHFDB_VOCABULARY_CACHE` to keep the downloads in another directory, and
+`$XDG_CACHE_HOME/ghfdb/vocabularies`) the first time it is needed. After that the server's
+`ETag` and `Cache-Control` decide whether the cached file is still current, so a change in the
+vocabularies reaches you without a fixed delay, and a cached file is used when you are offline. Set `GHFDB_VOCABULARY_CACHE` to keep the downloads in another directory, and
 delete the directory to refresh everything now. Call
 `ghfdb.fields.vocabularies.cache_directory()` to see which directory is in use.
+
+The downloads use the session `ghfdb.fields.vocabularies.caching_session()` builds. To use
+your own session, for example one behind a proxy, pass it in:
+
+```python
+from ghfdb.fields import FieldSchema, Vocabularies
+
+schema = FieldSchema.load(vocabularies=Vocabularies(my_session))
+```
 
 To get the whole schema as a Frictionless Table Schema, with an `enum` on every field that
 has allowed values, call `schema.descriptor()`. It builds the dictionary on each call.

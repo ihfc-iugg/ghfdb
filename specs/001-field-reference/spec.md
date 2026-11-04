@@ -108,8 +108,8 @@ access and confirm they load.
 
 1. **Given** the package is installed, **When** a developer loads the field definitions, **Then**
    they get one definition for every field of the upload template, in field-code order. The first
-   load downloads the vocabulary files into a cache directory, and later loads need no network
-   access.
+   load downloads the vocabulary files into a cache directory, and a cached file the server
+   says is still current needs no network access.
 2. **Given** the field definitions, **When** a developer looks up a field by its field code or by
    its published column name, **Then** they get the same definition either way.
 3. **Given** the field definitions, **When** a developer looks up a code or name that is not a
@@ -155,9 +155,10 @@ confirm every identifier the field schema holds is defined in them.
 3. **Given** a scheme or collection that is no longer defined where it is published, **When** the
    field definitions are loaded, **Then** loading fails and names the field and the missing
    identifier.
-4. **Given** a cached copy of a vocabulary file more than a week old, **When** the field
-   definitions are loaded, **Then** the file is downloaded again, and the old copy stays in use
-   when the download fails.
+4. **Given** a cached copy of a vocabulary file that the server no longer says is current,
+   **When** the field definitions are loaded, **Then** the package asks the server, uses the
+   cached copy if the server says it is unchanged, and otherwise downloads the file again. The
+   cached copy stays in use when the server cannot be reached. No fixed expiry hides a change.
 
 ### Edge Cases
 
@@ -216,10 +217,10 @@ confirm every identifier the field schema holds is defined in them.
   template's earlier spelling. *(US1, US2)*
 - **FR-010**: A developer MUST be able to load every field definition from the installed package
   and look a field up by field code or by published column name. A vocabulary file MUST be
-  downloaded from its scheme's identifier with `.ttl` added on first use, into a cache directory
-  outside the repository named for the scheme, and read from the cache after that, with no network
-  access. A cached file older than a week MUST be downloaded again, and the old copy kept when
-  that fails. The package MUST NOT contain the vocabulary files. An unknown code or name MUST fail
+  downloaded from its scheme's identifier with `.ttl` added on first use, through a caching HTTP
+  session whose cache is a directory outside the repository. The server's `ETag`, `Last-Modified`
+  and `Cache-Control` MUST decide whether a cached file is still current, with no fixed expiry,
+  and the cached copy MUST be used when the server cannot be reached. The package MUST NOT contain the vocabulary files. An unknown code or name MUST fail
   and name what was asked for. *(US2)*
 - **FR-011**: The documentation MUST contain a field reference with one entry per field, giving
   the same facts in the same order for every field, each with its source, following the reference

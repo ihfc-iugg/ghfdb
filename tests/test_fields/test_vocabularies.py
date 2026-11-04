@@ -1,13 +1,11 @@
-import os
-import time
-from io import BytesIO
 from pathlib import Path
 from typing import Literal
-from urllib.error import HTTPError
 
 import pytest
+from fakes import FakeSite, fake_session
 from rdflib import RDF, Graph, URIRef
 from rdflib.namespace import SKOS
+from requests_cache import CachedSession
 
 from ghfdb.fields import (
     AllowedValue,
@@ -16,9 +14,8 @@ from ghfdb.fields import (
     Vocabularies,
     VocabularyBinding,
 )
-from ghfdb.fields.vocabularies import MAX_AGE_SECONDS, cache_directory
+from ghfdb.fields.vocabularies import cache_directory, caching_session
 
-FIXTURES = Path(__file__).parent / "vocabularies"
 COLOURS = "https://example.test/vocabularies/colours"
 SHAPES = "https://example.test/vocabularies/shapes"
 
@@ -31,17 +28,9 @@ def binding(
     return VocabularyBinding(scheme, collection, term_form)
 
 
-def published(tmp_path: Path) -> Path:
-    """Publish the test schemes in a local directory and return their address.
-
-    A scheme is published at its identifier with ``.ttl`` added, so a scheme whose
-    identifier is a ``file:`` address is downloaded from that directory.
-    """
-    site = tmp_path / "site"
-    site.mkdir()
-    for path in FIXTURES.glob("*.ttl"):
-        (site / path.name).write_bytes(path.read_bytes())
-    return site
+def vocabularies() -> tuple[Vocabularies, FakeSite]:
+    site = FakeSite()
+    return Vocabularies(fake_session(site)), site
 
 
 class TestCacheDirectory:
@@ -62,128 +51,88 @@ class TestCacheDirectory:
 
 
 class TestDownload:
-    def test_a_missing_file_is_downloaded_from_the_identifier_with_ttl_added(
-        self, tmp_path: Path
-    ) -> None:
-        site = published(tmp_path)
-        cache = tmp_path / "cache"
-        scheme = (site / "colours").as_uri()
+    def test_a_scheme_is_downloaded_from_its_identifier_with_ttl_added(self) -> None:
+        vocabularies_, site = vocabularies()
 
-        graph = Vocabularies(cache).graph(scheme)
-
-        assert (cache / "colours.ttl").read_bytes() == (
-            site / "colours.ttl"
-        ).read_bytes()
-        assert (URIRef(COLOURS), RDF.type, SKOS.ConceptScheme) in graph
-
-    def test_a_cached_file_is_read_without_downloading_it_again(
-        self, tmp_path: Path
-    ) -> None:
-        cache = tmp_path / "cache"
-        cache.mkdir()
-        (cache / "colours.ttl").write_bytes((FIXTURES / "colours.ttl").read_bytes())
-        missing = (tmp_path / "nowhere" / "colours").as_uri()
-
-        graph = Vocabularies(cache).graph(missing)
+        graph = vocabularies_.graph(COLOURS)
 
         assert (URIRef(COLOURS), RDF.type, SKOS.ConceptScheme) in graph
+        assert [request.url for request in site.requests] == [f"{COLOURS}.ttl"]
 
-    def test_a_file_older_than_a_week_is_downloaded_again(self, tmp_path: Path) -> None:
-        site = published(tmp_path)
-        cache = tmp_path / "cache"
-        cache.mkdir()
-        stale = cache / "colours.ttl"
-        stale.write_text("")
-        old = time.time() - MAX_AGE_SECONDS - 60
-        os.utime(stale, (old, old))
+    def test_a_file_is_downloaded_once_per_object(self) -> None:
+        vocabularies_, site = vocabularies()
 
-        Vocabularies(cache).graph((site / "colours").as_uri())
+        vocabularies_.graph(COLOURS)
+        vocabularies_.graph(COLOURS)
 
-        assert stale.read_bytes() == (site / "colours.ttl").read_bytes()
+        assert len(site.requests) == 1
 
-    def test_an_old_file_is_kept_when_the_download_fails(self, tmp_path: Path) -> None:
-        cache = tmp_path / "cache"
-        cache.mkdir()
-        old_file = cache / "colours.ttl"
-        old_file.write_bytes((FIXTURES / "colours.ttl").read_bytes())
-        old = time.time() - MAX_AGE_SECONDS - 60
-        os.utime(old_file, (old, old))
-        offline = (tmp_path / "nowhere" / "colours").as_uri()
+    def test_an_unchanged_file_is_checked_with_its_etag_and_read_from_the_cache(
+        self,
+    ) -> None:
+        site = FakeSite()
+        session = fake_session(site)
+        Vocabularies(session).graph(COLOURS)
 
-        graph = Vocabularies(cache).graph(offline)
+        graph = Vocabularies(session).graph(COLOURS)
+
+        assert site.requests[1].headers["If-None-Match"] == site.etag
+        assert (URIRef(COLOURS), RDF.type, SKOS.ConceptScheme) in graph
+
+    def test_a_changed_file_is_downloaded_again(self) -> None:
+        site = FakeSite()
+        session = fake_session(site)
+        Vocabularies(session).graph(COLOURS)
+        site.etag = '"two"'
+
+        Vocabularies(session).graph(COLOURS)
+
+        assert len(site.requests) == 2
+        assert site.requests[1].headers["If-None-Match"] == '"one"'
+
+    def test_the_cached_file_is_used_when_the_server_cannot_be_reached(self) -> None:
+        site = FakeSite()
+        session = fake_session(site)
+        Vocabularies(session).graph(COLOURS)
+        site.failure = ConnectionError("offline")
+
+        graph = Vocabularies(session).graph(COLOURS)
 
         assert (URIRef(COLOURS), RDF.type, SKOS.ConceptScheme) in graph
 
-    def test_a_scheme_that_cannot_be_downloaded_leaves_nothing_in_the_cache(
-        self, tmp_path: Path
-    ) -> None:
-        cache = tmp_path / "cache"
+    def test_a_scheme_that_cannot_be_downloaded_is_reported(self) -> None:
+        vocabularies_, site = vocabularies()
+        site.failure = ConnectionError("offline")
 
         with pytest.raises(OSError):
-            Vocabularies(cache).graph((tmp_path / "nowhere" / "colours").as_uri())
+            vocabularies_.graph(COLOURS)
 
-        assert not list(cache.glob("*"))
+    def test_a_missing_file_is_reported(self) -> None:
+        vocabularies_, _ = vocabularies()
 
-    def test_something_that_is_not_turtle_is_refused_and_not_cached(
-        self, tmp_path: Path
-    ) -> None:
-        site = published(tmp_path)
-        (site / "colours.ttl").write_text("<html>not turtle")
-        cache = tmp_path / "cache"
+        with pytest.raises(OSError, match="404"):
+            vocabularies_.graph("https://example.test/vocabularies/fabrics")
+
+    def test_something_that_is_not_turtle_is_refused(self) -> None:
+        vocabularies_, site = vocabularies()
+        site.override["colours.ttl"] = b"<html>not turtle"
 
         with pytest.raises(OSError, match="not Turtle"):
-            Vocabularies(cache).graph((site / "colours").as_uri())
+            vocabularies_.graph(COLOURS)
 
-        assert not list(cache.glob("*"))
-
-
-class TestServerErrors:
-    @staticmethod
-    def failing(codes: list[int]):  # type: ignore[no-untyped-def]
-        def urlopen(address: str, timeout: float) -> BytesIO:
-            if codes:
-                raise HTTPError(address, codes.pop(0), "failed", None, None)  # type: ignore[arg-type]
-            return BytesIO((FIXTURES / "colours.ttl").read_bytes())
-
-        return urlopen
-
-    def test_a_server_error_is_tried_again(
+    def test_the_default_session_keeps_its_files_in_the_cache_directory(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        monkeypatch.setattr(
-            "ghfdb.fields.vocabularies.urlopen", self.failing([502, 503])
-        )
-        monkeypatch.setattr("time.sleep", lambda seconds: None)
+        monkeypatch.setenv("GHFDB_VOCABULARY_CACHE", str(tmp_path))
 
-        graph = Vocabularies(tmp_path).graph(COLOURS)
+        session = caching_session()
 
-        assert (URIRef(COLOURS), RDF.type, SKOS.ConceptScheme) in graph
-
-    def test_a_server_that_keeps_failing_is_reported(
-        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-    ) -> None:
-        monkeypatch.setattr(
-            "ghfdb.fields.vocabularies.urlopen", self.failing([502, 502, 502])
-        )
-        monkeypatch.setattr("time.sleep", lambda seconds: None)
-
-        with pytest.raises(HTTPError):
-            Vocabularies(tmp_path).graph(COLOURS)
-
-    def test_a_missing_file_is_not_tried_again(
-        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-    ) -> None:
-        codes = [404, 502]
-        monkeypatch.setattr("ghfdb.fields.vocabularies.urlopen", self.failing(codes))
-
-        with pytest.raises(HTTPError):
-            Vocabularies(tmp_path).graph(COLOURS)
-
-        assert codes == [502]
+        assert isinstance(session, CachedSession)
+        assert Path(session.cache.cache_dir) == tmp_path  # type: ignore[attr-defined]
 
 
 class TestAllowedValues:
-    vocabularies = Vocabularies(FIXTURES)
+    vocabularies = Vocabularies(fake_session(FakeSite()))
 
     def test_a_scheme_gives_every_one_of_its_concepts(self) -> None:
         values = self.vocabularies.allowed_values(binding(COLOURS))
@@ -256,19 +205,18 @@ class TestAllowedValues:
         with pytest.raises(MissingSchemeError, match="colours/cool"):
             self.vocabularies.allowed_values(binding(COLOURS, f"{COLOURS}/cool"))
 
-    def test_a_concept_without_an_english_label_is_an_error(
-        self, tmp_path: Path
-    ) -> None:
-        (tmp_path / "shapes.ttl").write_text(
+    def test_a_concept_without_an_english_label_is_an_error(self) -> None:
+        vocabularies_, site = vocabularies()
+        site.override["shapes.ttl"] = (
             "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .\n"
             f"<{SHAPES}> a skos:ConceptScheme .\n"
             f"<{SHAPES}/round> a skos:Concept ;\n"
             f"  skos:inScheme <{SHAPES}> ;\n"
             '  skos:prefLabel "rund"@de .\n'
-        )
+        ).encode()
 
         with pytest.raises(MissingSchemeError, match="round"):
-            Vocabularies(tmp_path).allowed_values(binding(SHAPES))
+            vocabularies_.allowed_values(binding(SHAPES))
 
 
 # The tests below read the vocabularies as currently published at their permanent

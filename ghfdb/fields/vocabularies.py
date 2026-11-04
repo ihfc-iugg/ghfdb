@@ -1,28 +1,27 @@
 """The IHFC Controlled Vocabularies, read from their permanent identifiers.
 
 A concept scheme is published at its identifier with ``.ttl`` added. Each file is
-downloaded into a cache directory outside the repository the first time it is needed,
-and downloaded again when the cached copy is older than a week.
+downloaded through a caching HTTP session, which keeps the file in a cache directory
+outside the repository and asks the server whether it changed before using it again.
 """
 
 import os
-import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
-from urllib.error import HTTPError
-from urllib.request import urlopen
 
 from rdflib import RDF, Graph, URIRef
 from rdflib import Literal as RdfLiteral
 from rdflib.collection import Collection
 from rdflib.namespace import SKOS
 from rdflib.term import Node
+from requests import Session
+from requests.adapters import HTTPAdapter, Retry
+from requests_cache import CachedSession
 
 CACHE_VARIABLE = "GHFDB_VOCABULARY_CACHE"
-MAX_AGE_SECONDS = 7 * 24 * 60 * 60
 TIMEOUT = 60
-ATTEMPTS = 3
+RETRIES = Retry(total=2, backoff_factor=1, status_forcelist=(502, 503, 504))
 
 
 @dataclass(frozen=True)
@@ -76,17 +75,37 @@ def cache_directory() -> Path:
     return Path(base) / "ghfdb" / "vocabularies"
 
 
-class Vocabularies:
-    """The vocabulary files a field schema points at, cached on disk."""
+def caching_session() -> Session:
+    """Build the session vocabulary files are downloaded with.
 
-    def __init__(self, cache: Path | None = None) -> None:
-        """Remember where the files are kept; a file is read when it is needed.
+    Returns:
+        A session that keeps responses in ``cache_directory()``. The server's
+        ``ETag``, ``Last-Modified`` and ``Cache-Control`` decide how long a file is
+        used without asking, and afterwards the server is asked whether it changed. A
+        cached file is used when the server cannot be reached.
+    """
+    session = CachedSession(
+        cache_name=str(cache_directory()),
+        backend="filesystem",
+        cache_control=True,
+        expire_after=0,
+        stale_if_error=True,
+    )
+    session.mount("https://", HTTPAdapter(max_retries=RETRIES))
+    return session
+
+
+class Vocabularies:
+    """The vocabulary files a field schema points at."""
+
+    def __init__(self, session: Session | None = None) -> None:
+        """Remember how files are downloaded; a file is read when it is needed.
 
         Args:
-            cache: The directory holding one ``<scheme name>.ttl`` file per scheme.
-                Without one, see ``cache_directory``.
+            session: The session to download files with. Without one, see
+                ``caching_session``.
         """
-        self.directory = cache or cache_directory()
+        self.session = caching_session() if session is None else session
         self.graphs: dict[str, Graph] = {}
 
     def allowed_values(self, binding: VocabularyBinding) -> tuple[AllowedValue, ...]:
@@ -121,78 +140,28 @@ class Vocabularies:
         return tuple(sorted(values, key=lambda value: value.term.casefold()))
 
     def graph(self, scheme: str) -> Graph:
-        """Read the file of one scheme, downloading it when it is missing or old.
+        """Read the file of one scheme once.
 
         Args:
             scheme: The scheme's permanent identifier. The file is at the identifier
-                with ``.ttl`` added and is cached under the identifier's last segment.
+                with ``.ttl`` added.
 
         Returns:
             The scheme's graph.
 
         Raises:
-            OSError: The file is not cached and cannot be downloaded.
-        """
-        if scheme not in self.graphs:
-            path = self.directory / f"{scheme.rsplit('/', 1)[-1]}.ttl"
-            if not path.is_file():
-                self.download(scheme, path)
-            elif time.time() - path.stat().st_mtime > MAX_AGE_SECONDS:
-                try:
-                    self.download(scheme, path)
-                except OSError:
-                    pass  # keep working offline on the copy we have
-            self.graphs[scheme] = Graph().parse(path, format="turtle")
-        return self.graphs[scheme]
-
-    @staticmethod
-    def fetch(address: str) -> bytes:
-        """Read a file from the web, trying again when the server fails.
-
-        Args:
-            address: The address to read.
-
-        Returns:
-            The file's content.
-
-        Raises:
-            OSError: The file cannot be read after ``ATTEMPTS`` tries, or the
-                server answered with anything but a server error.
-        """
-        for attempt in range(1, ATTEMPTS + 1):
-            try:
-                with urlopen(address, timeout=TIMEOUT) as response:
-                    content: bytes = response.read()
-                return content
-            except HTTPError as error:
-                if error.code < 500 or attempt == ATTEMPTS:
-                    raise
-                time.sleep(attempt)
-        raise AssertionError("unreachable")  # pragma: no cover
-
-    @staticmethod
-    def download(scheme: str, path: Path) -> None:
-        """Download a scheme's Turtle file into the cache.
-
-        The file is written only once it parses, so a failed download leaves the
-        cache as it was.
-
-        Args:
-            scheme: The scheme's permanent identifier.
-            path: Where to put the file.
-
-        Raises:
             OSError: The file cannot be downloaded or is not Turtle.
         """
-        content = Vocabularies.fetch(f"{scheme}.ttl")
-        try:
-            Graph().parse(data=content, format="turtle")
-        except Exception as error:
-            raise OSError(f"{scheme}.ttl is not Turtle: {error}") from error
-        path.parent.mkdir(parents=True, exist_ok=True)
-        partial = path.with_suffix(".partial")
-        partial.write_bytes(content)
-        partial.replace(path)
+        if scheme not in self.graphs:
+            response = self.session.get(f"{scheme}.ttl", timeout=TIMEOUT)
+            response.raise_for_status()
+            try:
+                self.graphs[scheme] = Graph().parse(
+                    data=response.content, format="turtle"
+                )
+            except Exception as error:
+                raise OSError(f"{scheme}.ttl is not Turtle: {error}") from error
+        return self.graphs[scheme]
 
     @staticmethod
     def members(

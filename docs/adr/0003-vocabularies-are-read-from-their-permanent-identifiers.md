@@ -16,10 +16,13 @@ The field schema, `ghfdb/fields/schema.json`, is written by hand and holds no vo
   the vocabularies they use: the terms are those currently published at the identifiers.
 - The vocabulary files are not stored in this repository or in the package. A scheme is published
   at its identifier with `.ttl` added, so the package downloads that file the first time it needs
-  the scheme and keeps it in a cache directory outside the repository, named for the scheme. A
-  cached file older than a week is downloaded again, and the old copy is kept when the download
-  fails. The cache is in the user's cache directory, or where `GHFDB_VOCABULARY_CACHE` points.
-  Deleting the directory forces a fresh download.
+  the scheme through a `requests-cache` session whose cache is a directory outside the
+  repository, in the user's cache directory or where `GHFDB_VOCABULARY_CACHE` points. The
+  server's `ETag`, `Last-Modified` and `Cache-Control` decide freshness: within the time the
+  server allows the cached file is used, after that the server is asked, and an unchanged file
+  costs a `304`. There is no fixed expiry, because one could hide a change. The cached file is
+  used when the server cannot be reached, and a server error is tried again twice. Deleting the
+  directory forces a fresh download.
 - `FieldSchema.load()` reads the allowed values from the cached files. The members of a
   `skos:OrderedCollection` keep the collection's order. Every other list is sorted by term.
 - A Frictionless Table Schema with an `enum` on each field is built in memory by
@@ -42,8 +45,8 @@ the vocabularies change. An identifier that moves is the vocabularies' responsib
 is permanent by promise, and the schema holds nothing else that could go stale.
 
 The costs are a first load that needs the network, and terms that can change between two uses of
-the same package version. The week-long cache bounds the second, and a cached copy keeps working
-offline.
+the same package version. The server's cache headers bound the second to the ten minutes GitHub Pages
+allows, and a cached copy keeps working offline.
 
 ## Revisit if
 

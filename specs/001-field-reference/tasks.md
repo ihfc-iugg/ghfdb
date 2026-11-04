@@ -32,8 +32,8 @@ column name, and validate the complete Table Schema built from `schema.json` wit
 - [ ] T003 [US2] `ghfdb/fields/vocabularies.py`: the frozen dataclasses `VocabularyBinding` and
   `AllowedValue` (plan.md, "`ghfdb.fields.vocabularies`").
 - [ ] T004 [US2] `ghfdb/fields/vocabularies.py`: `Vocabularies`, `MissingSchemeError`, the cache
-  directory and the download of `<scheme>.ttl`, written to the cache only once it parses and
-  downloaded again when a week old. `allowed_values(binding)` reads the file named for the scheme,
+  directory and the download of `<scheme>.ttl` through a `requests-cache` session that
+  revalidates with the server's `ETag` and `Cache-Control`. `allowed_values(binding)` reads the file named for the scheme,
   checks the scheme and collection identifiers are defined in it, and returns the scheme's
   concepts, or the collection's members, each as an `AllowedValue` with its term written per D-20
   and sorted per D-21 (an ordered collection keeps its order). It raises `MissingSchemeError`

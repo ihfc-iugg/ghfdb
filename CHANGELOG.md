@@ -19,7 +19,8 @@ All notable changes to this project are recorded here. The format follows
   loaded. The field schema links each of these fields to the permanent identifier of its
   concept scheme and, where it narrows the choice, its collection, and holds no term and no
   version. Each scheme's file is downloaded from its identifier the first time it is needed and
-  kept in a cache directory for a week (`GHFDB_VOCABULARY_CACHE` changes where).
+  downloaded again only when the server says it changed (`GHFDB_VOCABULARY_CACHE` changes where the
+  cache is). `requests` and `requests-cache` are now runtime dependencies.
   `FieldSchema.descriptor()` builds the complete Frictionless Table Schema, with the allowed
   values as `enum`, in memory.
 - `ghfdb.fields.Vocabularies`, which downloads and reads the vocabulary files. The tests read

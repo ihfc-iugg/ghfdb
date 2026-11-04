@@ -95,9 +95,10 @@ values come from the published vocabulary.
 
 **Chosen:** the field schema is part of the installed package. The vocabulary files are not: the
 package downloads each scheme's Turtle file from its identifier with `.ttl` added the first time it
-is needed, keeps it in a cache directory outside the repository, named for the scheme, and reads it
-from there afterwards. A cached file is downloaded again once it is a week old, and the old copy
-stays in use when that fails. Deleting the cache directory refreshes everything.
+is needed, through a `requests-cache` session that keeps it in a cache directory outside the
+repository. The server's `ETag`, `Last-Modified` and `Cache-Control` decide whether the cached file
+is still current, so an unchanged file costs a `304` and there is no fixed expiry that could hide a
+change. The cached file stays in use when the server cannot be reached. Deleting the cache directory refreshes everything.
 
 **ADR:** docs/adr/0003-vocabularies-are-read-from-their-permanent-identifiers.md
 

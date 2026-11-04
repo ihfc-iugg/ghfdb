@@ -612,6 +612,7 @@ docs = [
     { name = "sphinx", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13'" },
     { name = "sphinx", version = "9.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13'" },
     { name = "sphinxcontrib-mermaid" },
+    { name = "validators" },
 ]
 
 [package.metadata]
@@ -641,6 +642,7 @@ docs = [
     { name = "myst-parser", specifier = ">=4" },
     { name = "sphinx", specifier = ">=8" },
     { name = "sphinxcontrib-mermaid", specifier = ">=1" },
+    { name = "validators", specifier = ">=0.34" },
 ]
 
 [[package]]

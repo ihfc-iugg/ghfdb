@@ -75,7 +75,7 @@ it as a dictionary or a JSON file, call `schema.to_descriptor()` or `schema.to_j
    field.custom["columnName"]                   # 'tc_method'
    field.custom["vocabulary"]["scheme"]         # 'https://w3id.org/ihfc-iugg/vocabularies/conductivity-methods'
    field.constraints["enum"][0]                 # the first term, as written in a cell
-   sorted(field.custom)[:3]                     # ['columnName', 'domain', 'earlierColumnNames']
+   sorted(field.custom)[:3]                     # ['columnName', 'decimalPlaces', 'domain']
    ```
 
 A code the schema does not hold raises `frictionless.FrictionlessException`. A column name it does not

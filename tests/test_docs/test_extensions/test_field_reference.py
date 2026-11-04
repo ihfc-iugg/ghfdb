@@ -6,7 +6,7 @@ import pytest
 from extensions.field_reference import FieldReference, copy_schema
 from frictionless import Field, Schema
 
-from ghfdb.fields import Vocabularies, allowed_values
+from ghfdb.fields import AllowedValue, Vocabularies, allowed_values
 from ghfdb.template import VOCABULARIES
 
 GITHUB_DECISIONS = "https://github.com/ihfc-iugg/ghfdb/blob/main/specs/001-field-reference/decisions.md"
@@ -208,6 +208,142 @@ class TestVocabularyEntries:
                 assert f"`{value.term}`" in section, code
                 assert f"[`{value.term}`](" not in section, code
             assert "Fuchs et al. (2023), Appendix A" in section
+
+
+def hostile_reference(
+    schema: Schema,
+    monkeypatch: pytest.MonkeyPatch,
+    published_vocabularies: Vocabularies,
+    uri: str = "https://example.org/concept",
+    scheme: str | None = None,
+    collection: str | None = None,
+) -> FieldReference:
+    """Build a reference whose vocabularies hold an address the network could send.
+
+    Every vocabulary field gets one allowed value with the address ``uri``. The
+    first vocabulary field with a collection is changed to name ``scheme`` and
+    ``collection`` when they are given.
+    """
+    descriptor = schema.to_descriptor()
+    if scheme is not None or collection is not None:
+        entry = next(
+            f for f in descriptor["fields"] if (f["vocabulary"] or {}).get("collection")
+        )
+        entry["vocabulary"]["scheme"] = scheme or entry["vocabulary"]["scheme"]
+        entry["vocabulary"]["collection"] = (
+            collection or entry["vocabulary"]["collection"]
+        )
+    value = AllowedValue(term="[x]", label="x", uri=uri, notation=None)
+    monkeypatch.setattr(
+        Vocabularies, "allowed_values", lambda self, vocabulary: (value,)
+    )
+    return FieldReference(Schema.from_descriptor(descriptor), published_vocabularies)
+
+
+class TestAddresses:
+    def test_brackets_and_parentheses_in_an_address_are_percent_encoded(self) -> None:
+        address = FieldReference.address("https://example.org/a(b)[c]")
+
+        assert address == "https://example.org/a%28b%29%5Bc%5D"
+
+    def test_an_address_that_tries_to_start_another_link_stays_one_address(
+        self,
+    ) -> None:
+        address = FieldReference.address(
+            "https://example.org/a)[b](https://evil.example/"
+        )
+
+        assert address == "https://example.org/a%29%5Bb%5D%28https://evil.example/"
+        assert ")[" not in address and "](" not in address
+
+    @pytest.mark.parametrize(
+        "address",
+        ["https://w3id.org/ihfc-iugg/vocabularies/x/y_z", "http://example.org/a?b=c#d"],
+    )
+    def test_an_ordinary_web_address_is_unchanged(self, address: str) -> None:
+        assert FieldReference.address(address) == address
+
+    @pytest.mark.parametrize(
+        "address",
+        [
+            "javascript:alert(1)",
+            "ftp://example.org/x",
+            "https://example.org/a b",
+            "https://example.org/><script>",
+            "https://example.org/`x`",
+        ],
+    )
+    def test_anything_but_a_web_address_is_refused_naming_the_value(
+        self, address: str
+    ) -> None:
+        with pytest.raises(ValueError, match="Not a web address") as caught:
+            FieldReference.address(address)
+
+        assert repr(address) in str(caught.value)
+
+    def test_a_concept_address_cannot_end_its_link_early(
+        self,
+        schema: Schema,
+        monkeypatch: pytest.MonkeyPatch,
+        published_vocabularies: Vocabularies,
+    ) -> None:
+        reference = hostile_reference(
+            schema,
+            monkeypatch,
+            published_vocabularies,
+            uri="https://example.org/a(b)[c]",
+        )
+
+        markdown = reference.entries("child")
+
+        assert "](https://example.org/a%28b%29%5Bc%5D)" in markdown
+
+    @pytest.mark.parametrize(
+        "uri", ["javascript:alert(1)", "https://example.org/a b", "https://x/`y`"]
+    )
+    def test_a_concept_address_that_is_not_a_web_address_stops_the_build(
+        self,
+        schema: Schema,
+        monkeypatch: pytest.MonkeyPatch,
+        published_vocabularies: Vocabularies,
+        uri: str,
+    ) -> None:
+        reference = hostile_reference(schema, monkeypatch, published_vocabularies, uri)
+
+        with pytest.raises(ValueError, match="Not a web address"):
+            reference.entries("child")
+
+    def test_a_scheme_address_that_would_close_its_autolink_stops_the_build(
+        self,
+        schema: Schema,
+        monkeypatch: pytest.MonkeyPatch,
+        published_vocabularies: Vocabularies,
+    ) -> None:
+        reference = hostile_reference(
+            schema,
+            monkeypatch,
+            published_vocabularies,
+            scheme="https://example.org/a> <b",
+        )
+
+        with pytest.raises(ValueError, match="Not a web address"):
+            reference.entries("child")
+
+    def test_a_collection_address_that_would_close_its_autolink_stops_the_build(
+        self,
+        schema: Schema,
+        monkeypatch: pytest.MonkeyPatch,
+        published_vocabularies: Vocabularies,
+    ) -> None:
+        reference = hostile_reference(
+            schema,
+            monkeypatch,
+            published_vocabularies,
+            collection="javascript:alert(1)",
+        )
+
+        with pytest.raises(ValueError, match="Not a web address"):
+            reference.entries("child")
 
 
 class TestSeparatorsAndEarlierSpellings:

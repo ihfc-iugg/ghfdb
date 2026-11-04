@@ -5,6 +5,7 @@ from functools import cache
 from pathlib import Path
 from typing import Any
 
+import validators
 from frictionless import Field, Schema
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from sphinx.application import Sphinx
@@ -16,6 +17,8 @@ DECISIONS_URL = "https://github.com/ihfc-iugg/ghfdb/blob/main/specs/001-field-re
 SCHEMA_COPY = Path("reference") / "fields" / "ghfdb-field-schema.json"
 TEMPLATES = Path(__file__).parent / "templates"
 PAGES = "reference/fields/"
+WEB_SCHEMES = ("http", "https")
+LINK_BREAKERS = {ord(char): f"%{ord(char):02X}" for char in "()[]"}
 
 
 class FieldReference:
@@ -41,7 +44,7 @@ class FieldReference:
             keep_trailing_newline=True,
         )
         self.environment.filters.update(
-            cell=self.cell, code=self.code, pipes=self.pipes
+            address=self.address, cell=self.cell, code=self.code, pipes=self.pipes
         )
         self.macros: Any = self.environment.get_template(
             "field_reference.md.jinja"
@@ -74,6 +77,29 @@ class FieldReference:
         """
         fence = "`" * (max(map(len, re.findall("`+", text)), default=0) + 1)
         return f"{fence}{text}{fence}"
+
+    @staticmethod
+    def address(text: str) -> str:
+        """Check a web address from the vocabularies and make it safe for Markdown.
+
+        The addresses of concepts, schemes and collections are read from the network
+        each time the documentation builds.
+
+        Args:
+            text: A concept, scheme or collection address.
+
+        Returns:
+            The address with brackets and parentheses percent-encoded, so it cannot end
+            a link or an autolink early.
+
+        Raises:
+            ValueError: The text is not an ``http`` or ``https`` address, or it holds
+                whitespace or a character that cannot appear in one.
+        """
+        encoded = text.translate(LINK_BREAKERS)
+        if not validators.url(encoded, validate_scheme=WEB_SCHEMES.__contains__):
+            raise ValueError(f"Not a web address: {text!r}")
+        return encoded
 
     @staticmethod
     def pipes(markdown: str) -> str:

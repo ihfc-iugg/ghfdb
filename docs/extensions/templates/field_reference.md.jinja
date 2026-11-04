@@ -1,5 +1,5 @@
 {#- The Markdown of the field reference. field_reference.py supplies what is used here:
-    the schema, the filters cell, code and pipes, and the functions sources and
+    the schema, the filters address, cell, code and pipes, and the functions sources and
     allowed_values. -#}
 {%- set MISSING = "—" -%}
 {%- set OBLIGATIONS = {"M": "Mandatory (M)", "R": "Recommended (R)", "O": "Optional (O)"} -%}
@@ -69,14 +69,14 @@
 {{ facts(field, values) }}
 {%- if custom.vocabulary %}
 
-The allowed values come from the concept scheme <{{ custom.vocabulary.scheme }}>
-{%- if custom.vocabulary.collection %}, limited to the collection <{{ custom.vocabulary.collection }}>{% endif %}, in the IHFC Controlled Vocabularies as currently published.
+The allowed values come from the concept scheme <{{ custom.vocabulary.scheme | address }}>
+{%- if custom.vocabulary.collection %}, limited to the collection <{{ custom.vocabulary.collection | address }}>{% endif %}, in the IHFC Controlled Vocabularies as currently published.
 {%- endif %}
 {%- if values %}
 
 {% for value in values -%}
 {%- if value.uri -%}
-- [{{ value.term | code }}]({{ value.uri }})
+- [{{ value.term | code }}]({{ value.uri | address }})
 {%- else -%}
 - {{ value.term | code }}
 {%- endif -%}

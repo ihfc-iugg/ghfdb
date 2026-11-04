@@ -201,7 +201,10 @@ class TestReleaseAddresses:
     ) -> None:
         field = schema["C43"]
         value = AllowedValue(
-            term="x", label="x", uri="https://example.org/a)[b](https://evil.example/", notation=None
+            term="x",
+            label="x",
+            uri="https://example.org/a)[b](https://evil.example/",
+            notation=None,
         )
 
         markdown = reference.entry(replace(field, allowed_values=(value,)))
@@ -240,7 +243,9 @@ class TestReleaseAddresses:
     def test_a_release_doi_cannot_end_its_link_or_inject_markup(
         self, schema: FieldSchema
     ) -> None:
-        release = VocabularyRelease(version="2026.1_*", doi="10.1/a)[b](https://evil.example/")
+        release = VocabularyRelease(
+            version="2026.1_*", doi="10.1/a)[b](https://evil.example/"
+        )
         hostile = FieldSchema(schema.path, release, tuple(schema))
 
         markdown = FieldReference(hostile).entry(schema["C43"])

@@ -46,11 +46,11 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ghfdb"]
+packages = ["ghfdb"]
 
 # Without an explicit list, hatchling puts the whole working tree in the sdist.
 [tool.hatch.build.targets.sdist]
-include = ["/src", "/tests", "/README.md", "/LICENSE", "/CHANGELOG.md", "/vocabularies"]
+include = ["/ghfdb", "/tests", "/README.md", "/LICENSE", "/CHANGELOG.md", "/vocabularies"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -59,7 +59,7 @@ addopts = "--import-mode=importlib"
 
 [tool.mypy]
 strict = true
-files = ["src", "tests", "docs"]
+files = ["ghfdb", "tests", "docs"]
 
 [tool.ruff]
 line-length = 88
@@ -67,3 +67,6 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B"]
+
+[tool.deptry]
+known_first_party = ["ghfdb"]

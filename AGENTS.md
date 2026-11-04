@@ -14,7 +14,7 @@ are defined in `CONTEXT.md`.
 - **Test with coverage, as CI runs it:** `uv run pytest --cov=ghfdb` (Codecov applies the floors in `codecov.yml`)
 - **Lint:** `uv run pre-commit run --all-files`
 - **Type-check:** `uv run mypy`
-- **Dependencies:** `uv run deptry src`
+- **Dependencies:** `uv run deptry ghfdb`
 - **Build the documentation:** `uv run sphinx-build -W --keep-going -b html docs docs/_build/html`
 - **Build the package:** `uv build`
 

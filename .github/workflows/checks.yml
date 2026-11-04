@@ -27,7 +27,7 @@ jobs:
       - name: Type-check
         run: uv run mypy
       - name: Check dependencies
-        run: uv run deptry src
+        run: uv run deptry ghfdb
       - name: Test
         run: uv run pytest --cov=ghfdb --cov-report=term-missing --cov-report=xml
       - name: Upload coverage to Codecov

@@ -168,7 +168,7 @@ class TestFieldSchema:
 
 
 ROOT = Path(__file__).parents[2]
-SCHEMA_FILE = ROOT / "src" / "ghfdb" / "fields" / "schema.json"
+SCHEMA_FILE = ROOT / "ghfdb" / "fields" / "schema.json"
 TEMPLATE = ROOT / "tests" / "sources" / "upload-template.xlsx"
 DECISIONS = ROOT / "specs" / "001-field-reference" / "decisions.md"
 

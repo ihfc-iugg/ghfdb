@@ -118,6 +118,10 @@ class UploadWorkbook:
                 sheet_xml = archive.read(self.sheet_part(archive))
         except (zipfile.BadZipFile, KeyError, OSError) as error:
             raise CheckError(f"{self.path} cannot be opened: {error}") from error
+        if b'"e"' not in sheet_xml and b"'e'" not in sheet_xml:
+            # No cell has the error type, whatever the spacing around its "=". A plain
+            # search takes a quarter of the time of the full pattern on a large sheet.
+            return
         position_of = {column: position for position, column in enumerate(positions)}
         for cell in ERROR_CELL.finditer(sheet_xml):
             reference = CELL_REFERENCE.search(cell.group(1))

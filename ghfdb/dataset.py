@@ -59,7 +59,9 @@ class Dataset:
                 them, all the rules ghfdb declares; an empty sequence applies none.
             vocabularies: Where the allowed values of the rules' concepts come from.
                 Without it, the vocabularies in the user's cache, downloaded when
-                missing.
+                missing. A caller who loaded the schema with their own
+                ``Vocabularies`` should pass the same one, so the rules' terms match
+                the schema's.
 
         Returns:
             One line for each problem, with the columns ``row``, ``code``,
@@ -72,6 +74,7 @@ class Dataset:
         Raises:
             MissingSchemeError: A concept a rule names is not an allowed value of
                 its field.
+            OSError: The vocabularies are not cached and cannot be downloaded.
         """
         schema = load_schema() if schema is None else schema
         return DatasetCheck(self.data, schema, rules, vocabularies).problems()

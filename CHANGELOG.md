@@ -56,6 +56,10 @@ All notable changes to this project are recorded here. The format follows
 - The problem table has two new columns, `rule` and `related`, after `suggestion`. They are
   set for a `rule` problem only. `Dataset.check` takes the rules to apply, which default to
   all of them.
+- `Dataset.check` now reads the published vocabularies, from the user cache or by download,
+  to resolve the concepts the rules name. Offline with an empty cache it raises `OSError`.
+  A caller who loaded the schema with their own `Vocabularies` should pass the same one as
+  `vocabularies`.
 - openpyxl is now a runtime dependency, because `ghfdb.template` writes the upload template.
 - The documentation build now checks that every concept, scheme and collection address in the
   field reference is an `http` or `https` address and encodes the brackets and parentheses that

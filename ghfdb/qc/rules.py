@@ -306,6 +306,12 @@ class AllowedWhen(Rule):
 
         A child whose limited field holds a value not in the vocabulary is skipped: that
         cell already has a field problem.
+
+        Args:
+            check: The check, which holds the data, the schema and the terms.
+
+        Returns:
+            One line of kind ``rule`` for each value the limited field may not hold.
         """
         nothing = pandas.Series(dtype="string")
         field = check.schema.get_field(self.then.field)

@@ -337,7 +337,8 @@ CF_1 = RequiredWhen(
     reasoning=(
         "Table 4 of Fuchs et al. (2023) marks these fields mandatory for borehole and "
         "mine data only, so a child of that domain must fill them. Which exploration "
-        "methods belong to the domain is ruled in decision:004:D-1."
+        "methods belong to the domain is set out with the rules, and is open to "
+        "confirmation by the data assessment team."
     ),
     example=Example({"P12": DRILLING, "C5": None}, ("C5",)),
     domain=BOREHOLE,
@@ -352,7 +353,8 @@ CF_2 = RequiredWhen(
     reasoning=(
         "Table 4 of Fuchs et al. (2023) marks these fields mandatory for probe sensing "
         "only, so a child of that domain must fill them. Which exploration methods "
-        "belong to the domain is ruled in decision:004:D-1."
+        "belong to the domain is set out with the rules, and is open to confirmation "
+        "by the data assessment team."
     ),
     example=Example({"P12": PROBING_ONSHORE, "C6": None}, ("C6",)),
     domain=PROBE_SENSING,
@@ -365,8 +367,10 @@ CF_3 = AllowedWhen(
     ),
     source="fuchs-2023-appendix-a",
     reasoning=(
-        "Appendix A of Fuchs et al. (2023) describes this location as for conductivity "
-        "taken from published values, so any other source contradicts it."
+        "Appendix A of Fuchs et al. (2023) allows the location literature or "
+        "unspecified only if the source is assumed from literature: conductivity "
+        "measured on samples or in situ was measured somewhere, so its location is "
+        "known."
     ),
     example=Example({"C42": LITERATURE_OR_UNSPECIFIED, "C41": CORE_SAMPLES}, ("C41",)),
     when=Condition("C42", (LITERATURE_OR_UNSPECIFIED,)),

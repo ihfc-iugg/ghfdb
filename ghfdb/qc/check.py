@@ -46,15 +46,16 @@ class DatasetCheck:
             ``column_name``, ``kind``, ``value`` and ``suggestion``, ordered by row
             and then by the field's place in the schema.
         """
-        found = [
-            self.field_problems(order, field)
-            for order, field in enumerate(self.schema.fields)
-            if field.name in self.data.columns
-        ]
+        found = []
+        for order, field in enumerate(self.schema.fields):
+            if field.name in self.data.columns:
+                found.append(self.field_problems(order, field))
+            else:
+                found.append(self.absent_problems(order, field))
         frame = pandas.concat(
             [self.typed(pandas.DataFrame(columns=[*PROBLEM_COLUMNS, "order"])), *found]
         )
-        frame = frame.sort_values(["row", "order"], kind="stable")
+        frame = frame.sort_values(["row", "order"], kind="stable", na_position="first")
         return frame[PROBLEM_COLUMNS].reset_index(drop=True)
 
     @staticmethod
@@ -99,6 +100,39 @@ class DatasetCheck:
                 }
             )
         )
+
+    @staticmethod
+    def is_required(field: Field) -> bool:
+        """Say whether an empty cell in a field is a problem.
+
+        Args:
+            field: The field.
+
+        Returns:
+            True for a mandatory field in both the borehole and the site domain.
+        """
+        return field.custom["obligation"] == "M" and set(field.custom["domain"]) == {
+            "B",
+            "S",
+        }
+
+    def absent_problems(self, order: int, field: Field) -> pandas.DataFrame:
+        """Report a field the data has no column for.
+
+        Args:
+            order: The field's place in the schema.
+            field: The field.
+
+        Returns:
+            One ``no column`` line without a row, and for a required field a
+            ``missing`` line for every child.
+        """
+        none = pandas.Series([None], index=pandas.Index([None]), dtype="string")
+        found = [self.lines(order, field, Kind.NO_COLUMN, none)]
+        if self.is_required(field):
+            nothing = pandas.Series(pandas.NA, index=self.data.index, dtype="string")
+            found.append(self.lines(order, field, Kind.MISSING, nothing))
+        return pandas.concat(found)
 
     def field_problems(self, order: int, field: Field) -> pandas.DataFrame:
         """Check one field's column.

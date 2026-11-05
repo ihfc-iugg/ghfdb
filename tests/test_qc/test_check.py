@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from typing import Any
 
 import pandas
 import pytest
@@ -10,9 +9,12 @@ from ghfdb.qc.check import PROBLEM_COLUMNS, DatasetCheck, Kind
 Children = Callable[..., pandas.DataFrame]
 
 
-def found(frame: pandas.DataFrame, schema: Schema) -> set[tuple[Any, str, Kind]]:
+def found(frame: pandas.DataFrame, schema: Schema) -> set[tuple[int | None, str, Kind]]:
     problems = DatasetCheck(frame, schema).problems().to_dict("records")
-    return {(p["row"], p["code"], p["kind"]) for p in problems}
+    return {
+        (None if pandas.isna(p["row"]) else p["row"], p["code"], p["kind"])
+        for p in problems
+    }
 
 
 class TestProblemsFrame:
@@ -205,3 +207,42 @@ class TestNotANumber:
 
         assert len(problems) == 1
         assert found(frame, unranged) == {(9, number_field.name, Kind.WRONG_TYPE)}
+
+
+class TestNoColumn:
+    def test_an_absent_mandatory_field_is_one_no_column_problem_and_missing_everywhere(
+        self, schema: Schema, children: Children, mandatory_field: Field
+    ) -> None:
+        frame = children({}, {}, {}).drop(columns=mandatory_field.name)
+
+        problems = DatasetCheck(frame, schema).problems()
+
+        no_column = problems[problems["kind"] == Kind.NO_COLUMN]
+        assert list(no_column["code"]) == [mandatory_field.name]
+        assert no_column["row"].isna().all()
+        assert found(frame, schema) == {
+            (None, mandatory_field.name, Kind.NO_COLUMN),
+            *((row, mandatory_field.name, Kind.MISSING) for row in (9, 10, 11)),
+        }
+
+    def test_an_absent_recommended_field_is_only_a_no_column_problem(
+        self, schema: Schema, children: Children, recommended_field: Field
+    ) -> None:
+        frame = children({}, {}).drop(columns=recommended_field.name)
+
+        assert found(frame, schema) == {(None, recommended_field.name, Kind.NO_COLUMN)}
+
+    def test_the_no_column_problem_comes_before_the_problems_of_the_children(
+        self,
+        schema: Schema,
+        children: Children,
+        recommended_field: Field,
+        number_field: Field,
+    ) -> None:
+        frame = children({number_field.name: "abc"}).drop(
+            columns=recommended_field.name
+        )
+
+        problems = DatasetCheck(frame, schema).problems()
+
+        assert list(problems["kind"]) == [Kind.NO_COLUMN, Kind.WRONG_TYPE]

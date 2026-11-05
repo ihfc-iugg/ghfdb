@@ -64,8 +64,8 @@ class TestReportWrite:
         path = Report(workbook_path, problems, 1, published_vocabularies).write()
 
         assert read_problems(path) == [
-            (None, None, "Extra", str(Kind.UNKNOWN_COLUMN), None, None),
-            (9, "P1", "Heat flow", str(Kind.WRONG_TYPE), "abc", "ab"),
+            (None, None, "Extra", str(Kind.UNKNOWN_COLUMN), None, None, None, None),
+            (9, "P1", "Heat flow", str(Kind.WRONG_TYPE), "abc", "ab", None, None),
         ]
 
     def test_writes_a_value_holding_markup_escaped(

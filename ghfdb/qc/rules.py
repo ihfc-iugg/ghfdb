@@ -237,7 +237,24 @@ class RequiredWhen(Rule):
         )
 
     def fields(self, schema: Schema) -> tuple[str, ...]:
+        """List the exploration method field and the fields the domain requires."""
         return (self.domain.field, *self.required(schema))
+
+    def problems(self, check: DatasetCheck) -> pandas.DataFrame:
+        """Report each required field that is empty for a child in the domain."""
+        nothing = pandas.Series(dtype="string")
+        field = check.schema.get_field(self.domain.field)
+        found = [check.rule_lines(self, field, nothing, nothing)]
+        applies = check.holds(self.domain.condition)
+        if applies.any():
+            related = check.found(self.domain.condition)
+            for code in self.required(check.schema):
+                if code in check.data.columns:
+                    column = check.data[code].astype("string")
+                    empty = column[applies & check.blank(column)]
+                    field = check.schema.get_field(code)
+                    found.append(check.rule_lines(self, field, empty, related))
+        return pandas.concat(found)
 
     def concepts(self) -> tuple[tuple[str, str], ...]:
         named = [(self.domain.field, uri) for uri in self.domain.concepts]
@@ -269,6 +286,21 @@ class AllowedWhen(Rule):
 
     def fields(self, schema: Schema) -> tuple[str, ...]:
         return (self.when.field, self.then.field)
+
+    def problems(self, check: DatasetCheck) -> pandas.DataFrame:
+        """Report each value the field may not hold when the condition holds."""
+        nothing = pandas.Series(dtype="string")
+        field = check.schema.get_field(self.then.field)
+        found = [check.rule_lines(self, field, nothing, nothing)]
+        applies = check.holds(self.when)
+        if applies.any() and field.name in check.data.columns:
+            column = check.data[field.name].astype("string")
+            values = check.each_value(field, column[applies & ~check.blank(column)])
+            allowed = [check.terms[field.name, uri] for uri in self.then.concepts]
+            published = values.isin(field.constraints.get("enum", []))
+            wrong = values[published & ~values.isin(allowed)]
+            found.append(check.rule_lines(self, field, wrong, check.found(self.when)))
+        return pandas.concat(found)
 
     def concepts(self) -> tuple[tuple[str, str], ...]:
         named = [

@@ -266,7 +266,16 @@ class TestCheckError:
             UploadWorkbook(path, schema)
 
 
-COLUMNS = ["row", "code", "column_name", "kind", "value", "suggestion"]
+COLUMNS = [
+    "row",
+    "code",
+    "column_name",
+    "kind",
+    "value",
+    "suggestion",
+    "rule",
+    "related",
+]
 
 
 class TestUploadWorkbookData:

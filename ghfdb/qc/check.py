@@ -9,9 +9,18 @@ import pandas
 from frictionless import Field, Schema
 
 from ghfdb.fields import MissingSchemeError, Vocabularies, allowed_values
-from ghfdb.qc.rules import Rule
+from ghfdb.qc.rules import Condition, Rule
 
-PROBLEM_COLUMNS = ["row", "code", "column_name", "kind", "value", "suggestion"]
+PROBLEM_COLUMNS = [
+    "row",
+    "code",
+    "column_name",
+    "kind",
+    "value",
+    "suggestion",
+    "rule",
+    "related",
+]
 CLOSE_ENOUGH = 0.8
 
 
@@ -25,6 +34,7 @@ class Kind(StrEnum):
     UNKNOWN_COLUMN = "unknown column"
     NO_COLUMN = "no column"
     DUPLICATE_COLUMN = "duplicate column"
+    RULE = "rule"
 
 
 class DatasetCheck:
@@ -120,8 +130,10 @@ class DatasetCheck:
 
         Returns:
             One line for each problem, with the columns ``row``, ``code``,
-            ``column_name``, ``kind``, ``value`` and ``suggestion``, ordered by row
-            and then by the field's place in the schema.
+            ``column_name``, ``kind``, ``value``, ``suggestion``, ``rule`` and
+            ``related``, ordered by row and then by the field's place in the schema.
+            The lines of the rules come after the field lines of their row. ``rule``
+            and ``related`` are set for a ``rule`` line only.
         """
         found = []
         for order, field in enumerate(self.schema.fields):
@@ -129,6 +141,7 @@ class DatasetCheck:
                 found.append(self.field_problems(order, field))
             else:
                 found.append(self.absent_problems(order, field))
+        found += [rule.problems(self) for rule in self.rules]
         frame = pandas.concat(
             [self.typed(pandas.DataFrame(columns=[*PROBLEM_COLUMNS, "order"])), *found]
         )
@@ -179,10 +192,103 @@ class DatasetCheck:
                     "kind": str(kind),
                     "value": values.to_numpy(),
                     "suggestion": values.map(suggestions or {}).to_numpy(),
+                    "rule": None,
+                    "related": None,
                     "order": order,
                 }
             )
         )
+
+    def rule_lines(
+        self,
+        rule: Rule,
+        field: Field,
+        values: pandas.Series,
+        related: pandas.Series,
+    ) -> pandas.DataFrame:
+        """Build the problem lines for the cells of one field that break a rule.
+
+        Args:
+            rule: The rule that is broken.
+            field: The field to fill or to change.
+            values: The offending cells, indexed by row.
+            related: What decided the rule applies, indexed by row.
+
+        Returns:
+            The problem lines, sorted after the field lines of their row.
+        """
+        lines = self.lines(
+            len(self.schema.fields) + self.order(field), field, Kind.RULE, values
+        )
+        lines["rule"] = rule.identifier
+        lines["related"] = related.reindex(values.index).to_numpy()
+        return self.typed(lines)
+
+    def order(self, field: Field) -> int:
+        """Find a field's place in the schema.
+
+        Args:
+            field: The field.
+
+        Returns:
+            The field's position.
+        """
+        return [candidate.name for candidate in self.schema.fields].index(field.name)
+
+    def holds(self, condition: Condition) -> pandas.Series:
+        """Find the children a condition holds for.
+
+        Args:
+            condition: A field and the concepts that make a rule apply.
+
+        Returns:
+            For each child whether every value of the field is one of its allowed
+            values and at least one is a term of the condition. An empty cell, a value
+            that is not allowed and a field with no column never hold.
+        """
+        nowhere = pandas.Series(False, index=self.data.index)
+        if condition.field not in self.data.columns:
+            return nowhere
+        field = self.schema.get_field(condition.field)
+        column = self.data[condition.field].astype("string")
+        values = self.each_value(field, column[~self.blank(column)])
+        wanted = [self.terms[condition.field, uri] for uri in condition.concepts]
+        allowed = values.isin(field.constraints.get("enum", []))
+        held = (
+            allowed.groupby(level=0).all() & values.isin(wanted).groupby(level=0).any()
+        )
+        return held.reindex(self.data.index, fill_value=False).astype(bool)
+
+    def found(self, condition: Condition) -> pandas.Series:
+        """Find the term of a condition each child holds.
+
+        Args:
+            condition: A field and the concepts that make a rule apply.
+
+        Returns:
+            For each child the condition holds for, the field's code, published column
+            name and the first value found that is a term of the condition.
+        """
+        field = self.schema.get_field(condition.field)
+        column = self.data[condition.field].astype("string")
+        values = self.each_value(field, column[~self.blank(column)])
+        wanted = [self.terms[condition.field, uri] for uri in condition.concepts]
+        first = values[values.isin(wanted)]
+        first = first[~first.index.duplicated()]
+        label = f"{field.name} {field.custom['columnName']} "
+        return label + first
+
+    @staticmethod
+    def blank(column: pandas.Series) -> pandas.Series:
+        """Find the empty cells of a column.
+
+        Args:
+            column: A column of text.
+
+        Returns:
+            True where the cell is empty or holds spaces only.
+        """
+        return column.str.strip().fillna("").eq("")
 
     @staticmethod
     def is_required(field: Field) -> bool:
@@ -229,7 +335,7 @@ class DatasetCheck:
             The problem lines for the column.
         """
         column = self.data[field.name].astype("string")
-        blank = column.str.strip().fillna("").eq("")
+        blank = self.blank(column)
         filled = column[~blank]
         constraints = field.constraints
         found = []

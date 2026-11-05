@@ -7,10 +7,25 @@ from frictionless import Schema
 
 from ghfdb.fields import MissingSchemeError, Vocabularies
 from ghfdb.qc.check import DatasetCheck
-from ghfdb.qc.rules import CF_1, CF_2, CF_3, RULES, Condition, Rule
+from ghfdb.qc.rules import (
+    ASSUMED_FROM_LITERATURE,
+    CF_1,
+    CF_2,
+    CF_3,
+    CORE_SAMPLES,
+    DRILLING,
+    LITERATURE_OR_UNSPECIFIED,
+    PROBING_ONSHORE,
+    RULES,
+    Condition,
+    Rule,
+)
 
 Children = Callable[..., pandas.DataFrame]
-CONDUCTIVITY_SOURCES = "https://w3id.org/ihfc-iugg/vocabularies/conductivity-sources"
+VOCABULARIES = "https://w3id.org/ihfc-iugg/vocabularies"
+EXPLORATION_METHODS = f"{VOCABULARIES}/exploration-methods"
+CONDUCTIVITY_LOCATION = f"{VOCABULARIES}/conductivity-location"
+CONDUCTIVITY_SOURCES = f"{VOCABULARIES}/conductivity-sources"
 
 
 class TestResolution:
@@ -91,3 +106,254 @@ class TestResolution:
 
         with pytest.raises(MissingSchemeError, match="CF-3"):
             DatasetCheck(children({}), schema, (broken,), published_vocabularies)
+
+
+OTHER_METHOD = f"{EXPLORATION_METHODS}/other"
+ACTUAL_LOCATION = f"{CONDUCTIVITY_LOCATION}/actual"
+CUTTING_SAMPLES = f"{CONDUCTIVITY_SOURCES}/cutting_samples"
+DRILLING_TERM = ("P12", DRILLING)
+LITERATURE_TERM = ("C42", LITERATURE_OR_UNSPECIFIED)
+ASSUMED_TERM = ("C41", ASSUMED_FROM_LITERATURE)
+
+
+def with_separator(schema: Schema, *codes: str) -> Schema:
+    """Copy a schema, making fields take several values in a cell."""
+    descriptor = schema.to_descriptor()
+    for described in descriptor["fields"]:
+        if described["name"] in codes:
+            described["separator"] = ";"
+    return Schema.from_descriptor(descriptor)
+
+
+class Terms:
+    """Read the term of any concept of a field from the vocabularies."""
+
+    def __init__(self, schema: Schema, vocabularies: Vocabularies) -> None:
+        self.check = DatasetCheck(pandas.DataFrame(), schema)
+        self.vocabularies = vocabularies
+
+    def __call__(self, code: str, uri: str) -> str:
+        return self.check.uris(code, self.vocabularies)[uri]
+
+
+@pytest.fixture
+def term(schema: Schema, published_vocabularies: Vocabularies) -> Terms:
+    return Terms(schema, published_vocabularies)
+
+
+class TestRuleProblems:
+    @pytest.fixture(autouse=True)
+    def checking(self, schema: Schema, published_vocabularies: Vocabularies) -> None:
+        self.schema = schema
+        self.vocabularies = published_vocabularies
+
+    def lines(
+        self, frame: pandas.DataFrame, schema: Schema | None = None
+    ) -> list[tuple[int, str, str, str | None]]:
+        """Find the rule lines as (row, code, rule, related)."""
+        check = DatasetCheck(frame, schema or self.schema, RULES, self.vocabularies)
+        problems = check.problems()
+        found = problems[problems["kind"] == "rule"]
+        return [
+            (
+                line["row"],
+                line["code"],
+                line["rule"],
+                None if pandas.isna(line["related"]) else line["related"],
+            )
+            for line in found.to_dict("records")
+        ]
+
+    def test_an_empty_field_required_for_the_domain_is_one_line_with_its_condition(
+        self, children: Children, term: Terms
+    ) -> None:
+        frame = children({"P12": term(*DRILLING_TERM), "C5": None})
+
+        assert self.lines(frame) == [
+            (9, "C5", "CF-1", f"P12 explo_method {term(*DRILLING_TERM)}")
+        ]
+
+    def test_a_field_of_spaces_only_is_empty(
+        self, children: Children, term: Terms
+    ) -> None:
+        frame = children({"P12": term(*DRILLING_TERM), "C5": "  "})
+
+        assert [line[1] for line in self.lines(frame)] == ["C5"]
+
+    def test_the_line_carries_the_empty_value_and_the_column_name_to_fill(
+        self, children: Children, term: Terms
+    ) -> None:
+        frame = children({"P12": term(*DRILLING_TERM), "C5": "  "})
+
+        problems = DatasetCheck(frame, self.schema, RULES, self.vocabularies).problems()
+
+        (line,) = problems[problems["kind"] == "rule"].to_dict("records")
+        assert line["column_name"] == "q_bottom"
+        assert line["value"] == "  "
+        assert pandas.isna(line["suggestion"])
+
+    def test_every_empty_required_field_is_a_line(
+        self, children: Children, term: Terms
+    ) -> None:
+        frame = children({"P12": term(*DRILLING_TERM), "C5": None, "C32": None})
+
+        assert [line[1] for line in self.lines(frame)] == ["C5", "C32"]
+
+    def test_the_probe_sensing_rule_requires_its_own_fields(
+        self, children: Children, term: Terms
+    ) -> None:
+        probing = term("P12", PROBING_ONSHORE)
+        frame = children({"P12": probing, "C6": None, "C23": None, "C5": None})
+
+        assert self.lines(frame) == [
+            (9, "C6", "CF-2", f"P12 explo_method {probing}"),
+            (9, "C23", "CF-2", f"P12 explo_method {probing}"),
+        ]
+
+    @pytest.mark.parametrize("method", [None, "no such method"])
+    def test_an_empty_or_unknown_exploration_method_requires_nothing(
+        self, children: Children, method: str | None
+    ) -> None:
+        frame = children({"P12": method, "C5": None, "C6": None})
+
+        assert self.lines(frame) == []
+
+    def test_an_exploration_method_in_neither_domain_requires_nothing(
+        self, children: Children, term: Terms
+    ) -> None:
+        frame = children({"P12": term("P12", OTHER_METHOD), "C5": None, "C6": None})
+
+        assert self.lines(frame) == []
+
+    def test_several_exploration_methods_in_a_cell_are_all_read(
+        self, children: Children, term: Terms
+    ) -> None:
+        both = f"{term(*DRILLING_TERM)}; {term('P12', PROBING_ONSHORE)}"
+        frame = children(
+            {"P12": both, "C5": None, "C6": None},
+            {"P12": f"{both}; no such method", "C5": None, "C6": None},
+        )
+
+        found = self.lines(frame, with_separator(self.schema, "P12"))
+
+        assert [(row, code) for row, code, *_ in found] == [(9, "C5"), (9, "C6")]
+
+    def test_a_disallowed_value_is_a_line_naming_the_value_and_its_condition(
+        self, children: Children, term: Terms
+    ) -> None:
+        frame = children(
+            {"C42": term(*LITERATURE_TERM), "C41": term("C41", CORE_SAMPLES)}
+        )
+
+        assert self.lines(frame) == [
+            (9, "C41", "CF-3", f"C42 tc_location {term(*LITERATURE_TERM)}")
+        ]
+        problems = DatasetCheck(frame, self.schema, RULES, self.vocabularies).problems()
+        assert list(problems["value"]) == [term("C41", CORE_SAMPLES)]
+
+    def test_the_allowed_value_is_no_line(
+        self, children: Children, term: Terms
+    ) -> None:
+        frame = children(
+            {"C42": term(*LITERATURE_TERM), "C41": term(*ASSUMED_TERM)},
+            {"C42": term("C42", ACTUAL_LOCATION), "C41": term("C41", CORE_SAMPLES)},
+            {"C42": None, "C41": term("C41", CORE_SAMPLES)},
+            {"C42": "no such location", "C41": term("C41", CORE_SAMPLES)},
+        )
+
+        assert self.lines(frame) == []
+
+    def test_a_disallowed_value_not_in_the_vocabulary_is_skipped(
+        self, children: Children, term: Terms
+    ) -> None:
+        frame = children({"C42": term(*LITERATURE_TERM), "C41": "no such source"})
+
+        assert self.lines(frame) == []
+
+    def test_each_disallowed_value_in_a_cell_is_a_line(
+        self, children: Children, term: Terms
+    ) -> None:
+        core, cutting = term("C41", CORE_SAMPLES), term("C41", CUTTING_SAMPLES)
+        frame = children(
+            {
+                "C42": term(*LITERATURE_TERM),
+                "C41": f"{core}; {term(*ASSUMED_TERM)}; {cutting}; nonsense",
+            }
+        )
+
+        problems = DatasetCheck(
+            frame, with_separator(self.schema, "C41"), RULES, self.vocabularies
+        ).problems()
+
+        found = problems[problems["kind"] == "rule"]
+        assert list(found["value"]) == [core, cutting]
+
+    def test_several_values_in_the_condition_cell_hold_when_all_are_published(
+        self, children: Children, term: Terms
+    ) -> None:
+        both = f"{term(*LITERATURE_TERM)}; {term('C42', ACTUAL_LOCATION)}"
+        frame = children(
+            {"C42": both, "C41": term("C41", CORE_SAMPLES)},
+            {"C42": f"{both}; nonsense", "C41": term("C41", CORE_SAMPLES)},
+        )
+
+        found = self.lines(frame, with_separator(self.schema, "C42"))
+
+        assert [(row, code) for row, code, *_ in found] == [(9, "C41")]
+
+    @pytest.mark.parametrize("missing", ["P12", "C5", "C6", "C41", "C42"])
+    def test_a_rule_whose_field_has_no_column_gives_no_line(
+        self, children: Children, term: Terms, missing: str
+    ) -> None:
+        frame = children(
+            {"P12": term(*DRILLING_TERM), "C5": None},
+            {"P12": term("P12", PROBING_ONSHORE), "C6": None},
+            {"C42": term(*LITERATURE_TERM), "C41": term("C41", CORE_SAMPLES)},
+        ).drop(columns=missing)
+
+        codes = {code for _, code, *_ in self.lines(frame)}
+
+        assert missing not in codes
+        assert codes <= {"C5", "C6", "C23", "C31", "C32", "C41"}
+
+    def test_a_child_breaking_two_rules_has_its_rule_lines_after_its_field_lines(
+        self, children: Children, term: Terms
+    ) -> None:
+        frame = children(
+            {
+                "P12": term(*DRILLING_TERM),
+                "C5": None,
+                "C31": None,
+                "C42": term(*LITERATURE_TERM),
+                "C41": term("C41", CORE_SAMPLES),
+                "C1": "abc",
+            },
+            {"C1": "abc"},
+        )
+
+        problems = DatasetCheck(frame, self.schema, RULES, self.vocabularies).problems()
+
+        assert [
+            (p["row"], p["code"], p["kind"]) for p in problems.to_dict("records")
+        ] == [
+            (9, "C1", "wrong type"),
+            (9, "C5", "rule"),
+            (9, "C31", "rule"),
+            (9, "C41", "rule"),
+            (10, "C1", "wrong type"),
+        ]
+
+    def test_only_a_rule_line_carries_a_rule_and_a_related_field(
+        self, children: Children, term: Terms
+    ) -> None:
+        frame = children({"P12": term(*DRILLING_TERM), "C5": None, "C1": "abc"})
+
+        problems = DatasetCheck(frame, self.schema, RULES, self.vocabularies).problems()
+
+        filled = {
+            kind: (not pandas.isna(line["rule"]), not pandas.isna(line["related"]))
+            for kind, line in zip(
+                problems["kind"], problems.to_dict("records"), strict=True
+            )
+        }
+        assert filled == {"rule": (True, True), "wrong type": (False, False)}

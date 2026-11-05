@@ -165,14 +165,15 @@ class DatasetCheck:
             found.append(self.lines(order, field, Kind.MISSING, column[blank]))
         if field.type in ("number", "integer"):
             found += self.number_problems(order, field, filled)
+        values = self.each_value(field, filled)
         if "pattern" in constraints:
-            bad = filled[~filled.str.fullmatch(constraints["pattern"])]
+            bad = values[~values.str.fullmatch(constraints["pattern"])]
             found.append(self.lines(order, field, Kind.WRONG_TYPE, bad))
         if "maxLength" in constraints:
             long = filled[filled.str.len() > constraints["maxLength"]]
             found.append(self.lines(order, field, Kind.OUT_OF_RANGE, long))
         if "enum" in constraints:
-            unknown = filled[~filled.isin(constraints["enum"])]
+            unknown = values[~values.isin(constraints["enum"])]
             suggestions = self.suggestions(field, unknown.unique())
             found.append(
                 self.lines(order, field, Kind.NOT_IN_VOCABULARY, unknown, suggestions)
@@ -182,6 +183,27 @@ class DatasetCheck:
             if found
             else self.lines(order, field, Kind.MISSING, filled[:0])
         )
+
+    @staticmethod
+    def each_value(field: Field, filled: pandas.Series) -> pandas.Series:
+        """Split the cells of a field that holds several values in a cell.
+
+        Only a field with allowed values or a pattern is split. Each value keeps the
+        row of its cell.
+
+        Args:
+            field: The field.
+            filled: The cells that are not empty.
+
+        Returns:
+            One entry for each value, without surrounding spaces. The cells
+            themselves for a field that takes one value.
+        """
+        separator = field.custom["separator"]
+        if not separator or not {"enum", "pattern"} & set(field.constraints):
+            return filled
+        values = filled.str.split(separator, regex=False).explode().str.strip()
+        return values[values != ""].astype("string")
 
     @staticmethod
     def normalised(text: str) -> str:

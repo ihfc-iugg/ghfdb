@@ -319,3 +319,81 @@ class TestSuggestions:
 
         assert found_ == [term] * 30
         assert len(calls) == 1
+
+
+def with_separator(schema: Schema, field: Field) -> Schema:
+    """Copy a schema, making a field take several values in a cell."""
+    descriptor = schema.to_descriptor()
+    for described in descriptor["fields"]:
+        if described["name"] == field.name:
+            described["separator"] = ";"
+    return Schema.from_descriptor(descriptor)
+
+
+class TestSeveralValuesInACell:
+    def test_no_packaged_field_has_a_separator_together_with_terms_or_a_pattern(
+        self, schema: Schema
+    ) -> None:
+        both = [
+            field.name
+            for field in schema.fields
+            if field.custom["separator"]
+            and ({"enum", "pattern"} & set(field.constraints))
+        ]
+
+        assert both == []
+
+    def test_each_term_in_a_cell_is_checked_on_its_own(
+        self, schema: Schema, children: Children, vocabulary_field: Field
+    ) -> None:
+        first, second = vocabulary_field.constraints["enum"][:2]
+        separated = with_separator(schema, vocabulary_field)
+        frame = children(
+            {vocabulary_field.name: f"{first};{second}"},
+            {vocabulary_field.name: f"{first}; {second}"},
+        )
+
+        assert found(frame, separated) == set()
+
+    def test_a_bad_term_is_a_problem_naming_that_term_and_its_row(
+        self, schema: Schema, children: Children, vocabulary_field: Field
+    ) -> None:
+        term = vocabulary_field.constraints["enum"][0]
+        separated = with_separator(schema, vocabulary_field)
+        frame = children(
+            {vocabulary_field.name: term},
+            {vocabulary_field.name: f"{term}; nonsense one ; nonsense two"},
+        )
+
+        problems = DatasetCheck(frame, separated).problems()
+
+        assert [(p["row"], p["value"]) for p in problems.to_dict("records")] == [
+            (10, "nonsense one"),
+            (10, "nonsense two"),
+        ]
+        assert set(problems["kind"]) == {Kind.NOT_IN_VOCABULARY}
+
+    def test_each_value_in_a_cell_is_matched_to_the_pattern_on_its_own(
+        self, schema: Schema, children: Children, pattern_field: Field
+    ) -> None:
+        separated = with_separator(schema, pattern_field)
+        frame = children(
+            {pattern_field.name: "2020-05; 2021-06"},
+            {pattern_field.name: "2020-05; 2021-6"},
+        )
+
+        problems = DatasetCheck(frame, separated).problems().to_dict("records")
+
+        assert [(p["row"], p["kind"], p["value"]) for p in problems] == [
+            (10, Kind.WRONG_TYPE, "2021-6")
+        ]
+
+    def test_a_field_without_a_separator_takes_the_whole_cell_as_one_value(
+        self, schema: Schema, children: Children, vocabulary_field: Field
+    ) -> None:
+        terms = vocabulary_field.constraints["enum"]
+        frame = children({vocabulary_field.name: f"{terms[0]};{terms[1]}"})
+
+        assert found(frame, schema) == {
+            (9, vocabulary_field.name, Kind.NOT_IN_VOCABULARY)
+        }

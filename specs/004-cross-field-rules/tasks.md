@@ -102,3 +102,14 @@ names a source, gives its reasoning, has a diagram and an example matching what 
 - T001 first: the rule reference links the issues it files.
 - T002 → T003 → T004 → T005 → T006, T007, T008.
 - T009 needs T002. T010 needs T009.
+
+---
+
+## Review fixes
+
+- [ ] T013 [US1] `Dataset.check` reads the vocabularies to resolve the rules: no test writes into
+  the user's cache, and the docstring and changelog say so (review finding REV-001).
+- [ ] T014 [US2] Each rule's diagram names its domain, or its condition and allowed terms, read from
+  the vocabularies (REV-002).
+- [ ] T015 [US1] A child whose limited field holds a value not in the vocabulary is not checked
+  against CF-3 (REV-003, FR-004).

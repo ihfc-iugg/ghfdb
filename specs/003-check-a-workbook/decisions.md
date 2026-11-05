@@ -40,30 +40,31 @@ read correctly. A row whose label is not one of these is read as a child, and it
 reported as problems, which shows the assessor exactly where the reading went wrong rather than
 silently dropping a row.
 
-## D-5 — The report copy holds values, not formulas
+## D-5 — The report holds the problems, not a copy of the data
 
-The workbook is read with the value Excel last saved for each formula, and the report copy is
-written from that same reading, so a formula reaches the report copy as its value. The report
-shows what was checked. The original keeps its formulas.
+The report is a new file beside the workbook listing every problem with the Excel row of its child,
+and a summary of what was checked. Rewriting the whole workbook into a copy costs 20–30 seconds at
+90,000 children with every established spreadsheet writer measured (research.md, "Writing the
+report"), which alone misses SC-006. Leaving the original's data where it is also keeps one copy
+of the data to fix: the assessor works in the original with the report open beside it, and checks
+again.
 
 ## D-6 — A number in a free-text field is checked as its text
 
 A site name, a comment or an ID that is a number (`12`, `3.5`) is a valid value of a free-text
-field. Excel stores it as a number, and Frictionless rejects a number in a text field, so the check
-gives such a cell as its text. It is the mirror of D-1 and changes nothing the assessor typed. A
-cell Excel holds as a date is not given as text, so D-2 still reports it.
+field. The check reads every cell as the text Excel shows for it, so such a cell is text like any
+other and is never reported. It is the mirror of D-1 and changes nothing the assessor typed. A cell
+Excel holds as a date reads as a full date and time, so D-2 still reports it.
 
 ## D-7 — Text `nan` and infinities are wrong type
 
-Python reads the text `nan`, `inf` and `-inf` as numbers, so Frictionless accepts them in a number
-field and then reports range errors, two of them for `nan`. None of them is a number an assessor
-can have measured, so each is reported once, as wrong type, and the range errors on that cell are
-dropped.
+The text `nan`, `inf` and `-inf` parses as a number, but none of them is a number an assessor can
+have measured. Each is reported once, as wrong type, and no range problem is reported for that
+cell.
 
-## Design review notes carried into the build
+## D-8 — The speed target is checked by the test suite
 
-Recorded, not acted on in the plan: report sheets named `problems` and `check` would be renamed
-by openpyxl if the workbook already has sheets of those names (the reference page says so); the
-two earlier column names sit in a description row of the hand-maintained template, so scenario
-1.15 is tested by editing the header; reading an untrusted workbook needs no change for XML
-entity attacks, because the bundled expat refuses external entities and limits amplification.
+SC-006 is a test that generates a workbook of 90,000 children and fails when the check and its
+report take longer than 15 seconds. It runs with the rest of the suite, so a change that slows the
+check down fails its pull request rather than being found later. Generating the workbook takes
+about 30 seconds and is done once per test session.

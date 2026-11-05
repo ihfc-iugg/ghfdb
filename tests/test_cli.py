@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 import responses
-from conftest import read_problems
+from conftest import LARGE_CHILDREN, SEEDED_EVERY, read_problems
 from frictionless import Schema
 from openpyxl import Workbook, load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
@@ -396,4 +396,8 @@ class TestSpeed:
         print(f"checked 90,000 children in {elapsed:.1f} s")
         assert status == 1
         assert elapsed < self.LIMIT
-        assert len(read_problems(report_of(path))) == seeded
+        found = read_problems(report_of(path))
+        assert len(found) == seeded
+        broken = LARGE_CHILDREN // SEEDED_EVERY
+        assert [line[3] for line in found].count(str(Kind.RULE)) == broken
+        assert len(found) - broken == broken

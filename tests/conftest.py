@@ -196,10 +196,11 @@ SEEDED_EVERY = 100
 def large_workbook(
     schema: Schema, tmp_path_factory: pytest.TempPathFactory
 ) -> tuple[Path, int]:
-    """Write a workbook of 90,000 valid children, one in a hundred with a problem.
+    """Write a workbook of 90,000 valid children, two in a hundred with a problem.
 
-    The problem is text where a number is wanted, in one field. Returns the path and
-    the number of problems written.
+    One child in a hundred has text where a number is wanted, in one field. Another
+    one in a hundred breaks a cross-field rule: a borehole child with the interval
+    bottom empty. Returns the path and the number of problems written.
     """
     number = next(field for field in schema.fields if field.type == "number")
     path = tmp_path_factory.mktemp("large") / "large.xlsx"
@@ -211,11 +212,15 @@ def large_workbook(
         sheet.write_string(offset, 0, label)
     child = [valid_value(field) for field in schema.fields]
     wrong = codes.index(number.name)
+    bottom = codes.index("C5")
     seeded = 0
     for index in range(LARGE_CHILDREN):
         line = child
         if index % SEEDED_EVERY == 0:
             line = [*child[:wrong], "not a number", *child[wrong + 1 :]]
+            seeded += 1
+        elif index % SEEDED_EVERY == SEEDED_EVERY // 2:
+            line = [*child[:bottom], None, *child[bottom + 1 :]]
             seeded += 1
         sheet.write_row(FIRST_DATA_ROW - 1 + index, 0, [index, *line])
     workbook.close()

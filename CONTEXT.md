@@ -67,9 +67,9 @@ Avoid "determination", "entry" and "record" for a row. Say **child**.
 | **Dataset** | The children of a workbook held as one table (`ghfdb.Dataset`): one row per child, one column per field code, the index the Excel row. |
 | **Report** | The web page a check writes beside the workbook: its problems and what it was checked against, with no copy of the data. Written by the check command. |
 | **Problem** | One thing a check found wrong with one cell or row, with its Excel row number, field and kind. Not "error", "violation" or "flag". |
-| **Problem kinds** | **Missing** (a mandatory field is empty), **wrong type** (text in a number field, a fraction in a whole-number field), **out of range**, **not in vocabulary**, **rule** (a cross-field rule is broken), and the column problem kinds **unknown column**, **no column** and **duplicate column**. |
+| **Problem kinds** | **Missing** (a field mandatory in both domains is empty; a field mandatory in one domain only is reported as a rule problem), **wrong type** (text in a number field, a fraction in a whole-number field), **out of range**, **not in vocabulary**, **rule** (a cross-field rule is broken: the problem names the field to fill or change, the rule's identifier and the field that made it apply), and the column problem kinds **unknown column**, **no column** and **duplicate column**. |
 | **Column problem** | A problem with the workbook's layout rather than a cell, so it has no row: **unknown column**, **no column** (the workbook has no column for a field) or **duplicate column**. |
-| **Cross-field rule** | A rule that relates two or more fields, for example "when the exploration method is indirect, the temperature method must be an estimate". The field schema cannot express these. |
+| **Cross-field rule** | A rule that relates two or more fields of the same child, which the field schema cannot express. It has an identifier such as `CF-1`, never changed or reused, a statement and a source. For example, a child explored through a borehole must give the interval bottom. A child's domain is read from its exploration method. |
 | **Suggestion** | A vocabulary term offered with a not-in-vocabulary problem when the value is close to one, as in "did you mean `[Core samples]`?". |
 
 ## Vocabularies

@@ -45,8 +45,17 @@ All notable changes to this project are recorded here. The format follows
   and `Dataset.check`. `fastexcel`, `pandas`, `pyarrow` and `jinja2` are now runtime
   dependencies.
 
+- Cross-field rules, which relate several fields of one child. `ghfdb check` and
+  `Dataset.check` apply them after the field check, and a child that breaks one gets a
+  problem of the new kind `rule`. The report shows the rule's identifier linked to its entry
+  in the published reference, its statement and the field that made it apply.
+  `ghfdb.qc.rules` declares the rules.
+
 ### Changed
 
+- The problem table has two new columns, `rule` and `related`, after `suggestion`. They are
+  set for a `rule` problem only. `Dataset.check` takes the rules to apply, which default to
+  all of them.
 - openpyxl is now a runtime dependency, because `ghfdb.template` writes the upload template.
 - The documentation build now checks that every concept, scheme and collection address in the
   field reference is an `http` or `https` address and encodes the brackets and parentheses that
@@ -56,3 +65,15 @@ All notable changes to this project are recorded here. The format follows
   so a browser refuses the file if the CDN serves anything other than the published build. It
   was loaded without one before. The diagrams are drawn as before. `docs/conf.py` holds the
   version and hash, with the command that produces a new hash for an upgrade.
+
+### Scheme changes
+
+- Added rule CF-1: a child explored by drilling, clustered drilling, mining, tunneling or
+  indirect estimation has every field mandatory for borehole and mine data only filled
+  (`C5`, `C31`, `C32`).
+- Added rule CF-2: a child explored by probing, onshore, offshore or clustered, has every field
+  mandatory for probe sensing only filled (`C6`, `C23`).
+- Added rule CF-3: a thermal conductivity location of literature or unspecified (`C42`) is
+  allowed only when the thermal conductivity source (`C41`) is assumed from literature.
+- A field mandatory in one domain only is no longer left unchecked: when it is empty for a
+  child of that domain, it is reported as a `rule` problem.

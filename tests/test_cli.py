@@ -9,7 +9,10 @@ from frictionless import Schema
 from openpyxl import Workbook, load_workbook
 
 from ghfdb.cli import main
+from ghfdb.qc.check import Kind
+from ghfdb.template import FIRST_DATA_ROW
 
+SOURCE = Path(__file__).parent / "sources" / "upload-template.xlsx"
 Filler = Callable[[Sequence[Mapping[str, Any]]], Path]
 
 
@@ -236,3 +239,90 @@ class TestOffline:
         assert status == 2
         assert capsys.readouterr().err.strip()
         assert not report_of(path).exists()
+
+
+def column_of(sheet: Any, code: str) -> int:
+    """Find the column whose header, in row 1, is a field code."""
+    return next(cell.column for cell in sheet[1] if cell.value == code)
+
+
+class TestEndToEnd:
+    @pytest.fixture
+    def seeded(
+        self,
+        schema: Schema,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+        mandatory_code: str,
+    ) -> tuple[Path, set[tuple[Any, ...]]]:
+        """A workbook with one problem of each kind, and what should be reported."""
+        number = next(
+            f
+            for f in schema.fields
+            if f.type == "number" and {"minimum", "maximum"} <= set(f.constraints)
+        )
+        vocabulary = next(
+            f
+            for f in schema.fields
+            if "enum" in f.constraints and f.name != mandatory_code
+        )
+        absent = next(
+            f
+            for f in schema.fields
+            if f.custom["obligation"] == "R"
+            and f.name not in {number.name}
+            and f.name not in {vocabulary.name}
+        )
+        children = [
+            valid_child | {mandatory_code: None},
+            valid_child | {number.name: "not a number"},
+            valid_child | {number.name: number.constraints["maximum"] + 1},
+            valid_child | {vocabulary.name: "zzz-not-a-term"},
+        ]
+        path = filled_workbook(children)
+        workbook = load_workbook(path)
+        sheet = workbook["data list"]
+        column = column_of(sheet, absent.name)
+        for row in range(1, sheet.max_row + 1):
+            sheet.cell(row, column).value = None
+        last = sheet.max_column
+        sheet.cell(1, last + 1, "Not a field")
+        sheet.cell(9, last + 1, "x")
+        sheet.cell(1, last + 2, number.name)
+        workbook.save(path)
+        return path, {
+            (9, mandatory_code, str(Kind.MISSING)),
+            (10, number.name, str(Kind.WRONG_TYPE)),
+            (11, number.name, str(Kind.OUT_OF_RANGE)),
+            (12, vocabulary.name, str(Kind.NOT_IN_VOCABULARY)),
+            (None, None, str(Kind.UNKNOWN_COLUMN)),
+            (None, number.name, str(Kind.DUPLICATE_COLUMN)),
+            (None, absent.name, str(Kind.NO_COLUMN)),
+        }
+
+    @pytest.mark.usefixtures("vocabularies_cached")
+    def test_reports_every_seeded_problem_and_no_other(
+        self, seeded: tuple[Path, set[tuple[Any, ...]]]
+    ) -> None:
+        path, expected = seeded
+
+        assert main(["check", str(path)]) == 1
+
+        found = problem_lines(report_of(path))
+        assert {(line[0], line[1], line[3]) for line in found} == expected
+        assert len(found) == len(expected)
+
+    @pytest.mark.usefixtures("vocabularies_cached")
+    def test_the_same_valid_data_in_the_hand_maintained_template_has_no_problem(
+        self, schema: Schema, tmp_path: Path, valid_child: dict[str, Any]
+    ) -> None:
+        path = tmp_path / "template.xlsx"
+        shutil.copyfile(SOURCE, path)
+        workbook = load_workbook(path)
+        sheet = workbook["data list"]
+        for code, value in valid_child.items():
+            sheet.cell(FIRST_DATA_ROW, column_of(sheet, code), value)
+        workbook.save(path)
+
+        assert main(["check", str(path)]) == 0
+        assert problem_lines(report_of(path)) == []

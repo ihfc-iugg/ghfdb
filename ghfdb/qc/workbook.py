@@ -11,13 +11,13 @@ from frictionless import Schema
 from openpyxl.utils import column_index_from_string, get_column_letter
 
 from ghfdb.fields import load_schema
+from ghfdb.qc.check import PROBLEM_COLUMNS, Kind
 from ghfdb.template import ROW_LABELS
 
 SHEET = "data list"
 SUFFIXES = {".xlsx", ".xlsm"}
 HEADER_SEARCH_ROWS = 20
 DESCRIPTION_LABELS = {label.casefold() for label in ROW_LABELS}
-PROBLEM_COLUMNS = ["row", "code", "column_name", "kind", "value", "suggestion"]
 ENTITIES = {"&quot;": '"', "&apos;": "'"}
 ATTRIBUTE = re.compile(rb"""([\w:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')""")
 CELL_REFERENCE = re.compile(rb"""\br\s*=\s*["']([A-Z]+)([0-9]+)["']""")
@@ -318,11 +318,11 @@ class UploadWorkbook:
             for a field is the one ``data`` uses.
         """
         unknown = [
-            {"column_name": header, "kind": "unknown column"}
+            {"column_name": header, "kind": Kind.UNKNOWN_COLUMN}
             for header in self.unknown_columns
         ]
         duplicate = [
-            {"code": code, "column_name": header, "kind": "duplicate column"}
+            {"code": code, "column_name": header, "kind": Kind.DUPLICATE_COLUMN}
             for code, header in self.duplicate_columns
         ]
         problems = pandas.DataFrame([*unknown, *duplicate], columns=PROBLEM_COLUMNS)

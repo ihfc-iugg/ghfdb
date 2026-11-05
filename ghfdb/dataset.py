@@ -5,6 +5,8 @@ from pathlib import Path
 import pandas
 from frictionless import Schema
 
+from ghfdb.fields import load_schema
+from ghfdb.qc.check import DatasetCheck
 from ghfdb.qc.workbook import UploadWorkbook
 
 
@@ -39,3 +41,17 @@ class Dataset:
             CheckError: The workbook cannot be read.
         """
         return cls(UploadWorkbook(path, schema).data())
+
+    def check(self, schema: Schema | None = None) -> pandas.DataFrame:
+        """Find what is wrong with the children.
+
+        Args:
+            schema: The fields to check against. Without one, the schema packaged
+                with ghfdb.
+
+        Returns:
+            One line for each problem, with the columns ``row``, ``code``,
+            ``column_name``, ``kind``, ``value`` and ``suggestion``.
+        """
+        schema = load_schema() if schema is None else schema
+        return DatasetCheck(self.data, schema).problems()

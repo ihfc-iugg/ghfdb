@@ -8,7 +8,9 @@ from frictionless import Schema
 import ghfdb
 import ghfdb.qc
 from ghfdb.dataset import Dataset
+from ghfdb.qc.check import Kind
 from ghfdb.qc.workbook import UploadWorkbook
+from ghfdb.template import FIRST_DATA_ROW
 
 Filler = Callable[[Sequence[Mapping[str, Any]]], Path]
 
@@ -52,3 +54,28 @@ class TestFromWorkbook:
         dataset = Dataset.from_workbook(path)
 
         assert list(dataset.data.columns) == [field.name for field in schema.fields]
+
+
+class TestCheck:
+    def test_gives_the_problems_found_in_the_children(
+        self, schema: Schema, filled_workbook: Filler, valid_child: dict[str, Any]
+    ) -> None:
+        number = next(f for f in schema.fields if f.type == "number")
+        path = filled_workbook([valid_child, valid_child | {number.name: "abc"}])
+        dataset = Dataset.from_workbook(path, schema)
+
+        problems = dataset.check(schema)
+
+        assert {
+            (p["row"], p["code"], p["kind"]) for p in problems.to_dict("records")
+        } == {(FIRST_DATA_ROW + 1, number.name, Kind.WRONG_TYPE)}
+
+    def test_checks_against_the_packaged_schema_without_one(
+        self,
+        vocabularies_cached: Path,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+    ) -> None:
+        dataset = Dataset.from_workbook(filled_workbook([valid_child]))
+
+        assert dataset.check().empty

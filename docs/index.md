@@ -5,7 +5,8 @@ Python tools for working with the Global Heat Flow Database (GHFDB).
 The first part of the package, `ghfdb.qc`, is quality control for GHFDB data template
 workbooks: it checks a workbook against the field schema and the IHFC controlled
 vocabularies, and scores each heat-flow determination with the GHFDB quality scheme.
-It is in development and does not yet check or score anything.
+It checks a workbook with the `ghfdb check` command (see
+[Check a workbook](reference/check.md)). Scoring is still to come.
 
 ```{toctree}
 :maxdepth: 1

@@ -1,3 +1,4 @@
+import time
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -245,6 +246,14 @@ class TestCheckError:
         with pytest.raises(CheckError):
             UploadWorkbook(path, schema)
 
+    def test_refuses_a_workbook_with_no_id_column(
+        self, schema: Schema, filled_workbook: Filler, valid_child: dict[str, Any]
+    ) -> None:
+        path = edit(filled_workbook([valid_child]), lambda sheet: sheet.delete_cols(1))
+
+        with pytest.raises(CheckError):
+            UploadWorkbook(path, schema)
+
     def test_refuses_an_empty_data_list_sheet(
         self, schema: Schema, tmp_path: Path
     ) -> None:
@@ -451,6 +460,20 @@ class TestColumnProblems:
         problems = UploadWorkbook(path, schema).column_problems()
 
         assert problems.empty
+
+    def test_reads_a_sheet_with_a_value_in_its_last_column_quickly(
+        self, schema: Schema, filled_workbook: Filler, valid_child: dict[str, Any]
+    ) -> None:
+        path = edit(
+            filled_workbook([valid_child]),
+            lambda sheet: sheet.cell(FIRST_DATA_ROW, 16_384, "x"),
+        )
+        started = time.perf_counter()
+
+        problems = UploadWorkbook(path, schema).column_problems()
+
+        assert time.perf_counter() - started < 5
+        assert list(problems["column_name"]) == ["XFD"]
 
     def test_finds_two_columns_for_one_field_and_uses_the_first(
         self, schema: Schema, filled_workbook: Filler, valid_child: dict[str, Any]

@@ -89,25 +89,37 @@ class UploadWorkbook:
             sheet = fastexcel.read_excel(self.path).load_sheet_by_name(
                 SHEET, header_row=None, skip_rows=0, dtypes="string"
             )
-            frame = sheet.to_pandas()
+            table = sheet.to_arrow()
             positions = [info.absolute_index for info in sheet.available_columns()]
         except fastexcel.SheetNotFoundError:
             raise CheckError(f"{self.path} has no sheet named {SHEET!r}") from None
         except fastexcel.FastExcelError as error:
             raise CheckError(f"{self.path} cannot be opened: {error}") from error
-        self.put_error_values(frame, positions)
+        # A column with no cell filled is dropped before pandas sees it, so a stray
+        # value far to the right of the fields costs nothing. The error-cell scan
+        # restores any column whose only cells hold Excel errors.
+        errors = self.error_values()
+        kept = [
+            index
+            for index, column in enumerate(table.columns)
+            if column.null_count < table.num_rows or positions[index] in errors
+        ]
+        frame = table.select(kept).to_pandas()
+        frame.columns = pandas.RangeIndex(len(kept))
+        positions = [positions[index] for index in kept]
+        self.put_error_values(frame, positions, errors)
         return frame, positions
 
-    def put_error_values(self, frame: pandas.DataFrame, positions: list[int]) -> None:
-        """Write the Excel error values of the sheet into its frame.
+    def error_values(self) -> dict[int, dict[int, str]]:
+        """Find the Excel error values of the sheet.
 
         The reader gives a cell holding an error such as ``#N/A`` as empty. The
         sheet's XML is searched as bytes for those cells, so that no entity in an
         untrusted file is ever expanded.
 
-        Args:
-            frame: The sheet as read, changed in place.
-            positions: The sheet column of each column of ``frame``.
+        Returns:
+            The error text of each error cell, by sheet column and then Excel row,
+            both counted as the reader counts them: columns from 0, rows from 1.
 
         Raises:
             CheckError: The file is not a workbook archive or has no ``data list``
@@ -118,21 +130,37 @@ class UploadWorkbook:
                 sheet_xml = archive.read(self.sheet_part(archive))
         except (zipfile.BadZipFile, KeyError, OSError) as error:
             raise CheckError(f"{self.path} cannot be opened: {error}") from error
+        errors: dict[int, dict[int, str]] = {}
         if b'"e"' not in sheet_xml and b"'e'" not in sheet_xml:
             # No cell has the error type, whatever the spacing around its "=". A plain
             # search takes a quarter of the time of the full pattern on a large sheet.
-            return
-        position_of = {column: position for position, column in enumerate(positions)}
+            return errors
         for cell in ERROR_CELL.finditer(sheet_xml):
             reference = CELL_REFERENCE.search(cell.group(1))
             if reference is None:
                 continue
             column = column_index_from_string(reference.group(1).decode()) - 1
             row = int(reference.group(2))
-            if column in position_of and row <= frame.shape[0]:
-                frame.iat[row - 1, position_of[column]] = self.unescape(
-                    cell.group(2).decode()
-                )
+            errors.setdefault(column, {})[row] = self.unescape(cell.group(2).decode())
+        return errors
+
+    @staticmethod
+    def put_error_values(
+        frame: pandas.DataFrame,
+        positions: list[int],
+        errors: dict[int, dict[int, str]],
+    ) -> None:
+        """Write the Excel error values of the sheet into its frame.
+
+        Args:
+            frame: The sheet as read, changed in place.
+            positions: The sheet column of each column of ``frame``.
+            errors: The error text of each error cell, from ``error_values``.
+        """
+        for position, column in enumerate(positions):
+            for row, text in errors.get(column, {}).items():
+                if row <= frame.shape[0]:
+                    frame.iat[row - 1, position] = text
 
     @staticmethod
     def unescape(text: str) -> str:
@@ -275,17 +303,37 @@ class UploadWorkbook:
         The first filled column of the header is the row-label column and is matched
         to no field. A column with no header is unknown when a child holds a value
         in it.
+
+        Raises:
+            CheckError: The first filled column of the header is a field code that
+                no other column names, so the ID column in front of the fields is
+                missing.
         """
         names = self.field_names()
         headers = self.row_texts(self.header_row)
         label_column = next(i for i, header in enumerate(headers) if header)
-        children = self.frame.iloc[self.first_data_row - 1 :]
+        codes = {field.name for field in self.schema.fields}
+        label = headers[label_column]
+        others = {names.get(header) for header in headers[label_column + 1 :]}
+        if label in codes and label not in others:
+            raise CheckError(
+                f"{self.path} has no ID column in front of the field codes of its "
+                "header row"
+            )
+        blank = [
+            position
+            for position, header in enumerate(headers)
+            if not header and position != label_column
+        ]
+        cells = self.frame.iloc[self.first_data_row - 1 :, blank].stack()
+        holding = set(
+            cells[cells.astype("string").str.strip().ne("")].index.get_level_values(1)
+        )
         for position, header in enumerate(headers):
             if position == label_column:
                 continue
             if not header:
-                values = children.iloc[:, position].astype("string").str.strip()
-                if values.fillna("").ne("").any():
+                if self.frame.columns[position] in holding:
                     self.unknown_columns.append(self.column_letter(position))
             elif header not in names:
                 self.unknown_columns.append(header)

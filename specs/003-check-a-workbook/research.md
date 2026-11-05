@@ -36,12 +36,21 @@ Each error maps to one problem kind:
 | `constraint-error`, constraint `minimum`, `maximum` or `maxLength` | out of range |
 | `constraint-error`, constraint `enum` | not in vocabulary |
 
+The constraint is named only inside the error's note (`constraint "minimum" is "0"`), so the
+mapping reads it from there. Any other error type stops the check rather than being dropped.
+
 Two gaps were found, both small:
 
 - **Text `nan`, `inf` and `-inf` in a number field are accepted as numbers** (Python's `float()`
   reads them). `nan` then fails the range check as out of range, and `inf` passes a field with no
   range. Neither is what the assessor typed a number as, so the check reports both as wrong type,
   looking at the values Frictionless read rather than the text.
+- **A number in a free-text field is a type error.** Frictionless rejects an int in a string
+  field, which would flag a numeric site name or ID in 16 free-text fields. Such a cell is given
+  as its text (D-6).
+- **A blank row hides its errors.** When every cell of a row is empty, Frictionless reports one
+  `blank-row` error and drops the rest, missing problems included. A child is therefore a row
+  with at least one known field filled, so no child is ever blank.
 - **A cell of spaces only is a type error, not empty.** The spec reads it as empty (Edge Cases),
   so spaces-only cells are made empty before validation. That is the one change made to a value,
   and it changes nothing an assessor typed into a number or a term.
@@ -144,6 +153,10 @@ reading and writing the workbook              · 3, package    · openpyxl.load_
 suggestion for a close term                   · 4, stdlib     · difflib.get_close_matches
 command line                                  · 4, stdlib     · argparse
 vocabulary release of a scheme                · 3, package    · rdflib graph, dcterms:isPartOf
+matching a column by code or earlier name     · 7, new        · field_for_column covers the published name only
+column problems                               · 7, new        · Frictionless reports no unknown or duplicate column for inline data
+spaces-only and number-as-text normalising    · 7, new        · no option in frictionless or openpyxl
+the report copy                               · 7, new        · openpyxl writes cells; the layout is ours
 mapping a Frictionless error to a kind        · 7, new        · searched frictionless.errors; no kind of ours exists there
 nan and inf text in number fields             · 7, new        · Frictionless reads both as numbers
 the problem record                            · 7, new        · Frictionless errors carry no Excel row, no published column name, no suggestion

@@ -89,12 +89,19 @@ and keeps the loaded workbook, so the report is written from the same reading.
 - `header_row`: the first of rows 1–20 in which more than half of the non-empty cells name a field
   by code, published column name or earlier column name.
 - `columns`: for each field, the sheet column it was found in, the first one when two name the same
-  field. Also `unknown_columns`, `absent_fields` and `duplicate_columns`, for the column problems.
+  field. Column A of the header row is the template's row-label column (`ID`): it is matched to no
+  field and is never an unknown column, because field `A8` also has the published column name
+  `ID`. Fields are matched from column B on. Also `unknown_columns`, `absent_fields` and `duplicate_columns`, for the column problems.
 - `first_data_row`: the first row under the header whose column A is not a description label
   (`ROW_LABELS`, compared case-folded and stripped).
-- `children`: the Excel row of every later row that holds anything outside the `ID` column.
+- `children`: the Excel row of every later row in which at least one known field's cell is
+  non-empty after spaces-only cells are made empty. A child therefore never reaches Frictionless
+  as a blank row, which would hide its missing problems (Frictionless replaces every error of a
+  blank row with one `blank-row` error).
 - `values(field)`: the column's values for the children, in order, with spaces-only text made
-  `None`. An absent field gives a column of `None`.
+  `None`. In a field of type string, an int or float cell (never a bool) is given as its text,
+  the mirror of D-1 (D-6); a date cell stays as it is, so D-2 still reports it. An absent field
+  gives a column of `None`.
 
 ### `ghfdb.qc.check`
 
@@ -107,12 +114,17 @@ and keeps the loaded workbook, so the report is written from the same reading.
     as `tests/conftest.py` already does) with `required` set on every field whose obligation is
     `M` and whose domain is both `B` and `S` (FR-005, D-3). For a field with a separator and a
     vocabulary or pattern, those constraints move off the column, because each value is checked
-    on its own.
+    on its own. (No packaged field has that combination today. A schema test fails when one
+    gains it, so the per-value check in T009 is exercised by a test schema only.)
   - `problems()`: column problems first, then the result of
     `frictionless.validate(Resource(data=[codes, *rows], schema=…), limit_errors=None)`, each error
     mapped to a kind by the table in research.md and given the Excel row of its child, the field's
-    published column name and the cell as found. Then the two extra wrong-type cases: a number
-    field whose value Frictionless read as `nan` or an infinity. Then the per-value check of
+    published column name and the cell as found. A constraint error's constraint is read from its
+    note (`constraint "<name>" is …`), the only place Frictionless records it, and the per-kind
+    tests pin that. An error type the table does not name stops the check with `CheckError`
+    rather than being dropped. Before validation, text in a number column whose `float()` is
+    `nan` or infinite is reported as wrong type (D-7), and every Frictionless error for that cell
+    is dropped, so one cell gives one problem. Then the per-value check of
     separator fields, with `Field.read_cell`. Ordered by row, then by field order.
   - `suggest(field, value)`: the one closest term of the field's `enum`, comparing values with
     brackets and surrounding spaces removed and case folded, exact match first, then
@@ -124,7 +136,12 @@ and keeps the loaded workbook, so the report is written from the same reading.
 `Report(workbook, problems, schema, vocabularies)` and `write() -> Path`.
 
 - Path: `<stem>.report.xlsx` in the workbook's folder. The workbook's own path is never written:
-  `write` refuses, with `CheckError`, a report path equal to the workbook's.
+  when the report path exists, `write` refuses with `CheckError` if `os.path.samefile` says it is
+  the workbook (a link).
+- Every cell the report writes whose text comes from the workbook (a problem's value, a
+  suggestion, the Problems column) is written as a string, with `cell.data_type = "s"` after the
+  value. Otherwise openpyxl turns text starting with `=` into a live formula, which Excel would
+  run when the assessor opens the report (Article V, FR-013).
 - In `data list`: a "Problems" column after the last used column, holding for each child the list
   of its problems in one cell, and a fill on every cell that has a problem. These are layout and
   are not tested beyond the list being complete.
@@ -133,7 +150,8 @@ and keeps the loaded workbook, so the report is written from the same reading.
 - A `check` sheet: package version, time of the check, the vocabulary release or releases
   (`Vocabularies.releases()`), the number of children, problems and children with problems, and a
   line saying no problem was found when there is none.
-- Saved with openpyxl. A `PermissionError` becomes `CheckError` naming the report copy.
+- Saved with openpyxl. Any `OSError` on saving becomes `CheckError` naming the report copy, and
+  the earlier report copy is left as it was.
 
 ### `Vocabularies.releases()`
 
@@ -145,7 +163,8 @@ own and asks it afterwards.
 
 `argparse` with one subcommand, `check`, and one argument, the workbook's path. Loads the schema
 (an `OSError` from the vocabularies becomes the could-not-run message saying they must be
-downloaded once), runs the check, writes the report, prints one summary line ("212 children, 37
+downloaded once). `CheckError`, `OSError` and `MissingSchemeError` each return `2` with their
+message, runs the check, writes the report, prints one summary line ("212 children, 37
 problems in 14 of them, report: <path>"), and returns `0`, `1` or `2`. Could-not-run messages go
 to standard error. `run()` is `sys.exit(main())`, and `[project.scripts] ghfdb = "ghfdb.cli:run"`
 points at it, so the tests call `main` and read its status.
@@ -156,8 +175,9 @@ points at it, so the tests call `main` and read its status.
   `UploadTemplate(schema)`, writes children given as `{code: value}` dicts from row 9, and returns
   the path. A test that needs another layout (more description rows, an earlier column name, an
   unknown column) edits that workbook with openpyxl before checking it.
-- The valid child is built from the schema: a value inside each field's range or the first term of
-  its `enum`, so the tests do not type terms in by hand (Article XI).
+- The valid child is built from the schema: a value inside each field's range, the first term of
+  its `enum`, a value matching its pattern (`2020-05` for a year and month, which is not a
+  vocabulary term) or text, so the tests do not type terms in by hand (Article XI).
 - Problems are asserted as `(row, code, kind)` sets, never their wording.
 - The byte-for-byte test hashes the original before and after a run that finds problems, a run
   that finds none, and a run that cannot write its report.

@@ -28,12 +28,13 @@ copy with the seeded list, and compare the original's bytes with a copy taken be
 - [ ] T002 [US1] `ghfdb/qc/workbook.py`: `CheckError` and `UploadWorkbook` with `header_row`,
   `columns`, `first_data_row`, `children`. The header is found by field code, published column
   name or earlier column name. Description rows are skipped by label, whatever their number
-  (D-4). Rows holding nothing outside `ID` are not children. `CheckError` for a file that cannot
+  (D-4). Column A is matched to no field. A row is a child only when a known field's cell is non-empty, so a row holding only an `ID` is not one, and a child whose fields are all empty never reaches validation as a blank row. `CheckError` for a file that cannot
   be opened, no `data list` sheet, no header (AS 1.13, 1.14, 1.15, FR-008, FR-009). Tested on a
-  generated template and on `tests/sources/upload-template.xlsx` filled with the same children.
+  generated template and on `tests/sources/upload-template.xlsx` filled with the same children: neither gives a column problem.
 - [ ] T003 [US1] `UploadWorkbook.values(field)`, `unknown_columns`, `absent_fields`,
   `duplicate_columns`: the column's values for the children, spaces-only made `None`, the
-  first column used when two name one field, a column of `None` for an absent field. A formula
+  first column used when two name one field, a number in a free-text field given as its text
+  (D-6), a column of `None` for an absent field. A formula
   cell reads as its saved value, and as `None` with none saved (Edge Cases).
 - [ ] T004 [US1] `ghfdb/qc/__init__.py` exports; `docs/reference/python-api.md` gains a
   "Checking a workbook" section with `automodule:: ghfdb.qc.workbook`.
@@ -46,8 +47,8 @@ copy with the seeded list, and compare the original's bytes with a copy taken be
   column name and value as found (AS 1.2–1.8, 1.11, 1.12, FR-003–FR-006). A number stored as text
   is accepted, `1,234.5` and `12,5` are wrong type, a date in a year-and-month field is wrong type
   (D-1, D-2). The schema passed in is not changed.
-- [ ] T006 [US1] Text `nan`, `inf` and `-inf` in a number field are wrong type (research.md,
-  "Running the checks").
+- [ ] T006 [US1] Text `nan`, `inf` and `-inf` in a number field, ranged or not, give exactly one
+  wrong-type problem per cell (D-7).
 - [ ] T007 [US1] Column problems: an unknown column, a field with no column, two columns for one
   field, each reported once with no row; a mandatory field with no column is also missing on every
   child (AS 1.16).
@@ -56,7 +57,8 @@ copy with the seeded list, and compare the original's bytes with a copy taken be
   (AS 1.9, FR-007).
 - [ ] T009 [US1] A field with a separator and a vocabulary or pattern has each value checked on
   its own, with a problem per bad value naming that value. Tested with a test schema, since no
-  such field exists in the packaged one (AS 1.10).
+  such field exists in the packaged one (AS 1.10). A test on the packaged schema fails if any field gains a separator together with a
+  vocabulary or pattern.
 - [ ] T010 [US1] `ghfdb/fields/vocabularies.py`: `Vocabularies.releases()`, the `dcterms:isPartOf`
   of every scheme read, tested in `tests/test_fields/test_vocabularies.py` with the existing test
   vocabularies. `automodule:: ghfdb.qc.check` in the API reference. `CONTEXT.md`: **report copy**
@@ -69,11 +71,12 @@ copy with the seeded list, and compare the original's bytes with a copy taken be
   workbook with every problem shown against its child in `data list`, a `problems` sheet listing
   every problem, and a `check` sheet with the package version, time, vocabulary releases and
   counts; it says no problem was found when there is none, and replaces an earlier report copy
-  (AS 1.1, 1.17, 1.19, 1.20, FR-002, FR-010, FR-011). It refuses to write to the workbook's own
-  path, and a report copy it cannot replace is a `CheckError` that leaves the earlier one as it
-  was.
+  (AS 1.1, 1.17, 1.19, 1.20, FR-002, FR-010, FR-011). A workbook value starting with `=` reaches every sheet of the report as text, never a formula.
+  It refuses a report path that is the workbook itself (`os.path.samefile`), and a report copy it
+  cannot save is a `CheckError` that leaves the earlier one as it was.
 - [ ] T012 [US1] `ghfdb/cli.py`: `main(argv)` and `run()`, `ghfdb check <workbook>`, the summary
-  line, statuses `0`/`1`/`2`, could-not-run messages on standard error for each Edge Case
+  line, statuses `0`/`1`/`2`, could-not-run messages on standard error for each Edge Case, and status `2` for a
+  `MissingSchemeError` from the vocabularies
   (AS 1.18, FR-001, FR-012). `pyproject.toml`: `[project.scripts] ghfdb = "ghfdb.cli:run"`.
 - [ ] T013 [US1] The original workbook's bytes are unchanged after a run with problems, a run
   with none, and a run that cannot write its report (AS 1.1, 1.20, SC-003).
@@ -83,8 +86,8 @@ copy with the seeded list, and compare the original's bytes with a copy taken be
 - [ ] T015 [US1] The seeded workbook end to end through `main`: every seeded problem, and no
   other, in the `problems` sheet; the same data in the hand-maintained template with no problem
   (SC-001, SC-002, SC-004).
-- [ ] T016 [US1] `docs/reference/check.md`: how to run the command, what it writes, every part of
-  the report copy, every problem kind with an example, the statuses, and a Mermaid flowchart of
-  the check; in the reference toctree; `automodule:: ghfdb.qc.report` and `ghfdb.cli` in the API
+- [ ] T016 [US1] `docs/reference/check.md`: the command (synopsis, argument, what it writes, the
+  three statuses), each sheet and column of the report copy, and each problem kind with a short
+  example, with a Mermaid flowchart of the check and no numbered steps; in the reference toctree; `automodule:: ghfdb.qc.report` and `ghfdb.cli` in the API
   reference (AS 1.22, FR-015). README: "The package … does not yet check or score anything"
   becomes a short "Checking a workbook" section. `CHANGELOG.md` under Added.

@@ -45,3 +45,25 @@ silently dropping a row.
 The workbook is read with the value Excel last saved for each formula, and the report copy is
 written from that same reading, so a formula reaches the report copy as its value. The report
 shows what was checked. The original keeps its formulas.
+
+## D-6 — A number in a free-text field is checked as its text
+
+A site name, a comment or an ID that is a number (`12`, `3.5`) is a valid value of a free-text
+field. Excel stores it as a number, and Frictionless rejects a number in a text field, so the check
+gives such a cell as its text. It is the mirror of D-1 and changes nothing the assessor typed. A
+cell Excel holds as a date is not given as text, so D-2 still reports it.
+
+## D-7 — Text `nan` and infinities are wrong type
+
+Python reads the text `nan`, `inf` and `-inf` as numbers, so Frictionless accepts them in a number
+field and then reports range errors, two of them for `nan`. None of them is a number an assessor
+can have measured, so each is reported once, as wrong type, and the range errors on that cell are
+dropped.
+
+## Design review notes carried into the build
+
+Recorded, not acted on in the plan: report sheets named `problems` and `check` would be renamed
+by openpyxl if the workbook already has sheets of those names (the reference page says so); the
+two earlier column names sit in a description row of the hand-maintained template, so scenario
+1.15 is tested by editing the header; reading an untrusted workbook needs no change for XML
+entity attacks, because the bundled expat refuses external entities and limits amplification.

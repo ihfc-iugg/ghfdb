@@ -117,6 +117,21 @@ other method wait until a feature needs them.
 
 **ADR:** docs/adr/0005-a-dataset-holds-one-pandas-dataframe.md
 
+## D-12 — The report is a web page, not a spreadsheet
+
+The report is `<name>.report.html`: one HTML file with its styles inline and no script, holding a
+summary and a table of every problem. A report written as `.xlsx` would match the same extension
+as the workbooks it describes, so anything that gathers a folder's workbooks by extension, a person
+or a future command that checks many at once, would gather the reports too. A web page opens in any
+browser with no spreadsheet program, avoids the separator and encoding trouble of CSV in German
+locales, cannot carry a live formula, and has no row limit. It is rendered with Jinja2, the
+template engine the documentation already uses, with autoescaping on, because every value in it
+comes from an untrusted workbook. The table cannot be sorted or filtered without a script; it is
+ordered by Excel row, which is how an assessor works through the workbook. Decided by the
+maintainer at the merge gate.
+
+**ADR:** none — the report's format is public interface, documented on the reference page; it constrains nothing else in the package
+
 ## Design review notes carried into the build
 
 Recorded, not acted on in the plan: report sheets named `problems` and `summary` are written into

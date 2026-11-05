@@ -245,13 +245,18 @@ with a copy taken before the run.
 - Q: Does the report hold a copy of the workbook's data? → A: No. It lists every problem with its
   Excel row. A copy of 90,000 children cannot be written within SC-006. Integrated as FR-010 and
   the Key Entities.
+- Q: In what format is the report written? → A: A single web page, `<name>.report.html`. A
+  spreadsheet report would share the workbook's extension, so anything that finds workbooks by
+  extension would also find their reports. Integrated in the Assumptions.
 - Q: What does the command tell a script about the result? → A: Three statuses: no problems,
   problems found, could not run. Integrated as Acceptance Scenario 1.18 and FR-012.
 
 ## Assumptions
 
-- The report is a spreadsheet, so the assessor reads it in the program they filled the workbook
-  in. Its layout is settled at planning, within FR-010 and FR-011.
+- The report is a single web page that opens in any browser, with no file beside it. It does not
+  share the workbook's file extension, so a folder of workbooks can be told from their reports by
+  extension, as checking several workbooks at once will need. Its layout is settled at planning,
+  within FR-010 and FR-011.
 - The report holds no copy of the workbook's data. Rewriting 90,000 children takes 20–30 seconds
   with every established spreadsheet writer measured, which alone misses SC-006, and a copy of the
   data that can drift from the original is a second thing to keep straight. The assessor fixes the

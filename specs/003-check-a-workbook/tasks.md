@@ -113,3 +113,17 @@ with the seeded list; compare the original's bytes with a copy taken before; tim
   steps; in the reference toctree; `automodule:: ghfdb.qc.report` and `ghfdb.cli` in the API
   reference (AS 1.22, FR-015). README: "The package … does not yet check or score anything"
   becomes a short "Checking a workbook" section. `CHANGELOG.md` under Added.
+
+### Group 4 — the report as a web page (D-12, decided at the merge gate)
+
+- [ ] T025 [US1] `ghfdb/qc/report.py` writes `<stem>.report.html` from the Jinja2 template
+  `ghfdb/qc/templates/report.html.jinja` with autoescaping, through a temporary file and
+  `os.replace` as before (plan.md, "`ghfdb.qc.report.Report`"). Every test of the report reads the
+  page back with the standard library's `html.parser`, never by matching its wording. A value
+  holding markup (`<script>`, `&`, `"`) reaches the page escaped. `pyproject.toml`: `jinja2>=3.1`
+  in the runtime dependencies, `xlsxwriter` moved to the development group, its mypy override kept
+  for the tests; the template shipped in the wheel. CLI, end-to-end, offline, byte-for-byte and
+  speed tests follow the new report path.
+- [ ] T026 [US1] `docs/reference/check.md`, `README.md`, `CHANGELOG.md` and `CONTEXT.md` describe the
+  report as a web page with a summary and a table of problems; the flowchart's last step names it.
+

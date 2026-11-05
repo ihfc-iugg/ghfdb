@@ -17,7 +17,9 @@ the workbook's path.
 ## Technical Context
 
 - **Language**: Python 3.12+, managed with uv, built with hatchling.
-- **New runtime dependencies**: `pandas[pyarrow]>=3.0`, `fastexcel>=0.21`, `xlsxwriter>=3.2`
+- **New runtime dependencies**: `pandas[pyarrow]>=3.0`, `fastexcel>=0.21`, `jinja2>=3.1` (moved from
+  the documentation group; the report's template). `xlsxwriter` is a development dependency only,
+  for building test workbooks
   (research.md, "Dependencies added"). pyarrow, through pandas' extra, backs the text columns and
   is what fastexcel hands its frames over in.
 - **Existing dependencies used**: `frictionless` (the field schema, as `load_schema` returns it),
@@ -171,20 +173,20 @@ The class later features build on (D-11). Composition, never a `DataFrame` subcl
 `Report(workbook_path, problems, children, vocabularies)`, where `problems` is one DataFrame: the
 workbook's column problems followed by the dataset's, and `write() -> Path`.
 
-- Path: `<stem>.report.xlsx` in the workbook's folder. It is written to a temporary file in the
-  same folder (`tempfile.NamedTemporaryFile(delete=False, dir=…, suffix=".xlsx")`) and moved over
-  the earlier report with `os.replace`, so a failure leaves the earlier one whole. Any `OSError`,
-  and `xlsxwriter.exceptions.XlsxFileError` raised by `close()`, becomes `CheckError` naming the
-  report, and the temporary file is removed. `os.replace` replaces a link rather than writing
-  through it, so the workbook is never written whatever the report path is.
-- A `problems` sheet: one row per problem, column problems first with no row: Excel row, field
-  code, published column name, kind, value, suggestion. Written in XlsxWriter's constant-memory
-  mode, every value from the workbook with `write_string`, the row with `write_number`, and the
-  row cell left blank for a column problem.
-- A `summary` sheet: the workbook's file name, package version, time of the check, the vocabulary
-  release or releases (`Vocabularies.releases()`), the number of children, problems and children
-  with problems, and a line saying no problem was found when there is none.
-- The layout (column order, widths, headings, a frozen header row, an autofilter) is not tested.
+- Path: `<stem>.report.html` in the workbook's folder (D-12). Written to a temporary file in the
+  same folder and moved over the earlier report with `os.replace`, so a failure leaves the earlier
+  one whole and no temporary file behind. The report gets the mode a new file in the folder would
+  have. Any `OSError` becomes `CheckError` naming the report. `os.replace` replaces a link rather
+  than writing through it, so the workbook is never written.
+- Rendered from one Jinja2 template, `ghfdb/qc/templates/report.html.jinja`, shipped in the
+  package, with autoescaping on: every value from the workbook is escaped, so none can become
+  markup. One file, styles inline, no script, no external asset.
+- The page: the workbook's file name as the heading; a summary (package version, time of the check
+  in UTC, the vocabulary release or releases, the number of children, problems and children with
+  problems, and a line saying no problem was found when there is none); a table of the problems,
+  column problems first with no row, then by Excel row: Excel row, field code, published column
+  name, kind, value, suggestion.
+- The layout and styles are not tested.
 
 ### `Vocabularies.releases()`
 

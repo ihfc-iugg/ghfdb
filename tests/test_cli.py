@@ -7,6 +7,7 @@ import pytest
 import responses
 from frictionless import Schema
 from openpyxl import Workbook, load_workbook
+from openpyxl.worksheet.worksheet import Worksheet
 
 from ghfdb.cli import main
 from ghfdb.qc.check import Kind
@@ -241,9 +242,9 @@ class TestOffline:
         assert not report_of(path).exists()
 
 
-def column_of(sheet: Any, code: str) -> int:
+def column_of(sheet: Worksheet, code: str) -> int:
     """Find the column whose header, in row 1, is a field code."""
-    return next(cell.column for cell in sheet[1] if cell.value == code)
+    return next(int(cell.column) for cell in sheet[1] if cell.value == code)
 
 
 class TestEndToEnd:

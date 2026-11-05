@@ -27,26 +27,6 @@ ERROR_CELL = re.compile(
 )
 
 
-def unescape(text: str) -> str:
-    """Replace the XML entities of a text with the characters they stand for."""
-    return xml_unescape(text, ENTITIES)
-
-
-def attributes(tag: bytes) -> dict[str, str]:
-    """Read the attributes of one XML start tag.
-
-    Args:
-        tag: The tag, such as ``<sheet name="data list" r:id="rId2"/>``.
-
-    Returns:
-        The attribute values by name, with XML entities unescaped.
-    """
-    return {
-        match.group(1).decode(): unescape((match.group(2) or match.group(3)).decode())
-        for match in ATTRIBUTE.finditer(tag)
-    }
-
-
 class CheckError(Exception):
     """Raised when a workbook cannot be checked, with the reason in the message."""
 
@@ -146,9 +126,38 @@ class UploadWorkbook:
             column = column_index_from_string(reference.group(1).decode()) - 1
             row = int(reference.group(2))
             if column in position_of and row <= frame.shape[0]:
-                frame.iat[row - 1, position_of[column]] = unescape(
+                frame.iat[row - 1, position_of[column]] = self.unescape(
                     cell.group(2).decode()
                 )
+
+    @staticmethod
+    def unescape(text: str) -> str:
+        """Replace the XML entities of a text with the characters they stand for.
+
+        Args:
+            text: Text taken from the sheet's XML.
+
+        Returns:
+            The text with every entity replaced.
+        """
+        return xml_unescape(text, ENTITIES)
+
+    @staticmethod
+    def attributes(tag: bytes) -> dict[str, str]:
+        """Read the attributes of one XML start tag.
+
+        Args:
+            tag: The tag, such as ``<sheet name="data list" r:id="rId2"/>``.
+
+        Returns:
+            The attribute values by name, with XML entities unescaped.
+        """
+        return {
+            match.group(1).decode(): UploadWorkbook.unescape(
+                (match.group(2) or match.group(3)).decode()
+            )
+            for match in ATTRIBUTE.finditer(tag)
+        }
 
     def sheet_part(self, archive: zipfile.ZipFile) -> str:
         """Find the part of the archive holding the ``data list`` sheet.
@@ -166,7 +175,7 @@ class UploadWorkbook:
             KeyError: The workbook names no such sheet or no such relationship.
         """
         sheets = (
-            attributes(tag)
+            self.attributes(tag)
             for tag in re.findall(rb"<sheet\b[^>]*>", archive.read("xl/workbook.xml"))
         )
         sheet = next((tag for tag in sheets if tag.get("name") == SHEET), None)
@@ -175,7 +184,7 @@ class UploadWorkbook:
         identifier = next(v for k, v in sheet.items() if k.split(":")[-1] == "id")
         rels = archive.read("xl/_rels/workbook.xml.rels")
         for tag in re.findall(rb"<Relationship\b[^>]*>", rels):
-            relationship = attributes(tag)
+            relationship = self.attributes(tag)
             if relationship.get("Id") == identifier:
                 target = relationship["Target"]
                 return target[1:] if target.startswith("/") else f"xl/{target}"

@@ -88,8 +88,7 @@ names a source, gives its reasoning, has a diagram and an example matching what 
   render `docs/reference/rules.md` from `RULES`: an introduction to the two kinds and the
   domain mapping with D-1 cited, then one entry per rule, anchored by its identifier, with its
   statement, fields (linked to their field reference entries), source, reasoning, the Mermaid flowchart from its
-  `diagram()`, with node labels quoted, and the worked example. The source lookup gains `fuchs-2023-table-4` and
-  `decision:004:D-n`. A "Rules under discussion" section links the issues filed in T001. Added to
+  `diagram()`, with node labels quoted, and the worked example. The source lookup gains `fuchs-2023-table-4`. A "Rules under discussion" section links the issues filed in T001. Added to
   `docs/reference/index.md`. Tests: every rule in `RULES` has exactly one entry and no entry has no
   rule; every entry has each part (AS 2.1–2.3, FR-008).
 - [ ] T010 [US2] `field_reference.py`: each field's entry lists the identifiers of the rules that

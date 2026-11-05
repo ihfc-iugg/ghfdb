@@ -142,8 +142,7 @@ RULES: tuple[Rule, ...] = (CF_1, CF_2, CF_3)
   first agreed rule that needs it, not now (Article III).
 - `source` uses the field schema's source keys, so both cite sources the same way and the
   documentation resolves them with the same lookup (`field_reference.py`, `sources`). The lookup
-  gains `fuchs-2023-table-4`, and `decision:004:D-n` for a ruling in this feature's `decisions.md`,
-  matched before the existing `decision:` branch, which links FS-001's decisions.
+  gains `fuchs-2023-table-4`. No rule cites a ruling of this feature, so no new decision key is needed.
 - `Example` holds only the values of the fields the rule reads. A vocabulary value is a concept URI
   constant, resolved to its term like the rule's own concepts. Number and text values are plain.
   The expected problems give the field codes, and the expected `related` is derived from the

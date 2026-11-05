@@ -19,6 +19,7 @@ Counting indirect methods as borehole data follows the old checking tool. Indire
 not gathered in a borehole. They are grouped with borehole data because the borehole fields, such
 as the temperature methods, are the ones that describe them. This mapping is to be confirmed by
 the data assessment team with the other rules, and is recorded here so it can be.
+**ADR:** none — a ruling on the data, awaiting the data assessment team in https://github.com/ihfc-iugg/ghfdb/issues/36, and stated on the rule reference page.
 
 ### D-2 — An empty field that is mandatory in one domain only is a rule problem
 
@@ -30,6 +31,7 @@ method that makes the field mandatory, and the field left empty.
 
 The workbook check (FS-003) already reports only fields mandatory in every domain as missing, so
 nothing it reports changes.
+**ADR:** none — follows from the glossary's definition of missing, and is stated in `CONTEXT.md`.
 
 ### D-3 — The old checking tool's rules are a starting point, not a source
 
@@ -50,6 +52,7 @@ The questions raised for the data assessment team:
 | [#34](https://github.com/ihfc-iugg/ghfdb/issues/34) | When do the temperature correction methods apply? |
 | [#35](https://github.com/ihfc-iugg/ghfdb/issues/35) | Is the thermal conductivity method mandatory for borehole data? |
 | [#36](https://github.com/ihfc-iugg/ghfdb/issues/36) | Confirm the domain of each exploration method (D-1) |
+**ADR:** none — a sourcing rule already required by Article IX of the constitution.
 
 ### D-4 — The rules are declared in Python, as dataclasses with a `problems()` method
 
@@ -69,6 +72,7 @@ Both subclasses are used now, so the base class is not built ahead of need (Arti
 
 If citable scheme releases (R8) need a machine-readable copy of the rules, it is generated from
 `RULES`.
+**ADR:** docs/adr/0006-cross-field-rules-are-declared-in-python.md
 
 ### D-5 — A rule problem is one line of the problem table, with two new columns
 
@@ -76,12 +80,14 @@ A rule problem names the field to fill or change in `code`, `column_name` and `v
 other problem does. The new `rule` column gives the rule's identifier, and `related` gives the
 condition field and its value. One line per mistake keeps the command's counts honest. The columns
 are added, never renamed, so code reading the table keeps working (Article XIV).
+**ADR:** none — the report layout is documented on the check reference page, and the change is in `CHANGELOG.md`.
 
 ### D-6 — The domain rules read their fields from the field schema
 
 CF-1 and CF-2 do not list their fields. They take every field the field schema marks mandatory for
 their domain only, so the obligation and domain stay recorded in one place, with their source, and
 a change to either changes the rule.
+**ADR:** none — local to the two domain rules.
 
 ### D-7 — The design review's findings, all applied to the plan
 
@@ -92,6 +98,7 @@ worked examples give concepts by URI; no list form of *required when* until a ru
 example tests sit in `test_rules.py` over `valid_child`; a rule reads which fields already have a problem from
 the cells, rather than from a record of the field problems. D-1's reliance on
 the old tool is raised with the team (T001), and the mapping is not changed before they rule.
+**ADR:** none — a record of review outcomes, not a decision downstream work inherits.
 
 ### D-8 — `DatasetCheck` applies no rules unless it is given them
 

@@ -13,7 +13,7 @@ from platformdirs import user_cache_dir
 from rdflib import RDF, Graph, URIRef
 from rdflib import Literal as RdfLiteral
 from rdflib.collection import Collection
-from rdflib.namespace import SKOS
+from rdflib.namespace import DCTERMS, SKOS
 from rdflib.term import Node
 from requests import Session
 from requests.adapters import HTTPAdapter, Retry
@@ -144,6 +144,19 @@ class Vocabularies:
             except Exception as error:
                 raise OSError(f"{scheme}.ttl is not Turtle: {error}") from error
         return self.graphs[scheme]
+
+    def releases(self) -> list[str]:
+        """List the releases of the vocabularies this instance has read.
+
+        Returns:
+            The identifier of each release that a concept scheme read so far is part
+            of (``dcterms:isPartOf``), sorted and without repeats.
+        """
+        found: set[str] = set()
+        for graph in self.graphs.values():
+            for scheme in graph.subjects(RDF.type, SKOS.ConceptScheme):
+                found.update(str(o) for o in graph.objects(scheme, DCTERMS.isPartOf))
+        return sorted(found)
 
     @staticmethod
     def members(

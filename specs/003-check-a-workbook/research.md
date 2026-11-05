@@ -15,13 +15,14 @@ written with XlsxWriter, each seeded with problems of every kind.
 | Step | Chosen | Time | Rejected, and its time |
 |---|---|---|---|
 | Load the field schema and vocabularies | the existing `load_schema`, cache warm | 0.2 s | a cold download is 9 s, so tests and the speed test use a filled cache |
-| Read the sheet | fastexcel, every cell as text | 5.5 s | openpyxl: 13.5 s at 20,000, so about 60 s, and 11.7 s just to open a file with no dimension element. python-calamine to Python objects: 6.1 s, then a Python loop per cell |
+| Read the sheet | fastexcel, every cell as text, handed to pandas | 4.7 s (to polars: 5.0 s) | openpyxl: 13.5 s at 20,000, so about 60 s, and 11.7 s just to open a file with no dimension element. python-calamine to Python objects: 6.1 s, then a Python loop per cell |
 | Find error cells | byte search of the sheet's XML | 0.65 s | |
-| Check every field | polars expressions, one column at a time | about 1 s for all seven rules | Frictionless `validate` on rows read: 3.0 s at 20,000, so about 13 s. pandera: 0.7 s at 20,000, but wrong results (below) |
+| Check every field | pandas, one whole column at a time | 0.6 s for all seven rules on all 70 columns (polars: 0.3 s, same problems found) | Frictionless `validate` on rows read: 3.0 s at 20,000, so about 13 s. pandera: 0.7 s at 20,000, but wrong results (below) |
 | Write the report | XlsxWriter, problems only | under 0.1 s for 900 problems; 2.3 s for 100,000 | Rewriting the workbook as a copy: 30 s with XlsxWriter, 23 s with PyExcelerate, 31 s at 20,000 with openpyxl |
 
-The design review ran the whole planned pipeline at 90,000 children: 8.4 s on this machine,
-inside 15 with a thinner margin than the per-step figures suggest. A workbook saved by Excel keeps
+The steps add up to about 6.5 s. An earlier design review ran a whole pipeline of the same shape
+on polars at 8.4 s, so the speed test (D-8) is what settles the figure, inside 15 either way.
+`pandas.read_excel(engine="calamine")` took 10.4 s for the same sheet and is not used. A workbook saved by Excel keeps
 its text in a shared table and reads faster than the XlsxWriter-made benchmark, so the speed test
 errs on the slow side.
 
@@ -29,8 +30,8 @@ errs on the slow side.
 
 **Decision: fastexcel, once, with every cell as text.**
 
-- **fastexcel** (0.21, the engine polars itself uses for `read_excel`) reads with calamine, in
-  Rust, straight into Arrow and polars. With `dtypes="string"` every cell arrives as the text the
+- **fastexcel** (0.21, the engine polars uses for `read_excel`) reads with calamine, in Rust,
+  into Arrow, and `to_pandas()` hands that to pandas without copying text cell by cell. With `dtypes="string"` every cell arrives as the text the
   value has: `12.5` and the text `"12.5"` read the same (D-1), a number in a free-text field is
   text (D-6), a whole number stored as `3.0` reads `3`, `True` reads `true`, and a cell Excel
   holds as a date reads `2020-05-01 00:00:00`, which no year-and-month pattern matches (D-2).
@@ -74,30 +75,38 @@ The field schema's `earlierColumnNames` already holds the two renamed columns (`
 
 ## Checking the values
 
-**Decision: polars expressions, built from the field schema, one field at a time.**
+**Decision: pandas, the constitution's stack (Article XV), one whole column at a time.**
 
-Every rule the field schema holds is one expression on a text column:
+pandas and polars were measured on the same 90,000-child frame of text, with all seven rules on
+all 70 columns: pandas 0.6 s, polars 0.3 s, and the same 2,340,090 problems found by both. The
+difference is nothing against SC-006. pandas is kept because quality scoring (R6) will build on the
+same DataFrame, and because the researchers who will read and propose rules work in pandas. The
+speed came from the reader and from working on columns, never from the frame library.
 
-| Rule (field schema) | Expression | Problem kind |
+Every rule the field schema holds is one operation on a text column (pandas 3, text backed by
+pyarrow):
+
+| Rule (field schema) | Operation | Problem kind |
 |---|---|---|
 | obligation `M` in both domains | value empty | missing |
-| type `number` | `str.strip_chars().cast(Float64, strict=False)` is null where the value is not empty, or is NaN or infinite | wrong type |
-| type `integer` | as number, and the number is not equal to its floor | wrong type |
-| `pattern` | `str.contains("^(?:pattern)$")` false | wrong type |
+| type `number` | `pandas.to_numeric(column.str.strip(), errors="coerce")` is missing where the text is not empty, or is infinite | wrong type |
+| type `integer` | as number, and the number is not equal to its rounded value | wrong type |
+| `pattern` | `str.fullmatch(pattern)` false | wrong type |
 | `minimum`, `maximum` | the number outside them | out of range |
-| `maxLength` | `str.len_chars()` above it | out of range |
-| `enum` | `is_in(enum)` false | not in vocabulary |
+| `maxLength` | `str.len()` above it | out of range |
+| `enum` | `isin(enum)` false | not in vocabulary |
 
 Measured on single values: `3`, `3.0` and ` 12.5 ` pass a number field, `3.5` fails an integer
-field, `1,234.5`, `12,5`, `true` and a date fail a number field, `nan` and `inf` are caught as
-wrong type and never reach the range check (D-7), and the year-and-month pattern of `C38` (Rust's
-regular expressions accept it unchanged) passes `2020-05`, `2020-05; 2021-01` and `[Unspecified]`
-and fails `2020-05-01 00:00:00`. A cell gets at most one problem for its type; range, length,
-pattern and vocabulary are checked only on values of the right type, so one bad cell is one problem
-unless it genuinely breaks two rules (too long and not matching its pattern, say).
+field, `1,234.5`, `12,5`, `true` and a date fail a number field, the text `nan` comes back missing
+and `inf` infinite, so both are wrong type and never reach the range check (D-7), and the
+year-and-month pattern of `C38` passes `2020-05`, `2020-05; 2021-01` and `[Unspecified]` and fails
+`2020-05-01 00:00:00`. A cell gets at most one problem for its type; range, length, pattern and
+vocabulary are checked only on values of the right type, so one bad cell is one problem unless it
+genuinely breaks two rules (too long and not matching its pattern, say). `str.split` and `explode`
+keep each value's index, so a multi-value cell is checked value by value with its Excel row.
 
-Each expression gives the rows that break it, so the problems are built as one polars table per
-field (Excel row, field code, kind, value) and concatenated. Nothing loops over rows (Article XIII).
+Each operation gives the rows that break it, so the problems are built as one DataFrame per field
+(Excel row, field code, kind, value) and concatenated. Nothing loops over rows (Article XIII).
 
 **Rejected:**
 
@@ -123,7 +132,7 @@ constraints and custom properties from it, and adds `required` to nothing: oblig
 - Rewriting all 90,000 children into a copy took 30 s with XlsxWriter in constant-memory mode and
   23 s with PyExcelerate, and openpyxl took 31 s at 20,000. Each misses SC-006 on its own, so the
   report holds no copy of the data (D-5, spec Assumptions).
-- XlsxWriter is the established writer (polars' `write_excel` uses it). 100,000 problems are
+- XlsxWriter is the established writer (pandas' and polars' Excel writers both use it). 100,000 problems are
   written in 2.3 s.
 - **A link from each problem to its cell was measured and dropped.** Excel allows 65,530 links in a
   sheet, and XlsxWriter took 7.3 s for 100,000 with links. The Excel row and the column name lead
@@ -180,7 +189,8 @@ it times a warm load (0.2 s), never a download. It is marked `slow`, and runs by
 
 | Package | Group | Why |
 |---|---|---|
-| `polars` | runtime | The checks, on columns (Constitution, Articles II and XIII). Article XV names pandas, and is amended to polars in this pull request. |
+| `pandas` | runtime | The data and the checks, on columns (Constitution, Articles XIII and XV). |
+| `pyarrow` | runtime | Backs pandas' text columns, and is how fastexcel hands its frames over. |
 | `fastexcel` | runtime | Reading the children in seconds. |
 | `xlsxwriter` | runtime | Writing the report. |
 
@@ -195,7 +205,8 @@ field by published column name               · 2, this repo   · ghfdb.fields.f
 schema with allowed values                    · 2, this repo   · ghfdb.fields.load_schema
 offline vocabulary cache                      · 2, this repo   · ghfdb.fields.caching_session
 the sheet as text, with sheet positions        · 6, package    · fastexcel load_sheet_by_name(skip_rows=0, dtypes="string"), ColumnInfo.absolute_index
-type, range, length, pattern, enum on columns · 6, package    · polars expressions
+type, range, length, pattern, enum on columns · 6, package    · pandas: to_numeric, str.fullmatch, str.len, isin
+the class holding the data                    · 7, new        · the maintainer's decision (D-11); no package holds a GHFDB dataset
 the report                                    · 6, package    · xlsxwriter.Workbook, write_string
 suggestion for a close term                   · 4, stdlib     · difflib.get_close_matches
 command line                                  · 4, stdlib     · argparse

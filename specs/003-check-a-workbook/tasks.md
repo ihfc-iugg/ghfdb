@@ -25,32 +25,36 @@ with the seeded list; compare the original's bytes with a copy taken before; tim
 
 ### Group 1 — reading the workbook
 
-- [ ] T001 [US1] `pyproject.toml`: `polars>=1.30`, `fastexcel>=0.21` and `xlsxwriter>=3.2` in
-  `[project] dependencies`; `uv lock`; deptry clean. `CONSTITUTION.md` Article XV names polars for
-  tabular data in place of pandas, version bumped. `tests/conftest.py`: the `filled_workbook`
+- [ ] T001 [US1] `pyproject.toml`: `pandas>=3.0`, `pyarrow>=20`, `fastexcel>=0.21` and
+  `xlsxwriter>=3.2` in `[project] dependencies`, `pandas-stubs` and `types-xlsxwriter` in the
+  development group where mypy needs them; `uv lock`; deptry clean. `tests/conftest.py`: the `filled_workbook`
   fixture and the fixture pointing the vocabulary cache at the session's filled directory
   (plan.md, "Testing approach").
-- [ ] T002 [US1] `ghfdb/qc/workbook.py`: `CheckError` and `UploadWorkbook`: `header_row`, `columns`, `first_data_row`, read once with fastexcel.
+- [ ] T002 [US1] `ghfdb/qc/workbook.py`: `CheckError` and `UploadWorkbook`: `header_row`, `columns`,
+  `first_data_row`, read once with fastexcel into pandas.
   The header is found by field code, published column name or earlier column name; the first
   column is matched to no field; description rows are skipped by label, whatever their number
   (D-4). `CheckError` for a file that cannot be opened or is not a workbook (any `FastExcelError`), no
   `data list` sheet, no header
   (AS 1.13, 1.15, FR-008, FR-009). Tested on a generated template and on
   `tests/sources/upload-template.xlsx`, neither giving a column problem.
-- [ ] T003 [US1] `UploadWorkbook.frame`: field columns named by code,
-  an Excel `row` column that is right for a sheet starting at A1 and for one starting at B3,
-  spaces-only cells null, rows with every field empty dropped, so a row holding only an `ID` is no
+- [ ] T003 [US1] `UploadWorkbook.dataset()`: field columns named by code, indexed by an Excel row
+  that is right for a sheet starting at A1 and for one starting at B3, spaces-only cells missing, rows with every field empty dropped, so a row holding only an `ID` is no
   child (AS 1.12, 1.14). A formula cell reads as its saved value, and as empty with none saved
   (Edge Cases). A cell holding an Excel error value reaches the frame as its error text, so `#N/A`
   in a mandatory field is never missing. A sheet with its header at B3 and a stray cell in column A
-  below keeps every field in its own column. `unknown_columns`, `absent_fields`, `duplicate_columns`, the first column used when
-  two name one field.
-- [ ] T004 [US1] `ghfdb/qc/__init__.py` exports; `docs/reference/python-api.md` gains a
-  "Checking a workbook" section with `automodule:: ghfdb.qc.workbook`.
+  below keeps every field in its own column. `UploadWorkbook.column_problems()`: an unknown column
+  and two columns for one field, each once with no row, the first column used for the field.
+- [ ] T004 [US1] `ghfdb/dataset.py`: `Dataset` holding a public pandas `data`, with
+  `Dataset.from_workbook(path, schema=None)` returning the workbook's dataset (D-11); exported as
+  `ghfdb.Dataset`. `ghfdb/qc/__init__.py` exports. `docs/reference/python-api.md` gains a
+  "Datasets" section with `autoclass:: ghfdb.Dataset` and a "Checking a workbook" section with
+  `automodule:: ghfdb.qc.workbook`.
 
 ### Group 2 — the check
 
-- [ ] T005 [US1] `ghfdb/qc/check.py`: `Kind`, `ColumnProblem` and `WorkbookCheck.problems()` for
+- [ ] T005 [US1] `ghfdb/qc/check.py`: `Kind`, `ColumnProblem` and `DatasetCheck.problems()` on a
+  DataFrame with field codes as columns, and `Dataset.check()` returning them, for
   missing (fields mandatory in both domains only, D-3), wrong type (numbers, whole numbers,
   patterns), out of range (minimum, maximum, maximum length) and not in vocabulary, each with its
   Excel row, code, published column name and value as found (AS 1.2–1.8, 1.11, FR-003–FR-006). A
@@ -59,10 +63,9 @@ with the seeded list; compare the original's bytes with a copy taken before; tim
   at most one type problem, and range is checked only on values of the right type.
 - [ ] T006 [US1] Text `nan`, `inf` and `-inf` in a number field, ranged or not, give exactly one
   wrong-type problem per cell (D-7).
-- [ ] T007 [US1] `WorkbookCheck.column_problems()`: an unknown column, a field with no column, two
-  columns for one field, each once with no row; a mandatory field with no column is also missing
-  on every child (AS 1.16).
-- [ ] T008 [US1] `WorkbookCheck.suggestions`: a suggestion on a not-in-vocabulary problem for a
+- [ ] T007 [US1] A field the dataset has no column for is one `no column` problem with no row, and
+  a mandatory one is also missing on every child (AS 1.16).
+- [ ] T008 [US1] `DatasetCheck.suggestions`: a suggestion on a not-in-vocabulary problem for a
   value missing its brackets, in another case, or slightly misspelt; none for a value close to no
   term; a value repeated on many children is matched once (AS 1.9, FR-007).
 - [ ] T009 [US1] A field with a separator and a vocabulary or pattern has each value checked on its
@@ -70,7 +73,7 @@ with the seeded list; compare the original's bytes with a copy taken before; tim
   schema, since no packaged field has that combination (AS 1.10).
 - [ ] T010 [US1] `ghfdb/fields/vocabularies.py`: `Vocabularies.releases()`, the `dcterms:isPartOf`
   of every scheme read, tested in `tests/test_fields/test_vocabularies.py` with the existing test
-  vocabularies. `automodule:: ghfdb.qc.check` in the API reference. `CONTEXT.md`: **report** and
+  vocabularies. `automodule:: ghfdb.qc.check` in the API reference. `CONTEXT.md`: **dataset**, **report** and
   **column problem** added, the column problem kinds listed with the problem kinds, "planned"
   removed from the check and upload template entries where the code now exists.
 

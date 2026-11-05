@@ -76,13 +76,26 @@ places: `3.0000000001` reads `3`, `1e-12` reads `0`. No field's range or decimal
 that, so no check gives a different answer. A field that needs more places would need its cells
 read as numbers instead.
 
-## D-10 — Polars for tabular data, amending Article XV
+## D-10 — pandas for tabular data, as Article XV says
 
-Article XV names pandas for tabular data. This feature is the first to process any, and its speed
-target (SC-006) was measured with polars: whole-column casts on nullable text, regular expressions
-in Rust and the reader writing straight into its frames. The article is amended to name polars in
-this pull request, rather than the plan measuring a second library against the target to keep a
-word written before any tabular code existed.
+The checks were measured in polars and in pandas on the same 90,000 children: 0.3 s and 0.6 s,
+the same problems found. The speed of the check comes from the reader and from working on whole
+columns, not from the frame library. pandas is kept because quality scoring will work on the same
+DataFrame, so a second frame library would be loaded for nothing, and because researchers who will
+read, use and propose rules work in pandas.
+
+**ADR:** to be decided at convergence, with D-11.
+
+## D-11 — A Dataset class holds the data, by composition
+
+The data a check reads is held by `ghfdb.Dataset`, a class that holds one pandas DataFrame (one
+row per child, columns named by field code, indexed by Excel row when read from a workbook) and
+offers `from_workbook()` and `check()`. It is the maintainer's choice of the class the package
+grows on: later features can attach metadata, read other sources, merge datasets or submit to the
+GHFDB portal as methods of a class we own. A pandas accessor and a `DataFrame` subclass were turned
+down, because what is attached to one DataFrame object does not survive filtering or merging it.
+The DataFrame stays public, so a researcher uses all of pandas on it. Parents, metadata and every
+other method wait until a feature needs them.
 
 ## Design review notes carried into the build
 

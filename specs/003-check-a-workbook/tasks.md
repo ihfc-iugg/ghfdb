@@ -126,4 +126,3 @@ with the seeded list; compare the original's bytes with a copy taken before; tim
   speed tests follow the new report path.
 - [ ] T026 [US1] `docs/reference/check.md`, `README.md`, `CHANGELOG.md` and `CONTEXT.md` describe the
   report as a web page with a summary and a table of problems; the flowchart's last step names it.
-

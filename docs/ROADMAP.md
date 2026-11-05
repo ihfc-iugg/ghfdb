@@ -88,7 +88,7 @@ Serves G1 and G2. Out of scope: rules that relate several fields (R4), and score
 
 ### R4 — Cross-field rules
 
-*feature · advances G1, G4*
+*delivered in [#26](https://github.com/ihfc-iugg/ghfdb/issues/26) · advances G1, G4*
 
 Some mistakes only show when two fields are read together, for example a temperature method that
 cannot go with the stated exploration method, or a correction recorded without the conditions it

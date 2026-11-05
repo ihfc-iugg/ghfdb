@@ -69,9 +69,9 @@ description rows under it are skipped by their labels.
 `Dataset.check` and `ghfdb.qc.DatasetCheck` compare the children with the field schema.
 `DatasetCheck(data, schema).problems()` takes any DataFrame whose columns are field codes
 and returns one line for each problem, ordered by row and then by the field's place in the
-schema. The columns are `PROBLEM_COLUMNS`: `row`, `code`, `column_name`, `kind`, `value` and
-`suggestion`. The `row` is the index of the data, which is the Excel row for a dataset read
-from a workbook. The `value` is the cell as it was found.
+schema. The columns are `PROBLEM_COLUMNS`: `row`, `code`, `column_name`, `kind`, `value`,
+`suggestion`, `rule` and `related`. The `row` is the index of the data, which is the Excel
+row for a dataset read from a workbook. The `value` is the cell as it was found.
 
 ```python
 from pathlib import Path
@@ -96,6 +96,19 @@ is checked on its own and the problem names that value.
 
 ```{eval-rst}
 .. automodule:: ghfdb.qc.check
+   :members:
+```
+
+## Cross-field rules
+
+`ghfdb.qc.rules` declares the rules that relate several fields of a child. `RULES` holds
+them, and `DatasetCheck(data, schema, rules, vocabularies)` applies the rules it is given
+after the field check. A broken rule is a `rule` line, with the rule's identifier in the
+`rule` column and the field that decided the rule applies in the `related` column. The
+module documentation below says how to add a rule of a new kind.
+
+```{eval-rst}
+.. automodule:: ghfdb.qc.rules
    :members:
 ```
 

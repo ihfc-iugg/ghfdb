@@ -357,3 +357,46 @@ class TestRuleProblems:
             )
         }
         assert filled == {"rule": (True, True), "wrong type": (False, False)}
+
+
+class TestWorkedExamples:
+    @pytest.fixture(autouse=True)
+    def checking(self, schema: Schema, published_vocabularies: Vocabularies) -> None:
+        self.schema = schema
+        self.vocabularies = published_vocabularies
+
+    def test_a_valid_child_breaks_no_rule(self, children: Children) -> None:
+        problems = DatasetCheck(
+            children({}), self.schema, RULES, self.vocabularies
+        ).problems()
+
+        assert problems.empty
+
+    @pytest.mark.parametrize("rule", RULES, ids=lambda rule: rule.identifier)
+    def test_an_example_gives_exactly_its_expected_rule_problem(
+        self, children: Children, term: Terms, rule: Rule
+    ) -> None:
+        changes = {
+            code: term(code, value) if code in dict(rule.example.concepts()) else value
+            for code, value in rule.example.values.items()
+        }
+        condition = rule.fields(self.schema)[0]
+        field = self.schema.get_field(condition)
+
+        problems = DatasetCheck(
+            children(changes), self.schema, RULES, self.vocabularies
+        ).problems()
+
+        assert [
+            (line["row"], line["code"], line["kind"], line["rule"], line["related"])
+            for line in problems.to_dict("records")
+        ] == [
+            (
+                9,
+                code,
+                "rule",
+                rule.identifier,
+                f"{condition} {field.custom['columnName']} {changes[condition]}",
+            )
+            for code in rule.example.expected
+        ]

@@ -27,6 +27,9 @@ dependencies = [
   "xlsxwriter>=3.2",
 ]
 
+[project.scripts]
+ghfdb = "ghfdb.cli:run"
+
 [project.urls]
 Repository = "https://github.com/ihfc-iugg/ghfdb"
 Issues = "https://github.com/ihfc-iugg/ghfdb/issues"

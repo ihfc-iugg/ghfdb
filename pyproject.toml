@@ -83,7 +83,3 @@ select = ["E", "F", "W", "I", "UP", "B"]
 
 [tool.deptry]
 known_first_party = ["ghfdb"]
-
-# The report writer will be the first code to import it; remove this then.
-[tool.deptry.per_rule_ignores]
-DEP002 = ["xlsxwriter"]

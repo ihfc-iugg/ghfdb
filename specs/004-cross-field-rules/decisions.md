@@ -101,3 +101,10 @@ was loaded with. The class stays a check of whatever it is given, which is what 
 the field-check tests written before this feature construct, and the packaged rules are chosen
 where the package's defaults are chosen already. The plan had `RULES` as the class default.
 **ADR:** none — local to this feature, nothing downstream inherits it.
+
+### D-9 — `Dataset.check` takes the vocabularies as well as the rules
+
+`Dataset.check(schema=None, rules=RULES, vocabularies=None)`. The command passes the `Vocabularies`
+it loaded the schema with, so the rules' concepts resolve from the files already read rather than
+a second read of the cache.
+**ADR:** none — local to this feature, nothing downstream inherits it.

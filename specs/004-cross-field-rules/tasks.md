@@ -51,6 +51,8 @@ satisfying it, and compare the rule problems with the ones seeded.
   to add a rule of a new kind.
 - [x] T011 [US1] Name `Rule`, `RequiredWhen`, `AllowedWhen`, `Domain` and `Condition` on the Python
   API page, and give each subclass method its own docstring (the documentation check after group 1).
+- [x] T012 [US1] Reword the reasoning of CF-1, CF-2 and CF-3 for the rule reference: no internal
+  decision keys in published text, and CF-3 states the paper's condition.
 
 ### Group 2 — the command, the report and the speed
 

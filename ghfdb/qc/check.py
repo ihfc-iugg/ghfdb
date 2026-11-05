@@ -118,7 +118,8 @@ class DatasetCheck:
             field: The field.
 
         Returns:
-            True for a mandatory field in both the borehole and the site domain.
+            True for a field mandatory in both domains, borehole and mine (``B``)
+            and probe sensing (``S``).
         """
         return field.custom["obligation"] == "M" and set(field.custom["domain"]) == {
             "B",
@@ -158,10 +159,7 @@ class DatasetCheck:
         filled = column[~blank]
         constraints = field.constraints
         found = []
-        if field.custom["obligation"] == "M" and set(field.custom["domain"]) == {
-            "B",
-            "S",
-        }:
+        if self.is_required(field):
             found.append(self.lines(order, field, Kind.MISSING, column[blank]))
         if field.type in ("number", "integer"):
             found += self.number_problems(order, field, filled)

@@ -14,6 +14,8 @@ Text that is a number only once something is removed or replaced (`1,234.5`, `12
 reported as wrong type. Reading it as a number would mean guessing which separator was meant, which
 is exactly the silent coercion the old checking tool was faulted for.
 
+**ADR:** none — a reading rule of this check, recorded in the reference page; nothing downstream inherits it
+
 ## D-2 — A date cell in a year-and-month field is wrong type
 
 Excel turns `2020-05` typed into a cell into a full date unless the cell is formatted as text.
@@ -22,6 +24,8 @@ holds a day the assessor never entered and the field schema's format is a year a
 turns out to be common in real workbooks, the upload template can format those columns as text,
 which fixes it at the source.
 
+**ADR:** none — a reading rule of this check, local to it
+
 ## D-3 — Domain-only obligation waits for the cross-field rules
 
 Five fields are mandatory for one domain only, and nine are recommended for one domain only. The
@@ -29,6 +33,8 @@ upload template has no cell that says which domain a child belongs to before rev
 in by the data assessment team), so the domain has to be read from the child's other fields. That
 is a cross-field rule, which belongs to R4. Until then those fields are checked for type, range and
 vocabulary like any other, but an empty one is not reported.
+
+**ADR:** none — temporary until the cross-field rules arrive, which will replace it
 
 ## D-4 — Description rows are found by their labels
 
@@ -40,6 +46,8 @@ read correctly. A row whose label is not one of these is read as a child, and it
 reported as problems, which shows the assessor exactly where the reading went wrong rather than
 silently dropping a row.
 
+**ADR:** none — local to how the workbook is read
+
 ## D-5 — The report holds the problems, not a copy of the data
 
 The report is a new file beside the workbook listing every problem with the Excel row of its child,
@@ -49,6 +57,8 @@ report"), which alone misses SC-006. Leaving the original's data where it is als
 of the data to fix: the assessor works in the original with the report open beside it, and checks
 again.
 
+**ADR:** none — the report layout is public interface and is documented on the reference page; the choice itself constrains nothing else
+
 ## D-6 — A number in a free-text field is checked as its text
 
 A site name, a comment or an ID that is a number (`12`, `3.5`) is a valid value of a free-text
@@ -56,11 +66,15 @@ field. The check reads every cell as the text Excel shows for it, so such a cell
 other and is never reported. It is the mirror of D-1 and changes nothing the assessor typed. A cell
 Excel holds as a date reads as a full date and time, so D-2 still reports it.
 
+**ADR:** none — a reading rule of this check, local to it
+
 ## D-7 — Text `nan` and infinities are wrong type
 
 The text `nan`, `inf` and `-inf` parses as a number, but none of them is a number an assessor can
 have measured. Each is reported once, as wrong type, and no range problem is reported for that
 cell.
+
+**ADR:** none — a reading rule of this check, local to it
 
 ## D-8 — The speed target is checked by the test suite
 
@@ -69,12 +83,16 @@ report take longer than 15 seconds. It runs with the rest of the suite, so a cha
 check down fails its pull request rather than being found later. Generating the workbook takes
 about 30 seconds and is done once per test session.
 
+**ADR:** none — a test convention of this feature
+
 ## D-9 — Numbers are read to 9 decimal places
 
 Every cell is read as the text its value has, and the reader writes a number to at most 9 decimal
 places: `3.0000000001` reads `3`, `1e-12` reads `0`. No field's range or decimal places comes near
 that, so no check gives a different answer. A field that needs more places would need its cells
 read as numbers instead.
+
+**ADR:** none — a property of the reader, recorded on the reference page
 
 ## D-10 — pandas for tabular data, as Article XV says
 
@@ -84,7 +102,7 @@ columns, not from the frame library. pandas is kept because quality scoring will
 DataFrame, so a second frame library would be loaded for nothing, and because researchers who will
 read, use and propose rules work in pandas.
 
-**ADR:** to be decided at convergence, with D-11.
+**ADR:** docs/adr/0005-a-dataset-holds-one-pandas-dataframe.md
 
 ## D-11 — A Dataset class holds the data, by composition
 
@@ -96,6 +114,8 @@ GHFDB portal as methods of a class we own. A pandas accessor and a `DataFrame` s
 down, because what is attached to one DataFrame object does not survive filtering or merging it.
 The DataFrame stays public, so a researcher uses all of pandas on it. Parents, metadata and every
 other method wait until a feature needs them.
+
+**ADR:** docs/adr/0005-a-dataset-holds-one-pandas-dataframe.md
 
 ## Design review notes carried into the build
 

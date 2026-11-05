@@ -29,3 +29,19 @@ upload template has no cell that says which domain a child belongs to before rev
 in by the data assessment team), so the domain has to be read from the child's other fields. That
 is a cross-field rule, which belongs to R4. Until then those fields are checked for type, range and
 vocabulary like any other, but an empty one is not reported.
+
+## D-4 — Description rows are found by their labels
+
+The rows under the header are skipped while their column A holds a description row label
+(Obligation, Domain, Quality Relevance, Name, Short Name, Unit, Allowed range of values), compared
+without regard to case or surrounding spaces. Both the generated template and the hand-maintained
+one label every description row this way, so a workbook with more, fewer or no description rows is
+read correctly. A row whose label is not one of these is read as a child, and its values are
+reported as problems, which shows the assessor exactly where the reading went wrong rather than
+silently dropping a row.
+
+## D-5 — The report copy holds values, not formulas
+
+The workbook is read with the value Excel last saved for each formula, and the report copy is
+written from that same reading, so a formula reaches the report copy as its value. The report
+shows what was checked. The original keeps its formulas.

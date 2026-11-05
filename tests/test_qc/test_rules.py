@@ -324,7 +324,7 @@ class TestRuleProblems:
         frame = children(
             {
                 "C42": term(*LITERATURE_TERM),
-                "C41": f"{core}; {term(*ASSUMED_TERM)}; {cutting}; nonsense",
+                "C41": f"{core}; {term(*ASSUMED_TERM)}; {cutting}",
             }
         )
 
@@ -334,6 +334,19 @@ class TestRuleProblems:
 
         found = problems[problems["kind"] == "rule"]
         assert list(found["value"]) == [core, cutting]
+
+    def test_a_value_not_in_the_vocabulary_in_the_limited_cell_gives_no_rule_line(
+        self, children: Children, term: Terms
+    ) -> None:
+        core = term("C41", CORE_SAMPLES)
+        frame = children({"C42": term(*LITERATURE_TERM), "C41": f"{core}; nonsense"})
+
+        problems = DatasetCheck(
+            frame, with_separator(self.schema, "C41"), RULES, self.vocabularies
+        ).problems()
+
+        assert list(problems["kind"]) == ["not in vocabulary"]
+        assert list(problems["value"]) == ["nonsense"]
 
     def test_several_values_in_the_condition_cell_hold_when_all_are_published(
         self, children: Children, term: Terms

@@ -302,7 +302,11 @@ class AllowedWhen(Rule):
         return (self.when.field, self.then.field)
 
     def problems(self, check: DatasetCheck) -> pandas.DataFrame:
-        """Report each value the field may not hold when the condition holds."""
+        """Report each value the field may not hold when the condition holds.
+
+        A child whose limited field holds a value not in the vocabulary is skipped: that
+        cell already has a field problem.
+        """
         nothing = pandas.Series(dtype="string")
         field = check.schema.get_field(self.then.field)
         found = [check.rule_lines(self, field, nothing, nothing)]
@@ -312,7 +316,8 @@ class AllowedWhen(Rule):
             values = check.each_value(field, column[applies & ~check.blank(column)])
             allowed = [check.terms[field.name, uri] for uri in self.then.concepts]
             published = values.isin(field.constraints.get("enum", []))
-            wrong = values[published & ~values.isin(allowed)]
+            whole = published.groupby(level=0).transform("all")
+            wrong = values[whole & ~values.isin(allowed)]
             found.append(check.rule_lines(self, field, wrong, check.found(self.when)))
         return pandas.concat(found)
 

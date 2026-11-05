@@ -26,19 +26,24 @@ with the seeded list; compare the original's bytes with a copy taken before; tim
 ### Group 1 — reading the workbook
 
 - [ ] T001 [US1] `pyproject.toml`: `polars>=1.30`, `fastexcel>=0.21` and `xlsxwriter>=3.2` in
-  `[project] dependencies`; `uv lock`; deptry clean. `tests/conftest.py`: the `filled_workbook`
-  fixture (plan.md, "Testing approach").
-- [ ] T002 [US1] `ghfdb/qc/workbook.py`: `CheckError` and `UploadWorkbook`'s head: `first_column`, `header_row`, `columns`, `first_data_row`, read with openpyxl in read-only mode.
+  `[project] dependencies`; `uv lock`; deptry clean. `CONSTITUTION.md` Article XV names polars for
+  tabular data in place of pandas, version bumped. `tests/conftest.py`: the `filled_workbook`
+  fixture and the fixture pointing the vocabulary cache at the session's filled directory
+  (plan.md, "Testing approach").
+- [ ] T002 [US1] `ghfdb/qc/workbook.py`: `CheckError` and `UploadWorkbook`: `header_row`, `columns`, `first_data_row`, read once with fastexcel.
   The header is found by field code, published column name or earlier column name; the first
   column is matched to no field; description rows are skipped by label, whatever their number
-  (D-4). `CheckError` for a file that cannot be opened, no `data list` sheet, no header
+  (D-4). `CheckError` for a file that cannot be opened or is not a workbook (any `FastExcelError`), no
+  `data list` sheet, no header
   (AS 1.13, 1.15, FR-008, FR-009). Tested on a generated template and on
   `tests/sources/upload-template.xlsx`, neither giving a column problem.
-- [ ] T003 [US1] `UploadWorkbook.frame`, read with fastexcel as text: field columns named by code,
+- [ ] T003 [US1] `UploadWorkbook.frame`: field columns named by code,
   an Excel `row` column that is right for a sheet starting at A1 and for one starting at B3,
   spaces-only cells null, rows with every field empty dropped, so a row holding only an `ID` is no
   child (AS 1.12, 1.14). A formula cell reads as its saved value, and as empty with none saved
-  (Edge Cases). `unknown_columns`, `absent_fields`, `duplicate_columns`, the first column used when
+  (Edge Cases). A cell holding an Excel error value reaches the frame as its error text, so `#N/A`
+  in a mandatory field is never missing. A sheet with its header at B3 and a stray cell in column A
+  below keeps every field in its own column. `unknown_columns`, `absent_fields`, `duplicate_columns`, the first column used when
   two name one field.
 - [ ] T004 [US1] `ghfdb/qc/__init__.py` exports; `docs/reference/python-api.md` gains a
   "Checking a workbook" section with `automodule:: ghfdb.qc.workbook`.

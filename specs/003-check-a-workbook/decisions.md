@@ -68,3 +68,26 @@ SC-006 is a test that generates a workbook of 90,000 children and fails when the
 report take longer than 15 seconds. It runs with the rest of the suite, so a change that slows the
 check down fails its pull request rather than being found later. Generating the workbook takes
 about 30 seconds and is done once per test session.
+
+## D-9 — Numbers are read to 9 decimal places
+
+Every cell is read as the text its value has, and the reader writes a number to at most 9 decimal
+places: `3.0000000001` reads `3`, `1e-12` reads `0`. No field's range or decimal places comes near
+that, so no check gives a different answer. A field that needs more places would need its cells
+read as numbers instead.
+
+## D-10 — Polars for tabular data, amending Article XV
+
+Article XV names pandas for tabular data. This feature is the first to process any, and its speed
+target (SC-006) was measured with polars: whole-column casts on nullable text, regular expressions
+in Rust and the reader writing straight into its frames. The article is amended to name polars in
+this pull request, rather than the plan measuring a second library against the target to keep a
+word written before any tabular code existed.
+
+## Design review notes carried into the build
+
+Recorded, not acted on in the plan: report sheets named `problems` and `summary` are written into
+a new workbook, so no name can clash with the assessor's sheets; the two earlier column names sit
+in a description row of the hand-maintained template, so scenario 1.15 is tested by editing the
+header; the error-cell scan uses a byte pattern rather than an XML parser, so no entity in an
+untrusted file is expanded.

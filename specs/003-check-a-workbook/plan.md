@@ -4,12 +4,11 @@
 
 ## Summary
 
-`ghfdb check <workbook>` finds the header with openpyxl in read-only mode, reads the children as
-text with fastexcel, checks every field with polars expressions built from the field schema, adds
+`ghfdb check <workbook>` reads the `data list` sheet once, as text, with fastexcel, checks every field with polars expressions built from the field schema, adds
 suggestions to not-in-vocabulary problems with `difflib`, and writes a report of the problems and a
 summary with XlsxWriter beside the workbook. The tools are chosen for the finished package: a
-workbook of 90,000 children is checked and reported in about 6 seconds on the development machine,
-against the 15 seconds SC-006 allows. Nothing ever writes to the workbook's path.
+workbook of 90,000 children is checked and reported in about 8.5 seconds on the development
+machine, against the 15 seconds SC-006 allows. Nothing ever writes to the workbook's path.
 
 ## Technical Context
 
@@ -18,8 +17,10 @@ against the 15 seconds SC-006 allows. Nothing ever writes to the workbook's path
   added"). Floors set to the versions measured: `polars>=1.30`, `fastexcel>=0.21`,
   `xlsxwriter>=3.2`.
 - **Existing dependencies used**: `frictionless` (the field schema, as `load_schema` returns it),
-  `openpyxl` (the first rows), `rdflib` (the release of each scheme).
-- **Standard library**: `argparse`, `difflib`, `dataclasses`, `enum`, `os`, `tempfile`, `time`.
+  `rdflib` (the release of each scheme).
+- **Standard library**: `argparse`, `difflib`, `dataclasses`, `enum`, `os`, `re`, `tempfile`,
+  `zipfile`.
+- **Existing dependency no longer needed by the check**: openpyxl stays for the template only.
 - **Reads**: `ghfdb.fields.load_schema(vocabularies=…)`, a `frictionless.Schema` with an `enum` on
   every vocabulary field. `ghfdb.template.ROW_LABELS` for the description rows.
 - **Tests**: pytest. Test workbooks are generated with `UploadTemplate` or written with XlsxWriter in
@@ -36,14 +37,17 @@ against the 15 seconds SC-006 allows. Nothing ever writes to the workbook's path
 | II Simplicity | fastexcel reads, polars checks, XlsxWriter writes, `difflib` suggests, `argparse` parses. Our code is the layout of the template, seven rule expressions and the report's layout. |
 | III Anti-abstraction | No base class, no rule registry. One dataclass for the column problems and one `StrEnum` of kinds. Problems on children are rows of a polars table, not objects. |
 | IV Integration-first | Every behaviour is tested as an assessor meets it: a workbook in, `check`, a report out. |
-| V Data safety | fastexcel and openpyxl read saved values and never evaluate a formula. Every value from the workbook reaches the report through `write_string`, so none becomes a formula. The report path comes from the path the assessor gave, never from the workbook's contents. |
+| V Data safety | fastexcel reads saved values and never evaluate a formula. Every value from the workbook reaches the report through `write_string`, so none becomes a formula. The report path comes from the path the assessor gave, never from the workbook's contents. |
 | VI Documentation | A reference page for the command and the report, the Python API entry, README, CONTEXT.md and CHANGELOG, in this pull request. |
 | VII Dependencies | Three added, each replacing custom code or a measured failure of SC-006 (research.md). deptry stays clean. |
 | VIII Cohesion | `UploadWorkbook` holds the reading, `WorkbookCheck` the checking, `Report` the writing. |
 | IX Sources | Every rule is the field schema's, which already sources each fact. A problem names the field whose rule it broke. |
 | XI Vocabulary | Allowed terms and suggestions come from the field's `enum`, filled from the published vocabularies. |
 | XII Report, never modify | No code path writes to the workbook's path, and a test compares its bytes before and after every kind of run. Text in a number field is wrong type, a fraction in a whole-number field is wrong type, row numbers are Excel's, including for a sheet that does not start at A1. |
-| XIII Whole columns | Every check is a polars expression on a whole column. The only Python loops are over the 70 fields and over a field's distinct not-in-vocabulary values. |
+| XIII Whole columns | Every check is a polars expression on a whole column. The only Python loops are over the 70 fields, a field's distinct not-in-vocabulary values and the error cells found. |
+| XIV Compatibility | The command, the report layout and the `ghfdb.qc` API are new public interface, recorded in `CHANGELOG.md`. |
+| XV Stack | **Amended in this pull request** to name polars for tabular data in place of pandas (T001). polars is measured inside SC-006 here, pandas is not: the per-cell type rules need nullable text columns and vectorised casts that polars gives directly. The constitution's version is bumped. |
+| X Rules change together | Not engaged: no validation rule or scheme rule is changed. The checks apply the field schema's existing rules. |
 | Mermaid | The reference page shows the check as a flowchart, for readers who do not write code (G14). |
 
 ## Project Structure
@@ -89,26 +93,27 @@ README.md, CONTEXT.md, CHANGELOG.md
 - `CheckError(Exception)`: every could-not-run case, with a message naming what is wrong: a file
   that cannot be opened (including `.xls`), no `data list` sheet, no header row found, a report
   that cannot be written.
-- `UploadWorkbook(path, schema)`:
-  - **The head.** `openpyxl.load_workbook(path, read_only=True)`, sheet `data list`, rows 1–20 as
-    values with their row and column numbers. From them: `first_column` (the first filled column,
-    which is where fastexcel's columns start), `header_row`, the header's cells, and
-    `first_data_row`.
-  - `header_row`: the first of those rows in which more than half of the non-empty cells after the
-    first column name a field, by code, published column name or earlier column name.
-  - `columns`: each field and the position of the first column naming it. The first column (`ID`)
-    is matched to no field and is never an unknown column. Also `unknown_columns`,
+- `UploadWorkbook(path, schema)`, read once with fastexcel:
+  - `fastexcel.read_excel(path).load_sheet_by_name("data list", header_row=None, skip_rows=0,
+    dtypes="string")`. With `skip_rows=0` the first row of the frame is Excel row 1, and each
+    column's sheet position is `ColumnInfo.absolute_index` (research.md), so a child's Excel row
+    is its position plus 1 and every column is matched to its sheet column directly, whichever
+    cell the sheet starts at. Any `fastexcel.FastExcelError` while opening or reading becomes
+    `CheckError` naming the file (`SheetNotFoundError` as no `data list` sheet).
+  - `header_row`: the first of the first 20 rows in which more than half of the non-empty cells
+    after the first filled column name a field, by code, published column name or earlier column
+    name. The first filled column (`ID`) is matched to no field and is never an unknown column.
+  - `columns`: each field and the first column naming it. Also `unknown_columns`,
     `absent_fields` and `duplicate_columns`, for the column problems.
-  - `first_data_row`: the first row under the header whose first cell is not a description label
-    (`ROW_LABELS`, case-folded and stripped).
-  - **The body.** `fastexcel.read_excel(path).load_sheet_by_name("data list", header_row=None,
-    skip_rows=first_data_row - 1, dtypes="string")`, as a polars frame. With `skip_rows` given,
-    fastexcel counts from Excel row 1 (research.md), so a child's Excel `row` is `first_data_row`
-    plus its position. Field columns are renamed to field codes by matching each frame column to
-    the header cell in the same sheet column, counting from `first_column`; unknown and duplicate
-    columns are dropped. Spaces-only cells become null. Rows with every field null are dropped:
-    they are not children.
-  - `frame`: that polars frame, one row per child, one text column per field found, plus `row`.
+  - `first_data_row`: the first row under the header whose first filled cell is not a
+    description label (`ROW_LABELS`, case-folded and stripped).
+  - **Error cells.** fastexcel reads a cell holding an Excel error (`#N/A`, `#DIV/0!`) as empty.
+    The check finds those cells by scanning the `data list` sheet's XML in the file for cells of
+    type `e` (a byte search on the stream, `zipfile` and `re`, no XML parser; 0.65 s on the
+    90,000-child workbook) and puts their error text in place of the empty value, so an error is
+    checked like any other text and is never reported as missing (FR-004, Article XII).
+  - `frame`: one row per child, one text column per field found, named by code, plus `row`.
+    Spaces-only cells become null. Rows with every field null are dropped: they are not children.
 
 ### `ghfdb.qc.check`
 
@@ -177,6 +182,11 @@ must be downloaded once with a network connection. `run()` is `sys.exit(main())`
 - Problems are asserted as sets of `(row, code, kind)`, never their wording.
 - The byte-for-byte test hashes the original before and after a run with problems, a run with none
   and a run whose report cannot be written.
+- **Vocabularies in tests.** A fixture in `tests/conftest.py` monkeypatches
+  `ghfdb.fields.vocabularies.user_cache_dir`, as `tests/test_fields/test_vocabularies.py` already
+  does, so `main` reads the directory the session `published_vocabularies` fixture has filled. No
+  test writes outside its own directories, and `TestSpeed` times a warm load (0.2 s), never a
+  download (9 s). The offline test points it at its own `tmp_path`.
 - The CLI is tested through `main([...])`: the returned status, standard error for could-not-run,
   and the report read back.
 - Offline: vocabularies cached through `caching_session(tmp_path)`, then the check run with
@@ -192,6 +202,6 @@ must be downloaded once with a network connection. `run()` is `sys.exit(main())`
 | Item | Why it is needed |
 |---|---|
 | Three new dependencies | Measured: openpyxl reading, Frictionless validating and any full rewrite of the workbook each miss SC-006 alone (research.md). |
-| Two readers for one file | fastexcel does not say where its range starts, and Excel row numbers must be exact. openpyxl reads only the first 20 rows, in 0.02 s. |
+| An error-cell scan | fastexcel and calamine read Excel error values as empty, which would report `#N/A` in a mandatory field as missing. |
 | Seven rule expressions of ours | pandera, the column-wise package found, accepts `3.5` in a whole-number field; Frictionless is right but too slow. |
 | A 90,000-child test | SC-006 is measured on every change (FR-016), so a slower change fails its pull request. |

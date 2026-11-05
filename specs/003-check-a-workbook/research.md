@@ -14,47 +14,58 @@ written with XlsxWriter, each seeded with problems of every kind.
 
 | Step | Chosen | Time | Rejected, and its time |
 |---|---|---|---|
-| Read the header and description rows | openpyxl, read-only, first 20 rows | 0.02 s | |
-| Read the children | fastexcel, every cell as text | 5.5 s | openpyxl: 13.5 s at 20,000, so about 60 s. python-calamine to Python objects: 6.1 s, then a Python loop per cell to check |
-| Check every field | polars expressions, one column at a time | 0.3 s for three checks on all 70 columns | Frictionless `validate` on rows read: 3.0 s at 20,000, so about 13 s. pandera: 0.7 s at 20,000, but wrong results (below) |
+| Load the field schema and vocabularies | the existing `load_schema`, cache warm | 0.2 s | a cold download is 9 s, so tests and the speed test use a filled cache |
+| Read the sheet | fastexcel, every cell as text | 5.5 s | openpyxl: 13.5 s at 20,000, so about 60 s, and 11.7 s just to open a file with no dimension element. python-calamine to Python objects: 6.1 s, then a Python loop per cell |
+| Find error cells | byte search of the sheet's XML | 0.65 s | |
+| Check every field | polars expressions, one column at a time | about 1 s for all seven rules | Frictionless `validate` on rows read: 3.0 s at 20,000, so about 13 s. pandera: 0.7 s at 20,000, but wrong results (below) |
 | Write the report | XlsxWriter, problems only | under 0.1 s for 900 problems; 2.3 s for 100,000 | Rewriting the workbook as a copy: 30 s with XlsxWriter, 23 s with PyExcelerate, 31 s at 20,000 with openpyxl |
 
-That makes about 6 seconds on this machine for the target workbook, with room for slower test
-machines inside 15. Reading is most of it and is already done in Rust.
+The design review ran the whole planned pipeline at 90,000 children: 8.4 s on this machine,
+inside 15 with a thinner margin than the per-step figures suggest. A workbook saved by Excel keeps
+its text in a shared table and reads faster than the XlsxWriter-made benchmark, so the speed test
+errs on the slow side.
 
 ## Reading the workbook
 
-**Decision: fastexcel for the children, read as text; openpyxl, read-only, for the first rows.**
+**Decision: fastexcel, once, with every cell as text.**
 
 - **fastexcel** (0.21, the engine polars itself uses for `read_excel`) reads with calamine, in
   Rust, straight into Arrow and polars. With `dtypes="string"` every cell arrives as the text the
   value has: `12.5` and the text `"12.5"` read the same (D-1), a number in a free-text field is
   text (D-6), a whole number stored as `3.0` reads `3`, `True` reads `true`, and a cell Excel
-  holds as a date reads `2020-05-01 00:00:00`, which no year-and-month pattern matches (D-2). A
-  formula cell reads as the value Excel last saved for it, and the formula is never calculated
-  (Article V, FR-013). A formula with no saved value reads as empty.
-- **fastexcel drops leading empty columns, and leading empty rows unless told where to start.** A
-  sheet whose first filled cell is B3, read with no `skip_rows`, comes back starting at B3, and
-  fastexcel does not say where it started. Given `skip_rows=k` it counts from Excel row 1 instead:
-  the first row returned is Excel row `k + 1`, measured on a sheet starting at B3 with `k` of 0, 2
-  and 3. So the check always passes `skip_rows = first_data_row - 1`, and a child's Excel row is
-  `first_data_row` plus its position. The first column returned is the first filled column, which
-  openpyxl in read-only mode reports when it reads the first 20 rows (0.02 s, it streams and
-  stops) to find the header. Empty rows inside the range are kept.
-- openpyxl is already a dependency (the template). It is not used for the children: about
-  60 seconds at 90,000.
+  holds as a date reads `2020-05-01 00:00:00`, which no year-and-month pattern matches (D-2).
+  Numbers are written to at most 9 decimal places (`3.0000000001` reads `3`), which no field's
+  range or decimal places reaches (D-9). A formula cell reads as the value Excel last saved for it
+  and is never calculated (Article V, FR-013). A formula with no saved value, and **a cell holding
+  an Excel error value** (`#N/A`, `#DIV/0!`), read as empty: see "Error cells".
+- **Row and column positions.** With `skip_rows=0`, the first row of the frame is Excel row 1
+  even when the sheet's first filled cell is B3, and `ColumnInfo.absolute_index` gives each
+  column's sheet position. Excel row numbers are therefore exact (Article XII) from one reader.
+  Without `skip_rows`, fastexcel drops leading empty rows and says nothing about it, so it is
+  always passed.
+- Any failure to read is a `fastexcel.FastExcelError` (`CalamineError` for a truncated or
+  non-Excel file, `SheetNotFoundError` for no `data list` sheet), not an `OSError`, so the check
+  turns it into its own could-not-run error.
 - `.xlsx` and `.xlsm` are read. An `.xls` file is a could-not-run error naming the file.
+
+**Error cells.** Neither fastexcel nor python-calamine returns an error value: both give an empty
+cell. Reporting `#N/A` in a mandatory field as missing is what Article XII forbids, and in any
+other field the value would vanish. A cell of type `e` is stored in the sheet's XML as
+`<c r="B12" t="e"><v>#N/A</v></c>`, so the check scans that part of the file as bytes for such
+cells and puts the error text in their place. It took 0.65 s on the 313 MB sheet of the
+90,000-child workbook. A regular expression on bytes, not an XML parser, so no entity in an
+untrusted file is ever expanded.
 
 **Finding the header and the data.** The hand-maintained template (`tests/sources/upload-template.xlsx`)
 and the generated one put `ID` and the field codes in row 1 and seven description rows under it,
 labelled in column A (`ghfdb.template.ROW_LABELS`). The check:
 
-1. takes as the header the first of the first 20 rows in which most non-empty cells, from the
-   second column on, name a field by code, published column name or earlier column name (FR-009).
-   The first column is the row-label column, `ID`, and is matched to no field: field `A8`'s
-   published column name is also `ID`;
-2. skips every row directly under it whose first cell is one of the description row labels,
-   compared without regard to case or surrounding spaces (D-4);
+1. takes as the header the first of the first 20 rows in which most non-empty cells, after the
+   first filled column, name a field by code, published column name or earlier column name
+   (FR-009). The first filled column is the row-label column, `ID`, and is matched to no field:
+   field `A8`'s published column name is also `ID`;
+2. skips every row directly under it whose first filled cell is one of the description row
+   labels, compared without regard to case or surrounding spaces (D-4);
 3. reads every later row as a child when at least one field's cell is filled. A row holding only
    an `ID`, or nothing, is not a child (FR-008). Cells of spaces only count as empty.
 
@@ -162,18 +173,19 @@ Exit statuses: `0` no problems, `1` problems found, `2` could not run, which is 
 
 SC-006 is a test (D-8). A session fixture writes the 90,000-child workbook with XlsxWriter (about
 30 s, a development dependency only), and the test times `main(["check", path])` with
-`time.perf_counter`, failing above 15 s. It is marked `slow`, and runs by default.
+`time.perf_counter`, failing above 15 s. The vocabularies come from the session's filled cache, so
+it times a warm load (0.2 s), never a download. It is marked `slow`, and runs by default.
 
 ## Dependencies added
 
 | Package | Group | Why |
 |---|---|---|
-| `polars` | runtime | The checks, on columns (Constitution, Articles II and XIII). |
+| `polars` | runtime | The checks, on columns (Constitution, Articles II and XIII). Article XV names pandas, and is amended to polars in this pull request. |
 | `fastexcel` | runtime | Reading the children in seconds. |
 | `xlsxwriter` | runtime | Writing the report. |
 
 Each is established and maintained. Frictionless, openpyxl and rdflib stay for what they already
-do: the field schema, the template and the first rows, the vocabularies.
+do: the field schema, the template, the vocabularies. The check itself does not use openpyxl.
 
 ## What already exists
 
@@ -182,8 +194,7 @@ header and description rows of the template · 2, this repo   · ghfdb.template.
 field by published column name               · 2, this repo   · ghfdb.fields.field_for_column
 schema with allowed values                    · 2, this repo   · ghfdb.fields.load_schema
 offline vocabulary cache                      · 2, this repo   · ghfdb.fields.caching_session
-first rows with their real row numbers        · 3, package    · openpyxl.load_workbook(read_only=True)
-the children as text, in Rust                 · 6, package    · fastexcel.read_excel(...).load_sheet_by_name(dtypes="string")
+the sheet as text, with sheet positions        · 6, package    · fastexcel load_sheet_by_name(skip_rows=0, dtypes="string"), ColumnInfo.absolute_index
 type, range, length, pattern, enum on columns · 6, package    · polars expressions
 the report                                    · 6, package    · xlsxwriter.Workbook, write_string
 suggestion for a close term                   · 4, stdlib     · difflib.get_close_matches
@@ -192,5 +203,6 @@ vocabulary release of a scheme                · 3, package    · rdflib graph, 
 matching a column by code or earlier name     · 7, new        · field_for_column covers the published name only
 column problems                               · 7, new        · nothing reports unknown, absent or duplicate columns of this layout
 the seven rule expressions                    · 7, new        · pandera and Frictionless do it wrongly or too slowly (above)
+Excel error values                            · 7, new        · fastexcel and calamine read them as empty; openpyxl is 60 s
 the problem record                            · 7, new        · no installed type carries an Excel row, a kind of ours and a suggestion
 ```

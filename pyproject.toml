@@ -16,12 +16,15 @@ classifiers = [
   "Topic :: Scientific/Engineering",
 ]
 dependencies = [
+  "fastexcel>=0.21",
   "frictionless>=5",
   "openpyxl>=3.1",
+  "pandas[pyarrow]>=3.0",
   "platformdirs>=4",
   "rdflib>=7",
   "requests>=2.32",
   "requests-cache>=1.2",
+  "xlsxwriter>=3.2",
 ]
 
 [project.urls]
@@ -36,6 +39,7 @@ dev = [
   "pre-commit>=4",
   "deptry>=0.23",
   "mypy>=1.15",
+  "pandas-stubs",
   "types-openpyxl",
   "types-requests",
   "responses>=0.25",

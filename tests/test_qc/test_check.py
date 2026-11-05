@@ -2,6 +2,7 @@ from collections.abc import Callable
 from typing import Any
 
 import pandas
+import pytest
 from frictionless import Field, Schema
 
 from ghfdb.qc.check import PROBLEM_COLUMNS, DatasetCheck, Kind
@@ -175,3 +176,32 @@ class TestNotInVocabulary:
         assert found(frame, schema) == {
             (9, vocabulary_field.name, Kind.NOT_IN_VOCABULARY)
         }
+
+
+class TestNotANumber:
+    @pytest.mark.parametrize("text", ["nan", "NaN", "inf", "-inf", "Infinity"])
+    def test_a_ranged_number_field_gives_one_wrong_type_problem(
+        self, schema: Schema, children: Children, number_field: Field, text: str
+    ) -> None:
+        frame = children({number_field.name: text})
+
+        problems = DatasetCheck(frame, schema).problems()
+
+        assert len(problems) == 1
+        assert found(frame, schema) == {(9, number_field.name, Kind.WRONG_TYPE)}
+
+    @pytest.mark.parametrize("text", ["nan", "inf", "-inf"])
+    def test_a_number_field_without_a_range_gives_one_wrong_type_problem(
+        self, schema: Schema, children: Children, number_field: Field, text: str
+    ) -> None:
+        descriptor = schema.to_descriptor()
+        for field in descriptor["fields"]:
+            if field["name"] == number_field.name:
+                field["constraints"] = {}
+        unranged = Schema.from_descriptor(descriptor)
+        frame = children({number_field.name: text})
+
+        problems = DatasetCheck(frame, unranged).problems()
+
+        assert len(problems) == 1
+        assert found(frame, unranged) == {(9, number_field.name, Kind.WRONG_TYPE)}

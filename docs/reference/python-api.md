@@ -101,7 +101,10 @@ is checked on its own and the problem names that value.
 
 ## Cross-field rules
 
-`ghfdb.qc.rules` declares the rules that relate several fields of a child. `RULES` holds
+`ghfdb.qc.rules` declares the rules that relate several fields of a child. Every rule is a
+`Rule`. A `RequiredWhen` rule requires the fields mandatory in one `Domain` for the children of
+that domain, and an `AllowedWhen` rule limits one field once another holds the concepts of a
+`Condition`. `RULES` holds
 them, and `DatasetCheck(data, schema, rules, vocabularies)` applies the rules it is given
 after the field check. A broken rule is a `rule` line, with the rule's identifier in the
 `rule` column and the field that decided the rule applies in the `related` column. The

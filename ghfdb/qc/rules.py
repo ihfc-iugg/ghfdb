@@ -257,10 +257,12 @@ class RequiredWhen(Rule):
         return pandas.concat(found)
 
     def concepts(self) -> tuple[tuple[str, str], ...]:
+        """List the exploration-method concepts of the domain, then the example's."""
         named = [(self.domain.field, uri) for uri in self.domain.concepts]
         return (*named, *self.example.concepts())
 
     def diagram(self, schema: Schema) -> str:
+        """Draw the domain condition leading to each field it requires."""
         lines = [
             "flowchart LR",
             f'    when["{self.label(schema, self.domain.field)} is in the domain"]',
@@ -285,6 +287,7 @@ class AllowedWhen(Rule):
     then: Condition
 
     def fields(self, schema: Schema) -> tuple[str, ...]:
+        """Name the condition field, then the field the rule limits."""
         return (self.when.field, self.then.field)
 
     def problems(self, check: DatasetCheck) -> pandas.DataFrame:
@@ -303,6 +306,7 @@ class AllowedWhen(Rule):
         return pandas.concat(found)
 
     def concepts(self) -> tuple[tuple[str, str], ...]:
+        """List the condition's concepts, the allowed ones, then the example's."""
         named = [
             *((self.when.field, uri) for uri in self.when.concepts),
             *((self.then.field, uri) for uri in self.then.concepts),
@@ -310,6 +314,7 @@ class AllowedWhen(Rule):
         return (*named, *self.example.concepts())
 
     def diagram(self, schema: Schema) -> str:
+        """Draw the condition leading to the limit on the other field."""
         when = self.label(schema, self.when.field)
         then = self.label(schema, self.then.field)
         return "\n".join(

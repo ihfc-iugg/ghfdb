@@ -25,7 +25,8 @@ satisfying it, and compare the rule problems with the ones seeded.
 
 - [ ] T001 [US1] File one issue on this repository per question in `research.md` ("raised as an
   issue"), seven in all, each with the old rule or the paper's statement, what is unclear and the
-  question for the data assessment team, labelled `needs-info`. Record their numbers in
+  question for the data assessment team, labelled `needs-info`: the six rows marked "raised", and the confirmation of D-1, which
+  says indirect methods are checked as borehole data until the team rules. Record their numbers in
   `decisions.md` under D-3. No code.
 - [ ] T002 [US1] `ghfdb/qc/rules.json` with the two domains and CF-1, CF-2, CF-3, each with its
   statement, source, reasoning and worked example (plan.md, "Design"). `ghfdb/qc/rules.py`:
@@ -35,30 +36,32 @@ satisfying it, and compare the rule problems with the ones seeded.
   (FR-005, FR-007, FR-011). One test loads the packaged rules against the vocabularies as
   currently published (the `published_vocabularies` fixture), so the suite fails when a concept a
   rule names is withdrawn (AS 2.6).
-- [ ] T003 [US1] `RuleCheck.problems()` for *required when* (domain form and list form) and
+- [ ] T003 [US1] `DatasetCheck.rule_problems()` for *required when* (domain form) and
   *allowed when*, on whole columns: condition held, not held, condition field empty, condition
-  field flagged, target value flagged, a field holding several values, a missing column
-  (AS 1.1–1.9, FR-001–FR-004). `DatasetCheck`: `Kind.RULE`, the `rule` and `related` columns, the
-  rule check after the field check with the flagged cells passed in, rule lines sorted after the
+  value not in the vocabulary, target value not in the vocabulary, a target field holding several values, a missing column, a condition field holding several values, and one child breaking CF-1 with
+  two empty fields and CF-3 at once (AS 1.1–1.9, FR-001–FR-004). `related` names the condition
+  field's code, column name and value. `DatasetCheck`: `Kind.RULE`, the `rule` and `related` columns, 
+  `rule_problems()` after the field check (plan.md), rule lines sorted after the
   field lines of their row. Existing check tests updated for the two new columns only.
-- [ ] T004 [US1] `tests/test_qc/test_rule_examples.py`: every packaged rule's worked example gives
-  exactly its expected problem, the same child made valid gives none, and a rule without an
+- [ ] T004 [US1] `TestWorkedExamples` in `tests/test_qc/test_rules.py`: every packaged rule's worked
+  example over `valid_child` gives exactly its expected problem, `valid_child` alone gives none, and a rule without an
   example fails (FR-009). `docs/reference/python-api.md` gains `automodule:: ghfdb.qc.rules`.
 
 ### Group 2 — the command, the report and the speed
 
 - [ ] T005 [US1] `Dataset.check(schema=None, rules=None)` and `ghfdb check` load and apply the
   packaged rules; a concept no longer published gives status 2 with the rule named. The
-  end-to-end test of a seeded workbook gains one child breaking each rule; a generated template
-  filled in correctly reports no rule problem (SC-001, SC-004).
+  end-to-end test of a seeded workbook gains one child breaking each rule (SC-001). SC-004 is
+  covered by the existing test of a correctly filled template in `tests/test_cli.py`.
 - [ ] T006 [US1] `Report`: the rule identifier linked to its entry in the published rule
   reference, its statement, and the `related` value, for rule problems only (AS 1.10, FR-006).
   Tested on the report's cells.
-- [ ] T007 [US1] The 90,000-child speed test applies the rules and still passes within SC-006,
+- [ ] T007 [US1] The 90,000-child speed test (`tests/test_cli.py`, `TestSpeed`) applies the rules and still passes within SC-006,
   with one child in a hundred breaking a rule (AS 1.11, FR-012).
 - [ ] T008 [US1] `docs/reference/check.md`: the rule problem kind and the two new columns.
-  `CONTEXT.md`: **rule**, the domain read from the exploration method, the note under
-  **missing**. `CHANGELOG.md`: Added, Changed (two problem columns) and **Scheme changes** (CF-1,
+  `CONTEXT.md`: amend **Cross-field rule** and the **rule** problem kind, add the domain
+  read from the exploration method and the note under **missing**. `Dataset.check` and `Report`
+  docstrings list the two new columns. `CHANGELOG.md`: Added, Changed (two problem columns) and **Scheme changes** (CF-1,
   CF-2, CF-3) (FR-013).
 
 ---

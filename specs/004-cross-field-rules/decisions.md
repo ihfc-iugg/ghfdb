@@ -58,3 +58,13 @@ are added, never renamed, so code reading the table keeps working (Article XIV).
 CF-1 and CF-2 do not list their fields. They take every field the field schema marks mandatory for
 their domain only, so the obligation and domain stay recorded in one place, with their source, and
 a change to either changes the rule.
+
+### D-7 — The design review's findings, all applied to the plan
+
+The design review approved the plan with no critical or high finding. Every medium and low finding
+was applied as a plan edit rather than carried: `related` names the condition field's column name;
+concepts resolve through `allowed_values` for the rule's field, so a collection URI cannot pass;
+worked examples give concepts by URI; no list form of *required when* until a rule needs it; the
+example tests sit in `test_rules.py` over `valid_child`; the check is one `DatasetCheck` method
+that reads field problems from the cells instead of a separate class and record. D-1's reliance on
+the old tool is raised with the team (T001), and the mapping is not changed before they rule.

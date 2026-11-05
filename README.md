@@ -19,7 +19,18 @@ and scores each heat-flow determination with the GHFDB quality scheme: the uncer
 score, the methodological score and the perturbation flags of Fuchs et al. (2023),
 [doi:10.1016/j.tecto.2023.229976](https://doi.org/10.1016/j.tecto.2023.229976).
 
-The package is in early development and does not yet check or score anything.
+The package is in early development. It checks a workbook; it does not yet score one.
+
+## Checking a workbook
+
+```bash
+ghfdb check my-data.xlsx
+```
+
+The command reads the `data list` sheet, compares every cell with the field schema and the
+vocabularies, and writes `my-data.report.html` beside the workbook, a web page you open in any browser. The workbook itself is never
+changed. The command gives status 0 when it found no problem, 1 when it found problems and 2
+when it could not run. See [Check a workbook](https://ihfc-iugg.github.io/ghfdb/reference/check.html).
 
 ## Field definitions
 

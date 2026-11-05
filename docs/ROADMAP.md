@@ -66,7 +66,7 @@ Serves G7 and G2. Out of scope: other spreadsheet layouts, such as the release f
 
 ### R3 — Checking a workbook field by field
 
-*feature · advances G1, G2*
+*delivered in [#21](https://github.com/ihfc-iugg/ghfdb/issues/21) · advances G1, G2*
 
 An assessor runs one command on an upload template workbook and gets back a copy of it with every
 problem listed against its row: a mandatory field left empty, text where a number belongs, a

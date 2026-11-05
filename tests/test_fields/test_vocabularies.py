@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 import responses
-from example_site import publish
+from example_site import EXAMPLE_FILES, publish
 from frictionless import Schema
 from rdflib import RDF, Graph, URIRef
 from rdflib.namespace import SKOS
@@ -242,6 +242,42 @@ class TestAllowedValues:
 
         with pytest.raises(MissingSchemeError, match="round"):
             Vocabularies(caching_session(tmp_path)).allowed_values(vocabulary(SHAPES))
+
+
+class TestReleases:
+    def test_no_scheme_read_gives_no_release(self, tmp_path: Path) -> None:
+        assert Vocabularies(caching_session(tmp_path)).releases() == []
+
+    def test_a_release_shared_by_the_schemes_read_is_given_once(
+        self, vocabularies: Vocabularies
+    ) -> None:
+        vocabularies.graph(COLOURS)
+        vocabularies.graph(SHAPES)
+
+        assert vocabularies.releases() == ["https://doi.org/10.0000/test.1"]
+
+    def test_the_releases_of_every_scheme_read_are_given_sorted(
+        self, web: responses.RequestsMock, tmp_path: Path
+    ) -> None:
+        publish(web, "colours")
+        later = (EXAMPLE_FILES / "shapes.ttl").read_bytes()
+        publish(web, "shapes", body=later.replace(b"test.1", b"test.0"))
+        vocabularies = Vocabularies(caching_session(tmp_path))
+        vocabularies.graph(COLOURS)
+        vocabularies.graph(SHAPES)
+
+        assert vocabularies.releases() == [
+            "https://doi.org/10.0000/test.0",
+            "https://doi.org/10.0000/test.1",
+        ]
+
+    def test_a_scheme_not_read_adds_no_release(
+        self, vocabularies: Vocabularies
+    ) -> None:
+        vocabularies.graph(SHAPES)
+
+        assert vocabularies.releases() == ["https://doi.org/10.0000/test.1"]
+        assert COLOURS not in vocabularies.graphs
 
 
 # The tests below read the vocabularies as currently published at their permanent

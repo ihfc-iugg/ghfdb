@@ -7,5 +7,6 @@ for developers using it from Python.
 :maxdepth: 1
 
 fields/index
+check
 python-api
 ```

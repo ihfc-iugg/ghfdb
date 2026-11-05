@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ workbook }}</title>
+<style>
+body { font-family: system-ui, sans-serif; margin: 2rem; color: #1a1a1a; }
+table { border-collapse: collapse; margin-bottom: 2rem; }
+th, td { border: 1px solid #bbb; padding: 0.3rem 0.6rem; text-align: left; vertical-align: top; }
+thead th { background: #eee; position: sticky; top: 0; }
+#summary th { background: #f6f6f6; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>{{ workbook }}</h1>
+<h2>Summary</h2>
+<table id="summary">
+<tbody>
+{% for label, value in summary %}
+<tr><th scope="row">{{ label }}</th><td>{{ value }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% if not problems %}
+<p>No problem was found.</p>
+{% endif %}
+<h2>Problems</h2>
+<table id="problems">
+<thead>
+<tr>{% for heading in headings %}<th scope="col">{{ heading }}</th>{% endfor %}</tr>
+</thead>
+<tbody>
+{% for problem in problems %}
+<tr>{% for cell in problem %}<td>{{ cell }}</td>{% endfor %}</tr>
+{% endfor %}
+</tbody>
+</table>
+</body>
+</html>

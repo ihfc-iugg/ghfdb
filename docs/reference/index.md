@@ -8,5 +8,6 @@ for developers using it from Python.
 
 fields/index
 check
+rules
 python-api
 ```

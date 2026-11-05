@@ -124,7 +124,8 @@ class FieldReference:
         """
         return allowed_values(field, self.vocabularies)
 
-    def source(self, key: str) -> str:
+    @staticmethod
+    def source(key: str) -> str:
         """Say where a fact came from, as a phrase a reader outside the project knows.
 
         Args:
@@ -141,6 +142,8 @@ class FieldReference:
             return "Upload template"
         if key == "fuchs-2023-appendix-a":
             return "Fuchs et al. (2023), Appendix A"
+        if key == "fuchs-2023-table-4":
+            return "Fuchs et al. (2023), Table 4"
         if key == "vocabularies":
             return f"[IHFC Controlled Vocabularies]({VOCABULARIES})"
         if key.startswith("decision:"):

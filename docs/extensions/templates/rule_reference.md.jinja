@@ -1,0 +1,59 @@
+{#- The Markdown of the rule reference. rule_reference.py supplies what is used here:
+    the schema, the rules, the filters cell and code, and the functions domains, terms
+    and source, plus domain_of. -#}
+{%- set MISSING = "—" -%}
+{%- set DOMAIN_NAMES = {"B": "Borehole and mine (B)", "S": "Probe sensing (S)"} -%}
+{%- set NO_DOMAIN = "None" -%}
+
+{#- A link to a field's entry in the field reference. -#}
+{% macro field_link(code) -%}
+{{ "{ref}" }}`{{ code }} <field-{{ code | lower }}>`
+{%- endmacro %}
+
+{#- The table that maps each exploration method to its domain. -#}
+{% macro domains(code) -%}
+| Exploration method | Domain |
+|---|---|
+{%- for uri, term in terms(code).items() if uri %}
+{%- set domain = domain_of(uri) %}
+| {{ term | code }} | {{ DOMAIN_NAMES[domain.code] if domain else NO_DOMAIN }} |
+{%- endfor -%}
+{% endmacro %}
+
+{#- The table of the values of a rule's worked example. -#}
+{% macro example(rule) -%}
+| Field | Value | Problem |
+|---|---|---|
+{%- for code, value in rule.example.values.items() %}
+| {{ field_link(code) }} | {{ MISSING if value is none else terms(code).get(value, value) | code }} | {{ problem | code if code in rule.example.expected else MISSING }} |
+{%- endfor -%}
+{% endmacro %}
+
+{#- One rule: a link target, a heading and what the reader needs to apply it. -#}
+{% macro entry(rule) -%}
+({{ rule.identifier | lower }})=
+## {{ rule.identifier }}
+
+{{ rule.statement | cell }}
+
+Fields: {% for code in rule.fields(schema) %}{{ field_link(code) }}{{ ", " if not loop.last }}{% endfor %}
+
+Source: {{ source(rule.source) }}
+
+{{ rule.reasoning | cell }}
+
+```{mermaid}
+{{ rule.diagram(schema) }}
+```
+
+A child with these values breaks the rule:
+
+{{ example(rule) }}
+{%- endmacro %}
+
+{#- The entries of every rule, in the order of the rules. -#}
+{% macro entries() -%}
+{%- for rule in rules -%}
+{{ "\n\n" if not loop.first }}{{ entry(rule) }}
+{%- endfor -%}
+{% endmacro %}

@@ -1,8 +1,10 @@
+import shutil
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
 import pytest
+import responses
 from frictionless import Schema
 from openpyxl import Workbook, load_workbook
 
@@ -189,3 +191,48 @@ class TestWorkbookUnchanged:
         main(["check", str(path)])
 
         assert path.read_bytes() == before
+
+
+class TestOffline:
+    def test_the_cached_vocabularies_give_the_same_problems_without_a_network(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        cache_directory: Path,
+        schema: Schema,
+        tmp_path: Path,
+        web: responses.RequestsMock,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+        mandatory_code: str,
+    ) -> None:
+        cache = tmp_path / "cache"
+        shutil.copytree(cache_directory, cache)
+        monkeypatch.setattr(
+            "ghfdb.fields.vocabularies.user_cache_dir", lambda _: str(cache)
+        )
+        path = filled_workbook([valid_child | {mandatory_code: None}])
+
+        status = main(["check", str(path)])
+
+        assert status == 1
+        assert {(line[0], line[1]) for line in problem_lines(report_of(path))} == {
+            (9, mandatory_code)
+        }
+
+    def test_nothing_cached_and_no_network_gives_status_2(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        web: responses.RequestsMock,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setattr(
+            "ghfdb.fields.vocabularies.user_cache_dir", lambda _: str(tmp_path / "none")
+        )
+        path = tmp_path / "workbook.xlsx"
+
+        status = main(["check", str(path)])
+
+        assert status == 2
+        assert capsys.readouterr().err.strip()
+        assert not report_of(path).exists()

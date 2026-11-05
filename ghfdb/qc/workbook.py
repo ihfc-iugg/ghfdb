@@ -1,11 +1,14 @@
 """The upload template workbook, read into a table of text."""
 
+import re
+import zipfile
 from pathlib import Path
+from xml.sax.saxutils import unescape as xml_unescape
 
 import fastexcel
 import pandas
 from frictionless import Schema
-from openpyxl.utils import get_column_letter
+from openpyxl.utils import column_index_from_string, get_column_letter
 
 from ghfdb.fields import load_schema
 from ghfdb.template import ROW_LABELS
@@ -14,6 +17,34 @@ SHEET = "data list"
 SUFFIXES = {".xlsx", ".xlsm"}
 HEADER_SEARCH_ROWS = 20
 DESCRIPTION_LABELS = {label.casefold() for label in ROW_LABELS}
+PROBLEM_COLUMNS = ["row", "code", "column_name", "kind", "value", "suggestion"]
+ENTITIES = {"&quot;": '"', "&apos;": "'"}
+ATTRIBUTE = re.compile(rb"""([\w:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')""")
+CELL_REFERENCE = re.compile(rb"""\br\s*=\s*["']([A-Z]+)([0-9]+)["']""")
+ERROR_CELL = re.compile(
+    rb"""<c\s(?=[^>]*\bt\s*=\s*["']e["'])([^>]*)>\s*"""
+    rb"""(?:<f\b[^>]*/>|<f\b[^>]*>[^<]*</f>)?\s*<v>([^<]*)</v>"""
+)
+
+
+def unescape(text: str) -> str:
+    """Replace the XML entities of a text with the characters they stand for."""
+    return xml_unescape(text, ENTITIES)
+
+
+def attributes(tag: bytes) -> dict[str, str]:
+    """Read the attributes of one XML start tag.
+
+    Args:
+        tag: The tag, such as ``<sheet name="data list" r:id="rId2"/>``.
+
+    Returns:
+        The attribute values by name, with XML entities unescaped.
+    """
+    return {
+        match.group(1).decode(): unescape((match.group(2) or match.group(3)).decode())
+        for match in ATTRIBUTE.finditer(tag)
+    }
 
 
 class CheckError(Exception):
@@ -84,7 +115,71 @@ class UploadWorkbook:
             raise CheckError(f"{self.path} has no sheet named {SHEET!r}") from None
         except fastexcel.FastExcelError as error:
             raise CheckError(f"{self.path} cannot be opened: {error}") from error
+        self.put_error_values(frame, positions)
         return frame, positions
+
+    def put_error_values(self, frame: pandas.DataFrame, positions: list[int]) -> None:
+        """Write the Excel error values of the sheet into its frame.
+
+        The reader gives a cell holding an error such as ``#N/A`` as empty. The
+        sheet's XML is searched as bytes for those cells, so that no entity in an
+        untrusted file is ever expanded.
+
+        Args:
+            frame: The sheet as read, changed in place.
+            positions: The sheet column of each column of ``frame``.
+
+        Raises:
+            CheckError: The file is not a workbook archive or has no ``data list``
+                sheet part.
+        """
+        try:
+            with zipfile.ZipFile(self.path) as archive:
+                sheet_xml = archive.read(self.sheet_part(archive))
+        except (zipfile.BadZipFile, KeyError, OSError) as error:
+            raise CheckError(f"{self.path} cannot be opened: {error}") from error
+        position_of = {column: position for position, column in enumerate(positions)}
+        for cell in ERROR_CELL.finditer(sheet_xml):
+            reference = CELL_REFERENCE.search(cell.group(1))
+            if reference is None:
+                continue
+            column = column_index_from_string(reference.group(1).decode()) - 1
+            row = int(reference.group(2))
+            if column in position_of and row <= frame.shape[0]:
+                frame.iat[row - 1, position_of[column]] = unescape(
+                    cell.group(2).decode()
+                )
+
+    def sheet_part(self, archive: zipfile.ZipFile) -> str:
+        """Find the part of the archive holding the ``data list`` sheet.
+
+        The part is found from the sheet's relationship id, never from the sheet's
+        number or position.
+
+        Args:
+            archive: The workbook as a zip archive.
+
+        Returns:
+            The name of the part.
+
+        Raises:
+            KeyError: The workbook names no such sheet or no such relationship.
+        """
+        sheets = (
+            attributes(tag)
+            for tag in re.findall(rb"<sheet\b[^>]*>", archive.read("xl/workbook.xml"))
+        )
+        sheet = next((tag for tag in sheets if tag.get("name") == SHEET), None)
+        if sheet is None:
+            raise KeyError(SHEET)
+        identifier = next(v for k, v in sheet.items() if k.split(":")[-1] == "id")
+        rels = archive.read("xl/_rels/workbook.xml.rels")
+        for tag in re.findall(rb"<Relationship\b[^>]*>", rels):
+            relationship = attributes(tag)
+            if relationship.get("Id") == identifier:
+                target = relationship["Target"]
+                return target[1:] if target.startswith("/") else f"xl/{target}"
+        raise KeyError(identifier)
 
     def text(self, row: int, position: int) -> str:
         """Read one cell of the sheet as stripped text.
@@ -185,6 +280,46 @@ class UploadWorkbook:
                 self.duplicate_columns.append((names[header], header))
             else:
                 self.columns[names[header]] = position
+
+    def data(self) -> pandas.DataFrame:
+        """Build the table of the children.
+
+        Returns:
+            One row per child and one text column per field found, named by field
+            code. The index, named ``row``, is the child's Excel row. A cell of
+            spaces only is missing, and a row with every field missing is no
+            child and is left out.
+        """
+        positions = list(self.columns.values())
+        children = self.frame.iloc[self.first_data_row - 1 :, positions].copy()
+        children.columns = pandas.Index(self.columns)
+        children.index = pandas.Index(children.index + 1, name="row")
+        for code in children.columns:
+            column = children[code]
+            children[code] = column.mask(column.str.strip().eq(""))
+        return children.dropna(how="all")
+
+    def column_problems(self) -> pandas.DataFrame:
+        """List the problems that belong to the workbook's layout.
+
+        Returns:
+            One line for each unknown column and each column that repeats a field,
+            with the columns ``row``, ``code``, ``column_name``, ``kind``,
+            ``value`` and ``suggestion``. The row is always empty. The first column
+            for a field is the one ``data`` uses.
+        """
+        unknown = [
+            {"column_name": header, "kind": "unknown column"}
+            for header in self.unknown_columns
+        ]
+        duplicate = [
+            {"code": code, "column_name": header, "kind": "duplicate column"}
+            for code, header in self.duplicate_columns
+        ]
+        problems = pandas.DataFrame([*unknown, *duplicate], columns=PROBLEM_COLUMNS)
+        return problems.astype(
+            {"row": "Int64"} | dict.fromkeys(PROBLEM_COLUMNS[1:], "string")
+        )
 
     def column_letter(self, position: int) -> str:
         """Name a column of the frame by its letter in the sheet.

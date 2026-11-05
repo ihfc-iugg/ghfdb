@@ -69,6 +69,11 @@ addopts = "--import-mode=importlib"
 strict = true
 files = ["ghfdb", "tests", "docs"]
 
+# XlsxWriter ships no type hints and no stubs package exists.
+[[tool.mypy.overrides]]
+module = "xlsxwriter.*"
+ignore_missing_imports = true
+
 [tool.ruff]
 line-length = 88
 target-version = "py312"

@@ -39,6 +39,18 @@ therefore treated as a list of rules to trace, not as rules to copy. Each one en
 only with a source in Fuchs et al. (2023) or a recorded ruling. Each one that cannot be traced is
 raised as an issue in this repository, so none is dropped without a record (SC-003).
 
+The questions raised for the data assessment team:
+
+| Issue | Question |
+|---|---|
+| [#30](https://github.com/ihfc-iugg/ghfdb/issues/30) | Which temperature methods are allowed for an indirect exploration method? |
+| [#31](https://github.com/ihfc-iugg/ghfdb/issues/31) | Should probe-sensing data leave the temperature methods empty or give them as unspecified? |
+| [#32](https://github.com/ihfc-iugg/ghfdb/issues/32) | Does the in-situ flag limit the thermal conductivity pT conditions? |
+| [#33](https://github.com/ihfc-iugg/ghfdb/issues/33) | Do the pT conditions limit the thermal conductivity pT function? |
+| [#34](https://github.com/ihfc-iugg/ghfdb/issues/34) | When do the temperature correction methods apply? |
+| [#35](https://github.com/ihfc-iugg/ghfdb/issues/35) | Is the thermal conductivity method mandatory for borehole data? |
+| [#36](https://github.com/ihfc-iugg/ghfdb/issues/36) | Confirm the domain of each exploration method (D-1) |
+
 ### D-4 — The rules are declared in Python, as dataclasses with a `problems()` method
 
 The rules live in `ghfdb.qc.rules`: a frozen `Rule` dataclass and two subclasses, `RequiredWhen` and

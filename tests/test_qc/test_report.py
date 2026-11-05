@@ -7,9 +7,8 @@ from typing import Any
 
 import pandas
 import pytest
-import xlsxwriter
+from conftest import read_problems, read_table
 from frictionless import Schema
-from openpyxl import load_workbook
 
 import ghfdb
 from ghfdb.fields import Vocabularies
@@ -24,19 +23,9 @@ def problem_table(*lines: dict[str, Any]) -> pandas.DataFrame:
     return frame.astype({"row": "Int64"} | dict.fromkeys(PROBLEM_COLUMNS[1:], "string"))
 
 
-def read_problems(path: Path) -> list[tuple[Any, ...]]:
-    """Read the lines of the problems sheet, leaving out the heading row."""
-    sheet = load_workbook(path)["problems"]
-    return [tuple(cell.value for cell in row) for row in sheet.iter_rows(min_row=2)]
-
-
-def cell_values(path: Path, sheet: str) -> list[Any]:
-    return [
-        cell.value
-        for row in load_workbook(path)[sheet].iter_rows()
-        for cell in row
-        if cell.value is not None
-    ]
+def summary_values(path: Path) -> list[str]:
+    """Read every cell of the summary table."""
+    return [cell for row in read_table(path, "summary") for cell in row]
 
 
 @pytest.fixture
@@ -54,7 +43,7 @@ class TestReportWrite:
 
         path = report.write()
 
-        assert path == workbook_path.with_name("my-data.report.xlsx")
+        assert path == workbook_path.with_name("my-data.report.html")
         assert path.is_file()
 
     def test_lists_column_problems_first_without_a_row(
@@ -79,18 +68,18 @@ class TestReportWrite:
             (9, "P1", "Heat flow", str(Kind.WRONG_TYPE), "abc", "ab"),
         ]
 
-    def test_writes_a_value_starting_with_equals_as_text(
+    def test_writes_a_value_holding_markup_escaped(
         self, workbook_path: Path, published_vocabularies: Vocabularies
     ) -> None:
+        value = '<script>alert(1)</script> & "quoted"'
         problems = problem_table(
-            {"row": 9, "code": "P1", "kind": Kind.WRONG_TYPE, "value": "=1+1"}
+            {"row": 9, "code": "P1", "kind": Kind.WRONG_TYPE, "value": value}
         )
 
         path = Report(workbook_path, problems, 1, published_vocabularies).write()
 
-        cell = load_workbook(path)["problems"]["E2"]
-        assert cell.data_type == "s"
-        assert cell.value == "=1+1"
+        assert read_problems(path)[0][4] == value
+        assert "<script" not in path.read_text(encoding="utf-8")
 
     def test_writes_the_counts_and_the_package_version(
         self, workbook_path: Path, published_vocabularies: Vocabularies
@@ -103,10 +92,10 @@ class TestReportWrite:
 
         path = Report(workbook_path, problems, 17, published_vocabularies).write()
 
-        values = cell_values(path, "summary")
+        values = summary_values(path)
         assert workbook_path.name in values
         assert ghfdb.__version__ in values
-        assert {17, 3, 2} <= set(values)
+        assert {"17", "3", "2"} <= set(values)
 
     def test_states_the_vocabulary_releases_and_the_time_of_the_check(
         self,
@@ -118,7 +107,7 @@ class TestReportWrite:
 
         path = Report(workbook_path, problem_table(), 1, published_vocabularies).write()
 
-        values = [str(value) for value in cell_values(path, "summary")]
+        values = summary_values(path)
         releases = published_vocabularies.releases()
         assert releases
         assert all(any(release in value for value in values) for release in releases)
@@ -141,13 +130,13 @@ class TestReportWrite:
 
         assert stat.S_IMODE(path.stat().st_mode) == 0o666 & ~umask
 
-    def test_a_check_with_no_problem_leaves_the_problems_sheet_empty(
+    def test_a_check_with_no_problem_leaves_the_problems_table_empty(
         self, workbook_path: Path, published_vocabularies: Vocabularies
     ) -> None:
         path = Report(workbook_path, problem_table(), 4, published_vocabularies).write()
 
         assert read_problems(path) == []
-        assert 0 in cell_values(path, "summary")
+        assert "0" in summary_values(path)
 
     def test_replaces_an_earlier_report(
         self, workbook_path: Path, published_vocabularies: Vocabularies
@@ -164,18 +153,18 @@ class TestReportFailure:
     def test_a_report_path_that_cannot_be_replaced_is_a_check_error(
         self, workbook_path: Path, published_vocabularies: Vocabularies
     ) -> None:
-        workbook_path.with_name("my-data.report.xlsx").mkdir()
+        workbook_path.with_name("my-data.report.html").mkdir()
         report = Report(workbook_path, problem_table(), 1, published_vocabularies)
 
-        with pytest.raises(CheckError, match="my-data.report.xlsx"):
+        with pytest.raises(CheckError, match="my-data.report.html"):
             report.write()
 
         assert sorted(p.name for p in workbook_path.parent.iterdir()) == [
-            "my-data.report.xlsx",
+            "my-data.report.html",
             "my-data.xlsx",
         ]
 
-    def test_a_failed_close_leaves_the_earlier_report_whole_and_no_temporary_file(
+    def test_a_failed_render_leaves_the_earlier_report_whole_and_no_temporary_file(
         self,
         workbook_path: Path,
         published_vocabularies: Vocabularies,
@@ -186,17 +175,17 @@ class TestReportFailure:
         ).write()
         before = earlier.read_bytes()
 
-        def refuse(self: xlsxwriter.Workbook) -> None:
-            raise xlsxwriter.exceptions.XlsxFileError("refused")
+        def refuse(self: Report, path: Path) -> None:
+            raise OSError("refused")
 
-        monkeypatch.setattr(xlsxwriter.Workbook, "close", refuse)
+        monkeypatch.setattr(Report, "build", refuse)
         report = Report(workbook_path, problem_table(), 1, published_vocabularies)
 
-        with pytest.raises(CheckError, match="my-data.report.xlsx"):
+        with pytest.raises(CheckError, match="my-data.report.html"):
             report.write()
 
         assert earlier.read_bytes() == before
         assert sorted(p.name for p in workbook_path.parent.iterdir()) == [
-            "my-data.report.xlsx",
+            "my-data.report.html",
             "my-data.xlsx",
         ]

@@ -1,4 +1,5 @@
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,56 @@ from openpyxl import load_workbook
 
 from ghfdb.fields import Vocabularies, caching_session, load_schema
 from ghfdb.template import FIRST_DATA_ROW, ROW_LABELS, UploadTemplate
+
+
+class TableReader(HTMLParser):
+    """Collect the cells of the rows of the table with a given id."""
+
+    def __init__(self, table_id: str) -> None:
+        super().__init__()
+        self.table_id = table_id
+        self.rows: list[list[str]] = []
+        self.inside = False
+        self.in_head = False
+        self.in_cell = False
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "table" and dict(attrs).get("id") == self.table_id:
+            self.inside = True
+        elif self.inside and tag == "thead":
+            self.in_head = True
+        elif self.inside and tag == "tr" and not self.in_head:
+            self.rows.append([])
+        elif self.inside and tag in {"td", "th"} and not self.in_head:
+            self.rows[-1].append("")
+            self.in_cell = True
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "table":
+            self.inside = False
+        elif tag == "thead":
+            self.in_head = False
+        elif tag in {"td", "th"}:
+            self.in_cell = False
+
+    def handle_data(self, data: str) -> None:
+        if self.in_cell:
+            self.rows[-1][-1] += data
+
+
+def read_table(path: Path, table_id: str) -> list[list[str]]:
+    """Read the body rows of the table with an id from a report page."""
+    reader = TableReader(table_id)
+    reader.feed(path.read_text(encoding="utf-8"))
+    return reader.rows
+
+
+def read_problems(path: Path) -> list[tuple[Any, ...]]:
+    """Read the problems of a report: the row as a number, an empty cell as None."""
+    return [
+        (int(row[0]) if row[0] else None, *(cell or None for cell in row[1:]))
+        for row in read_table(path, "problems")
+    ]
 
 
 def read_content(path: Path) -> dict[str, Any]:

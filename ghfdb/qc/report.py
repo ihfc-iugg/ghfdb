@@ -1,4 +1,4 @@
-"""The report a check writes beside the workbook."""
+"""The report a check writes beside the workbook, a single web page."""
 
 import contextlib
 import os
@@ -7,12 +7,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas
-import xlsxwriter
-from xlsxwriter.exceptions import XlsxFileError
+from jinja2 import Environment, PackageLoader
 
 from ghfdb import __version__
 from ghfdb.fields import Vocabularies
 from ghfdb.qc.workbook import CheckError
+
+TEMPLATES = Environment(loader=PackageLoader("ghfdb.qc", "templates"), autoescape=True)
 
 HEADINGS = [
     "Excel row",
@@ -22,7 +23,6 @@ HEADINGS = [
     "Value",
     "Suggestion",
 ]
-WIDTHS = [11, 12, 32, 20, 40, 40]
 
 
 class Report:
@@ -61,8 +61,8 @@ class Report:
 
     @property
     def path(self) -> Path:
-        """Where the report is written: ``<workbook name>.report.xlsx`` beside it."""
-        return self.workbook_path.with_name(f"{self.workbook_path.stem}.report.xlsx")
+        """Where the report is written: ``<workbook name>.report.html`` beside it."""
+        return self.workbook_path.with_name(f"{self.workbook_path.stem}.report.html")
 
     def write(self) -> Path:
         """Write the report, replacing an earlier one.
@@ -80,7 +80,7 @@ class Report:
         temporary = None
         try:
             with tempfile.NamedTemporaryFile(
-                delete=False, dir=self.path.parent, suffix=".xlsx"
+                delete=False, dir=self.path.parent, suffix=".html"
             ) as file:
                 temporary = Path(file.name)
             self.build(temporary)
@@ -90,7 +90,7 @@ class Report:
             os.umask(umask)
             temporary.chmod(0o666 & ~umask)
             os.replace(temporary, self.path)
-        except (OSError, XlsxFileError) as error:
+        except OSError as error:
             if temporary is not None:
                 with contextlib.suppress(OSError):
                     temporary.unlink()
@@ -98,61 +98,43 @@ class Report:
         return self.path
 
     def build(self, path: Path) -> None:
-        """Write the ``problems`` and ``summary`` sheets to a file.
+        """Render the page and write it to a file.
 
         Args:
             path: The file to write.
         """
-        workbook = xlsxwriter.Workbook(str(path), {"constant_memory": True})
-        self.write_problems(workbook.add_worksheet("problems"))
-        self.write_summary(workbook.add_worksheet("summary"))
-        workbook.close()
+        page = TEMPLATES.get_template("report.html.jinja").render(
+            workbook=self.workbook_path.name,
+            summary=self.summary(),
+            headings=HEADINGS,
+            problems=self.cells(),
+        )
+        path.write_text(page, encoding="utf-8")
 
-    def write_problems(self, sheet: xlsxwriter.worksheet.Worksheet) -> None:
-        """Write the ``problems`` sheet, one row for each problem.
+    def cells(self) -> list[list[str]]:
+        """List the problems as text, an absent value as an empty cell.
 
-        Every value is written as text, so that a value starting with ``=`` is never
-        a formula.
-
-        Args:
-            sheet: The sheet.
+        Returns:
+            One list of six cells for each problem, in the order of the problems.
         """
-        for column, (heading, width) in enumerate(zip(HEADINGS, WIDTHS, strict=True)):
-            sheet.write_string(0, column, heading)
-            sheet.set_column(column, column, width)
-        sheet.freeze_panes(1, 0)
-        for line, problem in enumerate(self.problems.itertuples(index=False), start=1):
-            row, *texts = problem
-            if not pandas.isna(row):
-                sheet.write_number(line, 0, int(row))
-            for column, text in enumerate(texts, start=1):
-                if not pandas.isna(text):
-                    sheet.write_string(line, column, str(text))
-        sheet.autofilter(0, 0, max(len(self.problems), 1), len(HEADINGS) - 1)
+        return [
+            ["" if pandas.isna(cell) else str(cell) for cell in problem]
+            for problem in self.problems.itertuples(index=False)
+        ]
 
-    def write_summary(self, sheet: xlsxwriter.worksheet.Worksheet) -> None:
-        """Write the ``summary`` sheet.
+    def summary(self) -> list[tuple[str, str]]:
+        """List what the summary states.
 
-        Args:
-            sheet: The sheet.
+        Returns:
+            A label and a value for each line of the summary.
         """
         rows = self.problems["row"].dropna().nunique()
-        lines: list[tuple[str, str | int]] = [
+        return [
             ("Workbook", self.workbook_path.name),
             ("ghfdb version", __version__),
             ("Checked at (UTC)", datetime.now(UTC).isoformat(timespec="seconds")),
             ("Vocabulary releases", ", ".join(self.vocabularies.releases())),
-            ("Children", self.children),
-            ("Problems", len(self.problems)),
-            ("Children with problems", int(rows)),
+            ("Children", str(self.children)),
+            ("Problems", str(len(self.problems))),
+            ("Children with problems", str(int(rows))),
         ]
-        for line, (label, value) in enumerate(lines):
-            sheet.write_string(line, 0, label)
-            if isinstance(value, int):
-                sheet.write_number(line, 1, value)
-            else:
-                sheet.write_string(line, 1, value)
-        if self.problems.empty:
-            sheet.write_string(len(lines) + 1, 0, "No problem was found.")
-        sheet.set_column(0, 0, 26)
-        sheet.set_column(1, 1, 60)

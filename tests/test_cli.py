@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 import responses
+from conftest import read_problems
 from frictionless import Schema
 from openpyxl import Workbook, load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
@@ -19,12 +20,7 @@ Filler = Callable[[Sequence[Mapping[str, Any]]], Path]
 
 
 def report_of(workbook: Path) -> Path:
-    return workbook.with_name(f"{workbook.stem}.report.xlsx")
-
-
-def problem_lines(report: Path) -> list[tuple[Any, ...]]:
-    sheet = load_workbook(report)["problems"]
-    return [tuple(cell.value for cell in row) for row in sheet.iter_rows(min_row=2)]
+    return workbook.with_name(f"{workbook.stem}.report.html")
 
 
 @pytest.fixture
@@ -52,7 +48,7 @@ class TestMain:
         status = main(["check", str(path)])
 
         assert status == 0
-        assert problem_lines(report_of(path)) == []
+        assert read_problems(report_of(path)) == []
         assert str(report_of(path)) in capsys.readouterr().out
 
     def test_a_workbook_with_a_problem_gives_status_1(
@@ -66,7 +62,7 @@ class TestMain:
         status = main(["check", str(path)])
 
         assert status == 1
-        assert {(line[0], line[1]) for line in problem_lines(report_of(path))} == {
+        assert {(line[0], line[1]) for line in read_problems(report_of(path))} == {
             (9, mandatory_code)
         }
 
@@ -85,7 +81,7 @@ class TestMain:
         status = main(["check", str(path)])
 
         assert status == 1
-        assert [line[0] for line in problem_lines(report_of(path))] == [None]
+        assert [line[0] for line in read_problems(report_of(path))] == [None]
 
     @pytest.mark.parametrize("name", ["missing.xlsx", "notes.txt"])
     def test_a_file_that_cannot_be_read_gives_status_2_and_no_report(
@@ -220,7 +216,7 @@ class TestOffline:
         status = main(["check", str(path)])
 
         assert status == 1
-        assert {(line[0], line[1]) for line in problem_lines(report_of(path))} == {
+        assert {(line[0], line[1]) for line in read_problems(report_of(path))} == {
             (9, mandatory_code)
         }
 
@@ -310,7 +306,7 @@ class TestEndToEnd:
 
         assert main(["check", str(path)]) == 1
 
-        found = problem_lines(report_of(path))
+        found = read_problems(report_of(path))
         assert {(line[0], line[1], line[3]) for line in found} == expected
         assert len(found) == len(expected)
 
@@ -327,7 +323,7 @@ class TestEndToEnd:
         workbook.save(path)
 
         assert main(["check", str(path)]) == 0
-        assert problem_lines(report_of(path)) == []
+        assert read_problems(report_of(path)) == []
 
 
 @pytest.mark.slow
@@ -347,4 +343,4 @@ class TestSpeed:
         print(f"checked 90,000 children in {elapsed:.1f} s")
         assert status == 1
         assert elapsed < self.LIMIT
-        assert len(problem_lines(report_of(path))) == seeded
+        assert len(read_problems(report_of(path))) == seeded

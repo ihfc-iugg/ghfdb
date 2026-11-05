@@ -620,13 +620,13 @@ default-groups = ["dev", "docs"]
 dependencies = [
     { name = "fastexcel" },
     { name = "frictionless" },
+    { name = "jinja2" },
     { name = "openpyxl" },
     { name = "pandas", extra = ["pyarrow"] },
     { name = "platformdirs" },
     { name = "rdflib" },
     { name = "requests" },
     { name = "requests-cache" },
-    { name = "xlsxwriter" },
 ]
 
 [package.dev-dependencies]
@@ -640,10 +640,10 @@ dev = [
     { name = "responses" },
     { name = "types-openpyxl" },
     { name = "types-requests" },
+    { name = "xlsxwriter" },
 ]
 docs = [
     { name = "furo" },
-    { name = "jinja2" },
     { name = "myst-parser" },
     { name = "sphinx", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13'" },
     { name = "sphinx", version = "9.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13'" },
@@ -655,13 +655,13 @@ docs = [
 requires-dist = [
     { name = "fastexcel", specifier = ">=0.21" },
     { name = "frictionless", specifier = ">=5" },
+    { name = "jinja2", specifier = ">=3.1" },
     { name = "openpyxl", specifier = ">=3.1" },
     { name = "pandas", extras = ["pyarrow"], specifier = ">=3.0" },
     { name = "platformdirs", specifier = ">=4" },
     { name = "rdflib", specifier = ">=7" },
     { name = "requests", specifier = ">=2.32" },
     { name = "requests-cache", specifier = ">=1.2" },
-    { name = "xlsxwriter", specifier = ">=3.2" },
 ]
 
 [package.metadata.requires-dev]
@@ -675,10 +675,10 @@ dev = [
     { name = "responses", specifier = ">=0.25" },
     { name = "types-openpyxl" },
     { name = "types-requests" },
+    { name = "xlsxwriter", specifier = ">=3.2" },
 ]
 docs = [
     { name = "furo", specifier = ">=2025.1" },
-    { name = "jinja2", specifier = ">=3.1" },
     { name = "myst-parser", specifier = ">=4" },
     { name = "sphinx", specifier = ">=8" },
     { name = "sphinxcontrib-mermaid", specifier = ">=1" },

@@ -189,8 +189,7 @@ it times a warm load (0.2 s), never a download. It is marked `slow`, and runs by
 
 | Package | Group | Why |
 |---|---|---|
-| `pandas` | runtime | The data and the checks, on columns (Constitution, Articles XIII and XV). |
-| `pyarrow` | runtime | Backs pandas' text columns, and is how fastexcel hands its frames over. |
+| `pandas[pyarrow]` | runtime | The data and the checks, on columns (Constitution, Articles XIII and XV). The extra brings pyarrow, which backs the text columns and is how fastexcel hands its frames over. Declared through the extra because no module imports pyarrow itself, which deptry would flag. |
 | `fastexcel` | runtime | Reading the children in seconds. |
 | `xlsxwriter` | runtime | Writing the report. |
 

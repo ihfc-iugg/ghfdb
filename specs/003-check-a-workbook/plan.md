@@ -17,8 +17,8 @@ the workbook's path.
 ## Technical Context
 
 - **Language**: Python 3.12+, managed with uv, built with hatchling.
-- **New runtime dependencies**: `pandas>=3.0`, `pyarrow>=20`, `fastexcel>=0.21`,
-  `xlsxwriter>=3.2` (research.md, "Dependencies added"). pyarrow backs pandas' text columns and
+- **New runtime dependencies**: `pandas[pyarrow]>=3.0`, `fastexcel>=0.21`, `xlsxwriter>=3.2`
+  (research.md, "Dependencies added"). pyarrow, through pandas' extra, backs the text columns and
   is what fastexcel hands its frames over in.
 - **Existing dependencies used**: `frictionless` (the field schema, as `load_schema` returns it),
   `rdflib` (the release of each scheme). openpyxl stays for the template only.
@@ -38,7 +38,7 @@ the workbook's path.
 | Article | How the plan meets it |
 |---|---|
 | II Simplicity | fastexcel reads, pandas checks, XlsxWriter writes, `difflib` suggests, `argparse` parses. Our code is the layout of the template, seven rule expressions and the report's layout. `Dataset` holds the DataFrame and adds nothing pandas already does. |
-| III Anti-abstraction | No base class, no rule registry. `Dataset` has one present use, loading a workbook and checking it, and is the class later features build on by the maintainer's decision (D-11). One dataclass for the column problems and one `StrEnum` of kinds. Problems on children are rows of a pandas DataFrame, not objects. |
+| III Anti-abstraction | No base class, no rule registry. `Dataset` has one present use, loading a workbook and checking it, and is the class later features build on by the maintainer's decision (D-11). One `StrEnum` of kinds; every problem, of a child or of a column, is a row of one DataFrame shape. Problems on children are rows of a pandas DataFrame, not objects. |
 | IV Integration-first | Every behaviour is tested as an assessor meets it: a workbook in, `check`, a report out. |
 | V Data safety | fastexcel reads saved values and never evaluate a formula. Every value from the workbook reaches the report through `write_string`, so none becomes a formula. The report path comes from the path the assessor gave, never from the workbook's contents. |
 | VI Documentation | A reference page for the command and the report, the Python API entry, README, CONTEXT.md and CHANGELOG, in this pull request. |
@@ -71,9 +71,9 @@ specs/003-check-a-workbook/
 ```text
 ghfdb/__init__.py                 # exports Dataset
 ghfdb/dataset.py                  # Dataset: the DataFrame, from_workbook(), check()
-ghfdb/qc/__init__.py              # exports UploadWorkbook, DatasetCheck, Report, Kind, ColumnProblem, CheckError
+ghfdb/qc/__init__.py              # exports UploadWorkbook, DatasetCheck, Report, Kind, CheckError
 ghfdb/qc/workbook.py              # CheckError, UploadWorkbook: header, columns, children, Excel rows
-ghfdb/qc/check.py                 # Kind, ColumnProblem, DatasetCheck: the rule operations, suggestions
+ghfdb/qc/check.py                 # Kind, DatasetCheck: the rule operations, suggestions
 ghfdb/qc/report.py                # Report: the report file
 ghfdb/cli.py                      # main(), run(): `ghfdb check <workbook>`
 ghfdb/fields/vocabularies.py      # Vocabularies.releases()
@@ -100,6 +100,9 @@ README.md, CONTEXT.md, CHANGELOG.md
   that cannot be opened (including `.xls`), no `data list` sheet, no header row found, a report
   that cannot be written.
 - `UploadWorkbook(path, schema)`, read once with fastexcel:
+  - A path whose suffix, case-folded, is not `.xlsx` or `.xlsm` is refused with `CheckError` before
+    anything is read. fastexcel would read an `.xls` or `.ods` file, and the error-cell scan below
+    only understands the `.xlsx` layout. The suffix is the assessor's path, not workbook content.
   - `fastexcel.read_excel(path).load_sheet_by_name("data list", header_row=None, skip_rows=0,
     dtypes="string").to_pandas()`. With `skip_rows=0` the first row of the frame is Excel row 1, and each
     column's sheet position is `ColumnInfo.absolute_index` (research.md), so a child's Excel row
@@ -110,19 +113,26 @@ README.md, CONTEXT.md, CHANGELOG.md
     after the first filled column name a field, by code, published column name or earlier column
     name. The first filled column (`ID`) is matched to no field and is never an unknown column.
   - `columns`: each field and the first column naming it. Also `unknown_columns`,
-    `absent_fields` and `duplicate_columns`, for the column problems.
+    `absent_fields` and `duplicate_columns`, for the column problems. A column with an empty header
+    cell is an unknown column when any child holds a value in it, named by its column letter.
   - `first_data_row`: the first row under the header whose first filled cell is not a
     description label (`ROW_LABELS`, case-folded and stripped).
   - **Error cells.** fastexcel reads a cell holding an Excel error (`#N/A`, `#DIV/0!`) as empty.
-    The check finds those cells by scanning the `data list` sheet's XML in the file for cells of
-    type `e` (a byte search on the stream, `zipfile` and `re`, no XML parser; 0.65 s on the
+    The check finds the `data list` sheet's part from the `r:id` of the `<sheet>` named
+    `data list` in `xl/workbook.xml` (the name compared after XML unescaping) and that id's
+    `Target` in `xl/_rels/workbook.xml.rels` (relative to `xl/`, or absolute when it starts with
+    `/`), never from the sheet's number or order, which differ in the hand-maintained template. It
+    scans that part for cells of type `e` (a byte search on the stream, `zipfile` and `re`, no XML parser; 0.65 s on the
     90,000-child workbook) and puts their error text in place of the empty value, so an error is
     checked like any other text and is never reported as missing (FR-004, Article XII).
-  - `dataset()`: a `Dataset` of the children: one text column per field found, named by code,
-    index the Excel row (named `row`). Spaces-only cells become missing. Rows with every field
+    `zipfile.BadZipFile` and `KeyError` from the scan become `CheckError` naming the file.
+  - `data()`: the pandas DataFrame of the children: one text column per field found, named by code,
+    index the Excel row (named `row`). `ghfdb.qc` imports nothing from `ghfdb.dataset`, so imports
+    run one way, `ghfdb.dataset` to `ghfdb.qc`. Spaces-only cells become missing. Rows with every field
     missing are dropped: they are not children.
-  - `column_problems()`: one `ColumnProblem` per unknown column and per duplicate column, the
-    problems that belong to the workbook's layout rather than to its data.
+  - `column_problems()`: a DataFrame of the same shape as `DatasetCheck.problems()`, with no row,
+    one line per unknown column and per duplicate column: the problems that belong to the
+    workbook's layout rather than to its data.
 
 ### `ghfdb.dataset.Dataset`
 
@@ -130,7 +140,7 @@ The class later features build on (D-11). Composition, never a `DataFrame` subcl
 
 - `Dataset(data: pandas.DataFrame)`: `data` is public and is a plain DataFrame, one row per child,
   columns named by field code. A researcher works on it with all of pandas.
-- `Dataset.from_workbook(path, schema=None) -> Dataset`: `UploadWorkbook(path, schema).dataset()`,
+- `Dataset.from_workbook(path, schema=None) -> Dataset`: `Dataset(UploadWorkbook(path, schema).data())`,
   with `load_schema()` when no schema is given.
 - `check(schema=None) -> pandas.DataFrame`: the problems `DatasetCheck(self.data, schema)` finds.
 - Nothing else. Parents, metadata, merging and submitting are later features.
@@ -139,7 +149,6 @@ The class later features build on (D-11). Composition, never a `DataFrame` subcl
 
 - `Kind(StrEnum)`: `missing`, `wrong type`, `out of range`, `not in vocabulary`, `unknown column`,
   `no column`, `duplicate column`.
-- `ColumnProblem`: frozen dataclass `kind`, `code` (or `None`), `column` (the header text).
 - `DatasetCheck(data, schema)`, on any DataFrame with field codes as columns:
   - `problems()`: a DataFrame with columns `row` (the index of the data, the Excel row for a
     workbook), `code`, `column_name`, `kind`, `value`, `suggestion`, ordered by row and then field
@@ -159,17 +168,19 @@ The class later features build on (D-11). Composition, never a `DataFrame` subcl
 
 ### `ghfdb.qc.report.Report`
 
-`Report(workbook_path, column_problems, problems, children, vocabularies)`, where `problems` is the
-DataFrame from `Dataset.check()`, and `write() -> Path`.
+`Report(workbook_path, problems, children, vocabularies)`, where `problems` is one DataFrame: the
+workbook's column problems followed by the dataset's, and `write() -> Path`.
 
 - Path: `<stem>.report.xlsx` in the workbook's folder. It is written to a temporary file in the
   same folder (`tempfile.NamedTemporaryFile(delete=False, dir=…, suffix=".xlsx")`) and moved over
-  the earlier report with `os.replace`, so a failure leaves the earlier one whole. Any `OSError`
-  becomes `CheckError` naming the report. When the report path exists and `os.path.samefile` says
-  it is the workbook (a link), `write` refuses.
+  the earlier report with `os.replace`, so a failure leaves the earlier one whole. Any `OSError`,
+  and `xlsxwriter.exceptions.XlsxFileError` raised by `close()`, becomes `CheckError` naming the
+  report, and the temporary file is removed. `os.replace` replaces a link rather than writing
+  through it, so the workbook is never written whatever the report path is.
 - A `problems` sheet: one row per problem, column problems first with no row: Excel row, field
   code, published column name, kind, value, suggestion. Written in XlsxWriter's constant-memory
-  mode, every value from the workbook with `write_string`, numbers (the row) with `write_number`.
+  mode, every value from the workbook with `write_string`, the row with `write_number`, and the
+  row cell left blank for a column problem.
 - A `summary` sheet: the workbook's file name, package version, time of the check, the vocabulary
   release or releases (`Vocabularies.releases()`), the number of children, problems and children
   with problems, and a line saying no problem was found when there is none.
@@ -184,8 +195,8 @@ own and asks it afterwards.
 ### `ghfdb.cli`
 
 `main(argv: list[str] | None = None) -> int`, with `argparse` and one subcommand, `check`, taking
-the workbook's path. It loads the schema, reads `UploadWorkbook`, checks its `dataset()`, builds
-`Report` from the workbook's column problems and the dataset's problems,
+the workbook's path. It loads the schema, reads `UploadWorkbook`, checks `Dataset(workbook.data())`,
+builds `Report` from the workbook's column problems and the dataset's problems,
 writes the report, prints one line ("212 children, 37 problems in 14 of them, report:
 <path>") and returns `0` or `1`. `CheckError`, `OSError` and `MissingSchemeError` print their
 message to standard error and return `2`; an `OSError` while loading the vocabularies says they
@@ -206,7 +217,9 @@ must be downloaded once with a network connection. `run()` is `sys.exit(main())`
   and a run whose report cannot be written.
 - **Vocabularies in tests.** A fixture in `tests/conftest.py` monkeypatches
   `ghfdb.fields.vocabularies.user_cache_dir`, as `tests/test_fields/test_vocabularies.py` already
-  does, so `main` reads the directory the session `published_vocabularies` fixture has filled. No
+  does, to return the session's `tmp_path_factory.mktemp("cache")` directory. The session
+  `published_vocabularies` fixture keeps its files in that directory's `vocabularies` folder, and
+  the patching fixture requests the session `schema`, so the cache is filled before `main` runs. No
   test writes outside its own directories, and `TestSpeed` times a warm load (0.2 s), never a
   download (9 s). The offline test points it at its own `tmp_path`.
 - The CLI is tested through `main([...])`: the returned status, standard error for could-not-run,

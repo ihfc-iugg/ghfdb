@@ -25,35 +25,39 @@ with the seeded list; compare the original's bytes with a copy taken before; tim
 
 ### Group 1 — reading the workbook
 
-- [ ] T001 [US1] `pyproject.toml`: `pandas>=3.0`, `pyarrow>=20`, `fastexcel>=0.21` and
+- [ ] T001 [US1] `pyproject.toml`: `pandas[pyarrow]>=3.0`, `fastexcel>=0.21` and
   `xlsxwriter>=3.2` in `[project] dependencies`, `pandas-stubs` and `types-xlsxwriter` in the
   development group where mypy needs them; `uv lock`; deptry clean. `tests/conftest.py`: the `filled_workbook`
-  fixture and the fixture pointing the vocabulary cache at the session's filled directory
+  fixture and the fixture pointing the vocabulary cache at the session's filled `cache` directory,
+  with `published_vocabularies` moved into its `vocabularies` folder
   (plan.md, "Testing approach").
 - [ ] T002 [US1] `ghfdb/qc/workbook.py`: `CheckError` and `UploadWorkbook`: `header_row`, `columns`,
   `first_data_row`, read once with fastexcel into pandas.
   The header is found by field code, published column name or earlier column name; the first
   column is matched to no field; description rows are skipped by label, whatever their number
-  (D-4). `CheckError` for a file that cannot be opened or is not a workbook (any `FastExcelError`), no
+  (D-4). `CheckError` for a path not ending `.xlsx` or `.xlsm` (an `.xls` and an `.ods` file each give
+  status 2 through `main`), a file that cannot be opened (any `FastExcelError`), no
   `data list` sheet, no header
   (AS 1.13, 1.15, FR-008, FR-009). Tested on a generated template and on
   `tests/sources/upload-template.xlsx`, neither giving a column problem.
-- [ ] T003 [US1] `UploadWorkbook.dataset()`: field columns named by code, indexed by an Excel row
+- [ ] T003 [US1] `UploadWorkbook.data()`, the children's DataFrame: field columns named by code, indexed by an Excel row
   that is right for a sheet starting at A1 and for one starting at B3, spaces-only cells missing, rows with every field empty dropped, so a row holding only an `ID` is no
   child (AS 1.12, 1.14). A formula cell reads as its saved value, and as empty with none saved
   (Edge Cases). A cell holding an Excel error value reaches the frame as its error text, so `#N/A`
-  in a mandatory field is never missing. A sheet with its header at B3 and a stray cell in column A
-  below keeps every field in its own column. `UploadWorkbook.column_problems()`: an unknown column
-  and two columns for one field, each once with no row, the first column used for the field.
+  in a mandatory field is never missing, on a workbook whose `data list` is the first sheet and on
+  one where it is the second. A sheet with its header at B3 and a stray cell in column A
+  below keeps every field in its own column. `UploadWorkbook.column_problems()`, a DataFrame of
+  the problems' shape: an unknown column, a column with no header holding values, and two columns
+  for one field, each once with no row, the first column used for the field.
 - [ ] T004 [US1] `ghfdb/dataset.py`: `Dataset` holding a public pandas `data`, with
-  `Dataset.from_workbook(path, schema=None)` returning the workbook's dataset (D-11); exported as
+  `Dataset.from_workbook(path, schema=None)` wrapping `UploadWorkbook(path, schema).data()` (D-11); exported as
   `ghfdb.Dataset`. `ghfdb/qc/__init__.py` exports. `docs/reference/python-api.md` gains a
   "Datasets" section with `autoclass:: ghfdb.Dataset` and a "Checking a workbook" section with
   `automodule:: ghfdb.qc.workbook`.
 
 ### Group 2 — the check
 
-- [ ] T005 [US1] `ghfdb/qc/check.py`: `Kind`, `ColumnProblem` and `DatasetCheck.problems()` on a
+- [ ] T005 [US1] `ghfdb/qc/check.py`: `Kind` and `DatasetCheck.problems()` on a
   DataFrame with field codes as columns, and `Dataset.check()` returning them, for
   missing (fields mandatory in both domains only, D-3), wrong type (numbers, whole numbers,
   patterns), out of range (minimum, maximum, maximum length) and not in vocabulary, each with its
@@ -81,12 +85,12 @@ with the seeded list; compare the original's bytes with a copy taken before; tim
 
 - [ ] T011 [US1] `ghfdb/qc/report.py`: `Report.write()` writes `<stem>.report.xlsx` beside the
   workbook through a temporary file and `os.replace`, with the `problems` sheet (column problems
-  first) and the `summary` sheet (file name, package version, time, vocabulary releases, counts,
+  first, their row cell blank) and the `summary` sheet (file name, package version, time, vocabulary releases, counts,
   and that no problem was found when there is none); it replaces an earlier report (AS 1.1, 1.17,
   1.19, 1.20, FR-002, FR-010, FR-011). A workbook value starting with `=` reaches the report as
-  text, never a formula. It refuses a report path that is the workbook itself
-  (`os.path.samefile`), and a report it cannot write is a `CheckError` that leaves the earlier one
-  whole.
+  text, never a formula. A report it cannot write, including
+  XlsxWriter's `close()` failing, is a `CheckError` that leaves the earlier report whole and no
+  temporary file behind.
 - [ ] T012 [US1] `ghfdb/cli.py`: `main(argv)` and `run()`, `ghfdb check <workbook>`, the summary
   line, statuses `0`/`1`/`2`, could-not-run messages on standard error for each Edge Case, and
   status `2` for an `OSError` or `MissingSchemeError` from the vocabularies (AS 1.18, FR-001,

@@ -1,12 +1,15 @@
 """The check of a table of children against the field schema."""
 
+import difflib
 import math
+from collections.abc import Iterable
 from enum import StrEnum
 
 import pandas
 from frictionless import Field, Schema
 
 PROBLEM_COLUMNS = ["row", "code", "column_name", "kind", "value", "suggestion"]
+CLOSE_ENOUGH = 0.8
 
 
 class Kind(StrEnum):
@@ -74,7 +77,12 @@ class DatasetCheck:
         )
 
     def lines(
-        self, order: int, field: Field, kind: Kind, values: pandas.Series
+        self,
+        order: int,
+        field: Field,
+        kind: Kind,
+        values: pandas.Series,
+        suggestions: dict[str, str] | None = None,
     ) -> pandas.DataFrame:
         """Build the problem lines for the cells of one field that share a kind.
 
@@ -83,6 +91,7 @@ class DatasetCheck:
             field: The field.
             kind: The kind of problem.
             values: The offending cells, indexed by row.
+            suggestions: The term to offer for each value, where there is one.
 
         Returns:
             The problem lines.
@@ -95,7 +104,7 @@ class DatasetCheck:
                     "column_name": field.custom["columnName"],
                     "kind": str(kind),
                     "value": values.to_numpy(),
-                    "suggestion": None,
+                    "suggestion": values.map(suggestions or {}).to_numpy(),
                     "order": order,
                 }
             )
@@ -164,12 +173,56 @@ class DatasetCheck:
             found.append(self.lines(order, field, Kind.OUT_OF_RANGE, long))
         if "enum" in constraints:
             unknown = filled[~filled.isin(constraints["enum"])]
-            found.append(self.lines(order, field, Kind.NOT_IN_VOCABULARY, unknown))
+            suggestions = self.suggestions(field, unknown.unique())
+            found.append(
+                self.lines(order, field, Kind.NOT_IN_VOCABULARY, unknown, suggestions)
+            )
         return (
             pandas.concat(found)
             if found
             else self.lines(order, field, Kind.MISSING, filled[:0])
         )
+
+    @staticmethod
+    def normalised(text: str) -> str:
+        """Reduce a value or a term to what is compared when looking for a likeness.
+
+        Args:
+            text: A cell's value or a vocabulary term.
+
+        Returns:
+            The text without square brackets or surrounding spaces, in lower case.
+        """
+        return text.strip().strip("[]").strip().casefold()
+
+    def suggestions(self, field: Field, values: Iterable[str]) -> dict[str, str]:
+        """Find the vocabulary term each value is closest to.
+
+        A value that is a term once brackets, spaces and case are ignored gets that
+        term. Otherwise it gets the closest term that is at least 80% alike.
+
+        Args:
+            field: A field with allowed values.
+            values: The distinct values that are not allowed.
+
+        Returns:
+            The term for each value that has one close enough.
+        """
+        terms: dict[str, str] = {}
+        for term in field.constraints["enum"]:
+            terms.setdefault(self.normalised(term), term)
+        found = {}
+        for value in values:
+            key = self.normalised(value)
+            if key not in terms:
+                close = difflib.get_close_matches(
+                    key, list(terms), n=1, cutoff=CLOSE_ENOUGH
+                )
+                if not close:
+                    continue
+                key = close[0]
+            found[value] = terms[key]
+        return found
 
     def number_problems(
         self, order: int, field: Field, filled: pandas.Series

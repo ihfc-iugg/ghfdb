@@ -1,4 +1,6 @@
+import difflib
 from collections.abc import Callable
+from typing import Any
 
 import pandas
 import pytest
@@ -246,3 +248,74 @@ class TestNoColumn:
         problems = DatasetCheck(frame, schema).problems()
 
         assert list(problems["kind"]) == [Kind.NO_COLUMN, Kind.WRONG_TYPE]
+
+
+class TestSuggestions:
+    def suggested(
+        self, schema: Schema, children: Children, field: Field, *values: str
+    ) -> list[Any]:
+        frame = children(*({field.name: value} for value in values))
+        problems = DatasetCheck(frame, schema).problems()
+        return [None if pandas.isna(s) else s for s in problems["suggestion"]]
+
+    def test_a_value_missing_its_brackets_gets_the_term(
+        self, schema: Schema, children: Children, vocabulary_field: Field
+    ) -> None:
+        term = vocabulary_field.constraints["enum"][0]
+
+        found_ = self.suggested(schema, children, vocabulary_field, term.strip("[]"))
+
+        assert found_ == [term]
+
+    def test_a_value_in_another_case_gets_the_term(
+        self, schema: Schema, children: Children, vocabulary_field: Field
+    ) -> None:
+        term = vocabulary_field.constraints["enum"][0]
+        other = term.swapcase()
+        assert other not in vocabulary_field.constraints["enum"]
+
+        found_ = self.suggested(schema, children, vocabulary_field, other)
+
+        assert found_ == [term]
+
+    def test_a_slightly_misspelt_value_gets_the_term(
+        self, schema: Schema, children: Children, vocabulary_field: Field
+    ) -> None:
+        term = max(vocabulary_field.constraints["enum"], key=len)
+        inside = term.strip("[]")
+        misspelt = f"[{inside[:-3]}{inside[-2]}{inside[-3]}{inside[-1]}]"
+        assert misspelt not in vocabulary_field.constraints["enum"]
+
+        found_ = self.suggested(schema, children, vocabulary_field, misspelt)
+
+        assert found_ == [term]
+
+    def test_a_value_close_to_no_term_gets_no_suggestion(
+        self, schema: Schema, children: Children, vocabulary_field: Field
+    ) -> None:
+        found_ = self.suggested(schema, children, vocabulary_field, "qzxj wvkp 0000")
+
+        assert found_ == [None]
+
+    def test_a_value_repeated_on_many_children_is_matched_once(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        schema: Schema,
+        children: Children,
+        vocabulary_field: Field,
+    ) -> None:
+        calls = []
+        real = difflib.get_close_matches
+
+        def counting(*args: Any, **kwargs: Any) -> list[str]:
+            calls.append(args)
+            return real(*args, **kwargs)
+
+        monkeypatch.setattr("ghfdb.qc.check.difflib.get_close_matches", counting)
+        term = max(vocabulary_field.constraints["enum"], key=len)
+        misspelt = term.strip("[]")[:-1] + "q"
+
+        found_ = self.suggested(schema, children, vocabulary_field, *[misspelt] * 30)
+
+        assert found_ == [term] * 30
+        assert len(calls) == 1

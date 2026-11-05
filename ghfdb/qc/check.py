@@ -2,11 +2,14 @@
 
 import difflib
 import math
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from enum import StrEnum
 
 import pandas
 from frictionless import Field, Schema
+
+from ghfdb.fields import MissingSchemeError, Vocabularies, allowed_values
+from ghfdb.qc.rules import Rule
 
 PROBLEM_COLUMNS = ["row", "code", "column_name", "kind", "value", "suggestion"]
 CLOSE_ENOUGH = 0.8
@@ -35,11 +38,82 @@ class DatasetCheck:
     Attributes:
         data: The children.
         schema: The fields.
+        rules: The cross-field rules applied after the field check.
+        terms: The term of every concept the rules name, by field code and concept URI.
     """
 
-    def __init__(self, data: pandas.DataFrame, schema: Schema) -> None:
+    def __init__(
+        self,
+        data: pandas.DataFrame,
+        schema: Schema,
+        rules: Sequence[Rule] = (),
+        vocabularies: Vocabularies | None = None,
+    ) -> None:
+        """Remember what to check and turn the rules' concepts into terms.
+
+        Args:
+            data: One row per child and one text column per field, named by field code.
+            schema: The fields to check against.
+            rules: The cross-field rules to apply.
+            vocabularies: Where the allowed values of the concepts come from. Without
+                it, the vocabularies in the user's cache, downloaded when missing.
+
+        Raises:
+            MissingSchemeError: A concept a rule or its example names is not an allowed
+                value of its field. The message names the rule and the concept.
+        """
         self.data = data
         self.schema = schema
+        self.rules = tuple(rules)
+        self.terms = self.resolve(vocabularies)
+
+    def resolve(self, vocabularies: Vocabularies | None) -> dict[tuple[str, str], str]:
+        """Turn the concepts of the rules into the terms their fields accept.
+
+        Args:
+            vocabularies: Where the allowed values come from.
+
+        Returns:
+            The term of each concept, by field code and concept URI.
+
+        Raises:
+            MissingSchemeError: A concept is not an allowed value of its field, or the
+                field is not in the schema.
+        """
+        if not self.rules:
+            return {}
+        files = Vocabularies() if vocabularies is None else vocabularies
+        allowed: dict[str, dict[str, str]] = {}
+        terms = {}
+        for rule in self.rules:
+            for code, uri in rule.concepts():
+                if code not in allowed:
+                    allowed[code] = self.uris(code, files)
+                if uri not in allowed[code]:
+                    raise MissingSchemeError(
+                        f"{rule.identifier}: {uri} is not an allowed value of {code}"
+                    )
+                terms[code, uri] = allowed[code][uri]
+        return terms
+
+    def uris(self, code: str, vocabularies: Vocabularies) -> dict[str, str]:
+        """Map the concept URI of each allowed value of a field to its term.
+
+        Args:
+            code: The field's code.
+            vocabularies: Where the allowed values come from.
+
+        Returns:
+            The term of each allowed value that belongs to a vocabulary.
+        """
+        if not any(field.name == code for field in self.schema.fields):
+            return {}
+        field = self.schema.get_field(code)
+        return {
+            value.uri: value.term
+            for value in allowed_values(field, vocabularies)
+            if value.uri
+        }
 
     def problems(self) -> pandas.DataFrame:
         """Find what is wrong with the children.

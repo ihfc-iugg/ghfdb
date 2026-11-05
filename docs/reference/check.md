@@ -15,11 +15,11 @@ ghfdb check <workbook>
 |---|---|
 | `workbook` | The path of an `.xlsx` or `.xlsm` file with a sheet named `data list`. |
 
-The command writes `<name>.report.xlsx` in the folder of the workbook, replacing a report from
+The command writes `<name>.report.html` in the folder of the workbook, replacing a report from
 an earlier check, and prints one line on standard output:
 
 ```text
-212 children, 37 problems in 14 of them, report: /data/my-data.report.xlsx
+212 children, 37 problems in 14 of them, report: /data/my-data.report.html
 ```
 
 The first time it runs, the command downloads the vocabularies and keeps them in the user's
@@ -45,18 +45,19 @@ flowchart TD
     columns --> cells["Check every cell against its field"]
     vocabularies["Published vocabularies"] --> cells
     columns --> layout["List the column problems"]
-    cells --> report["Write the report beside the workbook"]
+    cells --> report["Write the HTML report beside the workbook"]
     layout --> report
     report --> status["Print one line and give a status"]
 ```
 
 ## The report
 
-`ghfdb.qc.report.Report` writes the report. The report holds the problems and a summary and
-no copy of the data. It is written to a temporary file in the workbook's folder and moved over
+`ghfdb.qc.report.Report` writes the report as one web page that opens in any browser. The
+page holds a summary and a table of the problems and no copy of the data. Its styles are
+in the page, and it has no script and no link to another file. It is written to a temporary file in the workbook's folder and moved over
 the earlier report, so a check that fails leaves the earlier report whole.
 
-### The `problems` sheet
+### The problems table
 
 One row for each problem. Problems of the workbook's columns come first, and the rest follow
 in order of row and then of the field's place in the schema.
@@ -67,10 +68,10 @@ in order of row and then of the field's place in the schema.
 | Field code | The code of the field, such as `P1`. Empty for an unknown column. |
 | Published column name | The name the field's column has in the upload template. For an unknown column, its header. |
 | Kind | The kind of problem (see below). |
-| Value | The cell as it was found, written as text. A value that begins with `=` is text and is never a formula. |
+| Value | The cell as it was found, written as text. The page shows markup in a value as text and never runs it. |
 | Suggestion | The closest allowed term, for a value that is not in the vocabulary and is like one. |
 
-### The `summary` sheet
+### The summary
 
 The summary names the workbook file, the `ghfdb` version, the time of the check in UTC, the
 releases of the vocabularies the check read, the number of children, the number of problems

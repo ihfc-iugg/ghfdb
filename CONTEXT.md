@@ -65,7 +65,7 @@ Avoid "determination", "entry" and "record" for a row. Say **child**.
 |---|---|
 | **Check** | Comparing a workbook with the field schema and the cross-field rules. It reports and never changes the workbook. |
 | **Dataset** | The children of a workbook held as one table (`ghfdb.Dataset`): one row per child, one column per field code, the index the Excel row. |
-| **Report** | The file a check writes beside the workbook: its problems and what it was checked against, with no copy of the data. Written by the check command. |
+| **Report** | The web page a check writes beside the workbook: its problems and what it was checked against, with no copy of the data. Written by the check command. |
 | **Problem** | One thing a check found wrong with one cell or row, with its Excel row number, field and kind. Not "error", "violation" or "flag". |
 | **Problem kinds** | **Missing** (a mandatory field is empty), **wrong type** (text in a number field, a fraction in a whole-number field), **out of range**, **not in vocabulary**, **rule** (a cross-field rule is broken), and the column problem kinds **unknown column**, **no column** and **duplicate column**. |
 | **Column problem** | A problem with the workbook's layout rather than a cell, so it has no row: **unknown column**, **no column** (the workbook has no column for a field) or **duplicate column**. |

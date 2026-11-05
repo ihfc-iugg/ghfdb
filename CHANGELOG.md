@@ -37,11 +37,12 @@ All notable changes to this project are recorded here. The format follows
   API reference.
 - The `ghfdb check <workbook>` command, which checks the `data list` sheet of a filled-in upload
   template against the field schema and the published vocabularies and writes
-  `<name>.report.xlsx` beside the workbook, with a `problems` sheet and a `summary` sheet. It
+  `<name>.report.html` beside the workbook, a single web page with a summary and a table of
+  problems. It
   gives status 0 for no problem, 1 for problems and 2 when it could not run. `ghfdb.qc.report.Report`
   writes the report, and `ghfdb.cli.main` and `ghfdb.cli.run` run the command.
 - `ghfdb.Dataset`, the children of a workbook as one pandas table, with `Dataset.from_workbook`
-  and `Dataset.check`. `fastexcel`, `pandas`, `pyarrow` and `xlsxwriter` are now runtime
+  and `Dataset.check`. `fastexcel`, `pandas`, `pyarrow` and `jinja2` are now runtime
   dependencies.
 
 ### Changed

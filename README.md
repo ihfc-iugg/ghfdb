@@ -28,7 +28,7 @@ ghfdb check my-data.xlsx
 ```
 
 The command reads the `data list` sheet, compares every cell with the field schema and the
-vocabularies, and writes `my-data.report.xlsx` beside the workbook. The workbook itself is never
+vocabularies, and writes `my-data.report.html` beside the workbook, a web page you open in any browser. The workbook itself is never
 changed. The command gives status 0 when it found no problem, 1 when it found problems and 2
 when it could not run. See [Check a workbook](https://ihfc-iugg.github.io/ghfdb/reference/check.html).
 

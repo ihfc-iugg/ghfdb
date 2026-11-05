@@ -52,7 +52,7 @@ satisfying it, and compare the rule problems with the ones seeded.
 
 ### Group 2 — the command, the report and the speed
 
-- [ ] T005 [US1] `Dataset.check(schema=None, rules=None)` and `ghfdb check` load and apply the
+- [ ] T005 [US1] `Dataset.check(schema=None, rules=RULES)` and `ghfdb check` apply the
   rules in `RULES`; a concept no longer published gives status 2 with the rule named. The
   end-to-end test of a seeded workbook gains one child breaking each rule (SC-001). SC-004 is
   covered by the existing test of a correctly filled template in `tests/test_cli.py`.

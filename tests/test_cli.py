@@ -132,3 +132,60 @@ def workbook_with_sheet(title: str, path: Path) -> Path:
     sheet.title = title
     workbook.save(path)
     return path
+
+
+class TestWorkbookUnchanged:
+    def test_a_run_with_problems_leaves_the_workbook_as_it_was(
+        self,
+        vocabularies_cached: Path,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+        mandatory_code: str,
+    ) -> None:
+        path = filled_workbook([valid_child | {mandatory_code: None}])
+        before = path.read_bytes()
+
+        assert main(["check", str(path)]) == 1
+
+        assert path.read_bytes() == before
+
+    def test_a_run_with_no_problem_leaves_the_workbook_as_it_was(
+        self,
+        vocabularies_cached: Path,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+    ) -> None:
+        path = filled_workbook([valid_child])
+        before = path.read_bytes()
+
+        assert main(["check", str(path)]) == 0
+
+        assert path.read_bytes() == before
+
+    def test_a_run_whose_report_cannot_be_written_leaves_the_workbook_as_it_was(
+        self,
+        vocabularies_cached: Path,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+    ) -> None:
+        path = filled_workbook([valid_child])
+        report_of(path).mkdir()
+        before = path.read_bytes()
+
+        assert main(["check", str(path)]) == 2
+
+        assert path.read_bytes() == before
+
+    def test_a_report_path_that_links_to_the_workbook_leaves_it_as_it_was(
+        self,
+        vocabularies_cached: Path,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+    ) -> None:
+        path = filled_workbook([valid_child])
+        report_of(path).symlink_to(path)
+        before = path.read_bytes()
+
+        main(["check", str(path)])
+
+        assert path.read_bytes() == before

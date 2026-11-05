@@ -38,3 +38,23 @@ schemas were found to disagree with the published vocabularies and with the 2023
 therefore treated as a list of rules to trace, not as rules to copy. Each one enters this package
 only with a source in Fuchs et al. (2023) or a recorded ruling. Each one that cannot be traced is
 raised as an issue in this repository, so none is dropped without a record (SC-003).
+
+### D-4 — The rules are kept in one packaged file beside the field schema
+
+`ghfdb/qc/rules.json` holds every rule, its source, reasoning and worked example. The check, the
+rule reference and the example tests all read it, so the three cannot disagree (Article X). It
+follows ADR 0001 and ADR 0004, which do the same for the field schema. A rule across fields has no
+place in a Table Schema, so the rules are not put in the field schema file.
+
+### D-5 — A rule problem is one line of the problem table, with two new columns
+
+A rule problem names the field to fill or change in `code`, `column_name` and `value`, as every
+other problem does. The new `rule` column gives the rule's identifier, and `related` gives the
+condition field and its value. One line per mistake keeps the command's counts honest. The columns
+are added, never renamed, so code reading the table keeps working (Article XIV).
+
+### D-6 — The domain rules read their fields from the field schema
+
+CF-1 and CF-2 do not list their fields. They take every field the field schema marks mandatory for
+their domain only, so the obligation and domain stay recorded in one place, with their source, and
+a change to either changes the rule.

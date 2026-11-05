@@ -125,9 +125,8 @@ expected problem matches what the check reports.
    by the test suite, so an example that stops matching fails.
 5. **Given** a field's entry in the field reference, **When** an assessor reads it, **Then** it
    lists the cross-field rules that involve the field.
-6. **Given** a rule whose terms come from a vocabulary, **When** the field reference moves to a
-   newer vocabulary release, **Then** the step that moves it reports every rule that uses a
-   concept that was changed or withdrawn.
+6. **Given** a rule that names a concept, **When** the vocabularies as published no longer
+   define that concept, **Then** the repository's checks fail and name the rule and the concept.
 
 ---
 
@@ -157,9 +156,9 @@ expected problem matches what the check reports.
   of that domain. (US1)
 - **FR-004**: A rule MUST NOT be checked on a child when a field it depends on is empty or already
   has a field problem, so one mistake is reported once. (US1)
-- **FR-005**: Every term a rule names MUST be a concept of the vocabulary release the field schema
-  is generated from, referred to by its identifier. No term is written into a rule by hand. (US1,
-  US2)
+- **FR-005**: Every term a rule names MUST be referred to by its concept's identifier and read
+  from the IHFC Controlled Vocabularies as currently published, as the field schema's allowed
+  values are. No term is written into a rule by hand. (US1, US2)
 - **FR-006**: Every rule MUST have a short identifier that never changes and is never reused, and
   the report MUST show where each broken rule is documented. (US1, US2)
 - **FR-007**: Every rule MUST name its source: a section or table of Fuchs et al. (2023), or a
@@ -172,8 +171,9 @@ expected problem matches what the check reports.
   the rule problem it states. (US2)
 - **FR-010**: The field reference MUST list, for each field, the cross-field rules that involve it.
   (US2)
-- **FR-011**: The step that moves the field reference to a newer vocabulary release MUST report
-  every rule that uses a concept the new release changes or withdraws. (US2)
+- **FR-011**: Loading the rules MUST fail, naming the rule and the concept, when a concept a rule
+  names is not defined in the vocabularies as published, so the repository's checks fail when
+  the vocabularies change beneath a rule. (US2)
 - **FR-012**: The time to check a workbook with every rule MUST meet SC-006, and MUST be measured
   by the test suite. (US1)
 - **FR-013**: Adding, changing or removing a rule MUST change its documentation, its worked example
@@ -227,8 +227,9 @@ expected problem matches what the check reports.
 - Q: Is a rule checked when one of its fields is already wrong? → A: No. The field problem stands
   alone, so one mistake is one problem. Integrated as FR-004 and Acceptance Scenario 1.8.
 - Q: How does a rule refer to vocabulary terms without typing them by hand? → A: By concept
-  identifier from the vocabulary release the field schema is generated from, and a move to a newer
-  release reports the rules it affects. Integrated as FR-005 and FR-011.
+  identifier, read from the vocabularies as currently published, the way the field schema reads its
+  allowed values (FS-001). A concept that is no longer published fails the repository's checks.
+  Integrated as FR-005, FR-011 and Acceptance Scenario 2.6.
 - Q: Are the worked examples documentation or tests? → A: Both. Each is run by the test suite.
   Integrated as FR-009 and Acceptance Scenario 2.4.
 - Q: Does a rule problem point back to its documentation? → A: Yes, by its identifier, so an

@@ -5,12 +5,14 @@ import os
 import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import pandas
 from jinja2 import Environment, PackageLoader
 
 from ghfdb import __version__
 from ghfdb.fields import Vocabularies
+from ghfdb.qc.rules import RULES
 from ghfdb.qc.workbook import CheckError
 
 TEMPLATES = Environment(loader=PackageLoader("ghfdb.qc", "templates"), autoescape=True)
@@ -22,7 +24,12 @@ HEADINGS = [
     "Kind",
     "Value",
     "Suggestion",
+    "Rule",
+    "Related",
 ]
+RULE_REFERENCE = "https://ihfc-iugg.github.io/ghfdb/reference/rules.html"
+STATEMENTS = {rule.identifier: rule.statement for rule in RULES}
+RULE_COLUMN = HEADINGS.index("Rule")
 
 
 class Report:
@@ -34,8 +41,11 @@ class Report:
     Args:
         workbook_path: The workbook that was checked.
         problems: One line for each problem, with the columns ``row``, ``code``,
-            ``column_name``, ``kind``, ``value`` and ``suggestion``. A problem of the
-            workbook's columns comes first and has no row.
+            ``column_name``, ``kind``, ``value``, ``suggestion``, ``rule`` and
+            ``related``. A problem of the workbook's columns comes first and has no
+            row. A problem of kind ``rule`` shows its rule's identifier, linked to the
+            rule in the latest published reference, with the rule's statement, and the
+            field that made the rule apply. Other kinds leave both cells empty.
         children: The number of children checked.
         vocabularies: The vocabularies the check read, which name the releases the
             report states.
@@ -111,16 +121,36 @@ class Report:
         )
         path.write_text(page, encoding="utf-8")
 
-    def cells(self) -> list[list[str]]:
+    def cells(self) -> list[list[dict[str, str]]]:
         """List the problems as text, an absent value as an empty cell.
 
         Returns:
-            One list of six cells for each problem, in the order of the problems.
+            One list of eight cells for each problem, in the order of the problems.
+            A cell is its ``text``, and for a rule its ``link`` to the rule reference
+            and the rule's ``statement``.
         """
         return [
-            ["" if pandas.isna(cell) else str(cell) for cell in problem]
+            [self.cell(position, cell) for position, cell in enumerate(problem)]
             for problem in self.problems.itertuples(index=False)
         ]
+
+    @staticmethod
+    def cell(position: int, value: Any) -> dict[str, str]:
+        """Turn a value of the problem table into a cell of the report.
+
+        Args:
+            position: The value's column in the problem table.
+            value: The value, which may be absent.
+
+        Returns:
+            The cell, which links the identifier of a rule to its reference entry.
+        """
+        text = "" if pandas.isna(value) else str(value)
+        cell = {"text": text}
+        if position == RULE_COLUMN and text:
+            cell["link"] = f"{RULE_REFERENCE}#{text.lower()}"
+            cell["statement"] = STATEMENTS.get(text, "")
+        return cell
 
     def summary(self) -> list[tuple[str, str]]:
         """List what the summary states.

@@ -92,3 +92,12 @@ worked examples give concepts by URI; no list form of *required when* until a ru
 example tests sit in `test_rules.py` over `valid_child`; a rule reads which fields already have a problem from
 the cells, rather than from a record of the field problems. D-1's reliance on
 the old tool is raised with the team (T001), and the mapping is not changed before they rule.
+
+### D-8 — `DatasetCheck` applies no rules unless it is given them
+
+`DatasetCheck(data, schema, rules=(), vocabularies=None)` checks fields only when no rules are
+passed. `Dataset.check` and the `ghfdb check` command pass `RULES` and the vocabularies the schema
+was loaded with. The class stays a check of whatever it is given, which is what its own tests and
+the field-check tests written before this feature construct, and the packaged rules are chosen
+where the package's defaults are chosen already. The plan had `RULES` as the class default.
+**ADR:** none — local to this feature, nothing downstream inherits it.

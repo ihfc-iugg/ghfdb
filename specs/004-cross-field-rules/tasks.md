@@ -49,6 +49,8 @@ satisfying it, and compare the rule problems with the ones seeded.
   example over `valid_child` gives exactly its expected problem, and `valid_child` alone gives none
   (FR-009). `docs/reference/python-api.md` gains `automodule:: ghfdb.qc.rules`, which documents how
   to add a rule of a new kind.
+- [x] T011 [US1] Name `Rule`, `RequiredWhen`, `AllowedWhen`, `Domain` and `Condition` on the Python
+  API page, and give each subclass method its own docstring (the documentation check after group 1).
 
 ### Group 2 — the command, the report and the speed
 

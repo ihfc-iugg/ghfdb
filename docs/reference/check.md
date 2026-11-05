@@ -80,7 +80,7 @@ and the number of children with problems. When there is no problem it says so.
 
 | Kind | Meaning | Example |
 |---|---|---|
-| `missing` | A field that is mandatory for both boreholes and sites is empty. | Row 12 has no value in a mandatory field. |
+| `missing` | A field that is mandatory in both domains, borehole and mine (`B`) and probe sensing (`S`), is empty. | Row 12 has no value in a mandatory field. |
 | `wrong type` | A cell is not the field's type or does not match its pattern. A number stored as text is accepted. | `abc` in a number field. |
 | `out of range` | A number is below the minimum or above the maximum, or text is longer than the maximum length. | A latitude of 120. |
 | `not in vocabulary` | A value is not one of the field's allowed terms. | `granit` where `granite` is allowed, with `granite` as the suggestion. |

@@ -84,6 +84,11 @@ class Report:
             ) as file:
                 temporary = Path(file.name)
             self.build(temporary)
+            # A temporary file is readable by its owner only. The report gets the
+            # mode any new file in the folder would have.
+            umask = os.umask(0)
+            os.umask(umask)
+            temporary.chmod(0o666 & ~umask)
             os.replace(temporary, self.path)
         except (OSError, XlsxFileError) as error:
             if temporary is not None:

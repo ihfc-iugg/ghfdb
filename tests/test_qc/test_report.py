@@ -1,9 +1,14 @@
+import contextlib
+import os
+import stat
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import pandas
 import pytest
 import xlsxwriter
+from frictionless import Schema
 from openpyxl import load_workbook
 
 import ghfdb
@@ -102,6 +107,39 @@ class TestReportWrite:
         assert workbook_path.name in values
         assert ghfdb.__version__ in values
         assert {17, 3, 2} <= set(values)
+
+    def test_states_the_vocabulary_releases_and_the_time_of_the_check(
+        self,
+        workbook_path: Path,
+        published_vocabularies: Vocabularies,
+        schema: Schema,
+    ) -> None:
+        before = datetime.now(UTC).replace(microsecond=0)
+
+        path = Report(workbook_path, problem_table(), 1, published_vocabularies).write()
+
+        values = [str(value) for value in cell_values(path, "summary")]
+        releases = published_vocabularies.releases()
+        assert releases
+        assert all(any(release in value for value in values) for release in releases)
+        times = []
+        for value in values:
+            with contextlib.suppress(ValueError):
+                times.append(datetime.fromisoformat(value))
+        assert any(
+            before <= moment <= datetime.now(UTC) for moment in times if moment.tzinfo
+        )
+
+    @pytest.mark.skipif(os.name != "posix", reason="file modes are POSIX")
+    def test_gives_the_report_the_mode_of_a_new_file(
+        self, workbook_path: Path, published_vocabularies: Vocabularies
+    ) -> None:
+        umask = os.umask(0)
+        os.umask(umask)
+
+        path = Report(workbook_path, problem_table(), 1, published_vocabularies).write()
+
+        assert stat.S_IMODE(path.stat().st_mode) == 0o666 & ~umask
 
     def test_a_check_with_no_problem_leaves_the_problems_sheet_empty(
         self, workbook_path: Path, published_vocabularies: Vocabularies

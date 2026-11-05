@@ -39,12 +39,24 @@ therefore treated as a list of rules to trace, not as rules to copy. Each one en
 only with a source in Fuchs et al. (2023) or a recorded ruling. Each one that cannot be traced is
 raised as an issue in this repository, so none is dropped without a record (SC-003).
 
-### D-4 — The rules are kept in one packaged file beside the field schema
+### D-4 — The rules are declared in Python, as dataclasses with a `problems()` method
 
-`ghfdb/qc/rules.json` holds every rule, its source, reasoning and worked example. The check, the
-rule reference and the example tests all read it, so the three cannot disagree (Article X). It
-follows ADR 0001 and ADR 0004, which do the same for the field schema. A rule across fields has no
-place in a Table Schema, so the rules are not put in the field schema file.
+The rules live in `ghfdb.qc.rules`: a frozen `Rule` dataclass and two subclasses, `RequiredWhen` and
+`AllowedWhen`, each implementing `problems()` and `diagram()`. `RULES` is a tuple of the rules. The
+check, the rule reference and the example tests all import it, so the three cannot disagree
+(Article X).
+
+The field schema is JSON because it is a Frictionless Table Schema, a published format other tools
+read (ADR 0004). The rules have no such format and no reader outside the package, so a JSON file
+would give up type and lint checking for nothing. In Python, mypy refuses a rule without a source
+or an example, and a misspelt concept constant is a lint error.
+
+A method per kind replaces a branch on the rule's kind inside the check. A rule that fits neither
+kind is a new subclass with its own `problems()` and `diagram()`, and the check does not change.
+Both subclasses are used now, so the base class is not built ahead of need (Article III).
+
+If citable scheme releases (R8) need a machine-readable copy of the rules, it is generated from
+`RULES`.
 
 ### D-5 — A rule problem is one line of the problem table, with two new columns
 
@@ -65,6 +77,6 @@ The design review approved the plan with no critical or high finding. Every medi
 was applied as a plan edit rather than carried: `related` names the condition field's column name;
 concepts resolve through `allowed_values` for the rule's field, so a collection URI cannot pass;
 worked examples give concepts by URI; no list form of *required when* until a rule needs it; the
-example tests sit in `test_rules.py` over `valid_child`; the check is one `DatasetCheck` method
-that reads field problems from the cells instead of a separate class and record. D-1's reliance on
+example tests sit in `test_rules.py` over `valid_child`; a rule reads which fields already have a problem from
+the cells, rather than from a record of the field problems. D-1's reliance on
 the old tool is raised with the team (T001), and the mapping is not changed before they rule.

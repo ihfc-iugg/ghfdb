@@ -61,21 +61,23 @@ confirmation.
 
 ## Where the rules are kept
 
-The field schema is a JSON file read by the check, the documentation and the template generator,
-so the three never disagree (ADR 0001, ADR 0004). The rules follow the same pattern: one packaged
-file, `ghfdb/qc/rules.json`, read by the check and by the documentation build. Each rule records
-its identifier, its statement, its kind, the fields it relates, the concepts it names, its source,
-its reasoning and its worked example. The documentation entry, its diagram and the test of its
-worked example are all generated from that one record, which is what keeps the documentation,
-the example and the check together (FR-008, FR-009, FR-013, Article X).
+The rules are declared in Python, in `ghfdb.qc.rules`, as instances of frozen dataclasses. The field
+schema is a JSON file because it is a Frictionless Table Schema, a published format that other tools
+read (ADR 0004). Cross-field rules have no such format, and nothing outside the package reads them.
+In Python, mypy and the linters check every rule, a misspelt concept or a missing source is caught
+before a test runs, and a rule that fits no existing kind can carry its own check. The check, the
+documentation build and the tests all import `RULES`, so they still cannot disagree (FR-008,
+FR-009, FR-013, Article X).
 
-Rules are not added to the field schema file. A Frictionless Table Schema has no place for a rule
-across fields, and putting them in `custom` would make the field schema carry facts that belong to
-no single field.
+Rules are not added to the field schema file. A Table Schema has no place for a rule across fields.
+
+If citable scheme releases (R8) need a machine-readable copy of the rules, it is generated from
+`RULES` then.
 
 ## Two kinds of rule
 
-Every rule this feature checks, and every rule raised for the team, is one of two shapes:
+Every rule this feature checks, and every rule raised for the team, is one of two shapes. Each is a
+subclass of `Rule` implementing `problems()`. A rule that fits neither is a new subclass:
 
 | Kind | Reads | Problem when |
 |---|---|---|
@@ -84,7 +86,7 @@ Every rule this feature checks, and every rule raised for the team, is one of tw
 
 CF-1 and CF-2 are *required when*: the condition is the exploration method being in the domain,
 and the required fields are those the field schema marks mandatory for that domain only. They are
-not listed in the rules file by hand. The rules file names the domain and its exploration methods,
+not listed in the rule by hand. The rule names the domain and its exploration methods,
 and the required fields are read from the field schema, so a change of obligation in the field
 schema changes the rule with it.
 
@@ -94,10 +96,10 @@ The rules the team may agree later fit the same two kinds, so no third kind is b
 
 ## Referring to concepts
 
-A rule names concepts by URI, and the URIs are turned into terms when the rules are loaded,
-through the same `Vocabularies` the field schema uses. That keeps the terms out of the code and
-the rules file (Article XI, FR-005), and a workbook term is matched exactly as the field check
-matches it. A concept URI that the published scheme no longer defines fails the load, naming the
+A rule names concepts by URI constants, and the URIs are turned into terms when the check starts,
+through the allowed values the field schema already holds. That keeps the terms out of the code
+(Article XI, FR-005), and a workbook term is matched exactly as the field check
+matches it. A concept URI that the published scheme no longer defines fails the check, naming the
 rule and the URI. That is what makes the repository's checks fail when the vocabularies change
 under a rule, as they already do for a field (FS-001, FR-017).
 
@@ -140,10 +142,10 @@ breaking a rule.
 
 ## The documentation
 
-`docs/reference/rules.md` is rendered from `rules.json` by a Sphinx extension beside the field
+`docs/reference/rules.md` is rendered from `RULES` by a Sphinx extension beside the field
 reference extension (`docs/extensions/rule_reference.py`). It holds one entry per rule, in the same
-order and with the same facts for each, and a Mermaid flowchart of its logic generated from the
-rule, the way the field reference already draws its diagrams. The field reference gains a line per
+order and with the same facts for each, and a Mermaid flowchart of its logic from the rule's
+`diagram()` method. Each kind draws its own, so a new kind brings its diagram with it. The field reference gains a line per
 field naming the rules that involve it (FR-010). The check reference page (`docs/reference/check.md`)
 describes the rule problem and its two columns.
 
@@ -151,11 +153,11 @@ describes the rule problem and its two columns.
 
 | Piece | Where the search stopped |
 |---|---|
-| Rule definitions read by both the check and the documentation | **this repo**: the field schema pattern, `ghfdb.fields.schema.load_schema` and `docs/extensions/field_reference.py` |
+| Rule definitions read by both the check and the documentation | **the language**: a Python module and dataclasses, imported by the check, `docs/extensions/rule_reference.py` and the tests |
 | Turning concept URIs into terms | **this repo**: `ghfdb.fields.schema.allowed_values(field, vocabularies)`, which gives each allowed value of the rule's field with its URI. `Vocabularies.allowed_value` alone would also accept a collection URI, so it is not used directly |
 | Splitting a field holding several values | **this repo**: `DatasetCheck.each_value` |
-| Validating the rules file's shape | **nothing needed**: the file is read into frozen dataclasses, so a missing key fails the load, and the test suite loads the packaged file on every run. A JSON Schema for one packaged file would be a second description of it |
-| Cross-field checks on a DataFrame | **a maintained package was looked at**: pandera's wide checks return failing rows, but not the skip rule, the related values or the problem table's shape, so wrapping it would add a layer rather than replace code. **New code**: about a hundred lines, `ghfdb/qc/rules.py` to load the rules and `DatasetCheck.rule_problems()` to check them |
+| Checking each rule's shape | **the type checker**: the rules are typed dataclasses, so mypy refuses a rule with a field missing |
+| Cross-field checks on a DataFrame | **a maintained package was looked at**: pandera's wide checks return failing rows, but not the skip rule, the related values or the problem table's shape, so wrapping it would add a layer rather than replace code. **New code**: about a hundred lines, `ghfdb/qc/rules.py` with the two kinds' `problems()`, and `DatasetCheck.holds()` and `rule_lines()` |
 | Mermaid diagrams in the documentation | **an installed package**: `sphinxcontrib-mermaid`, already used by the field reference. **New code**: generating a flowchart's text from a rule, a few lines in the rule reference template, with node labels quoted |
 | A child to lay a worked example over | **this repo**: the `valid_child` fixture in `tests/conftest.py` |
 | Rendering documentation pages from data | **this repo**: the Jinja templates in `docs/extensions/templates` |

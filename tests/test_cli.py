@@ -1,4 +1,5 @@
 import shutil
+import time
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -327,3 +328,23 @@ class TestEndToEnd:
 
         assert main(["check", str(path)]) == 0
         assert problem_lines(report_of(path)) == []
+
+
+@pytest.mark.slow
+@pytest.mark.usefixtures("vocabularies_cached")
+class TestSpeed:
+    LIMIT = 15
+
+    def test_a_workbook_of_90000_children_is_checked_and_reported_in_time(
+        self, large_workbook: tuple[Path, int]
+    ) -> None:
+        path, seeded = large_workbook
+
+        started = time.perf_counter()
+        status = main(["check", str(path)])
+        elapsed = time.perf_counter() - started
+
+        print(f"checked 90,000 children in {elapsed:.1f} s")
+        assert status == 1
+        assert elapsed < self.LIMIT
+        assert len(problem_lines(report_of(path))) == seeded

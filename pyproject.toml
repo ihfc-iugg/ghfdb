@@ -67,6 +67,7 @@ include = ["/ghfdb", "/tests", "/README.md", "/LICENSE", "/CHANGELOG.md"]
 testpaths = ["tests"]
 pythonpath = ["docs", "tests"]
 addopts = "--import-mode=importlib"
+markers = ["slow: takes seconds, not milliseconds; runs by default"]
 
 [tool.mypy]
 strict = true

@@ -4,11 +4,12 @@ from typing import Any
 
 import pytest
 import responses
+import xlsxwriter
 from frictionless import Field, Schema
 from openpyxl import load_workbook
 
 from ghfdb.fields import Vocabularies, caching_session, load_schema
-from ghfdb.template import FIRST_DATA_ROW, UploadTemplate
+from ghfdb.template import FIRST_DATA_ROW, ROW_LABELS, UploadTemplate
 
 
 def read_content(path: Path) -> dict[str, Any]:
@@ -134,3 +135,37 @@ def web() -> Iterator[responses.RequestsMock]:
     """Stand in for the web, so that no test reaches the network by accident."""
     with responses.RequestsMock(assert_all_requests_are_fired=False) as mock:
         yield mock
+
+
+LARGE_CHILDREN = 90_000
+SEEDED_EVERY = 100
+
+
+@pytest.fixture(scope="session")
+def large_workbook(
+    schema: Schema, tmp_path_factory: pytest.TempPathFactory
+) -> tuple[Path, int]:
+    """Write a workbook of 90,000 valid children, one in a hundred with a problem.
+
+    The problem is text where a number is wanted, in one field. Returns the path and
+    the number of problems written.
+    """
+    number = next(field for field in schema.fields if field.type == "number")
+    path = tmp_path_factory.mktemp("large") / "large.xlsx"
+    workbook = xlsxwriter.Workbook(str(path), {"constant_memory": True})
+    sheet = workbook.add_worksheet("data list")
+    codes = [field.name for field in schema.fields]
+    sheet.write_row(0, 0, ["ID", *codes])
+    for offset, label in enumerate(ROW_LABELS, start=1):
+        sheet.write_string(offset, 0, label)
+    child = [valid_value(field) for field in schema.fields]
+    wrong = codes.index(number.name)
+    seeded = 0
+    for index in range(LARGE_CHILDREN):
+        line = child
+        if index % SEEDED_EVERY == 0:
+            line = [*child[:wrong], "not a number", *child[wrong + 1 :]]
+            seeded += 1
+        sheet.write_row(FIRST_DATA_ROW - 1 + index, 0, [index, *line])
+    workbook.close()
+    return path, seeded

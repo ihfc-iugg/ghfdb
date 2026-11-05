@@ -91,13 +91,60 @@ class TestResolution:
 
     @pytest.mark.parametrize("rule", RULES, ids=lambda rule: rule.identifier)
     def test_a_rule_draws_a_diagram_naming_its_fields(
-        self, schema: Schema, rule: Rule
+        self,
+        schema: Schema,
+        rule: Rule,
+        children: Children,
+        published_vocabularies: Vocabularies,
     ) -> None:
-        diagram = rule.diagram(schema)
+        terms = DatasetCheck(children({}), schema, RULES, published_vocabularies).terms
+
+        diagram = rule.diagram(schema, terms)
 
         assert diagram.startswith("flowchart")
         for code in rule.fields(schema):
             assert code in diagram
+
+    def test_a_rule_that_allows_values_draws_the_terms_it_names(
+        self, schema: Schema, children: Children, published_vocabularies: Vocabularies
+    ) -> None:
+        terms = DatasetCheck(children({}), schema, RULES, published_vocabularies).terms
+
+        diagram = CF_3.diagram(schema, terms)
+
+        for condition in (CF_3.when, CF_3.then):
+            for uri in condition.concepts:
+                assert terms[condition.field, uri] in diagram
+
+    def test_a_rule_that_allows_several_values_joins_their_terms_with_or(
+        self, schema: Schema, children: Children, published_vocabularies: Vocabularies
+    ) -> None:
+        several = replace(
+            CF_3, then=Condition("C41", (ASSUMED_FROM_LITERATURE, CORE_SAMPLES))
+        )
+        terms = DatasetCheck(
+            children({}), schema, (several,), published_vocabularies
+        ).terms
+
+        diagram = several.diagram(schema, terms)
+
+        assert (
+            f"{terms['C41', ASSUMED_FROM_LITERATURE]} or {terms['C41', CORE_SAMPLES]}"
+            in diagram
+        )
+
+    def test_the_rules_of_two_domains_draw_different_conditions(
+        self, schema: Schema, children: Children, published_vocabularies: Vocabularies
+    ) -> None:
+        terms = DatasetCheck(children({}), schema, RULES, published_vocabularies).terms
+
+        borehole = CF_1.diagram(schema, terms)
+        probing = CF_2.diagram(schema, terms)
+
+        assert CF_1.domain.description in borehole
+        assert CF_2.domain.description in probing
+        assert CF_1.domain.description not in probing
+        assert CF_2.domain.description not in borehole
 
     def test_a_concept_of_a_field_the_schema_lacks_names_the_rule(
         self, schema: Schema, children: Children, published_vocabularies: Vocabularies

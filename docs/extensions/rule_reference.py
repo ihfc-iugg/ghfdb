@@ -40,6 +40,11 @@ class RuleReference:
         self.schema = schema
         self.vocabularies = Vocabularies() if vocabularies is None else vocabularies
         self.rules = tuple(rules)
+        self.concept_terms = {
+            (code, uri): self.terms(code)[uri]
+            for rule in self.rules
+            for code, uri in rule.concepts()
+        }
         self.environment = Environment(
             loader=FileSystemLoader(TEMPLATES),
             undefined=StrictUndefined,
@@ -56,6 +61,7 @@ class RuleReference:
                 "rules": self.rules,
                 "domain_of": self.domain_of,
                 "terms": self.terms,
+                "concept_terms": self.concept_terms,
                 "source": FieldReference.source,
                 "problem": str(Kind.RULE),
             }

@@ -29,7 +29,8 @@ new identifier that is never reused. To add a rule of a new kind:
    so the check can resolve them to terms on construction.
 4. Implement ``problems(check)``, working on whole columns, and build its lines with
    ``check.rule_lines``. Use ``check.holds`` to find the children a condition holds for.
-5. Implement ``diagram(schema)``, returning Mermaid flowchart text with quoted labels.
+5. Implement ``diagram(schema, terms)``, returning Mermaid flowchart text with quoted
+   labels that name the terms the rule applies to, read from ``terms``.
 
 Nothing else changes: the check only calls those methods.
 """
@@ -88,11 +89,14 @@ class Domain:
             mine data, ``S`` for probe sensing.
         field: The code of the field the exploration method is read from.
         concepts: The URIs of the exploration methods in the domain.
+        description: What a child of the domain is, as the end of "the exploration
+            method is ...".
     """
 
     code: str
     field: str
     concepts: tuple[str, ...]
+    description: str
 
     @property
     def condition(self) -> Condition:
@@ -104,9 +108,13 @@ BOREHOLE = Domain(
     "B",
     EXPLORATION_METHOD,
     (DRILLING, DRILLING_CLUSTERED, MINING, TUNNELING, INDIRECT),
+    "a borehole and mine method",
 )
 PROBE_SENSING = Domain(
-    "S", EXPLORATION_METHOD, (PROBING_ONSHORE, PROBING_OFFSHORE, PROBING_CLUSTERED)
+    "S",
+    EXPLORATION_METHOD,
+    (PROBING_ONSHORE, PROBING_OFFSHORE, PROBING_CLUSTERED),
+    "a probe-sensing method",
 )
 
 
@@ -185,11 +193,13 @@ class Rule:
         """
         raise NotImplementedError
 
-    def diagram(self, schema: Schema) -> str:
+    def diagram(self, schema: Schema, terms: Mapping[tuple[str, str], str]) -> str:
         """Draw the rule.
 
         Args:
             schema: The field schema.
+            terms: The term of each concept the rule names, by field code and concept
+                URI.
 
         Returns:
             Mermaid flowchart text.
@@ -261,11 +271,12 @@ class RequiredWhen(Rule):
         named = [(self.domain.field, uri) for uri in self.domain.concepts]
         return (*named, *self.example.concepts())
 
-    def diagram(self, schema: Schema) -> str:
+    def diagram(self, schema: Schema, terms: Mapping[tuple[str, str], str]) -> str:
         """Draw the domain condition leading to each field it requires."""
+        when = self.label(schema, self.domain.field)
         lines = [
             "flowchart LR",
-            f'    when["{self.label(schema, self.domain.field)} is in the domain"]',
+            f'    when["{when} is {self.domain.description}"]',
         ]
         for index, code in enumerate(self.required(schema)):
             lines.append(
@@ -305,6 +316,19 @@ class AllowedWhen(Rule):
             found.append(check.rule_lines(self, field, wrong, check.found(self.when)))
         return pandas.concat(found)
 
+    @staticmethod
+    def named(condition: Condition, terms: Mapping[tuple[str, str], str]) -> str:
+        """Name the terms of a condition for a diagram.
+
+        Args:
+            condition: A field and its concepts.
+            terms: The term of each concept, by field code and concept URI.
+
+        Returns:
+            The terms, joined with " or ".
+        """
+        return " or ".join(terms[condition.field, uri] for uri in condition.concepts)
+
     def concepts(self) -> tuple[tuple[str, str], ...]:
         """List the condition's concepts, the allowed ones, then the example's."""
         named = [
@@ -313,15 +337,15 @@ class AllowedWhen(Rule):
         ]
         return (*named, *self.example.concepts())
 
-    def diagram(self, schema: Schema) -> str:
+    def diagram(self, schema: Schema, terms: Mapping[tuple[str, str], str]) -> str:
         """Draw the condition leading to the limit on the other field."""
         when = self.label(schema, self.when.field)
         then = self.label(schema, self.then.field)
         return "\n".join(
             [
                 "flowchart LR",
-                f'    when["{when} holds a given value"]',
-                f'    then["{then} holds only a given value"]',
+                f'    when["{when} is {self.named(self.when, terms)}"]',
+                f'    then["{then} must be {self.named(self.then, terms)}"]',
                 "    when --> then",
             ]
         )

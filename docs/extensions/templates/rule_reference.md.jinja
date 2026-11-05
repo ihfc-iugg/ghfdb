@@ -1,6 +1,6 @@
 {#- The Markdown of the rule reference. rule_reference.py supplies what is used here:
-    the schema, the rules, the filters cell and code, and the functions domains, terms
-    and source, plus domain_of. -#}
+    the schema, the rules, the term of each concept the rules name (concept_terms), the
+    filters cell and code, and the functions domains, terms and source, plus domain_of. -#}
 {%- set MISSING = "—" -%}
 {%- set DOMAIN_NAMES = {"B": "Borehole and mine (B)", "S": "Probe sensing (S)"} -%}
 {%- set NO_DOMAIN = "None" -%}
@@ -43,7 +43,7 @@ Source: {{ source(rule.source) }}
 {{ rule.reasoning | cell }}
 
 ```{mermaid}
-{{ rule.diagram(schema) }}
+{{ rule.diagram(schema, concept_terms) }}
 ```
 
 A child with these values breaks the rule:

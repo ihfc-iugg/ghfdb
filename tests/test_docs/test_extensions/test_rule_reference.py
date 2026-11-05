@@ -105,7 +105,12 @@ class TestRuleEntries:
         for rule in RULES:
             section = section_of(reference.entries(), rule)
 
-            assert "```{mermaid}\n" + rule.diagram(schema) + "\n```" in section
+            assert (
+                "```{mermaid}\n"
+                + rule.diagram(schema, reference.concept_terms)
+                + "\n```"
+                in section
+            )
 
     def test_every_entry_has_an_example_table_with_a_row_per_field(
         self, schema: Schema, reference: RuleReference

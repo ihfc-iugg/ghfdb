@@ -79,3 +79,34 @@ class TestCheck:
         dataset = Dataset.from_workbook(filled_workbook([valid_child]))
 
         assert dataset.check().empty
+
+
+class TestCheckRules:
+    def test_applies_the_cross_field_rules_by_default(
+        self,
+        vocabularies_cached: Path,
+        schema: Schema,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+    ) -> None:
+        path = filled_workbook([valid_child | {"P12": "[Drilling]", "C5": None}])
+        dataset = Dataset.from_workbook(path, schema)
+
+        problems = dataset.check(schema)
+
+        assert [
+            (p["row"], p["code"], p["kind"], p["rule"])
+            for p in problems.to_dict("records")
+        ] == [(FIRST_DATA_ROW, "C5", Kind.RULE, "CF-1")]
+
+    def test_applies_no_rule_when_given_none(
+        self,
+        vocabularies_cached: Path,
+        schema: Schema,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+    ) -> None:
+        path = filled_workbook([valid_child | {"P12": "[Drilling]", "C5": None}])
+        dataset = Dataset.from_workbook(path, schema)
+
+        assert dataset.check(schema, rules=()).empty

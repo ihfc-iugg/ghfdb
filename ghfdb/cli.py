@@ -9,6 +9,7 @@ import pandas
 from ghfdb.dataset import Dataset
 from ghfdb.fields import MissingSchemeError, Vocabularies, load_schema
 from ghfdb.qc.report import Report
+from ghfdb.qc.rules import RULES
 from ghfdb.qc.workbook import CheckError, UploadWorkbook
 
 DOWNLOAD_ADVICE = (
@@ -39,7 +40,9 @@ def check(path: Path) -> int:
         raise OSError(f"{error} {DOWNLOAD_ADVICE}") from error
     workbook = UploadWorkbook(path, schema)
     dataset = Dataset(workbook.data())
-    problems = pandas.concat([workbook.column_problems(), dataset.check(schema)])
+    problems = pandas.concat(
+        [workbook.column_problems(), dataset.check(schema, RULES, vocabularies)]
+    )
     children = len(dataset.data)
     report = Report(path, problems, children, vocabularies).write()
     affected = problems["row"].dropna().nunique()

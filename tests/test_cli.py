@@ -1,6 +1,7 @@
 import shutil
 import time
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +14,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from ghfdb.cli import main
 from ghfdb.qc.check import Kind
+from ghfdb.qc.rules import CF_3, Condition
 from ghfdb.template import FIRST_DATA_ROW
 
 SOURCE = Path(__file__).parent / "sources" / "upload-template.xlsx"
@@ -236,6 +238,57 @@ class TestOffline:
 
         assert status == 2
         assert capsys.readouterr().err.strip()
+        assert not report_of(path).exists()
+
+
+BOREHOLE_METHOD = "[Drilling]"
+PROBING_METHOD = "[Probing (onshore, lake, river, etc.)]"
+LITERATURE_LOCATION = "[Literature or unspecified]"
+CORE_SAMPLES_SOURCE = "[Core samples]"
+
+
+@pytest.mark.usefixtures("vocabularies_cached")
+class TestRules:
+    def test_reports_a_child_breaking_each_rule_and_no_other_problem(
+        self, filled_workbook: Filler, valid_child: dict[str, Any]
+    ) -> None:
+        path = filled_workbook(
+            [
+                valid_child,
+                valid_child | {"P12": BOREHOLE_METHOD, "C5": None},
+                valid_child | {"P12": PROBING_METHOD, "C6": None},
+                valid_child | {"C42": LITERATURE_LOCATION, "C41": CORE_SAMPLES_SOURCE},
+            ]
+        )
+
+        status = main(["check", str(path)])
+
+        assert status == 1
+        found = read_problems(report_of(path))
+        assert [(line[0], line[1], line[3]) for line in found] == [
+            (10, "C5", str(Kind.RULE)),
+            (11, "C6", str(Kind.RULE)),
+            (12, "C41", str(Kind.RULE)),
+        ]
+        assert [line[6].split()[0] for line in found] == ["CF-1", "CF-2", "CF-3"]
+
+    def test_a_rule_whose_concept_is_not_published_gives_status_2_naming_the_rule(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        withdrawn = CF_3.then.concepts[0] + "_withdrawn"
+        broken = replace(CF_3, then=Condition("C41", (withdrawn,)))
+        monkeypatch.setattr("ghfdb.cli.RULES", (broken,))
+        path = filled_workbook([valid_child])
+
+        status = main(["check", str(path)])
+
+        captured = capsys.readouterr()
+        assert status == 2
+        assert "CF-3" in captured.err
         assert not report_of(path).exists()
 
 

@@ -1,6 +1,7 @@
 """Render the field reference from the field schema while the documentation builds."""
 
 import re
+from collections.abc import Sequence
 from functools import cache
 from pathlib import Path
 from typing import Any
@@ -11,6 +12,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from sphinx.application import Sphinx
 
 from ghfdb.fields import AllowedValue, Vocabularies, allowed_values, load_schema
+from ghfdb.qc.rules import RULES, Rule
 from ghfdb.template import VOCABULARIES
 
 DECISIONS_URL = "https://github.com/ihfc-iugg/ghfdb/blob/main/specs/001-field-reference/decisions.md"
@@ -31,12 +33,17 @@ class FieldReference:
         schema: The field schema to render.
         vocabularies: Where the vocabulary fields take their allowed values from.
             Without it, the cache directory.
+        rules: The cross-field rules whose identifiers each field's entry lists.
     """
 
     def __init__(
-        self, schema: Schema, vocabularies: Vocabularies | None = None
+        self,
+        schema: Schema,
+        vocabularies: Vocabularies | None = None,
+        rules: Sequence[Rule] = RULES,
     ) -> None:
         self.schema = schema
+        self.rules = tuple(rules)
         self.vocabularies = Vocabularies() if vocabularies is None else vocabularies
         self.environment = Environment(
             loader=FileSystemLoader(TEMPLATES),
@@ -49,7 +56,13 @@ class FieldReference:
         self.macros: Any = self.environment.get_template(
             "field_reference.md.jinja"
         ).make_module(
-            {"schema": schema, "sources": self.sources, "allowed_values": self.values}
+            {
+                "schema": schema,
+                "sources": self.sources,
+                "allowed_values": self.values,
+                "rules_of": self.rules_of,
+                "rule_sources": self.rule_sources,
+            }
         )
         self.environment.globals.update(index=self.index, entries=self.entries)
 
@@ -162,6 +175,32 @@ class FieldReference:
         """
         distinct = dict.fromkeys(field.custom["sources"][key] for key in keys)
         return "; ".join(self.source(code) for code in distinct)
+
+    def rules_of(self, field: Field) -> tuple[Rule, ...]:
+        """List the rules that relate a field to others.
+
+        Args:
+            field: A field of the schema.
+
+        Returns:
+            The rules whose fields include the field, in the order of the rules.
+        """
+        return tuple(
+            rule for rule in self.rules if field.name in rule.fields(self.schema)
+        )
+
+    def rule_sources(self, rules: Sequence[Rule]) -> str:
+        """Name the distinct sources the given rules come from.
+
+        Args:
+            rules: The rules.
+
+        Returns:
+            The sources, each once, in the order the rules come.
+        """
+        return "; ".join(
+            self.source(key) for key in dict.fromkeys(r.source for r in rules)
+        )
 
     def index(self) -> str:
         """Write the table that lists every field, each linked to its entry.

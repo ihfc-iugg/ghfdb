@@ -206,3 +206,24 @@ class TestRender:
 
         with pytest.raises(ValueError, match="Unknown source"):
             RuleReference(schema, published_vocabularies, (rule,)).entries()
+
+
+class TestFieldReferenceRules:
+    def test_a_field_lists_the_rules_that_relate_it_linked_to_their_entries(
+        self, schema: Schema, field_reference: FieldReference
+    ) -> None:
+        for field in schema.fields:
+            expected = [
+                rule for rule, codes in RELATED_FIELDS.items() if field.name in codes
+            ]
+            section = field_reference.entries(field.custom["group"])
+            entry = section[section.index(f"(field-{field.name.lower()})=\n") :]
+            entry = entry.split("\n\n(field-", 1)[0]
+
+            rows = [line for line in entry.splitlines() if line.startswith("| Rules ")]
+            if not expected:
+                assert rows == [], field.name
+                continue
+            assert len(rows) == 1, field.name
+            found = re.findall(r"\{ref\}`([A-Z]+-\d+) <([a-z]+-\d+)>`", rows[0])
+            assert found == [(name, name.lower()) for name in expected], field.name

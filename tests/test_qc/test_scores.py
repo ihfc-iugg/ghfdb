@@ -1,6 +1,6 @@
 import json
 from collections.abc import Mapping
-from importlib import resources
+from importlib import import_module, resources
 from typing import Any
 
 import pandas
@@ -12,6 +12,10 @@ from ghfdb.qc.scheme import Inputs, Terms
 from ghfdb.qc.scores import Scores
 
 NOT_DETERMINED = "not determined"
+# The modules that run worked examples, each exposing the examples it runs as EXAMPLES.
+RUNNING = ("test_uncertainty", "test_scores")
+# The parts no code scores yet. The group that builds a part removes it from here.
+PENDING = {"probe-t", "probe-tc", "borehole-t", "borehole-tc", "m-score", "child"}
 
 
 def load_examples(part: str) -> list[Mapping[str, Any]]:
@@ -68,6 +72,25 @@ class TestRouting:
         assert rules.iloc[0] == "borehole and mine"
         assert rules.iloc[2] == "probe sensing"
         assert rules.iloc[[1, 3]].isna().all()
+
+
+class TestWorkedExampleCoverage:
+    def test_every_example_outside_inheritance_is_run_by_exactly_one_test(self) -> None:
+        text = (resources.files("ghfdb.qc") / "worked_examples.json").read_text("utf-8")
+        examples = json.loads(text)["examples"]
+        expected = sorted(
+            example["id"]
+            for example in examples
+            if example["part"] != "inheritance" and example["part"] not in PENDING
+        )
+
+        run = sorted(
+            example["id"]
+            for name in RUNNING
+            for example in import_module(f"{__package__}.{name}").EXAMPLES
+        )
+
+        assert run == expected
 
 
 class TestPerturbationFlags:

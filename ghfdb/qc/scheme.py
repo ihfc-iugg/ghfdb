@@ -9,7 +9,10 @@ from frictionless import Schema
 from ghfdb.fields import MissingSchemeError, Vocabularies, allowed_values
 from ghfdb.qc.rules import (
     BOREHOLE,
+    CONDUCTIVITY_LOCATION,
+    CONDUCTIVITY_SOURCES,
     EXPLORATION_METHOD,
+    LITERATURE_OR_UNSPECIFIED,
     PROBE_SENSING,
     VOCABULARIES,
 )
@@ -20,6 +23,83 @@ PRESENT_NOT_CORRECTED = f"{HEAT_FLOW_CORRECTIONS}/present_not_corrected"
 PRESENT_NOT_SIGNIFICANT = f"{HEAT_FLOW_CORRECTIONS}/present_not_significant"
 NOT_RECOGNIZED = f"{HEAT_FLOW_CORRECTIONS}/not_recognized"
 UNSPECIFIED_CORRECTION = f"{HEAT_FLOW_CORRECTIONS}/unspecified"
+TILT_CORRECTED = f"{HEAT_FLOW_CORRECTIONS}/tiltCorrected"
+
+ACTUAL_LOCATION = f"{CONDUCTIVITY_LOCATION}/actual"
+OTHER_LOCATION = f"{CONDUCTIVITY_LOCATION}/other"
+LOCATIONS = (ACTUAL_LOCATION, OTHER_LOCATION, LITERATURE_OR_UNSPECIFIED)
+
+IN_SITU_PROBE = f"{CONDUCTIVITY_SOURCES}/insitu_probe"
+
+CONDUCTIVITY_METHODS = f"{VOCABULARIES}/conductivity-methods"
+PROBE_PULSE = f"{CONDUCTIVITY_METHODS}/probePulse"
+LABORATORY_METHODS = tuple(
+    f"{CONDUCTIVITY_METHODS}/{name}"
+    for name in (
+        "pointSource",
+        "lineSourceFull",
+        "lineSourceHalf",
+        "planeSourceFull",
+        "planeSourceHalf",
+        "laboratoryOther",
+    )
+)
+ESTIMATED_FROM_LITERATURE = tuple(
+    f"{CONDUCTIVITY_METHODS}/{name}"
+    for name in ("lithology", "wellLogDeterministic", "wellLogEmpirical")
+)
+ESTIMATED_FROM_OTHER = tuple(
+    f"{CONDUCTIVITY_METHODS}/{name}"
+    for name in ("waterContent", "mineralComposition", "chlorineContent", "unspecified")
+)
+CONDUCTIVITY_METHOD_CONCEPTS = (
+    PROBE_PULSE,
+    *LABORATORY_METHODS,
+    *ESTIMATED_FROM_LITERATURE,
+    *ESTIMATED_FROM_OTHER,
+)
+
+CONDUCTIVITY_SATURATION = f"{VOCABULARIES}/conductivity-saturation"
+SATURATED_IN_SITU = f"{CONDUCTIVITY_SATURATION}/saturatedInSitu"
+SATURATED_MEASURED = f"{CONDUCTIVITY_SATURATION}/saturatedMeasured"
+RECOVERED = f"{CONDUCTIVITY_SATURATION}/recovered"
+SATURATED_CALCULATED = f"{CONDUCTIVITY_SATURATION}/saturatedCalculated"
+DRY_UNSPECIFIED_OR_OTHER = tuple(
+    f"{CONDUCTIVITY_SATURATION}/{name}"
+    for name in ("dryMeasured", "unspecified", "other")
+)
+SATURATION_CONCEPTS = (
+    SATURATED_IN_SITU,
+    SATURATED_MEASURED,
+    RECOVERED,
+    SATURATED_CALCULATED,
+    *DRY_UNSPECIFIED_OR_OTHER,
+)
+
+CONDUCTIVITY_CONDITIONS = f"{VOCABULARIES}/conductivity-conditions"
+ACTUAL_IN_SITU = f"{CONDUCTIVITY_CONDITIONS}/actualInSitu"
+FULL_IN_SITU = tuple(
+    f"{CONDUCTIVITY_CONDITIONS}/{name}" for name in ("replicatedPT", "correctedPT")
+)
+PARTIAL_IN_SITU = tuple(
+    f"{CONDUCTIVITY_CONDITIONS}/{name}"
+    for name in (
+        "replicatedP",
+        "correctedP",
+        "replicatedT",
+        "correctedT",
+    )
+)
+AMBIENT_OR_UNSPECIFIED = tuple(
+    f"{CONDUCTIVITY_CONDITIONS}/{name}"
+    for name in ("recordedAmbient", "unrecordedAmbient", "unspecified")
+)
+CONDITIONS_CONCEPTS = (
+    ACTUAL_IN_SITU,
+    *FULL_IN_SITU,
+    *PARTIAL_IN_SITU,
+    *AMBIENT_OR_UNSPECIFIED,
+)
 
 # The correction fields in the order of the perturbation flags S E T P V C R.
 FLAG_FIELDS = ("C13", "C14", "C15", "C16", "C17", "C18", "C19")
@@ -31,13 +111,28 @@ CORRECTIONS = (
     UNSPECIFIED_CORRECTION,
 )
 
-NUMBER_FIELDS = ("C1", "C2")
-TERM_FIELDS = (EXPLORATION_METHOD, *FLAG_FIELDS)
+NUMBER_FIELDS = ("C1", "C2", "P6", "C6", "C23", "C37", "C47")
+TERM_FIELDS = (
+    EXPLORATION_METHOD,
+    *FLAG_FIELDS,
+    "C12",
+    "C41",
+    "C42",
+    "C43",
+    "C44",
+    "C45",
+)
 
 # Every concept the scheme names, by the code of the field that must allow it.
 CONCEPTS: tuple[tuple[str, str], ...] = (
     *((EXPLORATION_METHOD, uri) for uri in BOREHOLE.concepts + PROBE_SENSING.concepts),
     *((code, uri) for code in FLAG_FIELDS for uri in CORRECTIONS),
+    ("C12", TILT_CORRECTED),
+    ("C41", IN_SITU_PROBE),
+    *(("C42", uri) for uri in LOCATIONS),
+    *(("C43", uri) for uri in CONDUCTIVITY_METHOD_CONCEPTS),
+    *(("C44", uri) for uri in SATURATION_CONCEPTS),
+    *(("C45", uri) for uri in CONDITIONS_CONCEPTS),
 )
 
 

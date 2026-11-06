@@ -16,6 +16,8 @@ from ghfdb.qc.scheme import (
     Terms,
 )
 
+PROBE_TERM_FIELDS = ("C12", "C41", "C42", "C43", "C44", "C45")
+
 
 @pytest.fixture(scope="module")
 def terms(schema: Schema, published_vocabularies: Vocabularies) -> Terms:
@@ -41,10 +43,10 @@ class TestTerms:
 
             assert terms.term(code, uri) == accepted[uri], (code, uri)
 
-    def test_the_scheme_names_the_exploration_methods_and_the_corrections(self) -> None:
+    def test_the_scheme_names_the_fields_whose_terms_it_scores(self) -> None:
         codes = {code for code, _ in CONCEPTS}
 
-        assert codes == {EXPLORATION_METHOD, *FLAG_FIELDS}
+        assert codes == {EXPLORATION_METHOD, *FLAG_FIELDS, *PROBE_TERM_FIELDS}
 
     def test_a_concept_the_field_does_not_allow_fails_naming_it(
         self, schema: Schema, published_vocabularies: Vocabularies

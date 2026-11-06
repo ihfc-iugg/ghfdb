@@ -13,9 +13,9 @@ from ghfdb.qc.scores import Scores
 
 NOT_DETERMINED = "not determined"
 # The modules that run worked examples, each exposing the examples it runs as EXAMPLES.
-RUNNING = ("test_uncertainty", "test_scores")
+RUNNING = ("test_uncertainty", "test_scores", "test_probe")
 # The parts no code scores yet. The group that builds a part removes it from here.
-PENDING = {"probe-t", "probe-tc", "borehole-t", "borehole-tc", "m-score", "child"}
+PENDING = {"probe-tc", "borehole-t", "borehole-tc", "m-score", "child"}
 
 
 def load_examples(part: str) -> list[Mapping[str, Any]]:

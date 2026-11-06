@@ -131,14 +131,18 @@ vocabularies as published, and raises `MissingSchemeError` naming the concept wh
 longer published. `ghfdb.qc.scheme.Inputs` reads the scored fields of a table of children once:
 numbers as numbers, terms as concept URIs, and a value that is neither as empty. A cell holding a
 Python list holds several values. `ghfdb.qc.uncertainty.UScore` grades the uncertainty, and
-`ghfdb.qc.scores.Scores` routes each child to its rules and writes its perturbation flags. Each
-works on every child at once.
+`ghfdb.qc.scores.Scores` routes each child to its rules and writes its perturbation flags.
+`ghfdb.qc.probe.ProbeRules` scores the children explored by probing, one method for each
+criterion of the probe-sensing rules. Each works on every child at once.
 
 ```{eval-rst}
 .. automodule:: ghfdb.qc.scheme
    :members:
 
 .. automodule:: ghfdb.qc.uncertainty
+   :members:
+
+.. automodule:: ghfdb.qc.probe
    :members:
 
 .. automodule:: ghfdb.qc.scores

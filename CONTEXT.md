@@ -85,18 +85,19 @@ Avoid "determination", "entry" and "record" for a row. Say **child**.
 
 | Term | Meaning |
 |---|---|
-| **Quality scheme** | The rules that score a child: the U-score, the M-score and the perturbation flags, after Fuchs et al. (2023), with every departure from the paper documented. |
+| **Quality scheme** | The rules that score a child: the U-score, the M-score and the perturbation flags, after Fuchs et al. (2023), with every departure from the paper documented. It is written down in the reference documentation. This package does not compute any score yet. |
 | **Scheme version** | A released, fixed version of the quality scheme, such as `2027.1`, with its worked examples. Separate from the package version (planned). |
-| **Worked example** | One child's input values with its expected scores. The worked examples are part of the scheme and are the tests every implementation runs. |
+| **Worked example** | One child's, measurement's or parent's input values with its expected scores, kept in `ghfdb/qc/worked_examples.json` and shown in the documentation. The worked examples are part of the scheme and are the tests every implementation runs. No code runs them yet. |
 | **U-score** | The grade of a child's uncertainty, `U1`–`U4`, from the coefficient of variation. `Ux` when it cannot be determined. |
 | **M-score** | The grade of a child's methodology, `M1`–`M4`, from the product of its T-score and TC-score. `Mx` when it cannot be determined. |
 | **T-score**, **TC-score** | The numbers the M-score is made from: how well the temperature gradient and the thermal conductivity were determined. Each starts at 1.0 and takes a penalty per criterion. |
 | **Rules** (probe sensing, borehole and mine) | The two sets of criteria for the T-score and TC-score. A child is scored by one of them, chosen by its site's exploration method. |
-| **Missing-information mark** | The `x` after an M-score. Set when an input the scheme needed was empty, in which case that criterion took its largest penalty. Not to be confused with `Mx`. |
+| **Missing-information mark** | The `x` after an M-score. Set when an input the scheme needed was empty, in which case that criterion took its largest penalty, and in the few named cases the scheme lists. An input recorded as unspecified takes the same penalty without the mark. Not to be confused with `Mx`. |
 | **Not determined** | No score could be made: `Ux`, `Mx`, or a T-score or TC-score left empty. Never written as 0. |
 | **Perturbation flags** | Seven characters recording each disturbing effect's state, in the order `S E T P V C R`. Not "P-score". |
 | **Quality code** | The U-score, M-score and perturbation flags written as one string, such as `U2.M3x.-e-PX--`. |
-| **Inherited code** | The quality code a parent takes from its relevant children. |
+| **Inherited code** | The quality code a parent takes from its relevant children. Described in the scheme, not computed here. |
+| **Own score** | The T-score of a gradient or the TC-score of a conductivity on its own, before the child's corrections are applied. The child's T-score and TC-score are the ones the M-score is made from. |
 | **Preview score** | Any score this package computes. The GHFDB portal recalculates every score itself, and its value is authoritative. |
 
 ## People

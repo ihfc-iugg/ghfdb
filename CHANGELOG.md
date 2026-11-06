@@ -81,3 +81,17 @@ All notable changes to this project are recorded here. The format follows
   allowed only when the thermal conductivity source (`C41`) is assumed from literature.
 - A field mandatory in one domain only is no longer left unchecked: when it is empty for a
   child of that domain, it is reported as a `rule` problem.
+- The quality scheme is written down as a complete specification, the reference for how a child
+  is scored. It starts from the scheme the GHFDB portal applies today, which follows version 0.2
+  of the Heat Flow Quality Analysis Toolbox. The documentation has a page for each part: the
+  U-score, the T-score and TC-score under the probe-sensing rules and under the borehole and
+  mine rules, the M-score with its missing-information mark, the perturbation flags and the
+  inherited code of a parent, each with a diagram of its decisions. Every rule names its source
+  in Fuchs et al. (2023) or in the portal decision that changed it, and a page lists every
+  departure from the paper with its reasoning. Six places where the paper is ambiguous or
+  contradicts itself, or where the portal's description and code disagree, are put to the data
+  assessment team as questions.
+- The worked examples are published with the scheme in `ghfdb/qc/worked_examples.json`, 205
+  examples giving each one's inputs by field code and its expected scores, every one asserted by
+  the GHFDB portal's own tests. The documentation renders them as tables from that file. No score
+  is computed in this package yet.

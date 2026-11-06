@@ -30,7 +30,7 @@ ghfdb check my-data.xlsx
 The command reads the `data list` sheet, compares every cell with the field schema and the
 vocabularies, and writes `my-data.report.html` beside the workbook, a web page you open in any browser. The workbook itself is never
 changed. The command gives status 0 when it found no problem, 1 when it found problems and 2
-when it could not run. See [Check a workbook](https://ihfc-iugg.github.io/ghfdb/reference/check.html).
+when it could not run. See [Check a workbook](https://ihfc-iugg.github.io/ghfdb/user-guide/check.html).
 
 ## Field definitions
 
@@ -47,10 +47,10 @@ schema = load_schema()  # a frictionless.Schema
 print(field_for_column(schema, "tc_method").constraints["enum"][0])  # or "C43"
 ```
 
-See the [developer guide](https://ihfc-iugg.github.io/ghfdb/developer/field-definitions.html).
+See the [user guide](https://ihfc-iugg.github.io/ghfdb/user-guide/field-definitions.html).
 
 To fill in the upload template, download the one for your version from the
-[contributor guide](https://ihfc-iugg.github.io/ghfdb/upload-template/).
+[upload template reference](https://ihfc-iugg.github.io/ghfdb/upload-template/).
 
 ## Why
 

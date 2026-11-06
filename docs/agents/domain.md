@@ -7,7 +7,7 @@ Which of this repository's domain documents to read before working in it, and in
 - **`CONTEXT.md`** at the repo root — the glossary.
 - **`CONSTITUTION.md`** — the rules every change follows.
 - **`docs/adr/`** — architectural decisions, when there are any.
-- **`docs/developer/brainstorm.md`** — working notes from before the package was written. Not decisions.
+- **`docs/contributing/brainstorm.md`** — working notes from before the package was written. Not decisions.
 
 This is a single-context repo. There is no `CONTEXT-MAP.md`.
 

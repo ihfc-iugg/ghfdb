@@ -96,5 +96,5 @@ for value in allowed_values(schema.get_field("C44"), Vocabularies()):
     print(value.term, value.uri)
 ```
 
-Every public name is described on the [Python API](../reference/python-api.md) page, and every
+Every public name is described on the [Python API](../contributing/python-api.md) page, and every
 field is described in the [field reference](../reference/fields/index.md).

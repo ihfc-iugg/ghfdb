@@ -1,0 +1,5135 @@
+{
+  "scheme": "The GHFDB quality scheme, as the GHFDB portal applies it",
+  "format": 1,
+  "notes": [
+    "inputs are keyed by field code. A field that is absent is empty. A list holds several values of a field.",
+    "expected holds only what the GHFDB portal's test asserts. T and TC are null when not determined, never 0.",
+    "scoring is 'child' by default. 'measurement' means a gradient or conductivity scored on its own, before the child's correction rules.",
+    "expected.measurement holds the scores of the child's gradient and conductivity before the child's correction rules.",
+    "portal_tests names the GHFDB portal tests that assert the example, as path::node, relative to the portal repository.",
+    "criteria names the criteria of the scheme the example exercises."
+  ],
+  "criteria": {
+    "routing.probe-sensing": "A child is scored by the probe-sensing rules",
+    "routing.borehole-and-mine": "A child is scored by the borehole and mine rules",
+    "routing.not-determined": "No rules apply, so the scores are not determined",
+    "u.bands": "The four classes of the coefficient of variation",
+    "u.rounding": "The coefficient is rounded to six places",
+    "u.sign": "The sign of the value and of the uncertainty is ignored",
+    "u.not-determined": "Value or uncertainty empty or zero",
+    "probe-t.penetration": "Probe penetration",
+    "probe-t.recordings": "Number of temperature recordings (probe sensing)",
+    "probe-t.water-depth": "Water depth",
+    "probe-t.elevation-not-below-sea-level": "An elevation at or above sea level has no water depth",
+    "probe-t.tilt": "Probe tilt",
+    "probe-t.tilt-waiver": "A tilt correction waives the tilt criterion",
+    "probe-t.water-depth-waiver": "A bottom-water correction waives the water depth criterion",
+    "probe-tc.location": "Conductivity location (probe sensing)",
+    "probe-tc.saturation": "Saturation, method, source and location together",
+    "probe-tc.number": "Number of conductivity measurements (probe sensing)",
+    "probe-tc.number-not-scored-for-literature": "The number is not scored for a literature location (probe sensing)",
+    "probe-tc.pT": "pT conditions and method (probe sensing)",
+    "borehole-t.continuous-log": "Continuous log",
+    "borehole-t.continuous-log-needs-more-than-three": "A continuous log needs more than three recordings",
+    "borehole-t.single-points": "Multiple single points",
+    "borehole-t.surface-plus-one-point": "Surface temperature plus one point",
+    "borehole-t.unresolvable-method": "Temperature methods that fit no group",
+    "borehole-tc.gate": "No interval depth reported",
+    "borehole-tc.location": "Conductivity location (borehole and mine)",
+    "borehole-tc.source": "Conductivity source",
+    "borehole-tc.number": "Number of conductivity measurements (borehole and mine)",
+    "borehole-tc.number-not-scored-for-literature": "The number is not scored for a literature location (borehole and mine)",
+    "borehole-tc.saturation": "Saturation (borehole and mine)",
+    "borehole-tc.pT": "pT conditions (borehole and mine)",
+    "borehole-tc.pT-agreement": "pT conditions must agree with the in-situ correction",
+    "m.classes": "The four classes of the product",
+    "m.rounding": "The product is rounded to three places",
+    "m.mark": "The missing-information mark follows the M-score",
+    "m.not-determined": "A score that cannot be calculated gives Mx",
+    "flags.S": "Sedimentation flag",
+    "flags.E": "Erosion flag",
+    "flags.T": "Topography flag",
+    "flags.P": "Paleoclimate flag",
+    "flags.V": "Surface-temperature variation flag",
+    "flags.C": "Convection flag",
+    "flags.R": "Heat refraction flag",
+    "flags.not-significant": "Present and not significant",
+    "flags.not-recognized": "Not recognized",
+    "flags.unspecified": "Unspecified",
+    "flags.empty": "No correction recorded",
+    "inherited.single-child": "A parent with one child",
+    "inherited.none": "A parent with no child it rests on",
+    "inherited.u": "The poorest U-score",
+    "inherited.m": "The poorest M-score",
+    "inherited.flags": "The flags of the poorest child",
+    "inherited.tie-on-u": "A tie on the U-score is settled by the M-score",
+    "inherited.full-tie": "A tie on both scores",
+    "inherited.selection": "Which children a parent rests on",
+    "missing-information.empty": "An empty input takes the largest penalty and the mark",
+    "missing-information.unspecified-gives-no-mark": "An input recorded as unspecified takes the largest penalty and no mark",
+    "missing-information.gate": "No interval depth sets the mark",
+    "missing-information.unresolvable-method": "Temperature methods that fit no group set the mark",
+    "not-determined.u": "U-score not determined",
+    "not-determined.t": "T-score not determined",
+    "not-determined.tc": "TC-score not determined",
+    "not-determined.m": "M-score not determined",
+    "multi-valued.poorest": "A field holding several values takes the poorest",
+    "child.whole": "A child scored from its fields to its quality code"
+  },
+  "examples": [
+    {
+      "id": "RT-01",
+      "part": "routing",
+      "title": "Exploration method [Probing (onshore, lake, river, etc.)]",
+      "inputs": {
+        "P12": "[Probing (onshore, lake, river, etc.)]"
+      },
+      "expected": {
+        "rules": "probe sensing"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestRoute::test_probing_methods_route_to_the_probe_rules[probing_onshore]"
+      ],
+      "criteria": [
+        "routing.probe-sensing"
+      ]
+    },
+    {
+      "id": "RT-02",
+      "part": "routing",
+      "title": "Exploration method [Probing (offshore, ocean)]",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]"
+      },
+      "expected": {
+        "rules": "probe sensing"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestRoute::test_probing_methods_route_to_the_probe_rules[probing_offshore]"
+      ],
+      "criteria": [
+        "routing.probe-sensing"
+      ]
+    },
+    {
+      "id": "RT-03",
+      "part": "routing",
+      "title": "Exploration method [Probing (clustered)]",
+      "inputs": {
+        "P12": "[Probing (clustered)]"
+      },
+      "expected": {
+        "rules": "probe sensing"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestRoute::test_probing_methods_route_to_the_probe_rules[probing_clustering]"
+      ],
+      "criteria": [
+        "routing.probe-sensing"
+      ]
+    },
+    {
+      "id": "RT-04",
+      "part": "routing",
+      "title": "Exploration method [Drilling]",
+      "inputs": {
+        "P12": "[Drilling]"
+      },
+      "expected": {
+        "rules": "borehole and mine"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestRoute::test_excavation_and_indirect_methods_route_to_the_borehole_rules[drilling]"
+      ],
+      "criteria": [
+        "routing.borehole-and-mine"
+      ]
+    },
+    {
+      "id": "RT-05",
+      "part": "routing",
+      "title": "Exploration method [Drilling (clustered)]",
+      "inputs": {
+        "P12": "[Drilling (clustered)]"
+      },
+      "expected": {
+        "rules": "borehole and mine"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestRoute::test_excavation_and_indirect_methods_route_to_the_borehole_rules[drilling_clustering]"
+      ],
+      "criteria": [
+        "routing.borehole-and-mine"
+      ]
+    },
+    {
+      "id": "RT-06",
+      "part": "routing",
+      "title": "Exploration method [Mining]",
+      "inputs": {
+        "P12": "[Mining]"
+      },
+      "expected": {
+        "rules": "borehole and mine"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestRoute::test_excavation_and_indirect_methods_route_to_the_borehole_rules[mining]"
+      ],
+      "criteria": [
+        "routing.borehole-and-mine"
+      ]
+    },
+    {
+      "id": "RT-07",
+      "part": "routing",
+      "title": "Exploration method [Tunneling]",
+      "inputs": {
+        "P12": "[Tunneling]"
+      },
+      "expected": {
+        "rules": "borehole and mine"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestRoute::test_excavation_and_indirect_methods_route_to_the_borehole_rules[tunneling]"
+      ],
+      "criteria": [
+        "routing.borehole-and-mine"
+      ]
+    },
+    {
+      "id": "RT-08",
+      "part": "routing",
+      "title": "Exploration method [Indirect (GTM, BSR, CPD, etc.)]",
+      "inputs": {
+        "P12": "[Indirect (GTM, BSR, CPD, etc.)]"
+      },
+      "expected": {
+        "rules": "borehole and mine"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestRoute::test_excavation_and_indirect_methods_route_to_the_borehole_rules[indirect]"
+      ],
+      "criteria": [
+        "routing.borehole-and-mine"
+      ]
+    },
+    {
+      "id": "RT-09",
+      "part": "routing",
+      "title": "Exploration method [Other]",
+      "inputs": {
+        "P12": "[Other]"
+      },
+      "expected": {
+        "rules": "not determined"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestRoute::test_other_unspecified_and_empty_methods_are_not_determined[other]"
+      ],
+      "criteria": [
+        "routing.not-determined"
+      ]
+    },
+    {
+      "id": "RT-10",
+      "part": "routing",
+      "title": "Exploration method [Unspecified]",
+      "inputs": {
+        "P12": "[Unspecified]"
+      },
+      "expected": {
+        "rules": "not determined"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestRoute::test_other_unspecified_and_empty_methods_are_not_determined[unspecified]"
+      ],
+      "criteria": [
+        "routing.not-determined"
+      ]
+    },
+    {
+      "id": "RT-11",
+      "part": "routing",
+      "title": "Exploration method empty",
+      "inputs": {},
+      "expected": {
+        "rules": "not determined"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestRoute::test_other_unspecified_and_empty_methods_are_not_determined[None]"
+      ],
+      "criteria": [
+        "routing.not-determined"
+      ]
+    },
+    {
+      "id": "U-01",
+      "part": "u-score",
+      "title": "Uncertainty 4.9 on a value of 100: 4.9 %",
+      "inputs": {
+        "C1": 100,
+        "C2": 4.9
+      },
+      "expected": {
+        "U": "U1"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_bands_take_the_upper_bound_into_the_better_class[100-4.9-U1]"
+      ],
+      "criteria": [
+        "u.bands"
+      ]
+    },
+    {
+      "id": "U-02",
+      "part": "u-score",
+      "title": "Uncertainty 5 on a value of 100: 5 %",
+      "inputs": {
+        "C1": 100,
+        "C2": 5
+      },
+      "expected": {
+        "U": "U2"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_bands_take_the_upper_bound_into_the_better_class[100-5-U2]"
+      ],
+      "criteria": [
+        "u.bands"
+      ]
+    },
+    {
+      "id": "U-03",
+      "part": "u-score",
+      "title": "Uncertainty 15 on a value of 100: 15 %",
+      "inputs": {
+        "C1": 100,
+        "C2": 15
+      },
+      "expected": {
+        "U": "U2"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_bands_take_the_upper_bound_into_the_better_class[100-15-U2]"
+      ],
+      "criteria": [
+        "u.bands"
+      ]
+    },
+    {
+      "id": "U-04",
+      "part": "u-score",
+      "title": "Uncertainty 15.1 on a value of 100: 15.1 %",
+      "inputs": {
+        "C1": 100,
+        "C2": 15.1
+      },
+      "expected": {
+        "U": "U3"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_bands_take_the_upper_bound_into_the_better_class[100-15.1-U3]"
+      ],
+      "criteria": [
+        "u.bands"
+      ]
+    },
+    {
+      "id": "U-05",
+      "part": "u-score",
+      "title": "Uncertainty 25 on a value of 100: 25 %",
+      "inputs": {
+        "C1": 100,
+        "C2": 25
+      },
+      "expected": {
+        "U": "U3"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_bands_take_the_upper_bound_into_the_better_class[100-25-U3]"
+      ],
+      "criteria": [
+        "u.bands"
+      ]
+    },
+    {
+      "id": "U-06",
+      "part": "u-score",
+      "title": "Uncertainty 25.1 on a value of 100: 25.1 %",
+      "inputs": {
+        "C1": 100,
+        "C2": 25.1
+      },
+      "expected": {
+        "U": "U4"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_bands_take_the_upper_bound_into_the_better_class[100-25.1-U4]"
+      ],
+      "criteria": [
+        "u.bands"
+      ]
+    },
+    {
+      "id": "U-07",
+      "part": "u-score",
+      "title": "Uncertainty 80 on a value of 100: 80 %",
+      "inputs": {
+        "C1": 100,
+        "C2": 80
+      },
+      "expected": {
+        "U": "U4"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_bands_take_the_upper_bound_into_the_better_class[100-80-U4]"
+      ],
+      "criteria": [
+        "u.bands"
+      ]
+    },
+    {
+      "id": "U-08",
+      "part": "u-score",
+      "title": "The coefficient is rounded to six places before banding (4.9999996 on 100)",
+      "inputs": {
+        "C1": 100,
+        "C2": 4.9999996
+      },
+      "expected": {
+        "U": "U2"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_the_coefficient_is_rounded_to_six_places_before_banding[4.9999996-U2]"
+      ],
+      "criteria": [
+        "u.bands",
+        "u.rounding"
+      ]
+    },
+    {
+      "id": "U-09",
+      "part": "u-score",
+      "title": "The coefficient is rounded to six places before banding (15.0000004 on 100)",
+      "inputs": {
+        "C1": 100,
+        "C2": 15.0000004
+      },
+      "expected": {
+        "U": "U2"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_the_coefficient_is_rounded_to_six_places_before_banding[15.0000004-U2]"
+      ],
+      "criteria": [
+        "u.bands",
+        "u.rounding"
+      ]
+    },
+    {
+      "id": "U-10",
+      "part": "u-score",
+      "title": "The coefficient is rounded to six places before banding (25.0000004 on 100)",
+      "inputs": {
+        "C1": 100,
+        "C2": 25.0000004
+      },
+      "expected": {
+        "U": "U3"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_the_coefficient_is_rounded_to_six_places_before_banding[25.0000004-U3]"
+      ],
+      "criteria": [
+        "u.bands",
+        "u.rounding"
+      ]
+    },
+    {
+      "id": "U-11",
+      "part": "u-score",
+      "title": "The coefficient is rounded to six places before banding (25.000001 on 100)",
+      "inputs": {
+        "C1": 100,
+        "C2": 25.000001
+      },
+      "expected": {
+        "U": "U4"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_the_coefficient_is_rounded_to_six_places_before_banding[25.000001-U4]"
+      ],
+      "criteria": [
+        "u.bands",
+        "u.rounding"
+      ]
+    },
+    {
+      "id": "U-12",
+      "part": "u-score",
+      "title": "Value or uncertainty empty or zero",
+      "inputs": {
+        "C2": 5
+      },
+      "expected": {
+        "U": "Ux"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_an_empty_or_zero_value_or_uncertainty_is_not_determined[None-5]"
+      ],
+      "criteria": [
+        "u.not-determined",
+        "not-determined.u"
+      ]
+    },
+    {
+      "id": "U-13",
+      "part": "u-score",
+      "title": "Value or uncertainty empty or zero",
+      "inputs": {
+        "C1": 0,
+        "C2": 5
+      },
+      "expected": {
+        "U": "Ux"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_an_empty_or_zero_value_or_uncertainty_is_not_determined[0-5]"
+      ],
+      "criteria": [
+        "u.not-determined",
+        "not-determined.u"
+      ]
+    },
+    {
+      "id": "U-14",
+      "part": "u-score",
+      "title": "Value or uncertainty empty or zero",
+      "inputs": {
+        "C1": 100
+      },
+      "expected": {
+        "U": "Ux"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_an_empty_or_zero_value_or_uncertainty_is_not_determined[100-None]"
+      ],
+      "criteria": [
+        "u.not-determined",
+        "not-determined.u"
+      ]
+    },
+    {
+      "id": "U-15",
+      "part": "u-score",
+      "title": "Value or uncertainty empty or zero",
+      "inputs": {
+        "C1": 100,
+        "C2": 0
+      },
+      "expected": {
+        "U": "Ux"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_an_empty_or_zero_value_or_uncertainty_is_not_determined[100-0]"
+      ],
+      "criteria": [
+        "u.not-determined",
+        "not-determined.u"
+      ]
+    },
+    {
+      "id": "U-16",
+      "part": "u-score",
+      "title": "A negative value is read as a magnitude (-40 with 12)",
+      "inputs": {
+        "C1": -40,
+        "C2": 12
+      },
+      "expected": {
+        "U": "U4"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_a_negative_value_is_read_as_a_magnitude"
+      ],
+      "criteria": [
+        "u.sign"
+      ]
+    },
+    {
+      "id": "U-17",
+      "part": "u-score",
+      "title": "A negative uncertainty is read as a magnitude (40 with -1.9)",
+      "inputs": {
+        "C1": 40,
+        "C2": -1.9
+      },
+      "expected": {
+        "U": "U1"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestUScore::test_a_negative_value_is_read_as_a_magnitude"
+      ],
+      "criteria": [
+        "u.sign"
+      ]
+    },
+    {
+      "id": "PT-01",
+      "part": "probe-t",
+      "title": "Penetration 10.01 m",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 10.01,
+        "C23": 0,
+        "C37": 6
+      },
+      "expected": {
+        "T": 1.2,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_penetration_bins_are_tried_largest_first[10.01-0.1]"
+      ],
+      "criteria": [
+        "probe-t.penetration"
+      ]
+    },
+    {
+      "id": "PT-02",
+      "part": "probe-t",
+      "title": "Penetration 10 m",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 10,
+        "C23": 0,
+        "C37": 6
+      },
+      "expected": {
+        "T": 1.1,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_penetration_bins_are_tried_largest_first[10-0.0]"
+      ],
+      "criteria": [
+        "probe-t.penetration"
+      ]
+    },
+    {
+      "id": "PT-03",
+      "part": "probe-t",
+      "title": "Penetration 3.01 m",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 3.01,
+        "C23": 0,
+        "C37": 6
+      },
+      "expected": {
+        "T": 1.1,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_penetration_bins_are_tried_largest_first[3.01-0.0]"
+      ],
+      "criteria": [
+        "probe-t.penetration"
+      ]
+    },
+    {
+      "id": "PT-04",
+      "part": "probe-t",
+      "title": "Penetration 3 m",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 3,
+        "C23": 0,
+        "C37": 6
+      },
+      "expected": {
+        "T": 1.0,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_penetration_bins_are_tried_largest_first[3--0.1]"
+      ],
+      "criteria": [
+        "probe-t.penetration"
+      ]
+    },
+    {
+      "id": "PT-05",
+      "part": "probe-t",
+      "title": "Penetration 1.01 m",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 1.01,
+        "C23": 0,
+        "C37": 6
+      },
+      "expected": {
+        "T": 1.0,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_penetration_bins_are_tried_largest_first[1.01--0.1]"
+      ],
+      "criteria": [
+        "probe-t.penetration"
+      ]
+    },
+    {
+      "id": "PT-06",
+      "part": "probe-t",
+      "title": "Penetration 1 m",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 1,
+        "C23": 0,
+        "C37": 6
+      },
+      "expected": {
+        "T": 0.9,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_penetration_bins_are_tried_largest_first[1--0.2]"
+      ],
+      "criteria": [
+        "probe-t.penetration"
+      ]
+    },
+    {
+      "id": "PT-07",
+      "part": "probe-t",
+      "title": "6 temperature recordings",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 5,
+        "C23": 0,
+        "C37": 6
+      },
+      "expected": {
+        "T": 1.1
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_recording_bins_distinguish_two_from_fewer_and_more[6-0.1]"
+      ],
+      "criteria": [
+        "probe-t.recordings"
+      ]
+    },
+    {
+      "id": "PT-08",
+      "part": "probe-t",
+      "title": "5 temperature recordings",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 5,
+        "C23": 0,
+        "C37": 5
+      },
+      "expected": {
+        "T": 1.0
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_recording_bins_distinguish_two_from_fewer_and_more[5-0.0]"
+      ],
+      "criteria": [
+        "probe-t.recordings"
+      ]
+    },
+    {
+      "id": "PT-09",
+      "part": "probe-t",
+      "title": "3 temperature recordings",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 5,
+        "C23": 0,
+        "C37": 3
+      },
+      "expected": {
+        "T": 1.0
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_recording_bins_distinguish_two_from_fewer_and_more[3-0.0]"
+      ],
+      "criteria": [
+        "probe-t.recordings"
+      ]
+    },
+    {
+      "id": "PT-10",
+      "part": "probe-t",
+      "title": "2 temperature recordings",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 5,
+        "C23": 0,
+        "C37": 2
+      },
+      "expected": {
+        "T": 0.9
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_recording_bins_distinguish_two_from_fewer_and_more[2--0.1]"
+      ],
+      "criteria": [
+        "probe-t.recordings"
+      ]
+    },
+    {
+      "id": "PT-11",
+      "part": "probe-t",
+      "title": "1 temperature recordings",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 5,
+        "C23": 0,
+        "C37": 1
+      },
+      "expected": {
+        "T": 0.8
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_recording_bins_distinguish_two_from_fewer_and_more[1--0.2]"
+      ],
+      "criteria": [
+        "probe-t.recordings"
+      ]
+    },
+    {
+      "id": "PT-12",
+      "part": "probe-t",
+      "title": "Elevation -2500.01 m",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -2500.01,
+        "C6": 5,
+        "C23": 0,
+        "C37": 6
+      },
+      "expected": {
+        "T": 1.1,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_water_depth_bins_read_the_depth_below_sea_level[-2500.01-0.0]"
+      ],
+      "criteria": [
+        "probe-t.water-depth"
+      ]
+    },
+    {
+      "id": "PT-13",
+      "part": "probe-t",
+      "title": "Elevation -2500 m",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -2500,
+        "C6": 5,
+        "C23": 0,
+        "C37": 6
+      },
+      "expected": {
+        "T": 1.0,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_water_depth_bins_read_the_depth_below_sea_level[-2500--0.1]"
+      ],
+      "criteria": [
+        "probe-t.water-depth"
+      ]
+    },
+    {
+      "id": "PT-14",
+      "part": "probe-t",
+      "title": "Elevation -1500.01 m",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -1500.01,
+        "C6": 5,
+        "C23": 0,
+        "C37": 6
+      },
+      "expected": {
+        "T": 1.0,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_water_depth_bins_read_the_depth_below_sea_level[-1500.01--0.1]"
+      ],
+      "criteria": [
+        "probe-t.water-depth"
+      ]
+    },
+    {
+      "id": "PT-15",
+      "part": "probe-t",
+      "title": "Elevation -1500 m",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -1500,
+        "C6": 5,
+        "C23": 0,
+        "C37": 6
+      },
+      "expected": {
+        "T": 0.9,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_water_depth_bins_read_the_depth_below_sea_level[-1500--0.2]"
+      ],
+      "criteria": [
+        "probe-t.water-depth"
+      ]
+    },
+    {
+      "id": "PT-16",
+      "part": "probe-t",
+      "title": "Elevation 0: no water depth",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": 0,
+        "C6": 5,
+        "C23": 0,
+        "C37": 6
+      },
+      "expected": {
+        "T": 0.9,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_an_elevation_at_or_above_sea_level_counts_as_empty[0]"
+      ],
+      "criteria": [
+        "probe-t.water-depth",
+        "probe-t.elevation-not-below-sea-level"
+      ]
+    },
+    {
+      "id": "PT-17",
+      "part": "probe-t",
+      "title": "Elevation 120: no water depth",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": 120,
+        "C6": 5,
+        "C23": 0,
+        "C37": 6
+      },
+      "expected": {
+        "T": 0.9,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_an_elevation_at_or_above_sea_level_counts_as_empty[120]"
+      ],
+      "criteria": [
+        "probe-t.water-depth",
+        "probe-t.elevation-not-below-sea-level"
+      ]
+    },
+    {
+      "id": "PT-18",
+      "part": "probe-t",
+      "title": "Elevation empty: no water depth",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C6": 5,
+        "C23": 0,
+        "C37": 6
+      },
+      "expected": {
+        "T": 0.9,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_an_elevation_at_or_above_sea_level_counts_as_empty[None]"
+      ],
+      "criteria": [
+        "probe-t.water-depth",
+        "probe-t.elevation-not-below-sea-level",
+        "missing-information.empty"
+      ]
+    },
+    {
+      "id": "PT-19",
+      "part": "probe-t",
+      "title": "Tilt 30.01 degrees",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 5,
+        "C23": 30.01,
+        "C37": 6
+      },
+      "expected": {
+        "T": 0.9
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_tilt_bins[30.01--0.2]"
+      ],
+      "criteria": [
+        "probe-t.tilt"
+      ]
+    },
+    {
+      "id": "PT-20",
+      "part": "probe-t",
+      "title": "Tilt 30 degrees",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 5,
+        "C23": 30,
+        "C37": 6
+      },
+      "expected": {
+        "T": 1.0
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_tilt_bins[30--0.1]"
+      ],
+      "criteria": [
+        "probe-t.tilt"
+      ]
+    },
+    {
+      "id": "PT-21",
+      "part": "probe-t",
+      "title": "Tilt 10.01 degrees",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 5,
+        "C23": 10.01,
+        "C37": 6
+      },
+      "expected": {
+        "T": 1.0
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_tilt_bins[10.01--0.1]"
+      ],
+      "criteria": [
+        "probe-t.tilt"
+      ]
+    },
+    {
+      "id": "PT-22",
+      "part": "probe-t",
+      "title": "Tilt 10 degrees",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 5,
+        "C23": 10,
+        "C37": 6
+      },
+      "expected": {
+        "T": 1.1
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_tilt_bins[10-0.0]"
+      ],
+      "criteria": [
+        "probe-t.tilt"
+      ]
+    },
+    {
+      "id": "PT-23",
+      "part": "probe-t",
+      "title": "Tilt corrected waives the tilt criterion, even with an empty tilt",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 5,
+        "C37": 6,
+        "C12": "[Tilt corrected]"
+      },
+      "expected": {
+        "T": 1.1,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_a_corrected_tilt_is_waived_even_when_the_tilt_is_empty"
+      ],
+      "criteria": [
+        "probe-t.tilt-waiver"
+      ]
+    },
+    {
+      "id": "PT-24",
+      "part": "probe-t",
+      "title": "A bottom-water correction waives the water depth criterion, even with an empty elevation",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C6": 5,
+        "C23": 0,
+        "C37": 6,
+        "C17": "[Present and corrected]"
+      },
+      "expected": {
+        "T": 1.1,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_a_corrected_bottom_water_is_waived_even_when_the_elevation_is_empty"
+      ],
+      "criteria": [
+        "probe-t.water-depth-waiver"
+      ]
+    },
+    {
+      "id": "PT-25",
+      "part": "probe-t",
+      "title": "No penetration and no tilt recorded",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C37": 6
+      },
+      "expected": {
+        "T": 0.7,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_a_gradient_without_probe_metadata_has_empty_penetration_and_tilt"
+      ],
+      "criteria": [
+        "probe-t.penetration",
+        "probe-t.tilt",
+        "missing-information.empty"
+      ]
+    },
+    {
+      "id": "PT-26",
+      "part": "probe-t",
+      "title": "Number of temperature recordings empty",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C6": 5,
+        "C23": 0
+      },
+      "expected": {
+        "T": 0.8,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_empty_recordings_take_the_largest_penalty_and_the_mark"
+      ],
+      "criteria": [
+        "probe-t.recordings",
+        "missing-information.empty"
+      ]
+    },
+    {
+      "id": "PC-01",
+      "part": "probe-tc",
+      "title": "The best inputs",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C43": "[Probe - pulse technique]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 4
+      },
+      "expected": {
+        "TC": 1.2,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_the_best_inputs_reach_the_top_of_the_scale"
+      ],
+      "criteria": [
+        "probe-tc.location",
+        "probe-tc.saturation",
+        "probe-tc.number",
+        "probe-tc.pT"
+      ]
+    },
+    {
+      "id": "PC-02",
+      "part": "probe-tc",
+      "title": "4 conductivity measurements",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C43": "[Probe - pulse technique]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 4
+      },
+      "expected": {
+        "TC": 1.2
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_number_bins[4-0.0]"
+      ],
+      "criteria": [
+        "probe-tc.number"
+      ]
+    },
+    {
+      "id": "PC-03",
+      "part": "probe-tc",
+      "title": "3 conductivity measurements",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C43": "[Probe - pulse technique]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 3
+      },
+      "expected": {
+        "TC": 1.1
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_number_bins[3--0.1]"
+      ],
+      "criteria": [
+        "probe-tc.number"
+      ]
+    },
+    {
+      "id": "PC-04",
+      "part": "probe-tc",
+      "title": "2 conductivity measurements",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C43": "[Probe - pulse technique]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 2
+      },
+      "expected": {
+        "TC": 1.1
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_number_bins[2--0.1]"
+      ],
+      "criteria": [
+        "probe-tc.number"
+      ]
+    },
+    {
+      "id": "PC-05",
+      "part": "probe-tc",
+      "title": "1 conductivity measurements",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C43": "[Probe - pulse technique]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 1
+      },
+      "expected": {
+        "TC": 1.0
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_number_bins[1--0.2]"
+      ],
+      "criteria": [
+        "probe-tc.number"
+      ]
+    },
+    {
+      "id": "PC-06",
+      "part": "probe-tc",
+      "title": "A literature location: the number is not scored, even when empty",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[In-situ probe]",
+        "C42": "[Literature or unspecified]",
+        "C43": "[Probe - pulse technique]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Actual in-situ (pT) conditions]"
+      },
+      "expected": {
+        "TC": 1.0,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_the_number_is_not_scored_for_a_literature_location"
+      ],
+      "criteria": [
+        "probe-tc.number-not-scored-for-literature"
+      ]
+    },
+    {
+      "id": "PC-07",
+      "part": "probe-tc",
+      "title": "Saturation empty",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C43": "[Probe - pulse technique]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 4
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_any_empty_saturation_input_takes_the_largest_penalty_and_the_mark[saturation-0.9]"
+      ],
+      "criteria": [
+        "probe-tc.saturation",
+        "missing-information.empty"
+      ]
+    },
+    {
+      "id": "PC-08",
+      "part": "probe-tc",
+      "title": "Method empty",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 4
+      },
+      "expected": {
+        "TC": 0.6,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_any_empty_saturation_input_takes_the_largest_penalty_and_the_mark[method-0.6]"
+      ],
+      "criteria": [
+        "probe-tc.saturation",
+        "missing-information.empty"
+      ]
+    },
+    {
+      "id": "PC-09",
+      "part": "probe-tc",
+      "title": "Source empty",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C42": "[Actual heat-flow location]",
+        "C43": "[Probe - pulse technique]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 4
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_any_empty_saturation_input_takes_the_largest_penalty_and_the_mark[source-0.9]"
+      ],
+      "criteria": [
+        "probe-tc.saturation",
+        "missing-information.empty"
+      ]
+    },
+    {
+      "id": "PC-10",
+      "part": "probe-tc",
+      "title": "Location empty",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[In-situ probe]",
+        "C43": "[Probe - pulse technique]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 4
+      },
+      "expected": {
+        "TC": 0.7,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_any_empty_saturation_input_takes_the_largest_penalty_and_the_mark[location-0.7]"
+      ],
+      "criteria": [
+        "probe-tc.saturation",
+        "missing-information.empty"
+      ]
+    },
+    {
+      "id": "PC-11",
+      "part": "probe-tc",
+      "title": "Saturation recorded as unspecified",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C43": "[Probe - pulse technique]",
+        "C44": "[Unspecified]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 4
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_an_explicit_unspecified_saturation_is_a_value_and_is_not_marked"
+      ],
+      "criteria": [
+        "probe-tc.saturation",
+        "missing-information.unspecified-gives-no-mark"
+      ]
+    },
+    {
+      "id": "PC-12",
+      "part": "probe-tc",
+      "title": "Two locations: the poorest counts",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[In-situ probe]",
+        "C42": [
+          "[Actual heat-flow location]",
+          "[Other location]"
+        ],
+        "C43": "[Probe - pulse technique]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 4
+      },
+      "expected": {
+        "TC": 1.1
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_the_poorest_of_several_locations_counts"
+      ],
+      "criteria": [
+        "probe-tc.location",
+        "multi-valued.poorest"
+      ]
+    },
+    {
+      "id": "PC-13",
+      "part": "probe-tc",
+      "title": "Actual in-situ pT with a laboratory method",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C43": "[Lab - line source - full space]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 4
+      },
+      "expected": {
+        "TC": 0.6
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_an_actual_in_situ_pT_needs_the_pulse_probe_to_score_well"
+      ],
+      "criteria": [
+        "probe-tc.pT",
+        "probe-tc.saturation"
+      ]
+    },
+    {
+      "id": "PC-14",
+      "part": "probe-tc",
+      "title": "pT conditions empty",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C43": "[Probe - pulse technique]",
+        "C44": "[Saturated measured in-situ]",
+        "C47": 4
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_empty_pT_conditions_take_the_largest_penalty_and_the_mark"
+      ],
+      "criteria": [
+        "probe-tc.pT",
+        "missing-information.empty"
+      ]
+    },
+    {
+      "id": "BT-01",
+      "part": "borehole-t",
+      "title": "Four recordings of an equilibrium log: a continuous log",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 4,
+        "C31": "[LOGeq]",
+        "C32": "[LOGeq]"
+      },
+      "expected": {
+        "T": 1.1
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_a_continuous_log_needs_more_than_three_recordings"
+      ],
+      "criteria": [
+        "borehole-t.continuous-log"
+      ]
+    },
+    {
+      "id": "BT-02",
+      "part": "borehole-t",
+      "title": "Three recordings of the same log: multiple single points",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 3,
+        "C31": "[LOGeq]",
+        "C32": "[LOGeq]"
+      },
+      "expected": {
+        "T": 0.9
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_a_continuous_log_needs_more_than_three_recordings"
+      ],
+      "criteria": [
+        "borehole-t.single-points",
+        "borehole-t.continuous-log-needs-more-than-three"
+      ]
+    },
+    {
+      "id": "BT-03",
+      "part": "borehole-t",
+      "title": "A perturbed log at the top",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 10,
+        "C31": "[LOGpert]",
+        "C32": "[LOGeq]"
+      },
+      "expected": {
+        "T": 0.9
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_a_continuous_log_with_a_perturbed_method_is_penalised"
+      ],
+      "criteria": [
+        "borehole-t.continuous-log"
+      ]
+    },
+    {
+      "id": "BT-04",
+      "part": "borehole-t",
+      "title": "A log at the top and a bottom-hole temperature at the bottom",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 10,
+        "C31": "[LOGeq]",
+        "C32": "[BHT]"
+      },
+      "expected": {
+        "T": 0.7
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_a_non_log_method_makes_the_case_single_points"
+      ],
+      "criteria": [
+        "borehole-t.single-points"
+      ]
+    },
+    {
+      "id": "BT-05",
+      "part": "borehole-t",
+      "title": "Surface at the top, [cBHT] at the bottom",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 2,
+        "C31": "[SUR]",
+        "C32": "[cBHT]"
+      },
+      "expected": {
+        "T": 0.7,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_the_surface_case_is_decided_by_the_bottom_method_alone[cBHT--0.3]"
+      ],
+      "criteria": [
+        "borehole-t.surface-plus-one-point"
+      ]
+    },
+    {
+      "id": "BT-06",
+      "part": "borehole-t",
+      "title": "Surface at the top, [BHT] at the bottom",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 2,
+        "C31": "[SUR]",
+        "C32": "[BHT]"
+      },
+      "expected": {
+        "T": 0.5,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_the_surface_case_is_decided_by_the_bottom_method_alone[BHT--0.5]"
+      ],
+      "criteria": [
+        "borehole-t.surface-plus-one-point"
+      ]
+    },
+    {
+      "id": "BT-07",
+      "part": "borehole-t",
+      "title": "Surface at the top, [CPD] at the bottom",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 2,
+        "C31": "[SUR]",
+        "C32": "[CPD]"
+      },
+      "expected": {
+        "T": 0.4,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_the_surface_case_is_decided_by_the_bottom_method_alone[CPD--0.6]"
+      ],
+      "criteria": [
+        "borehole-t.surface-plus-one-point"
+      ]
+    },
+    {
+      "id": "BT-08",
+      "part": "borehole-t",
+      "title": "Surface at the top, [Other] at the bottom",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 2,
+        "C31": "[SUR]",
+        "C32": "[Other]"
+      },
+      "expected": {
+        "T": 0.4,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_the_surface_case_is_decided_by_the_bottom_method_alone[other--0.6]"
+      ],
+      "criteria": [
+        "borehole-t.surface-plus-one-point"
+      ]
+    },
+    {
+      "id": "BT-09",
+      "part": "borehole-t",
+      "title": "[HT-FTeq] at top and bottom",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 2,
+        "C31": "[HT-FTeq]",
+        "C32": "[HT-FTeq]"
+      },
+      "expected": {
+        "T": 0.9
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_the_misspelt_toolbox_tokens_read_as_the_vocabulary_methods[HT_FT--0.1]"
+      ],
+      "criteria": [
+        "borehole-t.single-points"
+      ]
+    },
+    {
+      "id": "BT-10",
+      "part": "borehole-t",
+      "title": "[HT-FTpert] at top and bottom",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 2,
+        "C31": "[HT-FTpert]",
+        "C32": "[HT-FTpert]"
+      },
+      "expected": {
+        "T": 0.7
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_the_misspelt_toolbox_tokens_read_as_the_vocabulary_methods[HT_FTpert--0.3]"
+      ],
+      "criteria": [
+        "borehole-t.single-points"
+      ]
+    },
+    {
+      "id": "BT-11",
+      "part": "borehole-t",
+      "title": "A method that fits no case (DTSeq with two recordings)",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 2,
+        "C31": "[DTSeq]",
+        "C32": "[DTSeq]"
+      },
+      "expected": {
+        "T": 0.5,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_a_method_that_fits_no_case_takes_the_largest_penalty_and_the_mark"
+      ],
+      "criteria": [
+        "borehole-t.single-points",
+        "borehole-t.unresolvable-method",
+        "missing-information.unresolvable-method"
+      ]
+    },
+    {
+      "id": "BT-12",
+      "part": "borehole-t",
+      "title": "Both temperature methods empty",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 10
+      },
+      "expected": {
+        "T": 0.5,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_empty_methods_take_the_largest_penalty_and_the_mark"
+      ],
+      "criteria": [
+        "borehole-t.single-points",
+        "missing-information.empty"
+      ]
+    },
+    {
+      "id": "BT-13",
+      "part": "borehole-t",
+      "title": "Both temperature methods unspecified",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 10,
+        "C31": "[Unspecified]",
+        "C32": "[Unspecified]"
+      },
+      "expected": {
+        "T": 0.5,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_an_explicit_unspecified_method_is_a_value_and_is_not_marked"
+      ],
+      "criteria": [
+        "borehole-t.single-points",
+        "missing-information.unspecified-gives-no-mark"
+      ]
+    },
+    {
+      "id": "BT-14",
+      "part": "borehole-t",
+      "title": "Two methods at the top: the poorest counts",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 2,
+        "C31": [
+          "[cBHT]",
+          "[CPD]"
+        ],
+        "C32": "[cBHT]"
+      },
+      "expected": {
+        "T": 0.5
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_the_poorest_of_several_methods_counts"
+      ],
+      "criteria": [
+        "borehole-t.single-points",
+        "multi-valued.poorest"
+      ]
+    },
+    {
+      "id": "BC-01",
+      "part": "borehole-tc",
+      "title": "The best inputs, with the pT conditions scored alone",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 1.0,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_the_best_uncorrected_inputs_score_one"
+      ],
+      "criteria": [
+        "borehole-tc.location",
+        "borehole-tc.source",
+        "borehole-tc.number",
+        "borehole-tc.saturation",
+        "borehole-tc.pT"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-02",
+      "part": "borehole-tc",
+      "title": "Only the top of the interval reported",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 1.0
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_one_reported_depth_passes_the_gate[depths0]"
+      ],
+      "criteria": [
+        "borehole-tc.gate"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-03",
+      "part": "borehole-tc",
+      "title": "Only the bottom of the interval reported",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C5": 500,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 1.0
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_one_reported_depth_passes_the_gate[depths1]"
+      ],
+      "criteria": [
+        "borehole-tc.gate"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-04",
+      "part": "borehole-tc",
+      "title": "Neither top nor bottom of the interval reported",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.1,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_neither_depth_gives_the_fixed_minimum_and_the_mark"
+      ],
+      "criteria": [
+        "borehole-tc.gate",
+        "missing-information.gate"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-05",
+      "part": "borehole-tc",
+      "title": "Location empty",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_an_empty_location_takes_the_largest_penalty_and_the_mark"
+      ],
+      "criteria": [
+        "borehole-tc.location",
+        "missing-information.empty"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-06",
+      "part": "borehole-tc",
+      "title": "Source [In-situ probe]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 1.1,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_source_penalties[insitu_probe-0.1]"
+      ],
+      "criteria": [
+        "borehole-tc.source"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-07",
+      "part": "borehole-tc",
+      "title": "Source [Core-log integration]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core-log integration]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 1.1,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_source_penalties[core_log-0.1]"
+      ],
+      "criteria": [
+        "borehole-tc.source"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-08",
+      "part": "borehole-tc",
+      "title": "Source [Core samples]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 1.0,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_source_penalties[core_samples-0.0]"
+      ],
+      "criteria": [
+        "borehole-tc.source"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-09",
+      "part": "borehole-tc",
+      "title": "Source [Cutting samples]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Cutting samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_source_penalties[cutting_samples--0.1]"
+      ],
+      "criteria": [
+        "borehole-tc.source"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-10",
+      "part": "borehole-tc",
+      "title": "Source [Outcrop samples]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Outcrop samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_source_penalties[outcrop_samples--0.1]"
+      ],
+      "criteria": [
+        "borehole-tc.source"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-11",
+      "part": "borehole-tc",
+      "title": "Source [Well-log interpretation]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Well-log interpretation]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_source_penalties[well_log--0.1]"
+      ],
+      "criteria": [
+        "borehole-tc.source"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-12",
+      "part": "borehole-tc",
+      "title": "Source [Mineral computation]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Mineral computation]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_source_penalties[mineral_computation--0.2]"
+      ],
+      "criteria": [
+        "borehole-tc.source"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-13",
+      "part": "borehole-tc",
+      "title": "Source [Assumed from literature]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Assumed from literature]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_source_penalties[assumed_from_literature--0.2]"
+      ],
+      "criteria": [
+        "borehole-tc.source"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-14",
+      "part": "borehole-tc",
+      "title": "Source [Other]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Other]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_source_penalties[other--0.2]"
+      ],
+      "criteria": [
+        "borehole-tc.source"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-15",
+      "part": "borehole-tc",
+      "title": "Source [Unspecified]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Unspecified]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_source_penalties[unspecified--0.2]"
+      ],
+      "criteria": [
+        "borehole-tc.source"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-16",
+      "part": "borehole-tc",
+      "title": "Source empty",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_an_empty_source_takes_the_largest_penalty_and_the_mark"
+      ],
+      "criteria": [
+        "borehole-tc.source",
+        "missing-information.empty"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-17",
+      "part": "borehole-tc",
+      "title": "16 conductivity measurements",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 16
+      },
+      "expected": {
+        "TC": 1.0
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_number_bins[16-0.0]"
+      ],
+      "criteria": [
+        "borehole-tc.number"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-18",
+      "part": "borehole-tc",
+      "title": "15 conductivity measurements",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 15
+      },
+      "expected": {
+        "TC": 0.9
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_number_bins[15--0.1]"
+      ],
+      "criteria": [
+        "borehole-tc.number"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-19",
+      "part": "borehole-tc",
+      "title": "Number of conductivity measurements empty",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]"
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_an_empty_number_takes_the_largest_penalty_and_the_mark"
+      ],
+      "criteria": [
+        "borehole-tc.number",
+        "missing-information.empty"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-20",
+      "part": "borehole-tc",
+      "title": "Saturation [Saturated measured in-situ]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 1.0,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_saturation_penalties[saturatedInSitu-0.0]"
+      ],
+      "criteria": [
+        "borehole-tc.saturation"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-21",
+      "part": "borehole-tc",
+      "title": "Saturation [Saturated measured]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 1.0,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_saturation_penalties[saturatedMeasured-0.0]"
+      ],
+      "criteria": [
+        "borehole-tc.saturation"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-22",
+      "part": "borehole-tc",
+      "title": "Saturation [Saturated calculated]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated calculated]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_saturation_penalties[saturatedCalculated--0.1]"
+      ],
+      "criteria": [
+        "borehole-tc.saturation"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-23",
+      "part": "borehole-tc",
+      "title": "Saturation [Recovered]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Recovered]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_saturation_penalties[recovered--0.1]"
+      ],
+      "criteria": [
+        "borehole-tc.saturation"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-24",
+      "part": "borehole-tc",
+      "title": "Saturation [Dry measured]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Dry measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_saturation_penalties[dryMeasured--0.2]"
+      ],
+      "criteria": [
+        "borehole-tc.saturation"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-25",
+      "part": "borehole-tc",
+      "title": "Saturation [Other]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Other]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_saturation_penalties[other--0.2]"
+      ],
+      "criteria": [
+        "borehole-tc.saturation"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-26",
+      "part": "borehole-tc",
+      "title": "Saturation [Unspecified]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Unspecified]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_saturation_penalties[unspecified--0.2]"
+      ],
+      "criteria": [
+        "borehole-tc.saturation",
+        "missing-information.unspecified-gives-no-mark"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-27",
+      "part": "borehole-tc",
+      "title": "pT conditions [Actual in-situ (pT) conditions], scored alone",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 1.0,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_uncorrected_pT_is_scored_on_its_own_terms[actualInSitu-0.0]"
+      ],
+      "criteria": [
+        "borehole-tc.pT"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-28",
+      "part": "borehole-tc",
+      "title": "pT conditions [Replicated in-situ (pT)], scored alone",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Replicated in-situ (pT)]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 1.0,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_uncorrected_pT_is_scored_on_its_own_terms[replicatedPT-0.0]"
+      ],
+      "criteria": [
+        "borehole-tc.pT"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-29",
+      "part": "borehole-tc",
+      "title": "pT conditions [Corrected in-situ (pT)], scored alone",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Corrected in-situ (pT)]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 1.0,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_uncorrected_pT_is_scored_on_its_own_terms[correctedPT-0.0]"
+      ],
+      "criteria": [
+        "borehole-tc.pT"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-30",
+      "part": "borehole-tc",
+      "title": "pT conditions [Replicated in-situ (p)], scored alone",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Replicated in-situ (p)]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_uncorrected_pT_is_scored_on_its_own_terms[replicatedP--0.1]"
+      ],
+      "criteria": [
+        "borehole-tc.pT"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-31",
+      "part": "borehole-tc",
+      "title": "pT conditions [Replicated in-situ (T)], scored alone",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Replicated in-situ (T)]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_uncorrected_pT_is_scored_on_its_own_terms[replicatedT--0.1]"
+      ],
+      "criteria": [
+        "borehole-tc.pT"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-32",
+      "part": "borehole-tc",
+      "title": "pT conditions [Corrected in-situ (p)], scored alone",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Corrected in-situ (p)]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_uncorrected_pT_is_scored_on_its_own_terms[correctedP--0.1]"
+      ],
+      "criteria": [
+        "borehole-tc.pT"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-33",
+      "part": "borehole-tc",
+      "title": "pT conditions [Corrected in-situ (T)], scored alone",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Corrected in-situ (T)]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_uncorrected_pT_is_scored_on_its_own_terms[correctedT--0.1]"
+      ],
+      "criteria": [
+        "borehole-tc.pT"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-34",
+      "part": "borehole-tc",
+      "title": "pT conditions [Recorded ambient pT conditions], scored alone",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Recorded ambient pT conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_uncorrected_pT_is_scored_on_its_own_terms[recordedAmbient--0.2]"
+      ],
+      "criteria": [
+        "borehole-tc.pT"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-35",
+      "part": "borehole-tc",
+      "title": "pT conditions [Unrecorded ambient pT conditions], scored alone",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Unrecorded ambient pT conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_uncorrected_pT_is_scored_on_its_own_terms[unrecordedAmbient--0.2]"
+      ],
+      "criteria": [
+        "borehole-tc.pT"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-36",
+      "part": "borehole-tc",
+      "title": "pT conditions [Unspecified], scored alone",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Unspecified]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_uncorrected_pT_is_scored_on_its_own_terms[unspecified--0.2]"
+      ],
+      "criteria": [
+        "borehole-tc.pT"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-37",
+      "part": "borehole-tc",
+      "title": "pT conditions empty",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_empty_pT_conditions_take_the_largest_penalty_and_the_mark"
+      ],
+      "criteria": [
+        "borehole-tc.pT",
+        "missing-information.empty"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-38",
+      "part": "borehole-tc",
+      "title": "Two pT conditions: the poorest counts",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": [
+          "[Actual in-situ (pT) conditions]",
+          "[Recorded ambient pT conditions]"
+        ],
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_the_poorest_of_several_pT_conditions_counts"
+      ],
+      "criteria": [
+        "borehole-tc.pT",
+        "multi-valued.poorest"
+      ],
+      "scoring": "measurement"
+    },
+    {
+      "id": "BC-39",
+      "part": "borehole-tc",
+      "title": "pT conditions [Corrected in-situ (pT)] with the in-situ correction [Pressure and temperature considered]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Corrected in-situ (pT)]",
+        "C47": 30,
+        "C11": "[Pressure and temperature considered]"
+      },
+      "expected": {
+        "TC": 1.0,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_the_in_situ_keyword_applies_the_agreement_rule[correctedPT-considered_pt-1.0-False]"
+      ],
+      "criteria": [
+        "borehole-tc.pT",
+        "borehole-tc.pT-agreement"
+      ],
+      "scoring": "child"
+    },
+    {
+      "id": "BC-40",
+      "part": "borehole-tc",
+      "title": "pT conditions [Corrected in-situ (pT)] with the in-situ correction [Not considered]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Corrected in-situ (pT)]",
+        "C47": 30,
+        "C11": "[Not considered]"
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_the_in_situ_keyword_applies_the_agreement_rule[correctedPT-not_considered-0.8-False]"
+      ],
+      "criteria": [
+        "borehole-tc.pT",
+        "borehole-tc.pT-agreement"
+      ],
+      "scoring": "child"
+    },
+    {
+      "id": "BC-41",
+      "part": "borehole-tc",
+      "title": "pT conditions [Corrected in-situ (T)] with the in-situ correction [Temperature considered]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Corrected in-situ (T)]",
+        "C47": 30,
+        "C11": "[Temperature considered]"
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_the_in_situ_keyword_applies_the_agreement_rule[correctedT-considered_t-0.9-False]"
+      ],
+      "criteria": [
+        "borehole-tc.pT",
+        "borehole-tc.pT-agreement"
+      ],
+      "scoring": "child"
+    },
+    {
+      "id": "BC-42",
+      "part": "borehole-tc",
+      "title": "pT conditions [Corrected in-situ (p)] with the in-situ correction [Pressure considered]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Corrected in-situ (p)]",
+        "C47": 30,
+        "C11": "[Pressure considered]"
+      },
+      "expected": {
+        "TC": 0.9,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_the_in_situ_keyword_applies_the_agreement_rule[correctedP-considered_p-0.9-False]"
+      ],
+      "criteria": [
+        "borehole-tc.pT",
+        "borehole-tc.pT-agreement"
+      ],
+      "scoring": "child"
+    },
+    {
+      "id": "BC-43",
+      "part": "borehole-tc",
+      "title": "pT conditions [Recorded ambient pT conditions] with the in-situ correction [Not considered]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Recorded ambient pT conditions]",
+        "C47": 30,
+        "C11": "[Not considered]"
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_the_in_situ_keyword_applies_the_agreement_rule[recordedAmbient-not_considered-0.8-False]"
+      ],
+      "criteria": [
+        "borehole-tc.pT",
+        "borehole-tc.pT-agreement"
+      ],
+      "scoring": "child"
+    },
+    {
+      "id": "BC-44",
+      "part": "borehole-tc",
+      "title": "pT conditions [Recorded ambient pT conditions] with the in-situ correction [Unspecified]",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Recorded ambient pT conditions]",
+        "C47": 30,
+        "C11": "[Unspecified]"
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_the_in_situ_keyword_applies_the_agreement_rule[recordedAmbient---0.8-False]"
+      ],
+      "criteria": [
+        "borehole-tc.pT",
+        "borehole-tc.pT-agreement"
+      ],
+      "scoring": "child"
+    },
+    {
+      "id": "BC-45",
+      "part": "borehole-tc",
+      "title": "pT conditions [Actual in-situ (pT) conditions] with the in-situ correction empty",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 30
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_the_in_situ_keyword_applies_the_agreement_rule[actualInSitu-None-0.8-True]"
+      ],
+      "criteria": [
+        "borehole-tc.pT",
+        "borehole-tc.pT-agreement",
+        "missing-information.empty"
+      ],
+      "scoring": "child"
+    },
+    {
+      "id": "BC-46",
+      "part": "borehole-tc",
+      "title": "pT conditions empty, in-situ correction recorded",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C47": 30,
+        "C11": "[Pressure and temperature considered]"
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_empty_pT_with_an_in_situ_correction_is_still_marked"
+      ],
+      "criteria": [
+        "borehole-tc.pT",
+        "borehole-tc.pT-agreement",
+        "missing-information.empty"
+      ],
+      "scoring": "child"
+    },
+    {
+      "id": "M-01",
+      "part": "m-score",
+      "title": "T-score 1.0 times TC-score 0.76 = 0.76",
+      "inputs": {
+        "T": 1.0,
+        "TC": 0.76
+      },
+      "expected": {
+        "M": "M1"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_classes_take_a_boundary_product_into_the_better_class[1.0-0.76-M1]"
+      ],
+      "criteria": [
+        "m.classes"
+      ]
+    },
+    {
+      "id": "M-02",
+      "part": "m-score",
+      "title": "T-score 1.0 times TC-score 0.75 = 0.75",
+      "inputs": {
+        "T": 1.0,
+        "TC": 0.75
+      },
+      "expected": {
+        "M": "M1"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_classes_take_a_boundary_product_into_the_better_class[1.0-0.75-M1]"
+      ],
+      "criteria": [
+        "m.classes"
+      ]
+    },
+    {
+      "id": "M-03",
+      "part": "m-score",
+      "title": "T-score 1.0 times TC-score 0.74 = 0.74",
+      "inputs": {
+        "T": 1.0,
+        "TC": 0.74
+      },
+      "expected": {
+        "M": "M2"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_classes_take_a_boundary_product_into_the_better_class[1.0-0.74-M2]"
+      ],
+      "criteria": [
+        "m.classes"
+      ]
+    },
+    {
+      "id": "M-04",
+      "part": "m-score",
+      "title": "T-score 1.0 times TC-score 0.5 = 0.5",
+      "inputs": {
+        "T": 1.0,
+        "TC": 0.5
+      },
+      "expected": {
+        "M": "M2"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_classes_take_a_boundary_product_into_the_better_class[1.0-0.5-M2]"
+      ],
+      "criteria": [
+        "m.classes"
+      ]
+    },
+    {
+      "id": "M-05",
+      "part": "m-score",
+      "title": "T-score 1.0 times TC-score 0.49 = 0.49",
+      "inputs": {
+        "T": 1.0,
+        "TC": 0.49
+      },
+      "expected": {
+        "M": "M3"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_classes_take_a_boundary_product_into_the_better_class[1.0-0.49-M3]"
+      ],
+      "criteria": [
+        "m.classes"
+      ]
+    },
+    {
+      "id": "M-06",
+      "part": "m-score",
+      "title": "T-score 0.5 times TC-score 0.5 = 0.25",
+      "inputs": {
+        "T": 0.5,
+        "TC": 0.5
+      },
+      "expected": {
+        "M": "M3"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_classes_take_a_boundary_product_into_the_better_class[0.5-0.5-M3]"
+      ],
+      "criteria": [
+        "m.classes"
+      ]
+    },
+    {
+      "id": "M-07",
+      "part": "m-score",
+      "title": "T-score 0.5 times TC-score 0.49 = 0.245",
+      "inputs": {
+        "T": 0.5,
+        "TC": 0.49
+      },
+      "expected": {
+        "M": "M4"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_classes_take_a_boundary_product_into_the_better_class[0.5-0.49-M4]"
+      ],
+      "criteria": [
+        "m.classes"
+      ]
+    },
+    {
+      "id": "M-08",
+      "part": "m-score",
+      "title": "T-score 0.1 times TC-score 0.1 = 0.01",
+      "inputs": {
+        "T": 0.1,
+        "TC": 0.1
+      },
+      "expected": {
+        "M": "M4"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_classes_take_a_boundary_product_into_the_better_class[0.1-0.1-M4]"
+      ],
+      "criteria": [
+        "m.classes"
+      ]
+    },
+    {
+      "id": "M-09",
+      "part": "m-score",
+      "title": "0.833 times 0.9 is 0.7497, rounded to 0.750 before the class",
+      "inputs": {
+        "T": 0.833,
+        "TC": 0.9
+      },
+      "expected": {
+        "M": "M1"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_the_product_is_rounded_to_three_places_before_it_is_classed"
+      ],
+      "criteria": [
+        "m.classes",
+        "m.rounding"
+      ]
+    },
+    {
+      "id": "M-10",
+      "part": "m-score",
+      "title": "Only the T-score marked",
+      "inputs": {
+        "T": 0.9,
+        "TC": 0.9,
+        "T_marked": true,
+        "TC_marked": false
+      },
+      "expected": {
+        "M": "M1x"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_either_marked_sub_score_adds_the_x_suffix[t]"
+      ],
+      "criteria": [
+        "m.mark"
+      ]
+    },
+    {
+      "id": "M-11",
+      "part": "m-score",
+      "title": "Only the TC-score marked",
+      "inputs": {
+        "T": 0.9,
+        "TC": 0.9,
+        "T_marked": false,
+        "TC_marked": true
+      },
+      "expected": {
+        "M": "M1x"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_either_marked_sub_score_adds_the_x_suffix[tc]"
+      ],
+      "criteria": [
+        "m.mark"
+      ]
+    },
+    {
+      "id": "M-12",
+      "part": "m-score",
+      "title": "Both marked",
+      "inputs": {
+        "T": 0.9,
+        "TC": 0.9,
+        "T_marked": true,
+        "TC_marked": true
+      },
+      "expected": {
+        "M": "M1x"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_either_marked_sub_score_adds_the_x_suffix[both]"
+      ],
+      "criteria": [
+        "m.mark"
+      ]
+    },
+    {
+      "id": "M-13",
+      "part": "m-score",
+      "title": "T-score not determined",
+      "inputs": {
+        "T": "not determined",
+        "TC": 0.9
+      },
+      "expected": {
+        "M": "Mx"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_a_sub_score_that_cannot_be_calculated_gives_mx"
+      ],
+      "criteria": [
+        "m.not-determined",
+        "not-determined.m"
+      ]
+    },
+    {
+      "id": "M-14",
+      "part": "m-score",
+      "title": "TC-score not determined",
+      "inputs": {
+        "T": 0.9,
+        "TC": "not determined"
+      },
+      "expected": {
+        "M": "Mx"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_a_sub_score_that_cannot_be_calculated_gives_mx"
+      ],
+      "criteria": [
+        "m.not-determined",
+        "not-determined.m"
+      ]
+    },
+    {
+      "id": "M-15",
+      "part": "m-score",
+      "title": "Both not determined, one of them marked",
+      "inputs": {
+        "T": "not determined",
+        "TC": "not determined",
+        "T_marked": true
+      },
+      "expected": {
+        "M": "Mx"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestMScore::test_a_sub_score_that_cannot_be_calculated_gives_mx"
+      ],
+      "criteria": [
+        "m.not-determined",
+        "not-determined.m"
+      ]
+    },
+    {
+      "id": "PF-01",
+      "part": "perturbation-flags",
+      "title": "No correction recorded",
+      "inputs": {},
+      "expected": {
+        "flags": "-------"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_no_corrections_give_seven_dashes"
+      ],
+      "criteria": [
+        "flags.empty"
+      ]
+    },
+    {
+      "id": "PF-02",
+      "part": "perturbation-flags",
+      "title": "C13 [Present and corrected]",
+      "inputs": {
+        "C13": "[Present and corrected]"
+      },
+      "expected": {
+        "flags": "S------"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_each_correction_writes_its_own_letter_in_its_own_place[S-S-0-present_corrected-True]"
+      ],
+      "criteria": [
+        "flags.S"
+      ]
+    },
+    {
+      "id": "PF-03",
+      "part": "perturbation-flags",
+      "title": "C14 [Present and corrected]",
+      "inputs": {
+        "C14": "[Present and corrected]"
+      },
+      "expected": {
+        "flags": "-E-----"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_each_correction_writes_its_own_letter_in_its_own_place[E-E-1-present_corrected-True]"
+      ],
+      "criteria": [
+        "flags.E"
+      ]
+    },
+    {
+      "id": "PF-04",
+      "part": "perturbation-flags",
+      "title": "C15 [Present and corrected]",
+      "inputs": {
+        "C15": "[Present and corrected]"
+      },
+      "expected": {
+        "flags": "--T----"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_each_correction_writes_its_own_letter_in_its_own_place[TOPO-T-2-present_corrected-True]"
+      ],
+      "criteria": [
+        "flags.T"
+      ]
+    },
+    {
+      "id": "PF-05",
+      "part": "perturbation-flags",
+      "title": "C16 [Present and corrected]",
+      "inputs": {
+        "C16": "[Present and corrected]"
+      },
+      "expected": {
+        "flags": "---P---"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_each_correction_writes_its_own_letter_in_its_own_place[PAL-P-3-present_corrected-True]"
+      ],
+      "criteria": [
+        "flags.P"
+      ]
+    },
+    {
+      "id": "PF-06",
+      "part": "perturbation-flags",
+      "title": "C17 [Present and corrected]",
+      "inputs": {
+        "C17": "[Present and corrected]"
+      },
+      "expected": {
+        "flags": "----V--"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_each_correction_writes_its_own_letter_in_its_own_place[SUR-V-4-present_corrected-True]"
+      ],
+      "criteria": [
+        "flags.V"
+      ]
+    },
+    {
+      "id": "PF-07",
+      "part": "perturbation-flags",
+      "title": "C18 [Present and corrected]",
+      "inputs": {
+        "C18": "[Present and corrected]"
+      },
+      "expected": {
+        "flags": "-----C-"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_each_correction_writes_its_own_letter_in_its_own_place[CONV-C-5-present_corrected-True]"
+      ],
+      "criteria": [
+        "flags.C"
+      ]
+    },
+    {
+      "id": "PF-08",
+      "part": "perturbation-flags",
+      "title": "C19 [Present and corrected]",
+      "inputs": {
+        "C19": "[Present and corrected]"
+      },
+      "expected": {
+        "flags": "------R"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_each_correction_writes_its_own_letter_in_its_own_place[HR-R-6-present_corrected-True]"
+      ],
+      "criteria": [
+        "flags.R"
+      ]
+    },
+    {
+      "id": "PF-09",
+      "part": "perturbation-flags",
+      "title": "C13 [Present and not corrected]",
+      "inputs": {
+        "C13": "[Present and not corrected]"
+      },
+      "expected": {
+        "flags": "s------"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_each_correction_writes_its_own_letter_in_its_own_place[S-S-0-present_not_corrected-False]"
+      ],
+      "criteria": [
+        "flags.S"
+      ]
+    },
+    {
+      "id": "PF-10",
+      "part": "perturbation-flags",
+      "title": "C14 [Present and not corrected]",
+      "inputs": {
+        "C14": "[Present and not corrected]"
+      },
+      "expected": {
+        "flags": "-e-----"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_each_correction_writes_its_own_letter_in_its_own_place[E-E-1-present_not_corrected-False]"
+      ],
+      "criteria": [
+        "flags.E"
+      ]
+    },
+    {
+      "id": "PF-11",
+      "part": "perturbation-flags",
+      "title": "C15 [Present and not corrected]",
+      "inputs": {
+        "C15": "[Present and not corrected]"
+      },
+      "expected": {
+        "flags": "--t----"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_each_correction_writes_its_own_letter_in_its_own_place[TOPO-T-2-present_not_corrected-False]"
+      ],
+      "criteria": [
+        "flags.T"
+      ]
+    },
+    {
+      "id": "PF-12",
+      "part": "perturbation-flags",
+      "title": "C16 [Present and not corrected]",
+      "inputs": {
+        "C16": "[Present and not corrected]"
+      },
+      "expected": {
+        "flags": "---p---"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_each_correction_writes_its_own_letter_in_its_own_place[PAL-P-3-present_not_corrected-False]"
+      ],
+      "criteria": [
+        "flags.P"
+      ]
+    },
+    {
+      "id": "PF-13",
+      "part": "perturbation-flags",
+      "title": "C17 [Present and not corrected]",
+      "inputs": {
+        "C17": "[Present and not corrected]"
+      },
+      "expected": {
+        "flags": "----v--"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_each_correction_writes_its_own_letter_in_its_own_place[SUR-V-4-present_not_corrected-False]"
+      ],
+      "criteria": [
+        "flags.V"
+      ]
+    },
+    {
+      "id": "PF-14",
+      "part": "perturbation-flags",
+      "title": "C18 [Present and not corrected]",
+      "inputs": {
+        "C18": "[Present and not corrected]"
+      },
+      "expected": {
+        "flags": "-----c-"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_each_correction_writes_its_own_letter_in_its_own_place[CONV-C-5-present_not_corrected-False]"
+      ],
+      "criteria": [
+        "flags.C"
+      ]
+    },
+    {
+      "id": "PF-15",
+      "part": "perturbation-flags",
+      "title": "C19 [Present and not corrected]",
+      "inputs": {
+        "C19": "[Present and not corrected]"
+      },
+      "expected": {
+        "flags": "------r"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_each_correction_writes_its_own_letter_in_its_own_place[HR-R-6-present_not_corrected-False]"
+      ],
+      "criteria": [
+        "flags.R"
+      ]
+    },
+    {
+      "id": "PF-16",
+      "part": "perturbation-flags",
+      "title": "C16 [Present and not significant]",
+      "inputs": {
+        "C16": "[Present and not significant]"
+      },
+      "expected": {
+        "flags": "---X---"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_the_remaining_statuses[present_not_significant-X]"
+      ],
+      "criteria": [
+        "flags.P",
+        "flags.not-significant"
+      ]
+    },
+    {
+      "id": "PF-17",
+      "part": "perturbation-flags",
+      "title": "C16 [Not recognized]",
+      "inputs": {
+        "C16": "[Not recognized]"
+      },
+      "expected": {
+        "flags": "---x---"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_the_remaining_statuses[not_recognized-x]"
+      ],
+      "criteria": [
+        "flags.P",
+        "flags.not-recognized"
+      ]
+    },
+    {
+      "id": "PF-18",
+      "part": "perturbation-flags",
+      "title": "C16 empty",
+      "inputs": {},
+      "expected": {
+        "flags": "-------"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestPerturbationFlags::test_the_remaining_statuses[--]"
+      ],
+      "criteria": [
+        "flags.P",
+        "flags.empty"
+      ]
+    },
+    {
+      "id": "IH-01",
+      "part": "inheritance",
+      "title": "A parent with no children",
+      "inputs": {
+        "children": []
+      },
+      "expected": {
+        "U": "Ux",
+        "M": "Mx",
+        "flags": "-------",
+        "code": "Ux.Mx.-------"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_no_children_is_not_determined"
+      ],
+      "criteria": [
+        "inherited.none"
+      ]
+    },
+    {
+      "id": "IH-02",
+      "part": "inheritance",
+      "title": "One child passes its code up",
+      "inputs": {
+        "children": [
+          {
+            "code": "U2.M3x.-e-PX--"
+          }
+        ]
+      },
+      "expected": {
+        "U": "U2",
+        "M": "M3x",
+        "flags": "-e-PX--",
+        "code": "U2.M3x.-e-PX--"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_one_child_passes_its_scores_and_flags_up"
+      ],
+      "criteria": [
+        "inherited.single-child"
+      ]
+    },
+    {
+      "id": "IH-03",
+      "part": "inheritance",
+      "title": "Children graded U1, U2",
+      "inputs": {
+        "children": [
+          {
+            "code": "U1.M1.-------"
+          },
+          {
+            "code": "U2.M1.-------"
+          }
+        ]
+      },
+      "expected": {
+        "U": "U2"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_the_poorest_u_score_is_inherited[grades0-U2]"
+      ],
+      "criteria": [
+        "inherited.u"
+      ]
+    },
+    {
+      "id": "IH-04",
+      "part": "inheritance",
+      "title": "Children graded U3, U1, U2",
+      "inputs": {
+        "children": [
+          {
+            "code": "U3.M1.-------"
+          },
+          {
+            "code": "U1.M1.-------"
+          },
+          {
+            "code": "U2.M1.-------"
+          }
+        ]
+      },
+      "expected": {
+        "U": "U3"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_the_poorest_u_score_is_inherited[grades1-U3]"
+      ],
+      "criteria": [
+        "inherited.u"
+      ]
+    },
+    {
+      "id": "IH-05",
+      "part": "inheritance",
+      "title": "Children graded U4, U3",
+      "inputs": {
+        "children": [
+          {
+            "code": "U4.M1.-------"
+          },
+          {
+            "code": "U3.M1.-------"
+          }
+        ]
+      },
+      "expected": {
+        "U": "U4"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_the_poorest_u_score_is_inherited[grades2-U4]"
+      ],
+      "criteria": [
+        "inherited.u"
+      ]
+    },
+    {
+      "id": "IH-06",
+      "part": "inheritance",
+      "title": "Children graded U4, Ux, U1",
+      "inputs": {
+        "children": [
+          {
+            "code": "U4.M1.-------"
+          },
+          {
+            "code": "Ux.M1.-------"
+          },
+          {
+            "code": "U1.M1.-------"
+          }
+        ]
+      },
+      "expected": {
+        "U": "Ux"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_the_poorest_u_score_is_inherited[grades3-Ux]"
+      ],
+      "criteria": [
+        "inherited.u"
+      ]
+    },
+    {
+      "id": "IH-07",
+      "part": "inheritance",
+      "title": "Children graded M1, M3",
+      "inputs": {
+        "children": [
+          {
+            "code": "U1.M1.-------"
+          },
+          {
+            "code": "U1.M3.-------"
+          }
+        ]
+      },
+      "expected": {
+        "M": "M3"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_any_marked_m_score_is_poorer_than_any_unmarked_and_mx_is_poorest[grades0-M3]"
+      ],
+      "criteria": [
+        "inherited.m"
+      ]
+    },
+    {
+      "id": "IH-08",
+      "part": "inheritance",
+      "title": "Children graded M4, M1x",
+      "inputs": {
+        "children": [
+          {
+            "code": "U1.M4.-------"
+          },
+          {
+            "code": "U1.M1x.-------"
+          }
+        ]
+      },
+      "expected": {
+        "M": "M1x"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_any_marked_m_score_is_poorer_than_any_unmarked_and_mx_is_poorest[grades1-M1x]"
+      ],
+      "criteria": [
+        "inherited.m"
+      ]
+    },
+    {
+      "id": "IH-09",
+      "part": "inheritance",
+      "title": "Children graded M1x, M4x",
+      "inputs": {
+        "children": [
+          {
+            "code": "U1.M1x.-------"
+          },
+          {
+            "code": "U1.M4x.-------"
+          }
+        ]
+      },
+      "expected": {
+        "M": "M4x"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_any_marked_m_score_is_poorer_than_any_unmarked_and_mx_is_poorest[grades2-M4x]"
+      ],
+      "criteria": [
+        "inherited.m"
+      ]
+    },
+    {
+      "id": "IH-10",
+      "part": "inheritance",
+      "title": "Children graded M4x, Mx, M2",
+      "inputs": {
+        "children": [
+          {
+            "code": "U1.M4x.-------"
+          },
+          {
+            "code": "U1.Mx.-------"
+          },
+          {
+            "code": "U1.M2.-------"
+          }
+        ]
+      },
+      "expected": {
+        "M": "Mx"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_any_marked_m_score_is_poorer_than_any_unmarked_and_mx_is_poorest[grades3-Mx]"
+      ],
+      "criteria": [
+        "inherited.m"
+      ]
+    },
+    {
+      "id": "IH-11",
+      "part": "inheritance",
+      "title": "U4 with M1 and U1 with M4",
+      "inputs": {
+        "children": [
+          {
+            "code": "U4.M1.-------"
+          },
+          {
+            "code": "U1.M4.-------"
+          }
+        ]
+      },
+      "expected": {
+        "U": "U4",
+        "M": "M4"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_the_u_and_m_scores_may_come_from_different_children"
+      ],
+      "criteria": [
+        "inherited.u",
+        "inherited.m"
+      ]
+    },
+    {
+      "id": "IH-12",
+      "part": "inheritance",
+      "title": "Flags of the child with the poorest U-score",
+      "inputs": {
+        "children": [
+          {
+            "code": "U1.M4.S------"
+          },
+          {
+            "code": "U3.M1.-E-----"
+          }
+        ]
+      },
+      "expected": {
+        "flags": "-E-----"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_the_flags_are_those_of_the_child_with_the_poorest_u_score"
+      ],
+      "criteria": [
+        "inherited.flags"
+      ]
+    },
+    {
+      "id": "IH-13",
+      "part": "inheritance",
+      "title": "The poorest M-score breaks a tie on the U-score",
+      "inputs": {
+        "children": [
+          {
+            "code": "U2.M1.S------"
+          },
+          {
+            "code": "U2.M3x.-E-----"
+          },
+          {
+            "code": "U2.M2.--T----"
+          }
+        ]
+      },
+      "expected": {
+        "flags": "-E-----"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_the_poorest_m_score_breaks_a_tie_on_the_u_score"
+      ],
+      "criteria": [
+        "inherited.flags",
+        "inherited.tie-on-u"
+      ]
+    },
+    {
+      "id": "IH-14",
+      "part": "inheritance",
+      "title": "Two children tie on both scores, in the order S then E",
+      "inputs": {
+        "children": [
+          {
+            "code": "U2.M2.S------"
+          },
+          {
+            "code": "U2.M2.-E-----"
+          }
+        ]
+      },
+      "expected": {
+        "flags": "S------"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_a_full_tie_takes_the_first_child_so_recalculation_is_stable"
+      ],
+      "criteria": [
+        "inherited.flags",
+        "inherited.full-tie"
+      ],
+      "note": "The order is the order the GHFDB portal holds the children in. QUESTION-3 asks the data assessment team what the scheme says."
+    },
+    {
+      "id": "IH-15",
+      "part": "inheritance",
+      "title": "The same two children in the order E then S",
+      "inputs": {
+        "children": [
+          {
+            "code": "U2.M2.-E-----"
+          },
+          {
+            "code": "U2.M2.S------"
+          }
+        ]
+      },
+      "expected": {
+        "flags": "-E-----"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestInherit::test_a_full_tie_takes_the_first_child_so_recalculation_is_stable"
+      ],
+      "criteria": [
+        "inherited.flags",
+        "inherited.full-tie"
+      ],
+      "note": "The order is the order the GHFDB portal holds the children in. QUESTION-3 asks the data assessment team what the scheme says."
+    },
+    {
+      "id": "IH-16",
+      "part": "inheritance",
+      "title": "An only child marked [Yes]",
+      "inputs": {
+        "children": [
+          {
+            "code": "U2.Mx.-------",
+            "C9": "[Yes]"
+          }
+        ]
+      },
+      "expected": {
+        "U": "U2",
+        "M": "Mx",
+        "code": "U2.Mx.-------"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_models/test_parent.py::TestParentQuality::test_an_only_child_passes_its_quality_up_whether_or_not_it_is_relevant"
+      ],
+      "criteria": [
+        "inherited.selection",
+        "inherited.single-child"
+      ]
+    },
+    {
+      "id": "IH-17",
+      "part": "inheritance",
+      "title": "An only child marked [No]",
+      "inputs": {
+        "children": [
+          {
+            "code": "U2.Mx.-------",
+            "C9": "[No]"
+          }
+        ]
+      },
+      "expected": {
+        "U": "U2",
+        "M": "Mx",
+        "code": "U2.Mx.-------"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_models/test_parent.py::TestParentQuality::test_an_only_child_passes_its_quality_up_whether_or_not_it_is_relevant"
+      ],
+      "criteria": [
+        "inherited.selection",
+        "inherited.single-child"
+      ]
+    },
+    {
+      "id": "IH-18",
+      "part": "inheritance",
+      "title": "Two relevant children, U1 and U3",
+      "inputs": {
+        "children": [
+          {
+            "code": "U1.Mx.-------",
+            "C9": "[Yes]"
+          },
+          {
+            "code": "U3.Mx.-------",
+            "C9": "[Yes]"
+          }
+        ]
+      },
+      "expected": {
+        "code": "U3.Mx.-------"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_models/test_parent.py::TestParentQuality::test_several_relevant_children_give_the_poorest_u_score_and_m_score"
+      ],
+      "criteria": [
+        "inherited.selection",
+        "inherited.u"
+      ]
+    },
+    {
+      "id": "IH-19",
+      "part": "inheritance",
+      "title": "U1 and U2 relevant, U4 not relevant",
+      "inputs": {
+        "children": [
+          {
+            "code": "U1.Mx.-------",
+            "C9": "[Yes]"
+          },
+          {
+            "code": "U2.Mx.-------",
+            "C9": "[Yes]"
+          },
+          {
+            "code": "U4.Mx.-------",
+            "C9": "[No]"
+          }
+        ]
+      },
+      "expected": {
+        "U": "U2"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_models/test_parent.py::TestParentQuality::test_a_child_not_marked_relevant_plays_no_part_among_several"
+      ],
+      "criteria": [
+        "inherited.selection"
+      ]
+    },
+    {
+      "id": "IH-20",
+      "part": "inheritance",
+      "title": "Several children and none relevant",
+      "inputs": {
+        "children": [
+          {
+            "code": "U1.Mx.-------",
+            "C9": "[No]"
+          },
+          {
+            "code": "U2.Mx.-------",
+            "C9": "[No]"
+          }
+        ]
+      },
+      "expected": {
+        "U": "Ux",
+        "M": "Mx",
+        "code": "Ux.Mx.-------"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_models/test_parent.py::TestParentQuality::test_several_children_and_none_relevant_is_not_determined"
+      ],
+      "criteria": [
+        "inherited.selection",
+        "inherited.none"
+      ]
+    },
+    {
+      "id": "IH-21",
+      "part": "inheritance",
+      "title": "Two relevant children scored from conformance cases B2 and B6",
+      "inputs": {
+        "children": [
+          {
+            "code": "U1.M1.-------",
+            "C9": "[Yes]"
+          },
+          {
+            "code": "U3.M4.-------",
+            "C9": "[Yes]"
+          }
+        ]
+      },
+      "expected": {
+        "U": "U3",
+        "M": "M4"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_models/test_parent.py::TestParentQuality::test_the_m_score_is_inherited_from_the_children_scored_methods"
+      ],
+      "criteria": [
+        "inherited.u",
+        "inherited.m",
+        "inherited.selection"
+      ]
+    },
+    {
+      "id": "X1-continuous-eq",
+      "part": "child",
+      "title": "Continuous equilibrium log, in-situ probe conductivity, no in-situ correction recorded",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 10,
+        "C31": "[LOGeq]",
+        "C32": "[LOGeq]",
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 20
+      },
+      "expected": {
+        "U": "Ux",
+        "T": 1.1,
+        "TC": 0.9,
+        "M": "M1x",
+        "flags": "-------",
+        "code": "Ux.M1x.-------",
+        "marked": true,
+        "measurement": {
+          "T": 1.1,
+          "TC": 1.1
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[X1-continuous-eq]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[X1-continuous-eq]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[X1-continuous-eq]",
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[X1-continuous-eq]"
+      ],
+      "criteria": [
+        "borehole-t.continuous-log",
+        "borehole-tc.pT-agreement",
+        "missing-information.empty",
+        "not-determined.u",
+        "m.mark",
+        "child.whole"
+      ]
+    },
+    {
+      "id": "X2-continuous-pert",
+      "part": "child",
+      "title": "Continuous perturbed log, core samples, no in-situ correction recorded",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 800,
+        "C37": 8,
+        "C31": "[LOGpert]",
+        "C32": "[LOGpert]",
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 10
+      },
+      "expected": {
+        "U": "Ux",
+        "T": 0.9,
+        "TC": 0.7,
+        "M": "M2x",
+        "flags": "-------",
+        "code": "Ux.M2x.-------",
+        "marked": true,
+        "measurement": {
+          "T": 0.9,
+          "TC": 0.9
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[X2-continuous-pert]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[X2-continuous-pert]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[X2-continuous-pert]",
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[X2-continuous-pert]"
+      ],
+      "criteria": [
+        "borehole-t.continuous-log",
+        "m.classes",
+        "m.mark"
+      ]
+    },
+    {
+      "id": "X3-multiple-single-points",
+      "part": "child",
+      "title": "Two bottom-hole temperatures, recovered core, no in-situ correction recorded",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 500,
+        "C37": 2,
+        "C31": "[BHT]",
+        "C32": "[BHT]",
+        "C41": "[Core samples]",
+        "C42": "[Other location]",
+        "C44": "[Recovered]",
+        "C45": "[Replicated in-situ (T)]",
+        "C47": 5
+      },
+      "expected": {
+        "U": "Ux",
+        "T": 0.7,
+        "TC": 0.5,
+        "M": "M3x",
+        "flags": "-------",
+        "code": "Ux.M3x.-------",
+        "marked": true,
+        "measurement": {
+          "T": 0.7,
+          "TC": 0.6
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[X3-multiple-single-points]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[X3-multiple-single-points]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[X3-multiple-single-points]",
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[X3-multiple-single-points]"
+      ],
+      "criteria": [
+        "borehole-t.single-points",
+        "m.classes",
+        "m.mark"
+      ]
+    },
+    {
+      "id": "X4-single-point-plus-surface",
+      "part": "child",
+      "title": "Surface temperature and one bottom-hole temperature, dry cuttings",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 300,
+        "C37": 1,
+        "C31": "[SUR]",
+        "C32": "[BHT]",
+        "C41": "[Cutting samples]",
+        "C42": "[Other location]",
+        "C44": "[Dry measured]",
+        "C45": "[Recorded ambient pT conditions]",
+        "C47": 1
+      },
+      "expected": {
+        "U": "Ux",
+        "T": 0.5,
+        "TC": 0.3,
+        "M": "M4x",
+        "flags": "-------",
+        "code": "Ux.M4x.-------",
+        "marked": true,
+        "measurement": {
+          "T": 0.5,
+          "TC": 0.3
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[X4-single-point-plus-surface]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[X4-single-point-plus-surface]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[X4-single-point-plus-surface]",
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[X4-single-point-plus-surface]"
+      ],
+      "criteria": [
+        "borehole-t.surface-plus-one-point",
+        "m.classes",
+        "m.mark"
+      ]
+    },
+    {
+      "id": "X5-interval-gate",
+      "part": "child",
+      "title": "No interval depth reported: the conductivity takes its fixed minimum",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C37": 6,
+        "C31": "[LOGeq]",
+        "C32": "[LOGeq]",
+        "C41": "[Assumed from literature]",
+        "C42": "[Literature or unspecified]",
+        "C44": "[Unspecified]",
+        "C45": "[Unspecified]"
+      },
+      "expected": {
+        "U": "Ux",
+        "T": 1.1,
+        "TC": 0.1,
+        "M": "M4x",
+        "flags": "-------",
+        "code": "Ux.M4x.-------",
+        "marked": true,
+        "measurement": {
+          "T": 1.1,
+          "TC": 0.1
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[X5-interval-gate]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[X5-interval-gate]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[X5-interval-gate]",
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[X5-interval-gate]"
+      ],
+      "criteria": [
+        "borehole-tc.gate",
+        "missing-information.gate",
+        "m.mark"
+      ]
+    },
+    {
+      "id": "P1-probe-with-waivers",
+      "part": "child",
+      "title": "Probe with a tilt correction and a bottom-water correction, and every flag state",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C1": 80,
+        "C2": 4,
+        "C6": 12,
+        "C23": 45,
+        "C37": 6,
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C43": "[Probe - pulse technique]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 4,
+        "C12": "[Tilt corrected]",
+        "C13": "[Present and corrected]",
+        "C14": "[Present and not corrected]",
+        "C15": "[Present and not significant]",
+        "C16": "[Not recognized]",
+        "C17": "[Present and corrected]",
+        "C18": "[Unspecified]"
+      },
+      "expected": {
+        "U": "U2",
+        "T": 1.2,
+        "TC": 1.2,
+        "M": "M1",
+        "flags": "SeXxV--",
+        "code": "U2.M1.SeXxV--",
+        "marked": false,
+        "measurement": {
+          "T": 1.0,
+          "TC": 1.2
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[P1-probe-with-waivers]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[P1-probe-with-waivers]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[P1-probe-with-waivers]"
+      ],
+      "criteria": [
+        "probe-t.tilt-waiver",
+        "probe-t.water-depth-waiver",
+        "probe-tc.saturation",
+        "probe-tc.pT",
+        "flags.unspecified",
+        "flags.S",
+        "flags.E",
+        "flags.T",
+        "flags.P",
+        "flags.V",
+        "u.bands",
+        "m.classes",
+        "child.whole"
+      ]
+    },
+    {
+      "id": "P2-probe-without-corrections",
+      "part": "child",
+      "title": "The same probe with no correction recorded",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -3000,
+        "C1": 80,
+        "C2": 4,
+        "C6": 12,
+        "C23": 45,
+        "C37": 6,
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C43": "[Probe - pulse technique]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 4
+      },
+      "expected": {
+        "U": "U2",
+        "T": 1.0,
+        "TC": 1.2,
+        "M": "M1",
+        "flags": "-------",
+        "code": "U2.M1.-------",
+        "marked": false,
+        "measurement": {
+          "T": 1.0,
+          "TC": 1.2
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[P2-probe-without-corrections]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[P2-probe-without-corrections]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[P2-probe-without-corrections]",
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[P2-probe-without-corrections]"
+      ],
+      "criteria": [
+        "probe-t.tilt",
+        "probe-t.water-depth",
+        "flags.empty",
+        "child.whole"
+      ]
+    },
+    {
+      "id": "P3-onshore-lab",
+      "part": "child",
+      "title": "Onshore probe, laboratory conductivity, no elevation below sea level, no tilt",
+      "inputs": {
+        "P12": "[Probing (onshore, lake, river, etc.)]",
+        "P6": 120,
+        "C1": 60,
+        "C2": 9,
+        "C6": 2,
+        "C37": 2,
+        "C41": "[Core samples]",
+        "C42": "[Other location]",
+        "C43": "[Lab - line source - full space]",
+        "C44": "[Saturated calculated]",
+        "C45": "[Recorded ambient pT conditions]",
+        "C47": 2
+      },
+      "expected": {
+        "U": "U2",
+        "T": 0.4,
+        "TC": 0.5,
+        "M": "M4x",
+        "flags": "-------",
+        "code": "U2.M4x.-------",
+        "marked": true,
+        "measurement": {
+          "T": 0.4,
+          "TC": 0.5
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[P3-onshore-lab]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[P3-onshore-lab]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[P3-onshore-lab]",
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[P3-onshore-lab]"
+      ],
+      "criteria": [
+        "probe-t.elevation-not-below-sea-level",
+        "missing-information.empty",
+        "m.mark",
+        "m.classes"
+      ]
+    },
+    {
+      "id": "P4-clustering-literature",
+      "part": "child",
+      "title": "Clustered probing, conductivity estimated from literature, negative heat flow",
+      "inputs": {
+        "P12": "[Probing (clustered)]",
+        "P6": -1600,
+        "C1": -40,
+        "C2": 12,
+        "C6": 0.8,
+        "C23": 12,
+        "C37": 1,
+        "C41": "[Assumed from literature]",
+        "C42": "[Literature or unspecified]",
+        "C43": "[Estimation - from lithology and literature]",
+        "C44": "[Unspecified]",
+        "C45": "[Unspecified]"
+      },
+      "expected": {
+        "U": "U4",
+        "T": 0.4,
+        "TC": 0.5,
+        "M": "M4",
+        "flags": "-------",
+        "code": "U4.M4.-------",
+        "marked": false,
+        "measurement": {
+          "T": 0.4,
+          "TC": 0.5
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[P4-clustering-literature]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[P4-clustering-literature]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[P4-clustering-literature]",
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[P4-clustering-literature]"
+      ],
+      "criteria": [
+        "probe-tc.saturation",
+        "probe-tc.number-not-scored-for-literature",
+        "u.sign",
+        "u.bands",
+        "m.classes"
+      ]
+    },
+    {
+      "id": "P5-no-saturation",
+      "part": "child",
+      "title": "Saturation empty, method unspecified",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "P6": -2000,
+        "C1": 100,
+        "C2": 30,
+        "C6": 4,
+        "C23": 5,
+        "C37": 3,
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C43": "[Unspecified]",
+        "C45": "[Replicated in-situ (p)]",
+        "C47": 1
+      },
+      "expected": {
+        "U": "U4",
+        "T": 0.9,
+        "TC": 0.5,
+        "M": "M3x",
+        "flags": "-------",
+        "code": "U4.M3x.-------",
+        "marked": true,
+        "measurement": {
+          "T": 0.9,
+          "TC": 0.5
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[P5-no-saturation]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[P5-no-saturation]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[P5-no-saturation]",
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[P5-no-saturation]"
+      ],
+      "criteria": [
+        "probe-tc.saturation",
+        "missing-information.empty",
+        "m.mark"
+      ]
+    },
+    {
+      "id": "B1-agreeing-in-situ",
+      "part": "child",
+      "title": "Corrected pT with an in-situ correction that agrees",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C1": 65,
+        "C2": 3,
+        "C4": 100,
+        "C5": 900,
+        "C37": 40,
+        "C31": "[LOGeq]",
+        "C32": "[cLOG]",
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Corrected in-situ (pT)]",
+        "C47": 30,
+        "C11": "[Pressure and temperature considered]"
+      },
+      "expected": {
+        "U": "U1",
+        "T": 1.1,
+        "TC": 1.0,
+        "M": "M1",
+        "flags": "-------",
+        "code": "U1.M1.-------",
+        "marked": false,
+        "measurement": {
+          "T": 1.1,
+          "TC": 1.0
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[B1-agreeing-in-situ]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[B1-agreeing-in-situ]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[B1-agreeing-in-situ]"
+      ],
+      "criteria": [
+        "borehole-tc.pT-agreement",
+        "u.bands",
+        "m.classes",
+        "child.whole"
+      ]
+    },
+    {
+      "id": "B2-not-considered",
+      "part": "child",
+      "title": "Corrected pT with an in-situ correction recorded as not considered",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C1": 65,
+        "C2": 3,
+        "C4": 100,
+        "C5": 900,
+        "C37": 40,
+        "C31": "[LOGeq]",
+        "C32": "[cLOG]",
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Corrected in-situ (pT)]",
+        "C47": 30,
+        "C11": "[Not considered]"
+      },
+      "expected": {
+        "U": "U1",
+        "T": 1.1,
+        "TC": 0.8,
+        "M": "M1",
+        "flags": "-------",
+        "code": "U1.M1.-------",
+        "marked": false,
+        "measurement": {
+          "T": 1.1,
+          "TC": 1.0
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[B2-not-considered]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[B2-not-considered]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[B2-not-considered]",
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[B2-not-considered]"
+      ],
+      "criteria": [
+        "borehole-tc.pT-agreement"
+      ]
+    },
+    {
+      "id": "B3-no-in-situ-correction",
+      "part": "child",
+      "title": "Corrected pT with no in-situ correction recorded",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C1": 65,
+        "C2": 3,
+        "C4": 100,
+        "C5": 900,
+        "C37": 40,
+        "C31": "[LOGeq]",
+        "C32": "[cLOG]",
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Corrected in-situ (pT)]",
+        "C47": 30
+      },
+      "expected": {
+        "U": "U1",
+        "T": 1.1,
+        "TC": 0.8,
+        "M": "M1x",
+        "flags": "-------",
+        "code": "U1.M1x.-------",
+        "marked": true,
+        "measurement": {
+          "T": 1.1,
+          "TC": 1.0
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[B3-no-in-situ-correction]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[B3-no-in-situ-correction]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[B3-no-in-situ-correction]",
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[B3-no-in-situ-correction]"
+      ],
+      "criteria": [
+        "borehole-tc.pT-agreement",
+        "missing-information.empty",
+        "m.mark"
+      ]
+    },
+    {
+      "id": "B4-mining-ambient",
+      "part": "child",
+      "title": "Mining, recorded ambient pT, in-situ correction recorded as unspecified",
+      "inputs": {
+        "P12": "[Mining]",
+        "C1": 65,
+        "C2": 3,
+        "C4": 100,
+        "C5": 900,
+        "C37": 40,
+        "C31": "[LOGeq]",
+        "C32": "[cLOG]",
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Recorded ambient pT conditions]",
+        "C47": 30,
+        "C11": "[Unspecified]"
+      },
+      "expected": {
+        "U": "U1",
+        "T": 1.1,
+        "TC": 0.8,
+        "M": "M1",
+        "flags": "-------",
+        "code": "U1.M1.-------",
+        "marked": false,
+        "measurement": {
+          "T": 1.1,
+          "TC": 0.8
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[B4-mining-ambient]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[B4-mining-ambient]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[B4-mining-ambient]",
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[B4-mining-ambient]"
+      ],
+      "criteria": [
+        "routing.borehole-and-mine",
+        "borehole-tc.pT-agreement",
+        "missing-information.unspecified-gives-no-mark"
+      ]
+    },
+    {
+      "id": "B5-drilling-clustering",
+      "part": "child",
+      "title": "Clustered drilling, replicated p with a pressure-considered correction",
+      "inputs": {
+        "P12": "[Drilling (clustered)]",
+        "C1": 50,
+        "C2": 10,
+        "C4": 0,
+        "C5": 2000,
+        "C37": 3,
+        "C31": [
+          "[BHT]",
+          "[cBHT]"
+        ],
+        "C32": "[BHT]",
+        "C41": "[Cutting samples]",
+        "C42": "[Other location]",
+        "C44": "[Recovered]",
+        "C45": "[Replicated in-situ (p)]",
+        "C47": 12,
+        "C11": "[Pressure considered]"
+      },
+      "expected": {
+        "U": "U3",
+        "T": 0.7,
+        "TC": 0.5,
+        "M": "M3",
+        "flags": "-------",
+        "code": "U3.M3.-------",
+        "marked": false,
+        "measurement": {
+          "T": 0.7,
+          "TC": 0.5
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[B5-drilling-clustering]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[B5-drilling-clustering]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[B5-drilling-clustering]"
+      ],
+      "criteria": [
+        "borehole-t.single-points",
+        "multi-valued.poorest",
+        "u.bands",
+        "m.classes"
+      ]
+    },
+    {
+      "id": "B6-tunnelling-literature",
+      "part": "child",
+      "title": "Tunnelling, literature conductivity, surface and one point",
+      "inputs": {
+        "P12": "[Tunneling]",
+        "C1": 90,
+        "C2": 20,
+        "C4": 0,
+        "C5": 1500,
+        "C37": 2,
+        "C31": "[SUR]",
+        "C32": "[cBHT]",
+        "C41": "[Assumed from literature]",
+        "C42": "[Literature or unspecified]",
+        "C44": "[Dry measured]",
+        "C45": "[Unspecified]",
+        "C11": "[Not considered]"
+      },
+      "expected": {
+        "U": "U3",
+        "T": 0.7,
+        "TC": 0.2,
+        "M": "M4",
+        "flags": "-------",
+        "code": "U3.M4.-------",
+        "marked": false,
+        "measurement": {
+          "T": 0.7,
+          "TC": 0.2
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[B6-tunnelling-literature]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[B6-tunnelling-literature]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[B6-tunnelling-literature]",
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[B6-tunnelling-literature]"
+      ],
+      "criteria": [
+        "routing.borehole-and-mine",
+        "borehole-t.surface-plus-one-point",
+        "borehole-tc.number-not-scored-for-literature",
+        "m.classes"
+      ]
+    },
+    {
+      "id": "B7-unresolvable-surface-case",
+      "part": "child",
+      "title": "Surface case with a bottom method it does not list, and an uncertainty of zero",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C1": 90,
+        "C2": 0,
+        "C4": 0,
+        "C5": 1500,
+        "C37": 2,
+        "C31": "[SUR]",
+        "C32": "[LOGeq]",
+        "C41": "[Mineral computation]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated calculated]",
+        "C45": "[Actual in-situ (pT) conditions]",
+        "C47": 20,
+        "C11": "[Pressure and temperature considered]"
+      },
+      "expected": {
+        "U": "Ux",
+        "T": 0.4,
+        "TC": 0.7,
+        "M": "M3x",
+        "flags": "-------",
+        "code": "Ux.M3x.-------",
+        "marked": true,
+        "measurement": {
+          "T": 0.4,
+          "TC": 0.7
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[B7-unresolvable-surface-case]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[B7-unresolvable-surface-case]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[B7-unresolvable-surface-case]"
+      ],
+      "criteria": [
+        "borehole-t.unresolvable-method",
+        "missing-information.unresolvable-method",
+        "not-determined.u",
+        "m.mark"
+      ]
+    },
+    {
+      "id": "B8-indirect-no-methods",
+      "part": "child",
+      "title": "Indirect method, no temperature methods, no interval depth, no uncertainty",
+      "inputs": {
+        "P12": "[Indirect (GTM, BSR, CPD, etc.)]",
+        "C1": 70,
+        "C37": 5,
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Corrected in-situ (pT)]",
+        "C47": 30,
+        "C11": "[Pressure and temperature considered]"
+      },
+      "expected": {
+        "U": "Ux",
+        "T": 0.5,
+        "TC": 0.1,
+        "M": "M4x",
+        "flags": "-------",
+        "code": "Ux.M4x.-------",
+        "marked": true,
+        "measurement": {
+          "T": 0.5,
+          "TC": 0.1
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[B8-indirect-no-methods]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[B8-indirect-no-methods]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[B8-indirect-no-methods]"
+      ],
+      "criteria": [
+        "routing.borehole-and-mine",
+        "borehole-tc.gate",
+        "missing-information.empty",
+        "not-determined.u"
+      ]
+    },
+    {
+      "id": "B9-everything-unspecified",
+      "part": "child",
+      "title": "Every scored input recorded as unspecified: largest penalties and no mark",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C1": 70,
+        "C2": 7,
+        "C4": 100,
+        "C5": 200,
+        "C37": 5,
+        "C31": "[Unspecified]",
+        "C32": "[Unspecified]",
+        "C41": "[Unspecified]",
+        "C42": "[Literature or unspecified]",
+        "C44": "[Unspecified]",
+        "C45": "[Unspecified]",
+        "C47": 1,
+        "C11": "[Unspecified]"
+      },
+      "expected": {
+        "U": "U2",
+        "T": 0.5,
+        "TC": 0.2,
+        "M": "M4",
+        "flags": "-------",
+        "code": "U2.M4.-------",
+        "marked": false,
+        "measurement": {
+          "T": 0.5,
+          "TC": 0.2
+        }
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[B9-everything-unspecified]",
+        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[B9-everything-unspecified]",
+        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[B9-everything-unspecified]",
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[B9-everything-unspecified]"
+      ],
+      "criteria": [
+        "missing-information.unspecified-gives-no-mark",
+        "borehole-t.single-points",
+        "borehole-tc.source"
+      ]
+    },
+    {
+      "id": "N1-no-route-other",
+      "part": "child",
+      "title": "Exploration method Other: no rules to score by",
+      "inputs": {
+        "P12": "[Other]",
+        "C1": 70,
+        "C2": 7,
+        "C37": 40,
+        "C31": "[LOGeq]",
+        "C32": "[cLOG]",
+        "C4": 100,
+        "C5": 900,
+        "C42": "[Actual heat-flow location]",
+        "C41": "[Core samples]",
+        "C47": 30,
+        "C44": "[Saturated measured]",
+        "C45": "[Corrected in-situ (pT)]",
+        "C11": "[Not considered]"
+      },
+      "expected": {
+        "U": "U2",
+        "T": null,
+        "TC": null,
+        "M": "Mx",
+        "flags": "-------",
+        "code": "U2.Mx.-------"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_a_site_with_no_route_leaves_the_sub_scores_not_determined[other]"
+      ],
+      "criteria": [
+        "routing.not-determined",
+        "not-determined.t",
+        "not-determined.tc",
+        "not-determined.m",
+        "child.whole"
+      ]
+    },
+    {
+      "id": "N2-no-route-empty",
+      "part": "child",
+      "title": "Exploration method empty: no rules to score by",
+      "inputs": {
+        "C1": 70,
+        "C2": 7,
+        "C37": 40,
+        "C31": "[LOGeq]",
+        "C32": "[cLOG]",
+        "C4": 100,
+        "C5": 900,
+        "C42": "[Actual heat-flow location]",
+        "C41": "[Core samples]",
+        "C47": 30,
+        "C44": "[Saturated measured]",
+        "C45": "[Corrected in-situ (pT)]",
+        "C11": "[Not considered]"
+      },
+      "expected": {
+        "U": "U2",
+        "T": null,
+        "TC": null,
+        "M": "Mx",
+        "flags": "-------",
+        "code": "U2.Mx.-------"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_a_site_with_no_route_leaves_the_sub_scores_not_determined[None]"
+      ],
+      "criteria": [
+        "routing.not-determined",
+        "not-determined.t",
+        "not-determined.tc",
+        "not-determined.m",
+        "child.whole"
+      ]
+    },
+    {
+      "id": "N3-no-measurements",
+      "part": "child",
+      "title": "A child with no temperature gradient and no thermal conductivity recorded",
+      "inputs": {
+        "C1": 70,
+        "C2": 7
+      },
+      "expected": {
+        "U": "U2",
+        "T": null,
+        "TC": null,
+        "M": "Mx",
+        "flags": "-------",
+        "code": "U2.Mx.-------"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_a_child_without_a_gradient_or_a_conductivity_is_not_determined"
+      ],
+      "criteria": [
+        "not-determined.t",
+        "not-determined.tc",
+        "not-determined.m"
+      ]
+    },
+    {
+      "id": "F1-every-flag",
+      "part": "child",
+      "title": "All seven correction fields recorded (B2 inputs, uncertainty 5 on a value of 50)",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C1": 50,
+        "C2": 5,
+        "C4": 100,
+        "C5": 900,
+        "C37": 40,
+        "C31": "[LOGeq]",
+        "C32": "[cLOG]",
+        "C41": "[Core samples]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured]",
+        "C45": "[Corrected in-situ (pT)]",
+        "C47": 30,
+        "C11": "[Not considered]",
+        "C13": "[Present and corrected]",
+        "C14": "[Present and not corrected]",
+        "C15": "[Present and not significant]",
+        "C16": "[Not recognized]",
+        "C17": "[Present and corrected]",
+        "C18": "[Present and not corrected]",
+        "C19": "[Present and corrected]"
+      },
+      "expected": {
+        "flags": "SeXxVcR"
+      },
+      "portal_tests": [
+        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_every_environmental_correction_writes_its_own_flag"
+      ],
+      "criteria": [
+        "flags.C",
+        "flags.R",
+        "flags.S",
+        "flags.E",
+        "flags.T",
+        "flags.P",
+        "flags.V"
+      ]
+    }
+  ]
+}

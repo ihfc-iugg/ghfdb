@@ -21,6 +21,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinxcontrib.mermaid",
     "extensions.field_reference",
+    "extensions.quality_scheme",
     "extensions.rule_reference",
     "extensions.upload_template",
 ]

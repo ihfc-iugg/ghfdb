@@ -30,18 +30,21 @@ examples test it. Waiting would hold the feature on rulings with no date.
 **Ambiguous**: D-1 says an input with a problem is scored as empty. A rule problem names a field
 too, but its value is a valid one that does not fit with another field.
 
-**Chosen**: the problem kinds missing, wrong type, out of range and not in vocabulary blank the
-cell they name. A rule problem and a column problem blank nothing. A column the workbook does not
-have is empty for every child already.
+**Chosen**: every problem kind that names a cell blanks it: missing, wrong type, out of range, not
+in vocabulary and rule. A rule problem blanks the field it names to fill or change (`code`), never
+the field that made the rule apply (`related`). A column problem blanks nothing: a column the
+workbook does not have is empty for every child already.
 
-**Why**: those four kinds mean the cell holds nothing the scheme can read. A rule problem's value
-is a real term that the scheme pages already score, and blanking it would change a score for a
-reason the scheme does not give.
+**Why**: FR-005 says an input with a problem is scored as empty, and a rule problem is a problem
+with the field it names. The field in `related` is correct as it stands; it is what makes the other
+one wrong.
 
 ## D-4: An out-of-range value scores differently in the report and from Python
 
 **Ambiguous**: the probe tilt criterion gives a tilt below 0° −0.2 without the mark, and the field
-schema's range forbids a negative tilt, so the check reports it as out of range.
+schema's range forbids a negative tilt, so the check reports it as out of range. The same holds for
+any value the scheme scores that the field schema's range rejects, such as a negative uncertainty
+`C2`, whose sign the U-score ignores.
 
 **Chosen**: the report follows D-1 and scores it as empty, with the mark. `Dataset.scores()`
 without a problem table scores the value as the page says, without the mark.
@@ -57,3 +60,16 @@ values is held as one row per value. See `research.md`, "Approach".
 
 **Why**: SC-004. One Python call per child per criterion would use most of the time left in the
 15-second budget.
+
+## D-6: Several values reach the scoring only from a dataset built in code
+
+**Ambiguous**: the scheme scores every value of a field that holds several and takes the poorest,
+and four worked examples give one (PC-12, BT-14, BC-38, B5-drilling-clustering). The field schema
+gives none of the scored fields a separator, so a workbook cell holds one value.
+
+**Chosen**: a cell of a dataset that holds a Python list holds several values, in any scored field.
+Text is never split for a scored field.
+
+**Why**: the scheme's overview says the upload template holds one value in each field it scores,
+and that several values come from data held elsewhere. Splitting text by a separator the schema
+does not declare would score a workbook differently from how the check reads it.

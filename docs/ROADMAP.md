@@ -106,15 +106,17 @@ issue for the data assessment team to agree first.
 
 ### R5 — The quality scheme, written down
 
-*feature · advances G4, G5, G3*
+*delivered in [#37](https://github.com/ihfc-iugg/ghfdb/issues/37) · advances G4, G5, G3*
 
 The quality scheme is set out in the documentation as a complete specification: the U-score, the
 T-score and TC-score for probe-sensing and for borehole and mine data, the M-score, the
-perturbation flags and the quality code. Its starting point is the scheme as the GHFDB portal
-applies it today. Every rule names its source in Fuchs et al. (2023) or the ruling that changed
-it, and every place where the paper is ambiguous or contradicts itself is settled and recorded.
-The agreed worked examples are published with it. This comes before the scores are computed,
-because the code has to implement a written rule.
+perturbation flags, the quality code and the inherited code of a parent. It starts from the scheme
+as the GHFDB portal applies it today. Every rule names its source in Fuchs et al. (2023) or the
+ruling that changed it, and a page lists every departure from the paper with its reasoning. The
+worked examples are published with it, each one a case the GHFDB portal's own tests assert. The
+scheme is living documentation: questions where the paper is ambiguous or contradicts itself are
+raised with the data assessment team in this repository's issues, and the pages are updated as
+each is settled.
 
 **Deliverables:**
 
@@ -122,7 +124,7 @@ because the code has to implement a written rule.
 - Every departure from the 2023 paper recorded, with its reasoning.
 - A set of worked examples, agreed with the GHFDB portal, giving each example's inputs and its
   expected scores.
-- The open questions listed and settled with the data assessment team in this repository's issues.
+- The open questions raised with the data assessment team in this repository's issues.
 
 Serves G4, G5 and G3. Out of scope: publishing the scheme as a citable release (R8).
 

@@ -10,8 +10,28 @@ from dataclasses import dataclass
 import numpy
 import pandas
 
-from ghfdb.qc.rules import EXPLORATION_METHOD, PROBE_SENSING
-from ghfdb.qc.scheme import PRESENT_CORRECTED, TILT_CORRECTED, Inputs
+from ghfdb.qc.rules import EXPLORATION_METHOD, LITERATURE_OR_UNSPECIFIED, PROBE_SENSING
+from ghfdb.qc.scheme import (
+    ACTUAL_IN_SITU,
+    ACTUAL_LOCATION,
+    AMBIENT_OR_UNSPECIFIED,
+    DRY_UNSPECIFIED_OR_OTHER,
+    ESTIMATED_FROM_LITERATURE,
+    ESTIMATED_FROM_OTHER,
+    FULL_IN_SITU,
+    IN_SITU_PROBE,
+    LABORATORY_METHODS,
+    OTHER_LOCATION,
+    PARTIAL_IN_SITU,
+    PRESENT_CORRECTED,
+    PROBE_PULSE,
+    RECOVERED,
+    SATURATED_CALCULATED,
+    SATURATED_IN_SITU,
+    SATURATED_MEASURED,
+    TILT_CORRECTED,
+    Inputs,
+)
 
 LARGEST_PENALTY = -0.2
 DECIMALS = 3
@@ -120,7 +140,9 @@ class ProbeRules:
         """
         penalties = numpy.column_stack(
             [
-                numpy.where(holds.to_numpy(dtype=bool), penalty, numpy.inf)
+                numpy.where(
+                    holds.fillna(False).to_numpy(dtype=bool), penalty, numpy.inf
+                )
                 for penalty, holds in cases
             ]
         ).min(axis=1)
@@ -281,3 +303,135 @@ class ProbeRules:
         return self.total(
             [self.penetration(), self.recordings(), self.water_depth(), self.tilt()]
         )
+
+    def location(self) -> Penalty:
+        """Score where the conductivity was measured, ``C42``.
+
+        See docs/reference/quality-scheme/probe-sensing.md, "Location".
+
+        Returns:
+            The penalty and the mark of each child.
+        """
+        location = self.inputs.concepts["C42"]
+        penalty = pandas.Series(
+            numpy.select(
+                [
+                    location.eq(ACTUAL_LOCATION).fillna(False).to_numpy(dtype=bool),
+                    location.eq(OTHER_LOCATION).fillna(False).to_numpy(dtype=bool),
+                ],
+                [0.0, -0.1],
+                LARGEST_PENALTY,
+            ),
+            index=location.index,
+        )
+        return self.poorest(penalty, location.isna())
+
+    def saturation(self) -> Penalty:
+        """Score the saturation with the method, the source and the location.
+
+        See docs/reference/quality-scheme/probe-sensing.md, "Saturation".
+
+        Returns:
+            The penalty and the mark of each child.
+        """
+        concepts = self.inputs.concepts
+        rows = self.combinations(
+            {
+                "saturation": concepts["C44"],
+                "method": concepts["C43"],
+                "source": concepts["C41"],
+                "location": concepts["C42"],
+            }
+        )
+        saturation, method = rows["saturation"], rows["method"]
+        in_situ = rows["source"].eq(IN_SITU_PROBE) & method.eq(PROBE_PULSE)
+        measured = saturation.isin([RECOVERED, SATURATED_MEASURED])
+        laboratory = method.isin(LABORATORY_METHODS)
+        return self.cases(
+            rows,
+            [
+                (0.1, saturation.eq(SATURATED_IN_SITU) & in_situ),
+                (0.0, measured & in_situ),
+                (0.0, measured & laboratory),
+                (-0.1, saturation.eq(SATURATED_CALCULATED) & laboratory),
+                (-0.2, saturation.isin(DRY_UNSPECIFIED_OR_OTHER) & laboratory),
+                (
+                    -0.1,
+                    method.isin(ESTIMATED_FROM_LITERATURE)
+                    & rows["location"].eq(LITERATURE_OR_UNSPECIFIED),
+                ),
+                (-0.2, method.isin(ESTIMATED_FROM_OTHER)),
+            ],
+        )
+
+    def number(self) -> Penalty:
+        """Score the number of conductivity measurements, ``C47``.
+
+        The criterion is left out for a literature location, whatever the number. See
+        docs/reference/quality-scheme/probe-sensing.md, "Number of conductivity
+        measurements".
+
+        Returns:
+            The penalty and the mark of each child.
+        """
+        rows = self.combinations(
+            {
+                "number": self.inputs.numbers["C47"],
+                "location": self.inputs.concepts["C42"],
+            }
+        )
+        numbers = rows["number"]
+        penalty = pandas.Series(
+            numpy.select([numbers > 3, numbers > 1], [0.0, -0.1], LARGEST_PENALTY),
+            index=rows.index,
+        )
+        skipped = rows["location"].eq(LITERATURE_OR_UNSPECIFIED).fillna(False)
+        return self.poorest(
+            penalty.mask(skipped, 0.0), numbers.isna().mask(skipped, False)
+        )
+
+    def conditions(self) -> Penalty:
+        """Score the pressure and temperature conditions with the method.
+
+        See docs/reference/quality-scheme/probe-sensing.md, "Pressure and temperature
+        conditions".
+
+        Returns:
+            The penalty and the mark of each child.
+        """
+        concepts = self.inputs.concepts
+        rows = self.combinations(
+            {"conditions": concepts["C45"], "method": concepts["C43"]}
+        )
+        conditions = rows["conditions"]
+        return self.cases(
+            rows,
+            [
+                (0.1, conditions.eq(ACTUAL_IN_SITU) & rows["method"].eq(PROBE_PULSE)),
+                (0.0, conditions.isin(FULL_IN_SITU)),
+                (-0.1, conditions.isin(PARTIAL_IN_SITU)),
+                (-0.2, conditions.isin(AMBIENT_OR_UNSPECIFIED)),
+            ],
+        )
+
+    def tc_score(self) -> Score:
+        """Score the conductivity of each child.
+
+        It reads nothing from the child, so the child's own score is the same (see
+        ``own_tc_score``). See docs/reference/quality-scheme/probe-sensing.md,
+        "TC-score".
+
+        Returns:
+            The TC-score and its mark for each child.
+        """
+        return self.total(
+            [self.location(), self.saturation(), self.number(), self.conditions()]
+        )
+
+    def own_tc_score(self) -> Score:
+        """Score the conductivity on its own, which is its score for the child.
+
+        Returns:
+            The own TC-score and its mark for each child.
+        """
+        return self.tc_score()

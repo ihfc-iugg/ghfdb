@@ -11,8 +11,17 @@ from ghfdb.fields import Vocabularies
 from ghfdb.qc.probe import ProbeRules
 from ghfdb.qc.scheme import Inputs, Terms
 
-PARTS = ("probe-t",)
+PARTS = ("probe-t", "probe-tc")
 PROBE = "[Probing (offshore, ocean)]"
+BEST_CONDUCTIVITY = {
+    "P12": PROBE,
+    "C41": "[In-situ probe]",
+    "C42": "[Actual heat-flow location]",
+    "C43": "[Probe - pulse technique]",
+    "C44": "[Saturated measured in-situ]",
+    "C45": "[Actual in-situ (pT) conditions]",
+    "C47": 4,
+}
 
 
 def load_examples() -> list[Mapping[str, Any]]:
@@ -124,3 +133,86 @@ class TestProbeTScore:
         score = rules_of(terms, one_child(child)).t_score()
 
         assert score.value.iloc[0] == 0.9
+
+
+class TestProbeTCScore:
+    @pytest.mark.parametrize(
+        "example",
+        [e for e in EXAMPLES if e["part"] == "probe-tc"],
+        ids=lambda example: example["id"],
+    )
+    def test_worked_example(self, terms: Terms, example: Mapping[str, Any]) -> None:
+        rules = rules_of(terms, one_child(example["inputs"]))
+
+        score = rules.tc_score()
+
+        assert score.value.iloc[0] == example["expected"]["TC"]
+        if "marked" in example["expected"]:
+            assert score.marked.iloc[0] == example["expected"]["marked"]
+        own = rules.own_tc_score()
+        assert own.value.equals(score.value)
+        assert own.marked.equals(score.marked)
+
+    def test_a_method_that_fits_no_saturation_case_takes_no_mark(
+        self, terms: Terms
+    ) -> None:
+        child = {
+            **BEST_CONDUCTIVITY,
+            "C43": "[Probe - continuous heating technique]",
+        }
+
+        score = rules_of(terms, one_child(child)).tc_score()
+
+        assert score.value.iloc[0] == 0.6
+        assert not score.marked.iloc[0]
+
+    def test_a_literature_location_among_several_leaves_the_number_to_the_rest(
+        self, terms: Terms
+    ) -> None:
+        child = {
+            **BEST_CONDUCTIVITY,
+            "C42": ["[Actual heat-flow location]", "[Literature or unspecified]"],
+        }
+        del child["C47"]
+
+        score = rules_of(terms, one_child(child)).tc_score()
+
+        assert score.value.iloc[0] == 0.8
+        assert score.marked.iloc[0]
+
+    def test_a_child_that_other_rules_score_is_not_determined(
+        self, terms: Terms
+    ) -> None:
+        data = pandas.DataFrame(
+            {"P12": ["[Mining]", PROBE], "C47": ["4", "4"]},
+            index=pandas.Index([12, 9], name="row"),
+            dtype=object,
+        )
+
+        score = rules_of(terms, data).tc_score()
+
+        assert score.value.isna().tolist() == [True, False]
+        assert score.marked.isna().tolist() == [True, False]
+
+    def test_every_child_of_a_dataset_is_scored_under_its_own_index(
+        self, terms: Terms
+    ) -> None:
+        data = pandas.DataFrame(
+            {
+                "P12": [PROBE, PROBE],
+                "C41": ["[In-situ probe]", None],
+                "C42": ["[Actual heat-flow location]", "[Other location]"],
+                "C43": ["[Probe - pulse technique]", "[Probe - pulse technique]"],
+                "C44": ["[Saturated measured in-situ]", "[Recovered]"],
+                "C45": ["[Actual in-situ (pT) conditions]", "[Corrected in-situ (pT)]"],
+                "C47": ["4", "1"],
+            },
+            index=pandas.Index([12, 9], name="row"),
+            dtype=object,
+        )
+
+        score = rules_of(terms, data).tc_score()
+
+        assert score.value.index.tolist() == [12, 9]
+        assert score.value.tolist() == [1.2, 0.5]
+        assert score.marked.tolist() == [False, True]

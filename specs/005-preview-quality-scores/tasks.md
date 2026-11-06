@@ -49,6 +49,8 @@ function for the `m-score` part, and compare with its expected scores.
   parameter lists, equal the identifiers in the file outside `inheritance`, counted from the file
   independently of the selection. Parts not built yet are listed in the test as pending, and the
   list is emptied by the group that builds them.
+- [x] T016 [US2] `docs/contributing/python-api.md`: a section on the scoring classes, so the
+  public names of this group are documented in the group that adds them.
 
 ### Group 2 — the probe-sensing rules
 

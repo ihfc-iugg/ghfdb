@@ -30,7 +30,7 @@ class TestWriteTemplate:
     ) -> None:
         path = write_template(UploadTemplate(schema), tmp_path)
 
-        assert path == tmp_path / "upload-template" / template_name(ghfdb.__version__)
+        assert path == tmp_path / "reference" / template_name(ghfdb.__version__)
         assert path.is_file()
 
     def test_content_equals_what_a_developer_writes(

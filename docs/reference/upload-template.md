@@ -1,10 +1,8 @@
 # Upload template
 
-This guide is for a data assessor or contributor who fills in the GHFDB upload template with
+The GHFDB upload template is the workbook a data assessor or contributor fills in with
 heat-flow data. Download the template for this version of ghfdb, enter your data on its
 `data list` sheet and follow the choice lists where a field offers them.
-To generate the same template from Python, see the developer guide's
-[upload template page](../developer/upload-template.md).
 
 {upload-template-download}
 
@@ -19,7 +17,7 @@ The workbook has three sheets:
   allowed range of values. Enter one record per row from row 9.
 - `controlled vocabulary` lists the allowed terms of each field that has a fixed list.
 
-Every field is described in full in the [field reference](../reference/fields/index.md).
+Every field is described in full in the [field reference](fields/index.md).
 
 ## Fill in the template
 

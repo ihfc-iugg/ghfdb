@@ -6,35 +6,35 @@ The first part of the package, `ghfdb.qc`, is quality control for GHFDB data tem
 workbooks: it checks a workbook against the field schema and the IHFC controlled
 vocabularies, and scores each heat-flow determination with the GHFDB quality scheme.
 It checks a workbook with the `ghfdb check` command (see
-[Check a workbook](reference/check.md)). Scoring is still to come.
+[Check a workbook](user-guide/check.md)). Scoring is still to come, but the scheme it will
+implement is written down: the [quality scheme](reference/quality-scheme/index.md) states each
+rule with its source, every departure from the paper, and the worked examples every
+implementation must pass.
 
 ```{toctree}
 :maxdepth: 1
-:caption: Contributing data
+:caption: User guide
 
-upload-template/index
-```
-
-```{toctree}
-:maxdepth: 1
-:caption: Developer guide
-
-developer/field-definitions
-developer/upload-template
+user-guide/check
+user-guide/field-definitions
 ```
 
 ```{toctree}
 :maxdepth: 1
 :caption: Reference
 
-reference/index
+reference/fields/index
+reference/rules
+reference/quality-scheme/index
+reference/upload-template
 ```
 
 ```{toctree}
 :maxdepth: 1
 :caption: Maintainers
 
-developer/brainstorm
+contributing/brainstorm
+contributing/python-api
 contributing/vocabularies
 contributing/standards/testing
 contributing/standards/documentation

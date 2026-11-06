@@ -52,5 +52,5 @@ change in a way that matters here:
    difference.
 
 See [ADR 0003](../adr/0003-vocabularies-are-read-from-their-permanent-identifiers.md) for why
-the schema works this way and [the Python API](../reference/python-api.md) for the classes
+the schema works this way and [the Python API](python-api.md) for the classes
 involved.

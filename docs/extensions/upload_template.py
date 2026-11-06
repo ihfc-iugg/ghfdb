@@ -13,7 +13,7 @@ import ghfdb
 from extensions.field_reference import FieldReference
 from ghfdb.template import UploadTemplate
 
-PAGE_DIRECTORY = "upload-template"
+PAGE_DIRECTORY = "reference"
 DOWNLOAD_MARKER = re.compile(r"^\{upload-template-download\}$", re.MULTILINE)
 CHANGES_MARKER = re.compile(r"^\{upload-template-changes\}$", re.MULTILINE)
 HAND_MAINTAINED = (

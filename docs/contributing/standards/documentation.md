@@ -261,8 +261,13 @@ empty when there are none. -->
 
 | Guide | Lives in | Reader | Covers |
 |---|---|---|---|
-| Developer guide | `developer/` | A developer using ghfdb from Python | Loading the field definitions, generating the upload template |
-| Contributor guide | `upload-template/` | A data assessor or contributor filling in the upload template | Downloading the template, its sheets, what changed from the hand-maintained template |
+| User guide | `user-guide/` | A data assessor checking a workbook, or someone reading the field definitions from Python | Checking a workbook, loading the field definitions |
+
+A developer of this package is one of its maintainers, so the Developer guide is the **User
+guide** here, and the Python API reference sits with the maintainers' pages in
+`contributing/`. The upload template page is reference, and the documentation build writes the downloadable
+template beside it in `reference/`. The reference pages are listed
+directly under the **Reference** caption, with no index page.
 
 ---
 

@@ -88,3 +88,8 @@ select = ["E", "F", "W", "I", "UP", "B"]
 
 [tool.deptry]
 known_first_party = ["ghfdb"]
+
+[tool.forge.conformance]
+# The worked examples are a data file, ghfdb/qc/worked_examples.json, so their test has no
+# Python module to mirror.
+non-mirror-paths = ["tests/test_qc/test_worked_examples.py"]

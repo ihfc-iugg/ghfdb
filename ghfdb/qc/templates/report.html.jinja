@@ -31,7 +31,7 @@ thead th { background: #eee; position: sticky; top: 0; }
 </thead>
 <tbody>
 {% for problem in problems %}
-<tr>{% for cell in problem %}<td>{{ cell }}</td>{% endfor %}</tr>
+<tr>{% for cell in problem %}<td>{% if cell.link %}<a href="{{ cell.link }}">{{ cell.text }}</a> {{ cell.statement }}{% else %}{{ cell.text }}{% endif %}</td>{% endfor %}</tr>
 {% endfor %}
 </tbody>
 </table>

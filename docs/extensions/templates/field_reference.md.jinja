@@ -25,6 +25,7 @@
 {%- endset -%}
 {%- set has_places = custom.decimalPlaces is not none -%}
 {%- set has_length = constraints.maxLength is defined -%}
+{%- set rules = rules_of(field) -%}
 {%- set has_range = constraints.minimum is defined or constraints.maximum is defined -%}
 | Fact | Value | Source |
 |---|---|---|
@@ -55,6 +56,14 @@
 {%- endif -%}
 {%- if values -%}
 {{- row("Allowed values", values | length ~ " values, listed below", sources(field, ["allowedValues"])) -}}
+{%- endif -%}
+{%- if rules -%}
+{%- set links -%}
+{%- for rule in rules -%}
+{{ "{ref}" }}`{{ rule.identifier }} <{{ rule.identifier | lower }}>`{{ ", " if not loop.last }}
+{%- endfor -%}
+{%- endset -%}
+{{- row("Rules", links, rule_sources(rules)) -}}
 {%- endif -%}
 {% endmacro %}
 

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 
 import pandas
+import pytest
 from frictionless import Schema
 
 import ghfdb
@@ -58,7 +59,11 @@ class TestFromWorkbook:
 
 class TestCheck:
     def test_gives_the_problems_found_in_the_children(
-        self, schema: Schema, filled_workbook: Filler, valid_child: dict[str, Any]
+        self,
+        vocabularies_cached: Path,
+        schema: Schema,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
     ) -> None:
         number = next(f for f in schema.fields if f.type == "number")
         path = filled_workbook([valid_child, valid_child | {number.name: "abc"}])
@@ -70,6 +75,24 @@ class TestCheck:
             (p["row"], p["code"], p["kind"]) for p in problems.to_dict("records")
         } == {(FIRST_DATA_ROW + 1, number.name, Kind.WRONG_TYPE)}
 
+    def test_writes_nothing_into_the_users_cache(
+        self,
+        vocabularies_cached: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        schema: Schema,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+    ) -> None:
+        user = tmp_path / "user"
+        user.mkdir()
+        monkeypatch.setenv("XDG_CACHE_HOME", str(user))
+        dataset = Dataset.from_workbook(filled_workbook([valid_child]), schema)
+
+        dataset.check(schema)
+
+        assert list(user.rglob("*")) == []
+
     def test_checks_against_the_packaged_schema_without_one(
         self,
         vocabularies_cached: Path,
@@ -79,3 +102,34 @@ class TestCheck:
         dataset = Dataset.from_workbook(filled_workbook([valid_child]))
 
         assert dataset.check().empty
+
+
+class TestCheckRules:
+    def test_applies_the_cross_field_rules_by_default(
+        self,
+        vocabularies_cached: Path,
+        schema: Schema,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+    ) -> None:
+        path = filled_workbook([valid_child | {"P12": "[Drilling]", "C5": None}])
+        dataset = Dataset.from_workbook(path, schema)
+
+        problems = dataset.check(schema)
+
+        assert [
+            (p["row"], p["code"], p["kind"], p["rule"])
+            for p in problems.to_dict("records")
+        ] == [(FIRST_DATA_ROW, "C5", Kind.RULE, "CF-1")]
+
+    def test_applies_no_rule_when_given_none(
+        self,
+        vocabularies_cached: Path,
+        schema: Schema,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+    ) -> None:
+        path = filled_workbook([valid_child | {"P12": "[Drilling]", "C5": None}])
+        dataset = Dataset.from_workbook(path, schema)
+
+        assert dataset.check(schema, rules=()).empty

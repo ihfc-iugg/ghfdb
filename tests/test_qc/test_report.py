@@ -1,5 +1,6 @@
 import contextlib
 import os
+import re
 import stat
 from datetime import UTC, datetime
 from pathlib import Path
@@ -14,6 +15,7 @@ import ghfdb
 from ghfdb.fields import Vocabularies
 from ghfdb.qc.check import PROBLEM_COLUMNS, Kind
 from ghfdb.qc.report import Report
+from ghfdb.qc.rules import CF_1, CF_3
 from ghfdb.qc.workbook import CheckError
 
 
@@ -64,8 +66,8 @@ class TestReportWrite:
         path = Report(workbook_path, problems, 1, published_vocabularies).write()
 
         assert read_problems(path) == [
-            (None, None, "Extra", str(Kind.UNKNOWN_COLUMN), None, None),
-            (9, "P1", "Heat flow", str(Kind.WRONG_TYPE), "abc", "ab"),
+            (None, None, "Extra", str(Kind.UNKNOWN_COLUMN), None, None, None, None),
+            (9, "P1", "Heat flow", str(Kind.WRONG_TYPE), "abc", "ab", None, None),
         ]
 
     def test_writes_a_value_holding_markup_escaped(
@@ -147,6 +149,64 @@ class TestReportWrite:
         path = Report(workbook_path, problem_table(), 1, published_vocabularies).write()
 
         assert read_problems(path) == []
+
+
+def links_of(path: Path) -> list[str]:
+    """List the address of every link in the report."""
+    return re.findall(r'<a href="([^"]*)"', path.read_text(encoding="utf-8"))
+
+
+class TestRuleProblems:
+    @pytest.fixture
+    def written(
+        self, workbook_path: Path, published_vocabularies: Vocabularies
+    ) -> Path:
+        problems = problem_table(
+            {"row": 9, "code": "P1", "kind": Kind.MISSING},
+            {
+                "row": 9,
+                "code": "C5",
+                "column_name": "q_bottom",
+                "kind": Kind.RULE,
+                "rule": CF_1.identifier,
+                "related": "P12 explo_method [Drilling]",
+            },
+            {
+                "row": 10,
+                "code": "C41",
+                "kind": Kind.RULE,
+                "value": "[Core samples]",
+                "rule": CF_3.identifier,
+                "related": "C42 conductivity_location [Literature or unspecified]",
+            },
+        )
+        return Report(workbook_path, problems, 2, published_vocabularies).write()
+
+    def test_a_rule_problem_shows_its_identifier_its_statement_and_the_related_value(
+        self, written: Path
+    ) -> None:
+        found = read_problems(written)
+
+        assert [(line[0], line[1], line[3]) for line in found] == [
+            (9, "P1", str(Kind.MISSING)),
+            (9, "C5", str(Kind.RULE)),
+            (10, "C41", str(Kind.RULE)),
+        ]
+        assert found[1][6].startswith(CF_1.identifier)
+        assert CF_1.statement in found[1][6]
+        assert found[1][7] == "P12 explo_method [Drilling]"
+        assert found[2][6].startswith(CF_3.identifier)
+        assert CF_3.statement in found[2][6]
+
+    def test_other_kinds_have_no_rule_and_no_related_value(self, written: Path) -> None:
+        assert read_problems(written)[0][6:] == (None, None)
+
+    def test_the_identifier_links_to_its_lowercased_anchor_in_the_published_reference(
+        self, written: Path
+    ) -> None:
+        reference = "https://ihfc-iugg.github.io/ghfdb/reference/rules.html"
+
+        assert links_of(written) == [f"{reference}#cf-1", f"{reference}#cf-3"]
 
 
 class TestReportFailure:

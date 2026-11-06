@@ -141,6 +141,17 @@ class TestExampleTable:
             f"T-score 1.2, own scores T-score 1.0, TC-score {NOT_DETERMINED}"
         )
 
+    def test_a_measurement_scored_on_its_own_says_its_score_is_its_own(
+        self, schema: Schema
+    ) -> None:
+        reference = reference_of(
+            schema, example(scoring="measurement", expected={"TC": 0.8, "marked": True})
+        )
+
+        row = rows_of(reference.examples("probe-t"))[0]
+
+        assert row[3] == "own TC-score 0.8, missing-information mark"
+
     def test_each_portal_test_is_linked_to_its_file_on_github(
         self, schema: Schema
     ) -> None:
@@ -176,3 +187,32 @@ class TestRender:
         page = reference.render('Fields:\n\n{{ fields("C6") }}\n')
 
         assert page == f"Fields:\n\n{reference.fields('C6')}\n"
+
+
+class TestDecision:
+    def test_a_decision_is_cited_by_its_heading_and_linked_to_it_on_github(
+        self, schema: Schema
+    ) -> None:
+        citation = reference_of(schema).decision(1)
+
+        assert citation == (
+            "GHFDB portal decision [D1, “The toolbox, not the paper, is the "
+            "definition”](https://github.com/ihfc-iugg/ghfdb-portal/blob/main/specs/"
+            "007-quality-scores/decisions.md#d1--the-toolbox-not-the-paper-is-the-"
+            "definition)"
+        )
+
+    def test_punctuation_in_a_heading_is_dropped_from_its_anchor_as_github_does(
+        self, schema: Schema
+    ) -> None:
+        citation = reference_of(schema).decision(14)
+
+        assert citation.endswith(
+            "#d14--a-correction-recorded-as---is-unspecified-a-missing-one-is-empty)"
+        )
+
+    def test_a_decision_the_extension_does_not_know_is_refused(
+        self, schema: Schema
+    ) -> None:
+        with pytest.raises(KeyError):
+            reference_of(schema).decision(4)

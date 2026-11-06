@@ -1,6 +1,7 @@
 """Render the quality scheme pages from the worked examples and the field schema."""
 
 import json
+import re
 from collections.abc import Mapping
 from functools import cache
 from importlib import resources
@@ -18,6 +19,29 @@ TEMPLATES = Path(__file__).parent / "templates"
 PAGES = "reference/quality-scheme/"
 EXAMPLES = resources.files("ghfdb.qc") / "worked_examples.json"
 PORTAL_TESTS = "https://github.com/ihfc-iugg/ghfdb-portal/blob/main/"
+DECISIONS_URL = f"{PORTAL_TESTS}specs/007-quality-scores/decisions.md"
+# The headings of the GHFDB portal's quality-score decisions that the pages cite, as
+# they read in the decisions file.
+DECISIONS = {
+    1: "The toolbox, not the paper, is the definition",
+    2: "Uncorrected scores on the measurement, corrected scores on the child",
+    3: "The uncorrected TC-score scores pT conditions alone",
+    5: "The quality code is written with two full stops",
+    6: "Heat refraction is R, and the flags follow the paper's figure order",
+    7: "A product on a class boundary takes the better class",
+    8: "Multi-valued fields take the poorest matching class",
+    9: "Parent inheritance follows the toolbox, with one addition",
+    10: "The paper's worked examples are not the conformance oracle",
+    11: "The probe tilt correction is read from the temperature correction",
+    12: "The toolbox's code is the oracle where its own tests disagree with it",
+    13: "A borehole child with no in-situ correction takes the agreement penalty",
+    14: "A correction recorded as `-` is unspecified, a missing one is empty",
+    15: (
+        "Four misspelled method tokens in the toolbox are read as the methods they name"
+    ),
+    16: "A borehole temperature method that fits no case is marked",
+    17: "Measurements are routed by the site's exploration method",
+}
 
 EXPECTED_LABELS = {
     "rules": "rules",
@@ -28,6 +52,7 @@ EXPECTED_LABELS = {
     "flags": "flags",
     "code": "quality code",
 }
+OWN_SCORES = ("T", "TC")
 NOT_DETERMINED = "not determined"
 MISSING = "—"
 
@@ -75,11 +100,32 @@ class SchemeReference:
             }
         )
         self.environment.globals.update(
+            decision=self.decision,
             fields=self.fields,
             examples=self.examples,
             field_legend=self.field_legend,
             coverage=self.coverage,
         )
+
+    @staticmethod
+    def decision(number: int) -> str:
+        """Cite one of the GHFDB portal's quality-score decisions.
+
+        Args:
+            number: The decision's number in the portal's decisions file.
+
+        Returns:
+            Markdown naming the decision by its heading, linked to that heading on
+            GitHub.
+
+        Raises:
+            KeyError: The page cites a decision this extension does not know.
+        """
+        heading = DECISIONS[number]
+        full = f"D{number} — {heading}"
+        anchor = re.sub(r"[^\w\s-]", "", full.lower()).replace(" ", "-")
+        text = heading.replace("`", "")
+        return f"GHFDB portal decision [D{number}, “{text}”]({DECISIONS_URL}#{anchor})"
 
     def examples_of(self, part: str) -> list[Mapping[str, Any]]:
         """List the examples of one part of the scheme, in the file's order.
@@ -160,8 +206,9 @@ class SchemeReference:
             The expected values separated by commas, each named.
         """
         expected: Mapping[str, Any] = example["expected"]
+        own = "own " if example.get("scoring") == "measurement" else ""
         parts = [
-            f"{label} {self.value(expected[key])}"
+            f"{own if key in OWN_SCORES else ''}{label} {self.value(expected[key])}"
             for key, label in EXPECTED_LABELS.items()
             if key in expected
         ]
@@ -170,10 +217,10 @@ class SchemeReference:
                 "missing-information mark" if expected["marked"] else "no mark"
             )
         if "measurement" in expected:
-            own = expected["measurement"]
+            scores = expected["measurement"]
             parts.append(
-                f"own scores T-score {self.value(own['T'])}, "
-                f"TC-score {self.value(own['TC'])}"
+                f"own scores T-score {self.value(scores['T'])}, "
+                f"TC-score {self.value(scores['TC'])}"
             )
         return ", ".join(parts)
 

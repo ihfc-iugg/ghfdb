@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -216,3 +217,22 @@ class TestDecision:
     ) -> None:
         with pytest.raises(KeyError):
             reference_of(schema).decision(4)
+
+
+class TestWorkedExamplesPage:
+    def test_the_page_renders_the_examples_of_every_part_in_the_file(
+        self, schema: Schema
+    ) -> None:
+        page = (
+            Path(__file__).parents[3]
+            / "docs"
+            / "reference"
+            / "quality-scheme"
+            / "worked-examples.md"
+        ).read_text(encoding="utf-8")
+        reference = SchemeReference(schema)
+
+        parts = {example["part"] for example in reference.data["examples"]}
+
+        for part in parts:
+            assert f'{{{{ examples("{part}") }}}}' in page, part

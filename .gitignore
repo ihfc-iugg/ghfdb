@@ -38,4 +38,4 @@ docs/_build/
 docs/reference/fields/ghfdb-field-schema.json
 
 # The upload template the documentation build writes for download
-docs/upload-template/*.xlsx
+docs/reference/*.xlsx

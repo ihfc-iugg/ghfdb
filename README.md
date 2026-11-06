@@ -50,7 +50,7 @@ print(field_for_column(schema, "tc_method").constraints["enum"][0])  # or "C43"
 See the [user guide](https://ihfc-iugg.github.io/ghfdb/user-guide/field-definitions.html).
 
 To fill in the upload template, download the one for your version from the
-[upload template reference](https://ihfc-iugg.github.io/ghfdb/upload-template/).
+[upload template reference](https://ihfc-iugg.github.io/ghfdb/reference/upload-template.html).
 
 ## Why
 

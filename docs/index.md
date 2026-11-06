@@ -26,7 +26,7 @@ user-guide/field-definitions
 reference/fields/index
 reference/rules
 reference/quality-scheme/index
-upload-template/index
+reference/upload-template
 ```
 
 ```{toctree}

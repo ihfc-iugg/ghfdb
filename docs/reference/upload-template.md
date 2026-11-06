@@ -17,7 +17,7 @@ The workbook has three sheets:
   allowed range of values. Enter one record per row from row 9.
 - `controlled vocabulary` lists the allowed terms of each field that has a fixed list.
 
-Every field is described in full in the [field reference](../reference/fields/index.md).
+Every field is described in full in the [field reference](fields/index.md).
 
 ## Fill in the template
 

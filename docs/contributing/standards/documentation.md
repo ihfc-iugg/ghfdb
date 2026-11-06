@@ -265,8 +265,8 @@ empty when there are none. -->
 
 A developer of this package is one of its maintainers, so the Developer guide is the **User
 guide** here, and the Python API reference sits with the maintainers' pages in
-`contributing/`. The upload template page is reference, under `upload-template/` because the
-documentation build writes the downloadable template beside it. The reference pages are listed
+`contributing/`. The upload template page is reference, and the documentation build writes the downloadable
+template beside it in `reference/`. The reference pages are listed
 directly under the **Reference** caption, with no index page.
 
 ---

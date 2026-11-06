@@ -31,12 +31,10 @@ function for the `m-score` part, and compare with its expected scores.
   field code, and `Terms`, which resolves them to the terms the fields accept through
   `ghfdb.fields.allowed_values` and raises `MissingSchemeError` naming the concept when one is not
   an allowed value (FR-010). `Inputs`: the scored fields of a dataset parsed once, numbers as
-  floats, terms as concept URIs, a field with a separator exploded to one row per value, and any
-  value that does not parse or is not an allowed term read as empty (AS 2.4). Numbers parse as the
-  check parses a number field, and a cell holding a Python list holds several values (D-6), which
-  any scored field accepts. `DatasetCheck.blank` and `DatasetCheck.each_value` are called as they
-  are. Tests: resolution
-  against the test vocabularies, a withdrawn concept fails naming it, and one test resolves against
+  floats, terms as concept URIs, and any value that does not parse or is not an allowed term read
+  as empty (AS 2.4). Numbers parse as the check parses a number field. A cell holding a Python list
+  holds several values, in any scored field, held as one row per value; text is never split
+  (D-6). `DatasetCheck.blank` is called as it is. Tests: resolution against the test vocabularies, a withdrawn concept fails naming it, and one test resolves against
   the vocabularies as currently published (`published_vocabularies`).
 - [ ] T002 [US2] `Scores` in `ghfdb/qc/scores.py`, routing first, reusing the domain concepts of
   `ghfdb/qc/rules.py`: probe sensing, borehole and mine, or none. Worked examples: `routing`.

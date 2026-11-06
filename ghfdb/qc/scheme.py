@@ -162,7 +162,7 @@ class Inputs:
             The text of every value, empty for a field the data lacks.
         """
         if code not in data.columns:
-            return pandas.Series(pandas.NA, index=data.index, dtype="string")
+            return pandas.Series(pandas.NA, index=data.index, dtype="string", name=code)
         return data[code].explode().astype("string").str.strip()
 
     @staticmethod

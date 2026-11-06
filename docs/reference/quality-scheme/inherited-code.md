@@ -43,7 +43,7 @@ or how a grade with the mark ranks against one without it. Both are {{ decision(
 
 When two children tie on both scores the scheme as the portal applies it takes the child it
 holds first, so that recalculating gives the same flags every time. What the scheme should say
-is under discussion (QUESTION-3).
+is under discussion (<https://github.com/ihfc-iugg/ghfdb/issues/40>).
 
 For example, a parent with two relevant children coded `U1.M4.S------` and `U3.M1x.-E-----`
 inherits `U3.M1x.-E-----`. `U3` is the poorer U-score, `M1x` is the poorer M-score, and the flags
@@ -75,4 +75,4 @@ and the M-score, and each way the flags are chosen.
 
 ## Under discussion
 
-* QUESTION-3: which child's perturbation flags a parent takes when two children tie.
+* <https://github.com/ihfc-iugg/ghfdb/issues/40>: which child's perturbation flags a parent takes when two children tie.

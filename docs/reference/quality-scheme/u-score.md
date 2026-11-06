@@ -44,7 +44,7 @@ flowchart TD
 
 Source: Fuchs et al. (2023), Section 3.1, Equation 2 and Table 1. The paper's table gives the
 classes as ranges that share their end points. The class of exactly 15 % is under discussion
-(QUESTION-4). The scheme classes it as `U2`, which is how the toolbox applies the table:
+(<https://github.com/ihfc-iugg/ghfdb/issues/41>). The scheme classes it as `U2`, which is how the toolbox applies the table:
 {{ decision(1) }}. The paper's Equation 2 leaves out the factor of 100 that turns the ratio
 into a percentage, and the scheme includes it.
 
@@ -72,4 +72,4 @@ for the rounding, for a negative value and for each way a U-score is not determi
 
 ## Under discussion
 
-* QUESTION-4: the class of a coefficient of variation of exactly 15 %.
+* <https://github.com/ihfc-iugg/ghfdb/issues/41>: the class of a coefficient of variation of exactly 15 %.

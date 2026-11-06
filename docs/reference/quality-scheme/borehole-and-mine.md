@@ -43,7 +43,7 @@ flowchart TD
    matter.
 
 An empty `C37` is not more than 3, so a gradient with an empty number of recordings is never a
-continuous log, and the empty number sets no mark (QUESTION-6).
+continuous log, and the empty number sets no mark (<https://github.com/ihfc-iugg/ghfdb/issues/43>).
 
 Source: Fuchs et al. (2023), Table 3, "Source type and number of T points". The paper conditions
 the continuous log on more than three recordings and does not state a condition for the other
@@ -86,7 +86,7 @@ group, and the poorest matching group decides.
 * **A method that fits no group.** A method listed in none of the groups of its case takes the
   case's largest penalty with the mark. `[DTSeq]` is listed only for the continuous log, so with
   three recordings or fewer it fits no group of multiple single points. `[DST]` and `[cDST]` are
-  in the vocabulary and in none of the groups, which is under discussion (QUESTION-1). Source:
+  in the vocabulary and in none of the groups, which is under discussion (<https://github.com/ihfc-iugg/ghfdb/issues/38>). Source:
   {{ decision(16) }}.
 * **Spellings.** The toolbox's lists spell three methods in ways the vocabulary does not. They
   are read as the methods they name, `[HT-FTeq]` and `[HT-FTpert]`: {{ decision(15) }}.
@@ -190,7 +190,7 @@ Reads `C44` `tc_saturation`.
 
 `[Unspecified]` and `[Other]` take −0.2 without the mark. Source: Fuchs et al. (2023), Table 3,
 "Saturation". The paper's text and its table describe this criterion differently, and the scheme
-follows the table (QUESTION-2). See {ref}`DEP-13 <dep-13>`.
+follows the table (<https://github.com/ihfc-iugg/ghfdb/issues/39>). See {ref}`DEP-13 <dep-13>`.
 
 ### Pressure and temperature conditions
 
@@ -227,8 +227,8 @@ examples named `X1` to `X5` and `B1` to `B9`.
 
 ## Under discussion
 
-* QUESTION-1: how the temperature methods `[DST]` and `[cDST]` score for a borehole gradient.
-* QUESTION-2: whether a borehole conductivity's saturation and pT conditions are scored
+* <https://github.com/ihfc-iugg/ghfdb/issues/38>: how the temperature methods `[DST]` and `[cDST]` score for a borehole gradient.
+* <https://github.com/ihfc-iugg/ghfdb/issues/39>: whether a borehole conductivity's saturation and pT conditions are scored
   together or apart.
-* QUESTION-6: whether an empty number of temperature recordings sets the mark for a borehole
+* <https://github.com/ihfc-iugg/ghfdb/issues/43>: whether an empty number of temperature recordings sets the mark for a borehole
   gradient.

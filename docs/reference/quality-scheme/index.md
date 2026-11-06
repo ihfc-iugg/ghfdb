@@ -164,11 +164,11 @@ decisions {{ decision(2) }} and {{ decision(3) }}). The worked examples call tho
 These questions are open with the data assessment team. Until they are settled, the scheme is
 written as the GHFDB portal applies it today.
 
-* QUESTION-1: how the temperature methods `[DST]` and `[cDST]` score for a borehole gradient.
-* QUESTION-2: whether a borehole conductivity's saturation and pT conditions are scored
+* <https://github.com/ihfc-iugg/ghfdb/issues/38>: how the temperature methods `[DST]` and `[cDST]` score for a borehole gradient.
+* <https://github.com/ihfc-iugg/ghfdb/issues/39>: whether a borehole conductivity's saturation and pT conditions are scored
   together or apart.
-* QUESTION-3: which child's perturbation flags a parent takes when two children tie.
-* QUESTION-4: the class of a coefficient of variation of exactly 15 %.
-* QUESTION-5: how a conductivity measured with the continuous heating probe scores.
-* QUESTION-6: whether an empty number of temperature recordings sets the mark for a borehole
+* <https://github.com/ihfc-iugg/ghfdb/issues/40>: which child's perturbation flags a parent takes when two children tie.
+* <https://github.com/ihfc-iugg/ghfdb/issues/41>: the class of a coefficient of variation of exactly 15 %.
+* <https://github.com/ihfc-iugg/ghfdb/issues/42>: how a conductivity measured with the continuous heating probe scores.
+* <https://github.com/ihfc-iugg/ghfdb/issues/43>: whether an empty number of temperature recordings sets the mark for a borehole
   gradient.

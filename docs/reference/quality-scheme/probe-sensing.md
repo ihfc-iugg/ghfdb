@@ -171,7 +171,7 @@ A laboratory method is one of `[Lab - point source]`, `[Lab - line source - full
 * **Unspecified.** An unspecified saturation, source or location is a value. It takes part in
   the cases above and, where it satisfies none, takes −0.2 without the mark.
 * **No case holds.** The criterion takes −0.2 without the mark. A conductivity measured by
-  `[Probe - continuous heating technique]` fits no case. It is under discussion (QUESTION-5).
+  `[Probe - continuous heating technique]` fits no case. It is under discussion (<https://github.com/ihfc-iugg/ghfdb/issues/42>).
 
 Source: Fuchs et al. (2023), Table 2, "Source type and saturation". The paper's table is
 narrower than the cases above, and the scheme follows the toolbox: {{ decision(1) }}. See
@@ -222,4 +222,4 @@ these rules are the examples named `P1` to `P5`.
 
 ## Under discussion
 
-* QUESTION-5: how a conductivity measured with the continuous heating probe scores.
+* <https://github.com/ihfc-iugg/ghfdb/issues/42>: how a conductivity measured with the continuous heating probe scores.

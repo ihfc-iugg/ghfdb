@@ -3946,7 +3946,7 @@
         "inherited.flags",
         "inherited.full-tie"
       ],
-      "note": "The order is the order the GHFDB portal holds the children in. QUESTION-3 asks the data assessment team what the scheme says."
+      "note": "The order is the order the GHFDB portal holds the children in. https://github.com/ihfc-iugg/ghfdb/issues/40 asks the data assessment team what the scheme says."
     },
     {
       "id": "IH-15",
@@ -3972,7 +3972,7 @@
         "inherited.flags",
         "inherited.full-tie"
       ],
-      "note": "The order is the order the GHFDB portal holds the children in. QUESTION-3 asks the data assessment team what the scheme says."
+      "note": "The order is the order the GHFDB portal holds the children in. https://github.com/ihfc-iugg/ghfdb/issues/40 asks the data assessment team what the scheme says."
     },
     {
       "id": "IH-16",

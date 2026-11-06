@@ -4,7 +4,7 @@ The scheme starts from the one the GHFDB portal applies today, and the portal fo
 of the Heat Flow Quality Analysis Toolbox where it and the paper of Fuchs et al. (2023) differ:
 {{ decision(1) }}. The toolbox scored the 2024 GHFDB release, so following it keeps the scores
 comparable with the scores data users already hold. This page lists every place where the scheme
-differs from the paper, or fills a gap the paper leaves. Each entry says what the paper says, what
+differs from the paper, or fills a gap the paper leaves. Each departure says what the paper says, what
 the scheme does, why, and where the decision is recorded. Each departure is also stated where the
 rule lives.
 

@@ -16,7 +16,7 @@ that it was used in deriving the parent's value.
 
 * A parent with exactly one child rests on it, whether or not it is marked relevant.
 * A parent with several children rests on the children marked `[Yes]`. The children not marked
-  take no part, which is how a poor determination stays in the record without lowering the site's
+  take no part, so a poor child stays in the data without lowering the site's
   quality.
 * A parent with several children of which none is marked `[Yes]`, or with no children, is not
   determined. Its code is `Ux.Mx.-------`.

@@ -1,6 +1,6 @@
 # Perturbation flags
 
-The perturbation flags record which disturbing effects the authors of a heat-flow determination
+The perturbation flags record which disturbing effects the authors of a heat-flow value
 recognised, and whether they corrected for them. They are seven characters, one for each effect,
 and they are the last part of the quality code: in `U2.M3x.-e-PX--` they are `-e-PX--`. The flags
 never change the U-score or the M-score.

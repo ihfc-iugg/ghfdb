@@ -73,3 +73,17 @@ Text is never split for a scored field.
 **Why**: the scheme's overview says the upload template holds one value in each field it scores,
 and that several values come from data held elsewhere. Splitting text by a separator the schema
 does not declare would score a workbook differently from how the check reads it.
+
+## D-7: Routing and the flags read a field's first value
+
+**Ambiguous**: the scheme scores every value of a field that holds several and takes the poorest,
+but routing and the perturbation flags are not penalties, so there is no poorest to take.
+
+**Chosen**: routing reads the first filled value of the exploration method, and each flag reads the
+first filled value of its correction field. Every criterion that gives a penalty keeps the
+poorest.
+
+**Why**: the upload template holds one value in each of these fields, and the scheme says nothing
+about several. Taking the first is the plainest reading until it does.
+
+**ADR:** none. It is local to this feature and changes with the scheme page if a ruling covers it.

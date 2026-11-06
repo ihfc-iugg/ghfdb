@@ -121,3 +121,26 @@ The report the `ghfdb check` command writes is built by `ghfdb.qc.report.Report`
 the workbook's path, the problems, the number of children and the `Vocabularies` the check read,
 and whose `write` method returns the report's path. The command, its report and each kind of
 problem are described in [Check a workbook](../user-guide/check.md).
+
+## Quality scores
+
+The quality scheme is computed by four classes, one for each part the
+[quality scheme](../reference/quality-scheme/index.md) separates. `ghfdb.qc.scheme.Terms`
+resolves every concept the scheme names, by its URI, to the term its field accepts in the
+vocabularies as published, and raises `MissingSchemeError` naming the concept when one is no
+longer published. `ghfdb.qc.scheme.Inputs` reads the scored fields of a table of children once:
+numbers as numbers, terms as concept URIs, and a value that is neither as empty. A cell holding a
+Python list holds several values. `ghfdb.qc.uncertainty.UScore` grades the uncertainty, and
+`ghfdb.qc.scores.Scores` routes each child to its rules and writes its perturbation flags. Each
+works on every child at once.
+
+```{eval-rst}
+.. automodule:: ghfdb.qc.scheme
+   :members:
+
+.. automodule:: ghfdb.qc.uncertainty
+   :members:
+
+.. automodule:: ghfdb.qc.scores
+   :members:
+```

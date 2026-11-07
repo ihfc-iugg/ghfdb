@@ -55,6 +55,55 @@ def read_table(path: Path, table_id: str) -> list[list[str]]:
     return reader.rows
 
 
+class HeadingReader(HTMLParser):
+    """Collect the column headings of a table, with the address each one links to."""
+
+    def __init__(self, table_id: str) -> None:
+        super().__init__()
+        self.table_id = table_id
+        self.headings: list[tuple[str, str | None]] = []
+        self.inside = False
+        self.in_head = False
+        self.in_heading = False
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "table" and dict(attrs).get("id") == self.table_id:
+            self.inside = True
+        elif self.inside and tag == "thead":
+            self.in_head = True
+        elif self.inside and self.in_head and tag == "th":
+            self.headings.append(("", None))
+            self.in_heading = True
+        elif self.in_heading and tag == "a":
+            self.headings[-1] = (self.headings[-1][0], dict(attrs).get("href"))
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "table":
+            self.inside = False
+        elif tag == "thead":
+            self.in_head = False
+        elif tag == "th":
+            self.in_heading = False
+
+    def handle_data(self, data: str) -> None:
+        if self.in_heading:
+            text, link = self.headings[-1]
+            self.headings[-1] = (text + data, link)
+
+
+def read_headings(path: Path, table_id: str) -> list[tuple[str, str | None]]:
+    """Read the column headings of a table, each with the link it carries or None."""
+    reader = HeadingReader(table_id)
+    reader.feed(path.read_text(encoding="utf-8"))
+    return reader.headings
+
+
+def read_scores(path: Path) -> list[dict[str, str]]:
+    """Read the Preview scores of a report: each row as its cells by heading."""
+    headings = [text for text, _ in read_headings(path, "scores")]
+    return [dict(zip(headings, row, strict=True)) for row in read_table(path, "scores")]
+
+
 def read_problems(path: Path) -> list[tuple[Any, ...]]:
     """Read the problems of a report: the row as a number, an empty cell as None."""
     return [

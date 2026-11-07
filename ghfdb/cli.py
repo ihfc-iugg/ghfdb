@@ -43,8 +43,9 @@ def check(path: Path) -> int:
     problems = pandas.concat(
         [workbook.column_problems(), dataset.check(schema, RULES, vocabularies)]
     )
+    scores = dataset.scores(problems=problems, vocabularies=vocabularies)
     children = len(dataset.data)
-    report = Report(path, problems, children, vocabularies).write()
+    report = Report(path, problems, children, vocabularies, scores).write()
     affected = problems["row"].dropna().nunique()
     print(
         f"{children} children, {len(problems)} problems in {affected} of them, "

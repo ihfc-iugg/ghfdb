@@ -9,6 +9,7 @@ from typing import Any
 
 import pandas
 from jinja2 import Environment, PackageLoader
+from markupsafe import Markup
 
 from ghfdb import __version__
 from ghfdb.fields import Vocabularies
@@ -30,6 +31,24 @@ HEADINGS = [
 RULE_REFERENCE = "https://ihfc-iugg.github.io/ghfdb/reference/rules.html"
 STATEMENTS = {rule.identifier: rule.statement for rule in RULES}
 RULE_COLUMN = HEADINGS.index("Rule")
+SCHEME_REFERENCE = "https://ihfc-iugg.github.io/ghfdb/reference/quality-scheme/"
+# The heading of each column of the scores table and the page of the scheme reference
+# that explains it, if any.
+SCORE_PAGES = {
+    "Excel row": None,
+    "Rules": "index",
+    "U-score": "u-score",
+    "T-score": "index",
+    "TC-score": "index",
+    "M-score": "m-score",
+    "Perturbation flags": "perturbation-flags",
+    "Quality code": "index",
+    "Has problems": None,
+}
+SCORE_HEADINGS = list(SCORE_PAGES)
+SCORE_COLUMNS = ["rules", "U", "T", "TC", "M", "flags", "code"]
+YES = "yes"
+NO = "no"
 
 
 class Report:
@@ -49,12 +68,15 @@ class Report:
         children: The number of children checked.
         vocabularies: The vocabularies the check read, which name the releases the
             report states.
+        scores: The preview scores of the children, as ``Dataset.scores`` returns
+            them, indexed by Excel row. A score not determined is an empty cell.
 
     Attributes:
         workbook_path: The workbook.
         problems: The problems.
         children: The number of children.
         vocabularies: The vocabularies.
+        scores: The preview scores.
     """
 
     def __init__(
@@ -63,11 +85,13 @@ class Report:
         problems: pandas.DataFrame,
         children: int,
         vocabularies: Vocabularies,
+        scores: pandas.DataFrame,
     ) -> None:
         self.workbook_path = workbook_path
         self.problems = problems
         self.children = children
         self.vocabularies = vocabularies
+        self.scores = scores
 
     @property
     def path(self) -> Path:
@@ -118,6 +142,11 @@ class Report:
             summary=self.summary(),
             headings=HEADINGS,
             problems=self.cells(),
+            score_headings=[
+                (heading, f"{SCHEME_REFERENCE}{page}.html" if page else None)
+                for heading, page in SCORE_PAGES.items()
+            ],
+            scores=self.score_rows(),
         )
         path.write_text(page, encoding="utf-8")
 
@@ -133,6 +162,26 @@ class Report:
             [self.cell(position, cell) for position, cell in enumerate(problem)]
             for problem in self.problems.itertuples(index=False)
         ]
+
+    def score_rows(self) -> list[Markup]:
+        """List the preview scores as table rows, one for each child.
+
+        Returns:
+            For each child, in the order of the scores, its cells escaped and joined as
+            the cells of a row: the Excel row, the scores as text with an empty cell
+            for a score not determined, and whether the child has problems.
+        """
+        text = self.scores[SCORE_COLUMNS].astype(object)
+        text["T"] = self.scores["T"].round(3).astype("string")
+        text["TC"] = self.scores["TC"].round(3).astype("string")
+        text = text.where(text.notna(), "")
+        text.insert(0, "row", self.scores.index.astype(str))
+        has_problems = self.scores.index.isin(self.problems["row"].dropna())
+        text["problems"] = pandas.Series(has_problems, index=text.index).map(
+            {True: YES, False: NO}
+        )
+        separator = Markup("</td><td>")
+        return [separator.join(row) for row in text.itertuples(index=False)]
 
     @staticmethod
     def cell(position: int, value: Any) -> dict[str, str]:
@@ -167,4 +216,10 @@ class Report:
             ("Children", str(self.children)),
             ("Problems", str(len(self.problems))),
             ("Children with problems", str(int(rows))),
+            (
+                "Quality scheme",
+                Markup('<a href="{}">GHFDB quality scheme</a>').format(
+                    f"{SCHEME_REFERENCE}index.html"
+                ),
+            ),
         ]

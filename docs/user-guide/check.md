@@ -103,7 +103,7 @@ missing-information mark: information the scheme needs was missing, and the chil
 better with it. A child with a problem is still
 scored, with every cell that has a problem of kind missing, wrong type, out of range, not in
 vocabulary or rule counted as empty, so fix the problems and check again to see the scores
-the portal will give. A workbook with no children has the table and no rows.
+the portal will give. A workbook with no children has the table with no rows, and the report says there is no child to score.
 
 ### The summary
 

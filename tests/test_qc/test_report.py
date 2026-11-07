@@ -326,6 +326,20 @@ class TestPreviewScores:
         assert read_scores(path) == []
         assert [text for text, _ in read_headings(path, "scores")] == SCORE_HEADINGS
 
+    def test_a_check_of_no_children_says_there_is_no_child_to_score(
+        self, workbook_path: Path, published_vocabularies: Vocabularies
+    ) -> None:
+        path = Report(
+            workbook_path, problem_table(), 0, published_vocabularies, score_table()
+        ).write()
+
+        assert 'id="no-scores"' in path.read_text(encoding="utf-8")
+
+    def test_a_check_of_children_does_not_say_there_is_no_child_to_score(
+        self, written: Path
+    ) -> None:
+        assert 'id="no-scores"' not in written.read_text(encoding="utf-8")
+
     def test_a_value_holding_markup_is_written_escaped(
         self, workbook_path: Path, published_vocabularies: Vocabularies
     ) -> None:

@@ -15,7 +15,7 @@ NOT_DETERMINED = "not determined"
 # The modules that run worked examples, each exposing the examples it runs as EXAMPLES.
 RUNNING = ("test_uncertainty", "test_scores", "test_probe", "test_borehole")
 # The parts no code scores yet. The group that builds a part removes it from here.
-PENDING = {"borehole-tc", "m-score", "child"}
+PENDING = {"m-score", "child"}
 
 
 def load_examples(part: str) -> list[Mapping[str, Any]]:

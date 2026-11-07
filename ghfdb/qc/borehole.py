@@ -9,12 +9,31 @@ from collections.abc import Sequence
 import numpy
 import pandas
 
-from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD
+from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD, LITERATURE_OR_UNSPECIFIED
 from ghfdb.qc.scheme import (
+    ACTUAL_IN_SITU,
+    ACTUAL_LOCATION,
+    AMBIENT_OR_UNSPECIFIED,
+    BEST_SOURCES,
+    CONSIDERED_P_OR_T,
+    CONSIDERED_PT,
     CONTINUOUS_LOG_BEST,
     CONTINUOUS_LOG_METHODS,
     CONTINUOUS_LOG_PERTURBED,
+    CORE_SAMPLES,
+    DRY_UNSPECIFIED_OR_OTHER,
+    ESTIMATED_SOURCES,
     ESTIMATED_TEMPERATURE,
+    FULL_IN_SITU,
+    LARGEST_PENALTY,
+    NOT_CONSIDERED_OR_UNSPECIFIED,
+    OTHER_LOCATION,
+    PARTIAL_IN_SITU,
+    RECOVERED,
+    SAMPLED_SOURCES,
+    SATURATED_CALCULATED,
+    SATURATED_IN_SITU,
+    SATURATED_MEASURED,
     SINGLE_POINTS_EQUILIBRIUM,
     SINGLE_POINTS_PERTURBED,
     SURFACE,
@@ -23,6 +42,8 @@ from ghfdb.qc.scheme import (
     Inputs,
     Penalty,
     Score,
+    cases,
+    combinations,
     poorest,
     total,
 )
@@ -44,6 +65,29 @@ LARGEST_CONTINUOUS_LOG = -0.1
 LARGEST_SINGLE_POINTS = -0.5
 LARGEST_SURFACE_PLUS_ONE_POINT = -0.6
 CONTINUOUS_LOG_RECORDINGS = 3
+LOCATIONS: Groups = [
+    (0.0, [ACTUAL_LOCATION]),
+    (-0.1, [OTHER_LOCATION]),
+    (LARGEST_PENALTY, [LITERATURE_OR_UNSPECIFIED]),
+]
+SOURCES: Groups = [
+    (0.1, BEST_SOURCES),
+    (0.0, [CORE_SAMPLES]),
+    (-0.1, SAMPLED_SOURCES),
+    (LARGEST_PENALTY, ESTIMATED_SOURCES),
+]
+SATURATIONS: Groups = [
+    (0.0, [SATURATED_IN_SITU, SATURATED_MEASURED]),
+    (-0.1, [SATURATED_CALCULATED, RECOVERED]),
+    (LARGEST_PENALTY, DRY_UNSPECIFIED_OR_OTHER),
+]
+CONDITIONS: Groups = [
+    (0.0, [ACTUAL_IN_SITU, *FULL_IN_SITU]),
+    (-0.1, PARTIAL_IN_SITU),
+    (LARGEST_PENALTY, AMBIENT_OR_UNSPECIFIED),
+]
+MEASUREMENTS_ABOVE = 15
+GATE_SCORE = 0.1
 
 
 class BoreholeRules:
@@ -210,3 +254,179 @@ class BoreholeRules:
             The own T-score and its mark for each child.
         """
         return self.t_score()
+
+    def depth_reported(self) -> pandas.Series:
+        """Find the children that report the top or the bottom of the interval.
+
+        Returns:
+            Whether ``C4`` or ``C5`` is filled for each child.
+        """
+        numbers = self.inputs.numbers
+        return (
+            self.inputs.first(numbers["C4"]).notna()
+            | self.inputs.first(numbers["C5"]).notna()
+        )
+
+    def single(self, code: str, groups: Groups) -> Penalty:
+        """Score a field by the group each of its values belongs to.
+
+        Args:
+            code: The code of the field.
+            groups: The penalty of each group and the concepts in it.
+
+        Returns:
+            The poorest penalty of each child, ``-0.2`` with the mark for an empty
+            value.
+        """
+        graded = self.grade(self.inputs.concepts[code], groups, LARGEST_PENALTY)
+        return poorest(graded.value, graded.marked, self.inputs.index)
+
+    def location(self) -> Penalty:
+        """Score where the conductivity was measured, ``C42``.
+
+        See docs/reference/quality-scheme/borehole-and-mine.md, "Location".
+
+        Returns:
+            The penalty and the mark of each child.
+        """
+        return self.single("C42", LOCATIONS)
+
+    def source(self) -> Penalty:
+        """Score where the conductivity comes from, ``C41``.
+
+        See docs/reference/quality-scheme/borehole-and-mine.md, "Source".
+
+        Returns:
+            The penalty and the mark of each child.
+        """
+        return self.single("C41", SOURCES)
+
+    def number(self) -> Penalty:
+        """Score the number of conductivity measurements, ``C47``.
+
+        The criterion is left out for a literature location, whatever the number. See
+        docs/reference/quality-scheme/borehole-and-mine.md, "Number of conductivity
+        measurements".
+
+        Returns:
+            The penalty and the mark of each child.
+        """
+        rows = combinations(
+            {
+                "number": self.inputs.numbers["C47"],
+                "location": self.inputs.concepts["C42"],
+            }
+        )
+        numbers = rows["number"]
+        penalty = pandas.Series(
+            numpy.where(numbers > MEASUREMENTS_ABOVE, 0.0, -0.1), index=rows.index
+        )
+        skipped = rows["location"].eq(LITERATURE_OR_UNSPECIFIED).fillna(False)
+        return poorest(
+            penalty.mask(skipped, 0.0),
+            numbers.isna().mask(skipped, False),
+            self.inputs.index,
+        )
+
+    def saturation(self) -> Penalty:
+        """Score the saturation, ``C44``.
+
+        See docs/reference/quality-scheme/borehole-and-mine.md, "Saturation".
+
+        Returns:
+            The penalty and the mark of each child.
+        """
+        return self.single("C44", SATURATIONS)
+
+    def conditions(self) -> Penalty:
+        """Score the pressure and temperature conditions with the in-situ correction.
+
+        The conditions ``C45`` must agree with the child's correction ``C11``. See
+        docs/reference/quality-scheme/borehole-and-mine.md, "Pressure and temperature
+        conditions".
+
+        Returns:
+            The penalty and the mark of each child.
+        """
+        concepts = self.inputs.concepts
+        rows = combinations(
+            {"conditions": concepts["C45"], "correction": concepts["C11"]}
+        )
+        conditions, correction = rows["conditions"], rows["correction"]
+        return cases(
+            rows,
+            [
+                (
+                    0.0,
+                    conditions.isin([ACTUAL_IN_SITU, *FULL_IN_SITU])
+                    & correction.eq(CONSIDERED_PT),
+                ),
+                (
+                    -0.1,
+                    conditions.isin(PARTIAL_IN_SITU)
+                    & correction.isin(CONSIDERED_P_OR_T),
+                ),
+                (
+                    LARGEST_PENALTY,
+                    conditions.isin(AMBIENT_OR_UNSPECIFIED)
+                    & correction.isin(NOT_CONSIDERED_OR_UNSPECIFIED),
+                ),
+            ],
+            self.inputs.index,
+        )
+
+    def own_conditions(self) -> Penalty:
+        """Score the pressure and temperature conditions alone, ``C45``.
+
+        See docs/reference/quality-scheme/departures.md, "DEP-15".
+
+        Returns:
+            The penalty and the mark of each child.
+        """
+        return self.single("C45", CONDITIONS)
+
+    def score(self, conditions: Penalty) -> Score:
+        """Add the criteria of the TC-score, behind the interval depth gate.
+
+        Args:
+            conditions: The penalty of the pressure and temperature conditions.
+
+        Returns:
+            The score and its mark for each child: ``0.1`` with the mark where
+            neither depth is reported, and nothing else scored.
+        """
+        scored = total(
+            [
+                self.location(),
+                self.source(),
+                self.number(),
+                self.saturation(),
+                conditions,
+            ],
+            self.routed(),
+        )
+        closed = self.routed() & ~self.depth_reported()
+        return Score(
+            scored.value.mask(closed, GATE_SCORE), scored.marked.mask(closed, True)
+        )
+
+    def tc_score(self) -> Score:
+        """Score the conductivity of each child, with its in-situ correction.
+
+        See docs/reference/quality-scheme/borehole-and-mine.md, "TC-score".
+
+        Returns:
+            The TC-score and its mark for each child.
+        """
+        return self.score(self.conditions())
+
+    def own_tc_score(self) -> Score:
+        """Score the conductivity on its own, before the child's correction applies.
+
+        See docs/reference/quality-scheme/index.md, "Scores of a child and of its
+        measurements".
+
+        Returns:
+            The own TC-score and its mark for each child.
+        """
+        return self.score(self.own_conditions())

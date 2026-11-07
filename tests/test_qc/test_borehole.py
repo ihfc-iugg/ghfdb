@@ -11,7 +11,7 @@ from ghfdb.fields import Vocabularies
 from ghfdb.qc.borehole import BoreholeRules
 from ghfdb.qc.scheme import Inputs, Terms
 
-PARTS = ("borehole-t",)
+PARTS = ("borehole-t", "borehole-tc")
 DRILLING = "[Drilling]"
 GRADIENT = {
     "P12": DRILLING,
@@ -20,6 +20,16 @@ GRADIENT = {
     "C37": 2,
     "C31": "[cBHT]",
     "C32": "[cBHT]",
+}
+CONDUCTIVITY = {
+    "P12": DRILLING,
+    "C4": 0,
+    "C5": 1000,
+    "C41": "[Core samples]",
+    "C42": "[Actual heat-flow location]",
+    "C44": "[Saturated measured]",
+    "C45": "[Corrected in-situ (pT)]",
+    "C47": 30,
 }
 
 
@@ -158,3 +168,112 @@ class TestBoreholeTScore:
         assert score.value.index.tolist() == [12, 9, 10]
         assert score.value.tolist() == [1.1, 0.5, 0.5]
         assert score.marked.tolist() == [False, False, False]
+
+
+class TestBoreholeTCScore:
+    @pytest.mark.parametrize(
+        "example",
+        [e for e in EXAMPLES if e["part"] == "borehole-tc"],
+        ids=lambda example: example["id"],
+    )
+    def test_worked_example(self, terms: Terms, example: Mapping[str, Any]) -> None:
+        rules = rules_of(terms, one_child(example["inputs"]))
+
+        if example["scoring"] == "measurement":
+            score = rules.own_tc_score()
+        else:
+            score = rules.tc_score()
+
+        assert score.value.iloc[0] == example["expected"]["TC"]
+        if "marked" in example["expected"]:
+            assert score.marked.iloc[0] == example["expected"]["marked"]
+
+    def test_the_own_score_reads_the_pT_conditions_without_the_in_situ_correction(
+        self, terms: Terms
+    ) -> None:
+        child = {**CONDUCTIVITY, "C11": "[Not considered]"}
+        rules = rules_of(terms, one_child(child))
+
+        child_score = rules.tc_score()
+        own_score = rules.own_tc_score()
+
+        assert (child_score.value.iloc[0], child_score.marked.iloc[0]) == (0.8, False)
+        assert (own_score.value.iloc[0], own_score.marked.iloc[0]) == (1.0, False)
+
+    def test_a_literature_location_leaves_the_number_out_and_sets_no_mark_for_it(
+        self, terms: Terms
+    ) -> None:
+        child = {**CONDUCTIVITY, "C42": "[Literature or unspecified]"}
+        del child["C47"]
+
+        score = rules_of(terms, one_child(child)).own_tc_score()
+
+        assert score.value.iloc[0] == 0.8
+        assert not score.marked.iloc[0]
+
+    def test_a_literature_location_among_several_leaves_the_number_to_the_rest(
+        self, terms: Terms
+    ) -> None:
+        child = {
+            **CONDUCTIVITY,
+            "C42": ["[Actual heat-flow location]", "[Literature or unspecified]"],
+        }
+        del child["C47"]
+
+        score = rules_of(terms, one_child(child)).own_tc_score()
+
+        assert score.value.iloc[0] == 0.7
+        assert score.marked.iloc[0]
+
+    def test_the_gate_stops_the_scoring_of_every_other_criterion(
+        self, terms: Terms
+    ) -> None:
+        child = {"P12": DRILLING, "C41": "[Other]", "C45": "[Unspecified]"}
+
+        score = rules_of(terms, one_child(child)).tc_score()
+
+        assert score.value.iloc[0] == 0.1
+        assert score.marked.iloc[0]
+
+    def test_a_child_that_other_rules_score_is_not_determined(
+        self, terms: Terms
+    ) -> None:
+        data = pandas.DataFrame(
+            {"P12": ["[Probing (offshore, ocean)]", None, DRILLING]},
+            index=pandas.Index([12, 9, 10], name="row"),
+            dtype=object,
+        )
+
+        rules = rules_of(terms, data)
+
+        for score in (rules.tc_score(), rules.own_tc_score()):
+            assert score.value.isna().tolist() == [True, True, False]
+            assert score.marked.isna().tolist() == [True, True, False]
+
+    def test_every_child_of_a_dataset_is_scored_under_its_own_index(
+        self, terms: Terms
+    ) -> None:
+        data = pandas.DataFrame(
+            {
+                "P12": [DRILLING, DRILLING, "[Mining]"],
+                "C4": ["0", None, "0"],
+                "C41": ["[In-situ probe]", "[Core samples]", "[Cutting samples]"],
+                "C42": ["[Actual heat-flow location]"] * 3,
+                "C44": ["[Saturated measured]"] * 3,
+                "C45": ["[Corrected in-situ (pT)]"] * 3,
+                "C47": ["30", "30", "3"],
+                "C11": [
+                    "[Pressure and temperature considered]",
+                    None,
+                    "[Not considered]",
+                ],
+            },
+            index=pandas.Index([12, 9, 10], name="row"),
+            dtype=object,
+        )
+
+        score = rules_of(terms, data).tc_score()
+
+        assert score.value.index.tolist() == [12, 9, 10]
+        assert score.value.tolist() == [1.1, 0.1, 0.6]
+        assert score.marked.tolist() == [False, True, False]

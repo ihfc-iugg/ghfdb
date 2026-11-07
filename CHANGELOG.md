@@ -156,5 +156,11 @@ All notable changes to this project are recorded here. The format follows
   assessment team as questions.
 - The worked examples are published with the scheme in `ghfdb/qc/worked_examples.json`, 205
   examples giving each one's inputs by field code and its expected scores, every one asserted by
-  the GHFDB portal's own tests. The documentation renders them as tables from that file. No score
-  is computed in this package yet.
+  the GHFDB portal's own tests. The documentation renders them as tables from that file.
+- Preview quality scores. `ghfdb check` now scores every child under the quality scheme and the
+  report gains a Preview scores table after the problems: the rules that scored the child,
+  its U-score, T-score, TC-score and M-score, its perturbation flags and quality code, and
+  whether the child has problems. Each score heading links to its page of the scheme
+  reference, and the summary links to the scheme. A cell that has a problem is scored as
+  empty. `Dataset.scores` gives the same table in Python. A workbook of 90,000 children is
+  still checked, scored and reported in under 15 seconds.

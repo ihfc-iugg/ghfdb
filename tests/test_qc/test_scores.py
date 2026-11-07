@@ -8,14 +8,14 @@ import pytest
 from frictionless import Schema
 
 from ghfdb.fields import Vocabularies
-from ghfdb.qc.scheme import Inputs, Terms
+from ghfdb.qc.scheme import Inputs, Score, Terms
 from ghfdb.qc.scores import Scores
 
 NOT_DETERMINED = "not determined"
 # The modules that run worked examples, each exposing the examples it runs as EXAMPLES.
 RUNNING = ("test_uncertainty", "test_scores", "test_probe", "test_borehole")
 # The parts no code scores yet. The group that builds a part removes it from here.
-PENDING = {"m-score", "child"}
+PENDING = {"child"}
 
 
 def load_examples(part: str) -> list[Mapping[str, Any]]:
@@ -26,8 +26,9 @@ def load_examples(part: str) -> list[Mapping[str, Any]]:
 
 ROUTING = load_examples("routing")
 FLAGS = load_examples("perturbation-flags")
+M_SCORE = load_examples("m-score")
 # Every example this module runs, which the coverage test reads.
-EXAMPLES = [*ROUTING, *FLAGS]
+EXAMPLES = [*ROUTING, *FLAGS, *M_SCORE]
 
 
 def one_child(inputs: Mapping[str, Any]) -> pandas.DataFrame:
@@ -118,3 +119,44 @@ class TestPerturbationFlags:
 
         assert flags.index.tolist() == [12, 9, 10]
         assert flags.tolist() == ["S-----x", "------X", "-------"]
+
+
+def sub_score(value: Any, marked: bool) -> Score:
+    """Build the score of one child from an example's value and mark."""
+    number = pandas.NA if value == NOT_DETERMINED else value
+    return Score(
+        pandas.Series([number], index=[9], dtype="Float64"),
+        pandas.Series([pandas.NA if number is pandas.NA else marked], dtype="boolean"),
+    )
+
+
+class TestMScore:
+    @pytest.mark.parametrize("example", M_SCORE, ids=lambda example: example["id"])
+    def test_worked_example(self, terms: Terms, example: Mapping[str, Any]) -> None:
+        inputs = example["inputs"]
+        t = sub_score(inputs["T"], inputs.get("T_marked", False))
+        tc = sub_score(inputs["TC"], inputs.get("TC_marked", False))
+
+        grade = Scores(Inputs(one_child({}), terms), terms).m_score(t, tc)
+
+        assert grade.iloc[0] == example["expected"]["M"]
+
+    def test_every_child_is_graded_under_its_own_index(self, terms: Terms) -> None:
+        index = pandas.Index([12, 9, 10, 11], name="row")
+        t = Score(
+            pandas.Series([1.0, 0.5, pandas.NA, 0.3], index=index, dtype="Float64"),
+            pandas.Series(
+                [False, True, pandas.NA, False], index=index, dtype="boolean"
+            ),
+        )
+        tc = Score(
+            pandas.Series([0.8, 0.5, 0.9, 0.3], index=index, dtype="Float64"),
+            pandas.Series([False, False, False, False], index=index, dtype="boolean"),
+        )
+
+        grade = Scores(Inputs(pandas.DataFrame(index=index), terms), terms).m_score(
+            t, tc
+        )
+
+        assert grade.index.tolist() == [12, 9, 10, 11]
+        assert grade.tolist() == ["M1", "M3x", "Mx", "M4"]

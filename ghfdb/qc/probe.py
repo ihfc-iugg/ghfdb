@@ -4,8 +4,6 @@ Every method works on the whole table of children at once. A criterion reads its
 from ``Inputs`` and returns the penalty and the missing-information mark of every child.
 """
 
-from collections.abc import Sequence
-
 import numpy
 import pandas
 
@@ -20,6 +18,7 @@ from ghfdb.qc.scheme import (
     FULL_IN_SITU,
     IN_SITU_PROBE,
     LABORATORY_METHODS,
+    LARGEST_PENALTY,
     OTHER_LOCATION,
     PARTIAL_IN_SITU,
     PRESENT_CORRECTED,
@@ -32,10 +31,12 @@ from ghfdb.qc.scheme import (
     Inputs,
     Penalty,
     Score,
+    bands,
+    cases,
+    combinations,
+    poorest,
+    total,
 )
-
-LARGEST_PENALTY = -0.2
-DECIMALS = 3
 
 
 class ProbeRules:
@@ -64,91 +65,6 @@ class ProbeRules:
         methods = self.inputs.first(self.inputs.concepts[EXPLORATION_METHOD])
         return methods.isin(PROBE_SENSING.concepts)
 
-    def poorest(self, penalty: pandas.Series, marked: pandas.Series) -> Penalty:
-        """Keep the poorest of the values of each child.
-
-        Args:
-            penalty: The penalty of every value, under the index of its child.
-            marked: Whether each value sets the mark.
-
-        Returns:
-            The lowest penalty of each child, marked when a value with that penalty is.
-        """
-        lowest = penalty.groupby(level=0, sort=False).transform("min")
-        chosen = marked & (penalty == lowest)
-        return Penalty(
-            penalty.groupby(level=0, sort=False).min().reindex(self.inputs.index),
-            chosen.groupby(level=0, sort=False).any().reindex(self.inputs.index),
-        )
-
-    def combinations(self, fields: dict[str, pandas.Series]) -> pandas.DataFrame:
-        """Pair every value of each field with every value of the others, per child.
-
-        Args:
-            fields: The parsed values of each field, with a row for each value, by the
-                name the combination gives it.
-
-        Returns:
-            One row for each combination, under the index of its child.
-        """
-        names = iter(fields)
-        first = next(names)
-        rows = fields[first].rename(first).to_frame()
-        for name in names:
-            rows = rows.join(fields[name].rename(name))
-        return rows
-
-    def cases(
-        self, rows: pandas.DataFrame, cases: Sequence[tuple[float, pandas.Series]]
-    ) -> Penalty:
-        """Score a list of cases: the poorest case that holds counts.
-
-        Args:
-            rows: The combinations of values.
-            cases: The penalty of each case and whether it holds in each row.
-
-        Returns:
-            The poorest penalty of each child: ``-0.2`` with the mark when a field
-            of the rows is empty, and ``-0.2`` without it when no case holds.
-        """
-        penalties = numpy.column_stack(
-            [
-                numpy.where(
-                    holds.fillna(False).to_numpy(dtype=bool), penalty, numpy.inf
-                )
-                for penalty, holds in cases
-            ]
-        ).min(axis=1)
-        empty = rows.isna().any(axis=1)
-        penalty = pandas.Series(
-            numpy.where(numpy.isinf(penalties) | empty, LARGEST_PENALTY, penalties),
-            index=rows.index,
-        )
-        return self.poorest(penalty, empty)
-
-    def bands(
-        self,
-        numbers: pandas.Series,
-        edges: Sequence[tuple[float, float]],
-        penalty_below: float = LARGEST_PENALTY,
-    ) -> Penalty:
-        """Score numbers in bands that are open at the lower end.
-
-        Args:
-            numbers: The parsed values of a field.
-            edges: A lower edge and the penalty of a number above it, largest first.
-            penalty_below: The penalty of a number at or below every edge.
-
-        Returns:
-            The poorest penalty of each child, with the mark where the number is empty.
-        """
-        conditions = [numbers > edge for edge, _ in edges]
-        choices = [penalty for _, penalty in edges]
-        penalty = pandas.Series(
-            numpy.select(conditions, choices, penalty_below), index=numbers.index
-        )
-        return self.poorest(penalty, numbers.isna())
-
     def waive(self, penalty: Penalty, code: str, concept: str) -> Penalty:
         """Take away a penalty and its mark from the children a correction waives.
 
@@ -173,7 +89,11 @@ class ProbeRules:
         Returns:
             The penalty and the mark of each child.
         """
-        return self.bands(self.inputs.numbers["C6"], [(10, 0.1), (3, 0.0), (1, -0.1)])
+        return bands(
+            self.inputs.numbers["C6"],
+            [(10, 0.1), (3, 0.0), (1, -0.1)],
+            self.inputs.index,
+        )
 
     def recordings(self) -> Penalty:
         """Score the number of temperature recordings, ``C37``.
@@ -185,7 +105,7 @@ class ProbeRules:
             The penalty and the mark of each child.
         """
         numbers = self.inputs.numbers["C37"]
-        return self.bands(numbers, [(5, 0.1), (2, 0.0), (1, -0.1)])
+        return bands(numbers, [(5, 0.1), (2, 0.0), (1, -0.1)], self.inputs.index)
 
     def water_depth(self) -> Penalty:
         """Score the water depth, the elevation ``P6`` with its sign reversed.
@@ -199,7 +119,7 @@ class ProbeRules:
         """
         elevation = self.inputs.numbers["P6"]
         depth = (-elevation).where(elevation < 0)
-        return self.bands(depth, [(2500, 0.0), (1500, -0.1)])
+        return bands(depth, [(2500, 0.0), (1500, -0.1)], self.inputs.index)
 
     def tilt(self) -> Penalty:
         """Score the probe tilt, ``C23``, in degrees.
@@ -220,30 +140,7 @@ class ProbeRules:
             ),
             index=degrees.index,
         )
-        return self.poorest(penalty, degrees.isna())
-
-    def total(self, criteria: Sequence[Penalty]) -> Score:
-        """Add the penalties of the criteria to 1.0 for the children these rules score.
-
-        Args:
-            criteria: The penalty of each criterion.
-
-        Returns:
-            The score rounded to three places and whether any criterion sets the mark,
-            ``<NA>`` for a child these rules do not score.
-        """
-        value = sum(
-            (criterion.value for criterion in criteria),
-            pandas.Series(1.0, index=self.inputs.index),
-        )
-        marked = pandas.concat(
-            [criterion.marked for criterion in criteria], axis=1
-        ).any(axis=1)
-        routed = self.routed()
-        return Score(
-            value.round(DECIMALS).astype("Float64").where(routed),
-            marked.astype("boolean").where(routed),
-        )
+        return poorest(penalty, degrees.isna(), self.inputs.index)
 
     def t_score(self) -> Score:
         """Score the gradient of each child, with both corrections applied.
@@ -255,13 +152,14 @@ class ProbeRules:
         Returns:
             The T-score and its mark for each child.
         """
-        return self.total(
+        return total(
             [
                 self.penetration(),
                 self.recordings(),
                 self.waive(self.water_depth(), "C17", PRESENT_CORRECTED),
                 self.waive(self.tilt(), "C12", TILT_CORRECTED),
-            ]
+            ],
+            self.routed(),
         )
 
     def own_t_score(self) -> Score:
@@ -273,8 +171,9 @@ class ProbeRules:
         Returns:
             The own T-score and its mark for each child.
         """
-        return self.total(
-            [self.penetration(), self.recordings(), self.water_depth(), self.tilt()]
+        return total(
+            [self.penetration(), self.recordings(), self.water_depth(), self.tilt()],
+            self.routed(),
         )
 
     def location(self) -> Penalty:
@@ -297,7 +196,7 @@ class ProbeRules:
             ),
             index=location.index,
         )
-        return self.poorest(penalty, location.isna())
+        return poorest(penalty, location.isna(), self.inputs.index)
 
     def saturation(self) -> Penalty:
         """Score the saturation with the method, the source and the location.
@@ -308,7 +207,7 @@ class ProbeRules:
             The penalty and the mark of each child.
         """
         concepts = self.inputs.concepts
-        rows = self.combinations(
+        rows = combinations(
             {
                 "saturation": concepts["C44"],
                 "method": concepts["C43"],
@@ -320,7 +219,7 @@ class ProbeRules:
         in_situ = rows["source"].eq(IN_SITU_PROBE) & method.eq(PROBE_PULSE)
         measured = saturation.isin([RECOVERED, SATURATED_MEASURED])
         laboratory = method.isin(LABORATORY_METHODS)
-        return self.cases(
+        return cases(
             rows,
             [
                 (0.1, saturation.eq(SATURATED_IN_SITU) & in_situ),
@@ -335,6 +234,7 @@ class ProbeRules:
                 ),
                 (-0.2, method.isin(ESTIMATED_FROM_OTHER)),
             ],
+            self.inputs.index,
         )
 
     def number(self) -> Penalty:
@@ -347,7 +247,7 @@ class ProbeRules:
         Returns:
             The penalty and the mark of each child.
         """
-        rows = self.combinations(
+        rows = combinations(
             {
                 "number": self.inputs.numbers["C47"],
                 "location": self.inputs.concepts["C42"],
@@ -359,8 +259,10 @@ class ProbeRules:
             index=rows.index,
         )
         skipped = rows["location"].eq(LITERATURE_OR_UNSPECIFIED).fillna(False)
-        return self.poorest(
-            penalty.mask(skipped, 0.0), numbers.isna().mask(skipped, False)
+        return poorest(
+            penalty.mask(skipped, 0.0),
+            numbers.isna().mask(skipped, False),
+            self.inputs.index,
         )
 
     def conditions(self) -> Penalty:
@@ -373,11 +275,9 @@ class ProbeRules:
             The penalty and the mark of each child.
         """
         concepts = self.inputs.concepts
-        rows = self.combinations(
-            {"conditions": concepts["C45"], "method": concepts["C43"]}
-        )
+        rows = combinations({"conditions": concepts["C45"], "method": concepts["C43"]})
         conditions = rows["conditions"]
-        return self.cases(
+        return cases(
             rows,
             [
                 (0.1, conditions.eq(ACTUAL_IN_SITU) & rows["method"].eq(PROBE_PULSE)),
@@ -385,6 +285,7 @@ class ProbeRules:
                 (-0.1, conditions.isin(PARTIAL_IN_SITU)),
                 (-0.2, conditions.isin(AMBIENT_OR_UNSPECIFIED)),
             ],
+            self.inputs.index,
         )
 
     def tc_score(self) -> Score:
@@ -397,8 +298,9 @@ class ProbeRules:
         Returns:
             The TC-score and its mark for each child.
         """
-        return self.total(
-            [self.location(), self.saturation(), self.number(), self.conditions()]
+        return total(
+            [self.location(), self.saturation(), self.number(), self.conditions()],
+            self.routed(),
         )
 
     def own_tc_score(self) -> Score:

@@ -13,6 +13,8 @@ missing-information mark is set, and the child's row of scores says that it has 
 records. Scoring it as a value fitting no class would take the same penalty without the mark, and
 would let a mistake in the workbook pass as a reported fact. Agreed when the feature was scoped.
 
+**ADR:** docs/adr/0007-a-value-with-a-problem-is-scored-as-empty.md
+
 ## D-2: The open questions of the scheme do not block scoring
 
 **Ambiguous**: issues #30 to #43 hold open questions about the scheme, and some of them may change
@@ -24,6 +26,8 @@ change to the page, its worked examples and the code lands together and is recor
 
 **Why**: the pages already state a definite reading for each open question, and the worked
 examples test it. Waiting would hold the feature on rulings with no date.
+
+**ADR:** none. It is a sequencing call for this feature; each ruling lands as its own change.
 
 ## D-3: Which problems blank a cell
 
@@ -39,6 +43,8 @@ workbook does not have is empty for every child already.
 with the field it names. The field in `related` is correct as it stands; it is what makes the other
 one wrong.
 
+**ADR:** docs/adr/0007-a-value-with-a-problem-is-scored-as-empty.md
+
 ## D-4: An out-of-range value scores differently in the report and from Python
 
 **Ambiguous**: the probe tilt criterion gives a tilt below 0° −0.2 without the mark, and the field
@@ -53,6 +59,8 @@ without a problem table scores the value as the page says, without the mark.
 a value given directly. The report's row says the child has problems, so the mark there is
 explained.
 
+**ADR:** none. It follows from ADR 0007 and needs no record of its own.
+
 ## D-5: Scoring works on whole columns
 
 **Chosen**: each criterion is scored for every child at once with pandas, and a field with several
@@ -60,6 +68,8 @@ values is held as one row per value. See `research.md`, "Approach".
 
 **Why**: SC-004. One Python call per child per criterion would use most of the time left in the
 15-second budget.
+
+**ADR:** none. It is an implementation choice inside the scoring modules, visible in the code.
 
 ## D-6: Several values reach the scoring only from a dataset built in code
 
@@ -73,6 +83,8 @@ Text is never split for a scored field.
 **Why**: the scheme's overview says the upload template holds one value in each field it scores,
 and that several values come from data held elsewhere. Splitting text by a separator the schema
 does not declare would score a workbook differently from how the check reads it.
+
+**ADR:** docs/adr/0008-several-values-come-only-from-python.md
 
 ## D-7: Routing and the flags read a field's first value
 

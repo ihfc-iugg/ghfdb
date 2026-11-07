@@ -85,9 +85,9 @@ Avoid "determination", "entry" and "record" for a row. Say **child**.
 
 | Term | Meaning |
 |---|---|
-| **Quality scheme** | The rules that score a child: the U-score, the M-score and the perturbation flags, after Fuchs et al. (2023), with every departure from the paper documented. It is written down in the reference documentation. This package does not compute any score yet. |
+| **Quality scheme** | The rules that score a child: the U-score, the M-score and the perturbation flags, after Fuchs et al. (2023), with every departure from the paper documented. It is written down in the reference documentation. This package computes the scores. |
 | **Scheme version** | A released, fixed version of the quality scheme, such as `2027.1`, with its worked examples. Separate from the package version (planned). |
-| **Worked example** | One child's, measurement's or parent's input values with its expected scores, kept in `ghfdb/qc/worked_examples.json` and shown in the documentation. The worked examples are part of the scheme and are the tests every implementation runs. No code runs them yet. |
+| **Worked example** | One child's, measurement's or parent's input values with its expected scores, kept in `ghfdb/qc/worked_examples.json` and shown in the documentation. The worked examples are part of the scheme and are the tests every implementation runs, and this package runs them. |
 | **U-score** | The grade of a child's uncertainty, `U1`–`U4`, from the coefficient of variation. `Ux` when it cannot be determined. |
 | **M-score** | The grade of a child's methodology, `M1`–`M4`, from the product of its T-score and TC-score. `Mx` when it cannot be determined. |
 | **T-score**, **TC-score** | The numbers the M-score is made from: how well the temperature gradient and the thermal conductivity were determined. Each starts at 1.0 and takes a penalty per criterion. |

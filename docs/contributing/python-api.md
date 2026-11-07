@@ -132,7 +132,8 @@ longer published. `ghfdb.qc.scheme.Inputs` reads the scored fields of a table of
 numbers as numbers, terms as concept URIs, and a value that is neither as empty. A cell holding a
 Python list holds several values. Every criterion returns a `Penalty`, the penalty and the
 mark of each child, and a T-score or TC-score is a `Score`. `ghfdb.qc.uncertainty.UScore` grades the uncertainty, and
-`ghfdb.qc.scores.Scores` routes each child to its rules and writes its perturbation flags.
+`ghfdb.qc.scores.Scores` routes each child to its rules, writes its perturbation flags, grades the
+M-score and assembles the table of scores.
 `ghfdb.qc.probe.ProbeRules` scores the children explored by probing, one method for each
 criterion of the probe-sensing rules. `ghfdb.qc.borehole.BoreholeRules` scores the children
 explored by drilling, mining and indirect methods in the same way, with one method for each
@@ -141,6 +142,25 @@ penalty and the concepts that earn it. Each works on every child at once. Both s
 share the functions of `ghfdb.qc.scheme` that keep the `poorest` of a child's values, pair the
 values of several fields (`combinations`), score `bands` of numbers or a list of `cases`, and
 add the criteria into one score (`total`).
+
+`Dataset.scores` scores the children and returns one row for each, indexed like `data`. The columns
+are `rules`, `U`, `T`, `TC`, `marked`, `M`, `flags`, `code`, `own_T`, `own_TC`, `own_T_marked` and
+`own_TC_marked`. The `code` is the U-score, the M-score and the flags joined by points, as in
+`U2.M1.SeXxV--`. A T-score or TC-score that is not determined is `<NA>` and never 0, and the grades
+are then `Ux` and `Mx`. `marked` says whether the M-score carries the missing-information mark. The
+`own` columns are the scores of the child's gradient and conductivity before its corrections apply.
+Given the problems `Dataset.check` found, a cell a problem names is scored as empty, so the child is
+scored as the report scores it; without them, a value is scored as the scheme's pages say.
+
+```python
+from pathlib import Path
+
+from ghfdb import Dataset
+
+dataset = Dataset.from_workbook(Path("my-heat-flow-data.xlsx"))
+scores = dataset.scores(dataset.check())
+scores[["M", "code"]]
+```
 
 ```{eval-rst}
 .. automodule:: ghfdb.qc.scheme

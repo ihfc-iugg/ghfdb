@@ -17,9 +17,8 @@ its source, either a section, table or figure of the paper or the portal decisio
 it. Every place where the scheme differs from the paper is listed, with its reasoning, in
 [Departures from the paper](departures.md).
 
-This package does not compute any score yet. The scheme is written down first, so that the code
-that computes scores implements a written rule, and the
-[worked examples](worked-examples.md) are the tests that code has to pass.
+This package computes the scores these pages describe and runs the
+[worked examples](worked-examples.md) as tests.
 
 ```{toctree}
 :maxdepth: 1

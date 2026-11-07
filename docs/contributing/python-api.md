@@ -134,7 +134,9 @@ Python list holds several values. Every criterion returns a `Penalty`, the penal
 mark of each child, and a T-score or TC-score is a `Score`. `ghfdb.qc.uncertainty.UScore` grades the uncertainty, and
 `ghfdb.qc.scores.Scores` routes each child to its rules and writes its perturbation flags.
 `ghfdb.qc.probe.ProbeRules` scores the children explored by probing, one method for each
-criterion of the probe-sensing rules. Each works on every child at once.
+criterion of the probe-sensing rules. `ghfdb.qc.borehole.BoreholeRules` scores the children
+explored by drilling, mining and indirect methods in the same way, with one method for each
+criterion of the borehole and mine rules. Each works on every child at once.
 
 ```{eval-rst}
 .. automodule:: ghfdb.qc.scheme
@@ -144,6 +146,9 @@ criterion of the probe-sensing rules. Each works on every child at once.
    :members:
 
 .. automodule:: ghfdb.qc.probe
+   :members:
+
+.. automodule:: ghfdb.qc.borehole
    :members:
 
 .. automodule:: ghfdb.qc.scores

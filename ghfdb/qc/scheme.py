@@ -10,9 +10,11 @@ from frictionless import Schema
 
 from ghfdb.fields import MissingSchemeError, Vocabularies, allowed_values
 from ghfdb.qc.rules import (
+    ASSUMED_FROM_LITERATURE,
     BOREHOLE,
     CONDUCTIVITY_LOCATION,
     CONDUCTIVITY_SOURCES,
+    CORE_SAMPLES,
     EXPLORATION_METHOD,
     LITERATURE_OR_UNSPECIFIED,
     PROBE_SENSING,
@@ -29,12 +31,105 @@ PRESENT_NOT_SIGNIFICANT = f"{HEAT_FLOW_CORRECTIONS}/present_not_significant"
 NOT_RECOGNIZED = f"{HEAT_FLOW_CORRECTIONS}/not_recognized"
 UNSPECIFIED_CORRECTION = f"{HEAT_FLOW_CORRECTIONS}/unspecified"
 TILT_CORRECTED = f"{HEAT_FLOW_CORRECTIONS}/tiltCorrected"
+CONSIDERED_PT = f"{HEAT_FLOW_CORRECTIONS}/consideredPT"
+CONSIDERED_P_OR_T = tuple(
+    f"{HEAT_FLOW_CORRECTIONS}/{name}" for name in ("consideredP", "consideredT")
+)
+NOT_CONSIDERED_OR_UNSPECIFIED = (
+    f"{HEAT_FLOW_CORRECTIONS}/notConsidered",
+    UNSPECIFIED_CORRECTION,
+)
+IN_SITU_CORRECTIONS = (
+    CONSIDERED_PT,
+    *CONSIDERED_P_OR_T,
+    *NOT_CONSIDERED_OR_UNSPECIFIED,
+)
+
+TEMPERATURE_METHODS = f"{VOCABULARIES}/temperature-method"
+SURFACE = f"{TEMPERATURE_METHODS}/SUR"
+CONTINUOUS_LOG_BEST = tuple(
+    f"{TEMPERATURE_METHODS}/{name}" for name in ("LOGeq", "cLOG", "DTSeq", "cDTS")
+)
+CONTINUOUS_LOG_PERTURBED = (f"{TEMPERATURE_METHODS}/LOGpert",)
+CONTINUOUS_LOG_METHODS = (*CONTINUOUS_LOG_BEST, *CONTINUOUS_LOG_PERTURBED)
+SINGLE_POINTS_EQUILIBRIUM = tuple(
+    f"{TEMPERATURE_METHODS}/{name}"
+    for name in (
+        "LOGeq",
+        "cLOG",
+        "cBHT",
+        "HT_FT",
+        "cHT_FT",
+        "RTDeq",
+        "cRTD",
+        "ODTT_PC",
+        "ODTT_TP",
+        "EGRT",
+        "GRT",
+        "cDTS",
+    )
+)
+SINGLE_POINTS_PERTURBED = tuple(
+    f"{TEMPERATURE_METHODS}/{name}"
+    for name in ("LOGpert", "DTSpert", "BHT", "HT_FTpert", "RTDpert", "BLK")
+)
+ESTIMATED_TEMPERATURE = tuple(
+    f"{TEMPERATURE_METHODS}/{name}"
+    for name in ("CPD", "XEN", "GTM", "BSR", "unspecified", "other")
+)
+SURFACE_BOTTOM_CORRECTED = tuple(
+    f"{TEMPERATURE_METHODS}/{name}"
+    for name in (
+        "cBHT",
+        "RTDeq",
+        "cRTD",
+        "ODTT_PC",
+        "ODTT_TP",
+        "cHT_FT",
+        "EGRT",
+        "GRT",
+    )
+)
+SURFACE_BOTTOM_PERTURBED = tuple(
+    f"{TEMPERATURE_METHODS}/{name}" for name in ("BHT", "HT_FTpert", "RTDpert")
+)
+TEMPERATURE_METHOD_CONCEPTS = tuple(
+    dict.fromkeys(
+        (
+            SURFACE,
+            *CONTINUOUS_LOG_METHODS,
+            *SINGLE_POINTS_EQUILIBRIUM,
+            *SINGLE_POINTS_PERTURBED,
+            *ESTIMATED_TEMPERATURE,
+            *SURFACE_BOTTOM_CORRECTED,
+            *SURFACE_BOTTOM_PERTURBED,
+        )
+    )
+)
 
 ACTUAL_LOCATION = f"{CONDUCTIVITY_LOCATION}/actual"
 OTHER_LOCATION = f"{CONDUCTIVITY_LOCATION}/other"
 LOCATIONS = (ACTUAL_LOCATION, OTHER_LOCATION, LITERATURE_OR_UNSPECIFIED)
 
 IN_SITU_PROBE = f"{CONDUCTIVITY_SOURCES}/insitu_probe"
+BEST_SOURCES = (IN_SITU_PROBE, f"{CONDUCTIVITY_SOURCES}/core_log")
+SAMPLED_SOURCES = tuple(
+    f"{CONDUCTIVITY_SOURCES}/{name}"
+    for name in ("cutting_samples", "outcrop_samples", "well_log")
+)
+ESTIMATED_SOURCES = (
+    *(
+        f"{CONDUCTIVITY_SOURCES}/{name}"
+        for name in ("mineral_computation", "unspecified", "other")
+    ),
+    ASSUMED_FROM_LITERATURE,
+)
+SOURCE_CONCEPTS = (
+    *BEST_SOURCES,
+    CORE_SAMPLES,
+    *SAMPLED_SOURCES,
+    *ESTIMATED_SOURCES,
+)
 
 CONDUCTIVITY_METHODS = f"{VOCABULARIES}/conductivity-methods"
 PROBE_PULSE = f"{CONDUCTIVITY_METHODS}/probePulse"
@@ -116,11 +211,14 @@ CORRECTIONS = (
     UNSPECIFIED_CORRECTION,
 )
 
-NUMBER_FIELDS = ("C1", "C2", "P6", "C6", "C23", "C37", "C47")
+NUMBER_FIELDS = ("C1", "C2", "P6", "C4", "C5", "C6", "C23", "C37", "C47")
 TERM_FIELDS = (
     EXPLORATION_METHOD,
     *FLAG_FIELDS,
+    "C11",
     "C12",
+    "C31",
+    "C32",
     "C41",
     "C42",
     "C43",
@@ -132,8 +230,11 @@ TERM_FIELDS = (
 CONCEPTS: tuple[tuple[str, str], ...] = (
     *((EXPLORATION_METHOD, uri) for uri in BOREHOLE.concepts + PROBE_SENSING.concepts),
     *((code, uri) for code in FLAG_FIELDS for uri in CORRECTIONS),
+    *(("C11", uri) for uri in IN_SITU_CORRECTIONS),
     ("C12", TILT_CORRECTED),
-    ("C41", IN_SITU_PROBE),
+    *(("C31", uri) for uri in TEMPERATURE_METHOD_CONCEPTS),
+    *(("C32", uri) for uri in TEMPERATURE_METHOD_CONCEPTS),
+    *(("C41", uri) for uri in SOURCE_CONCEPTS),
     *(("C42", uri) for uri in LOCATIONS),
     *(("C43", uri) for uri in CONDUCTIVITY_METHOD_CONCEPTS),
     *(("C44", uri) for uri in SATURATION_CONCEPTS),

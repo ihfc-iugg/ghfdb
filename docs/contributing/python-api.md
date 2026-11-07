@@ -136,7 +136,11 @@ mark of each child, and a T-score or TC-score is a `Score`. `ghfdb.qc.uncertaint
 `ghfdb.qc.probe.ProbeRules` scores the children explored by probing, one method for each
 criterion of the probe-sensing rules. `ghfdb.qc.borehole.BoreholeRules` scores the children
 explored by drilling, mining and indirect methods in the same way, with one method for each
-criterion of the borehole and mine rules. Each works on every child at once.
+criterion of the borehole and mine rules, whose groups of concepts are lists of `Groups`: a
+penalty and the concepts that earn it. Each works on every child at once. Both sets of rules
+share the functions of `ghfdb.qc.scheme` that keep the `poorest` of a child's values, pair the
+values of several fields (`combinations`), score `bands` of numbers or a list of `cases`, and
+add the criteria into one score (`total`).
 
 ```{eval-rst}
 .. automodule:: ghfdb.qc.scheme

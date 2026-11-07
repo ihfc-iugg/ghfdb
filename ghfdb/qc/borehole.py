@@ -9,7 +9,12 @@ from collections.abc import Sequence
 import numpy
 import pandas
 
-from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD, LITERATURE_OR_UNSPECIFIED
+from ghfdb.qc.rules import (
+    BOREHOLE,
+    CORE_SAMPLES,
+    EXPLORATION_METHOD,
+    LITERATURE_OR_UNSPECIFIED,
+)
 from ghfdb.qc.scheme import (
     ACTUAL_IN_SITU,
     ACTUAL_LOCATION,
@@ -20,7 +25,6 @@ from ghfdb.qc.scheme import (
     CONTINUOUS_LOG_BEST,
     CONTINUOUS_LOG_METHODS,
     CONTINUOUS_LOG_PERTURBED,
-    CORE_SAMPLES,
     DRY_UNSPECIFIED_OR_OTHER,
     ESTIMATED_SOURCES,
     ESTIMATED_TEMPERATURE,

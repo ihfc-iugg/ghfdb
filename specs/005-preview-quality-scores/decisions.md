@@ -87,3 +87,20 @@ poorest.
 about several. Taking the first is the plainest reading until it does.
 
 **ADR:** none. It is local to this feature and changes with the scheme page if a ruling covers it.
+
+## D-8: A borehole gradient's case is chosen once for the child
+
+**Ambiguous**: the borehole and mine T-score reads one of three cases, and the page chooses the case
+from the methods and the number of recordings. It does not say how to choose when a field holds
+several values.
+
+**Chosen**: the case is chosen for the child, not for each value. It is surface plus one point when
+any top method is `[SUR]`, as the page's "includes" reads. It is a continuous log when every
+number of recordings is more than 3 and every filled method is in the continuous list. Within the
+case, the poorest matching group decides, as the page says.
+
+**Why**: a case describes how the whole gradient was measured, so it belongs to the child. Several
+numbers of recordings reach the scoring only from a dataset built in Python (D-6), and requiring
+every one to exceed 3 is the reading that never grades a gradient better than its poorest value.
+
+**ADR:** none. It is local to this feature and follows the scheme page if a ruling covers it.

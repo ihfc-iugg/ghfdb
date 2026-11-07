@@ -104,3 +104,21 @@ numbers of recordings reach the scoring only from a dataset built in Python (D-6
 every one to exceed 3 is the reading that never grades a gradient better than its poorest value.
 
 **ADR:** none. It is local to this feature and follows the scheme page if a ruling covers it.
+
+## D-9: A worked example can break a cross-field rule
+
+**Found**: the worked example `B9-everything-unspecified` gives a conductivity location of
+`[Literature or unspecified]` with a source of `[Unspecified]`. Cross-field rule CF-3 allows that
+location only when the source is assumed from literature, so a workbook holding this child has a
+rule problem on `C41`. Under D-3 the report scores `C41` as empty, and the M-score is `M4x` where
+the example gives `M4`.
+
+**Chosen**: the example is scored as written through `Dataset.scores()`, where it passes, and the
+report test for the worked examples leaves it out and checks instead that the report agrees with
+`Dataset.scores(problems=…)` for it.
+
+**Why**: both outcomes follow from rules already agreed: the scheme scores the inputs it is given,
+and the report scores a value with a problem as empty (FR-005). Whether `[Unspecified]` should
+satisfy CF-3 is a question for the cross-field rules, not for scoring.
+
+**ADR:** none. It is local to this feature's tests.

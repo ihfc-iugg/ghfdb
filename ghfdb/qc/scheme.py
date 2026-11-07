@@ -3,6 +3,7 @@
 import math
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from typing import Self
 
 import numpy
 import pandas
@@ -254,6 +255,86 @@ class Penalty:
     value: pandas.Series
     marked: pandas.Series
 
+    @classmethod
+    def poorest(
+        cls, penalty: pandas.Series, marked: pandas.Series, index: pandas.Index
+    ) -> Self:
+        """Keep the poorest of the values of each child.
+
+        Args:
+            penalty: The penalty of every value, under the index of its child.
+            marked: Whether each value sets the mark.
+            index: The index of the children.
+
+        Returns:
+            The lowest penalty of each child, marked when a value with that penalty is.
+        """
+        lowest = penalty.groupby(level=0, sort=False).transform("min")
+        chosen = marked & (penalty == lowest)
+        return cls(
+            penalty.groupby(level=0, sort=False).min().reindex(index),
+            chosen.groupby(level=0, sort=False).any().reindex(index),
+        )
+
+    @classmethod
+    def cases(
+        cls,
+        rows: pandas.DataFrame,
+        options: Sequence[tuple[float, pandas.Series]],
+        index: pandas.Index,
+    ) -> Self:
+        """Score a list of cases: the poorest case that holds counts.
+
+        Args:
+            rows: The combinations of values.
+            options: The penalty of each case and whether it holds in each row.
+            index: The index of the children.
+
+        Returns:
+            The poorest penalty of each child: ``-0.2`` with the mark when a field
+            of the rows is empty, and ``-0.2`` without it when no case holds.
+        """
+        penalties = numpy.column_stack(
+            [
+                numpy.where(
+                    holds.fillna(False).to_numpy(dtype=bool), penalty, numpy.inf
+                )
+                for penalty, holds in options
+            ]
+        ).min(axis=1)
+        empty = rows.isna().any(axis=1)
+        penalty = pandas.Series(
+            numpy.where(numpy.isinf(penalties) | empty, LARGEST_PENALTY, penalties),
+            index=rows.index,
+        )
+        return cls.poorest(penalty, empty, index)
+
+    @classmethod
+    def bands(
+        cls,
+        numbers: pandas.Series,
+        edges: Sequence[tuple[float, float]],
+        index: pandas.Index,
+        penalty_below: float = LARGEST_PENALTY,
+    ) -> Self:
+        """Score numbers in bands that are open at the lower end.
+
+        Args:
+            numbers: The parsed values of a field.
+            edges: A lower edge and the penalty of a number above it, largest first.
+            index: The index of the children.
+            penalty_below: The penalty of a number at or below every edge.
+
+        Returns:
+            The poorest penalty of each child, with the mark where the number is empty.
+        """
+        conditions = [numbers > edge for edge, _ in edges]
+        choices = [penalty for _, penalty in edges]
+        penalty = pandas.Series(
+            numpy.select(conditions, choices, penalty_below), index=numbers.index
+        )
+        return cls.poorest(penalty, numbers.isna(), index)
+
 
 @dataclass(frozen=True)
 class Score:
@@ -269,123 +350,29 @@ class Score:
     value: pandas.Series
     marked: pandas.Series
 
+    @classmethod
+    def total(cls, criteria: Sequence[Penalty], routed: pandas.Series) -> Self:
+        """Add the penalties of the criteria to 1.0 for the children the rules score.
 
-def poorest(
-    penalty: pandas.Series, marked: pandas.Series, index: pandas.Index
-) -> Penalty:
-    """Keep the poorest of the values of each child.
+        Args:
+            criteria: The penalty of each criterion.
+            routed: Whether the rules score each child.
 
-    Args:
-        penalty: The penalty of every value, under the index of its child.
-        marked: Whether each value sets the mark.
-        index: The index of the children.
-
-    Returns:
-        The lowest penalty of each child, marked when a value with that penalty is.
-    """
-    lowest = penalty.groupby(level=0, sort=False).transform("min")
-    chosen = marked & (penalty == lowest)
-    return Penalty(
-        penalty.groupby(level=0, sort=False).min().reindex(index),
-        chosen.groupby(level=0, sort=False).any().reindex(index),
-    )
-
-
-def combinations(fields: dict[str, pandas.Series]) -> pandas.DataFrame:
-    """Pair every value of each field with every value of the others, per child.
-
-    Args:
-        fields: The parsed values of each field, with a row for each value, by the
-            name the combination gives it.
-
-    Returns:
-        One row for each combination, under the index of its child.
-    """
-    names = iter(fields)
-    first = next(names)
-    rows = fields[first].rename(first).to_frame()
-    for name in names:
-        rows = rows.join(fields[name].rename(name))
-    return rows
-
-
-def cases(
-    rows: pandas.DataFrame,
-    options: Sequence[tuple[float, pandas.Series]],
-    index: pandas.Index,
-) -> Penalty:
-    """Score a list of cases: the poorest case that holds counts.
-
-    Args:
-        rows: The combinations of values.
-        options: The penalty of each case and whether it holds in each row.
-        index: The index of the children.
-
-    Returns:
-        The poorest penalty of each child: ``-0.2`` with the mark when a field
-        of the rows is empty, and ``-0.2`` without it when no case holds.
-    """
-    penalties = numpy.column_stack(
-        [
-            numpy.where(holds.fillna(False).to_numpy(dtype=bool), penalty, numpy.inf)
-            for penalty, holds in options
-        ]
-    ).min(axis=1)
-    empty = rows.isna().any(axis=1)
-    penalty = pandas.Series(
-        numpy.where(numpy.isinf(penalties) | empty, LARGEST_PENALTY, penalties),
-        index=rows.index,
-    )
-    return poorest(penalty, empty, index)
-
-
-def bands(
-    numbers: pandas.Series,
-    edges: Sequence[tuple[float, float]],
-    index: pandas.Index,
-    penalty_below: float = LARGEST_PENALTY,
-) -> Penalty:
-    """Score numbers in bands that are open at the lower end.
-
-    Args:
-        numbers: The parsed values of a field.
-        edges: A lower edge and the penalty of a number above it, largest first.
-        index: The index of the children.
-        penalty_below: The penalty of a number at or below every edge.
-
-    Returns:
-        The poorest penalty of each child, with the mark where the number is empty.
-    """
-    conditions = [numbers > edge for edge, _ in edges]
-    choices = [penalty for _, penalty in edges]
-    penalty = pandas.Series(
-        numpy.select(conditions, choices, penalty_below), index=numbers.index
-    )
-    return poorest(penalty, numbers.isna(), index)
-
-
-def total(criteria: Sequence[Penalty], routed: pandas.Series) -> Score:
-    """Add the penalties of the criteria to 1.0 for the children a set of rules scores.
-
-    Args:
-        criteria: The penalty of each criterion.
-        routed: Whether the rules score each child.
-
-    Returns:
-        The score rounded to three places and whether any criterion sets the mark,
-        ``<NA>`` for a child the rules do not score.
-    """
-    value = sum(
-        (criterion.value for criterion in criteria),
-        pandas.Series(1.0, index=routed.index),
-    )
-    marked = pandas.concat([criterion.marked for criterion in criteria], axis=1).any(
-        axis=1
-    )
-    return Score(
-        value.round(DECIMALS).astype("Float64").where(routed),
-        marked.astype("boolean").where(routed),
-    )
+        Returns:
+            The score rounded to three places and whether any criterion sets the mark,
+            ``<NA>`` for a child the rules do not score.
+        """
+        value = sum(
+            (criterion.value for criterion in criteria),
+            pandas.Series(1.0, index=routed.index),
+        )
+        marked = pandas.concat(
+            [criterion.marked for criterion in criteria], axis=1
+        ).any(axis=1)
+        return cls(
+            value.round(DECIMALS).astype("Float64").where(routed),
+            marked.astype("boolean").where(routed),
+        )
 
 
 class Terms:
@@ -496,6 +483,24 @@ class Inputs:
             code: self.values(data, code).map(terms.uris(code)).astype("string")
             for code in TERM_FIELDS
         }
+
+    @staticmethod
+    def combinations(fields: dict[str, pandas.Series]) -> pandas.DataFrame:
+        """Pair every value of each field with every value of the others, per child.
+
+        Args:
+            fields: The parsed values of each field, with a row for each value, by the
+                name the combination gives it.
+
+        Returns:
+            One row for each combination, under the index of its child.
+        """
+        names = iter(fields)
+        first = next(names)
+        rows = fields[first].rename(first).to_frame()
+        for name in names:
+            rows = rows.join(fields[name].rename(name))
+        return rows
 
     @staticmethod
     def values(data: pandas.DataFrame, code: str) -> pandas.Series:

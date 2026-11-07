@@ -46,10 +46,6 @@ from ghfdb.qc.scheme import (
     Inputs,
     Penalty,
     Score,
-    cases,
-    combinations,
-    poorest,
-    total,
 )
 
 Groups = Sequence[tuple[float, Sequence[str]]]
@@ -225,7 +221,7 @@ class BoreholeRules:
             self.decide(concepts["C31"], surface, continuous, bottom=False),
             self.decide(concepts["C32"], surface, continuous, bottom=True),
         ]
-        chosen = poorest(
+        chosen = Penalty.poorest(
             pandas.concat([end.value for end in ends]),
             pandas.concat([end.marked for end in ends]),
             self.inputs.index,
@@ -249,7 +245,7 @@ class BoreholeRules:
         Returns:
             The T-score and its mark for each child.
         """
-        return total([self.temperature_methods()], self.routed())
+        return Score.total([self.temperature_methods()], self.routed())
 
     def own_t_score(self) -> Score:
         """Score the gradient on its own, which is its score for the child.
@@ -283,7 +279,7 @@ class BoreholeRules:
             value.
         """
         graded = self.grade(self.inputs.concepts[code], groups, LARGEST_PENALTY)
-        return poorest(graded.value, graded.marked, self.inputs.index)
+        return Penalty.poorest(graded.value, graded.marked, self.inputs.index)
 
     def location(self) -> Penalty:
         """Score where the conductivity was measured, ``C42``.
@@ -315,7 +311,7 @@ class BoreholeRules:
         Returns:
             The penalty and the mark of each child.
         """
-        rows = combinations(
+        rows = Inputs.combinations(
             {
                 "number": self.inputs.numbers["C47"],
                 "location": self.inputs.concepts["C42"],
@@ -326,7 +322,7 @@ class BoreholeRules:
             numpy.where(numbers > MEASUREMENTS_ABOVE, 0.0, -0.1), index=rows.index
         )
         skipped = rows["location"].eq(LITERATURE_OR_UNSPECIFIED).fillna(False)
-        return poorest(
+        return Penalty.poorest(
             penalty.mask(skipped, 0.0),
             numbers.isna().mask(skipped, False),
             self.inputs.index,
@@ -353,11 +349,11 @@ class BoreholeRules:
             The penalty and the mark of each child.
         """
         concepts = self.inputs.concepts
-        rows = combinations(
+        rows = Inputs.combinations(
             {"conditions": concepts["C45"], "correction": concepts["C11"]}
         )
         conditions, correction = rows["conditions"], rows["correction"]
-        return cases(
+        return Penalty.cases(
             rows,
             [
                 (
@@ -399,7 +395,7 @@ class BoreholeRules:
             The score and its mark for each child: ``0.1`` with the mark where
             neither depth is reported, and nothing else scored.
         """
-        scored = total(
+        scored = Score.total(
             [
                 self.location(),
                 self.source(),

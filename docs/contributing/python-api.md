@@ -139,9 +139,10 @@ criterion of the probe-sensing rules. `ghfdb.qc.borehole.BoreholeRules` scores t
 explored by drilling, mining and indirect methods in the same way, with one method for each
 criterion of the borehole and mine rules, whose groups of concepts are lists of `Groups`: a
 penalty and the concepts that earn it. Each works on every child at once. Both sets of rules
-share the functions of `ghfdb.qc.scheme` that keep the `poorest` of a child's values, pair the
-values of several fields (`combinations`), score `bands` of numbers or a list of `cases`, and
-add the criteria into one score (`total`).
+share the methods of `ghfdb.qc.scheme` that keep the poorest of a child's values
+(`Penalty.poorest`), pair the values of several fields (`Inputs.combinations`), score bands of
+numbers (`Penalty.bands`) or a list of cases (`Penalty.cases`), and add the criteria into one
+score (`Score.total`).
 
 `Dataset.scores` scores the children and returns one row for each, indexed like `data`. The columns
 are `rules`, `U`, `T`, `TC`, `marked`, `M`, `flags`, `code`, `own_T`, `own_TC`, `own_T_marked` and

@@ -574,3 +574,4 @@ class TestSpeed:
         broken = LARGE_CHILDREN // SEEDED_EVERY
         assert [line[3] for line in found].count(str(Kind.RULE)) == broken
         assert len(found) - broken == broken
+        assert len(read_scores(report_of(path))) == LARGE_CHILDREN

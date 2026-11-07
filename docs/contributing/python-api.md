@@ -118,8 +118,9 @@ module documentation below says how to add a rule of a new kind.
 ```
 
 The report the `ghfdb check` command writes is built by `ghfdb.qc.report.Report`, which takes
-the workbook's path, the problems, the number of children and the `Vocabularies` the check read,
-and whose `write` method returns the report's path. The command, its report and each kind of
+the workbook's path, the problems, the number of children, the `Vocabularies` the check read and
+the scores `Dataset.scores` returned for the children, indexed by Excel row, and whose `write`
+method returns the report's path. The command, its report and each kind of
 problem are described in [Check a workbook](../user-guide/check.md).
 
 ## Quality scores

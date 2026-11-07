@@ -118,6 +118,9 @@ All notable changes to this project are recorded here. The format follows
 
 ### Scheme changes
 
+- Wrote down how several values in one field are read: number fields value by value with
+  `C1` and `C2` paired, routing, flags and the two probe waivers reading the first filled value,
+  and a borehole gradient's case chosen once for the child. The code already read them this way.
 - Added rule CF-1: a child explored by drilling, clustered drilling, mining, tunneling or
   indirect estimation has every field mandatory for borehole and mine data only filled
   (`C4`, `C5`, `C31`, `C32`).

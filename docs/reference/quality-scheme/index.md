@@ -140,6 +140,20 @@ temperature methods at its top. The scheme scores every value and takes the poor
 does not say how to score such a field: {{ decision(8) }}. The upload template holds one value
 in each field it scores, so this applies to data held in the portal.
 
+The readings below fill the gaps the paper leaves.
+
+- A number field is scored value by value too. The U-score pairs every value of `C1` with every
+  value of `C2`, grades each pair, and takes the poorest pair. A pair with a zero or an empty
+  number gives no grade, so a zero among several values is skipped when another pair can be
+  graded. The U-score is `Ux` only when no pair can be graded.
+- Routing by exploration method, the perturbation flags and the two probe waivers read one value:
+  the first filled value of the field. The waivers are the tilt correction of `C12` and the
+  surface correction of `C17`. The order of the values can therefore change the score.
+- A borehole gradient takes its case once for the whole child, not for each value. It is the
+  surface case when any top method is the surface. It is a continuous log when every number of
+  recordings is more than 3 and every filled method is a continuous log method. Within the
+  case, the poorest matching group decides.
+
 ## Scores of a child and of its measurements
 
 A child scores its gradient and its conductivity, and applies three rules that read the child's

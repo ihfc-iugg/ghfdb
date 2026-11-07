@@ -133,14 +133,15 @@ Serves G4, G5 and G3. Out of scope: publishing the scheme as a citable release (
 *multi-feature · advances G3*
 
 The check also scores every child: its U-score, its T-score and TC-score, its M-score with the
-missing-information mark, its perturbation flags and its quality code, written into the report
-copy with the scheme version they were made under. Every worked example from R5 produces exactly
-its expected scores.
+missing-information mark, its perturbation flags and its quality code, written into the report,
+which names the package version that made them until the scheme has numbered releases (R8).
+Every worked example from R5 produces exactly its
+expected scores.
 
 **Deliverables:**
 
 - Each part of the scheme computed for every child in a workbook.
-- The scores and the scheme version in the report.
+- The scores in the report, with the package version that made them.
 - Every worked example passing with its exact expected scores.
 
 Serves G3. Out of scope: the parent's inherited code (R10).

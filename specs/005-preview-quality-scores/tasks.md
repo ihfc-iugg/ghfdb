@@ -133,3 +133,5 @@ each child's scores in the report with its expected scores.
   the command passes the schema it already loaded.
 - [ ] T025 [US1] REV-009: roadmap R6 says the report names the package version until R8, and
   no longer says the scores go into a copy of the workbook.
+- [x] T026 [US2] Declare `numpy` and `markupsafe` as dependencies, since the scoring and the report
+  import them directly and the dependency check refuses a transitive import.

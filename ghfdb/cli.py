@@ -43,7 +43,7 @@ def check(path: Path) -> int:
     problems = pandas.concat(
         [workbook.column_problems(), dataset.check(schema, RULES, vocabularies)]
     )
-    scores = dataset.scores(problems=problems, vocabularies=vocabularies)
+    scores = dataset.scores(problems, vocabularies, schema)
     children = len(dataset.data)
     report = Report(path, problems, children, vocabularies, scores).write()
     affected = problems["row"].dropna().nunique()

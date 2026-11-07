@@ -84,6 +84,7 @@ class Dataset:
         self,
         problems: pandas.DataFrame | None = None,
         vocabularies: Vocabularies | None = None,
+        schema: Schema | None = None,
     ) -> pandas.DataFrame:
         """Score the children under the quality scheme.
 
@@ -96,6 +97,8 @@ class Dataset:
                 say.
             vocabularies: Where the allowed values come from. Without it, the
                 vocabularies in the user's cache, downloaded when missing.
+            schema: The fields, which say where each takes its allowed values from.
+                Without it, the packaged schema.
 
         Returns:
             One row for each child, indexed like ``data``, with the columns ``rules``,
@@ -108,5 +111,6 @@ class Dataset:
                 its field.
             OSError: The vocabularies are not cached and cannot be downloaded.
         """
-        schema = load_schema(vocabularies=vocabularies)
+        if schema is None:
+            schema = load_schema(vocabularies=vocabularies)
         return Scores.build(self.data, schema, problems, vocabularies).table()

@@ -9,7 +9,7 @@ from frictionless import Schema
 import ghfdb
 import ghfdb.qc
 from ghfdb.dataset import Dataset
-from ghfdb.fields import Vocabularies
+from ghfdb.fields import MissingSchemeError, Vocabularies
 from ghfdb.qc.check import PROBLEM_COLUMNS, Kind
 from ghfdb.qc.workbook import UploadWorkbook
 from ghfdb.template import FIRST_DATA_ROW
@@ -214,6 +214,24 @@ class TestScores:
 
         assert scores.empty
         assert list(scores.columns) == SCORE_COLUMNS
+
+    def test_scores_against_the_schema_it_is_given(
+        self,
+        published_vocabularies: Vocabularies,
+        schema: Schema,
+    ) -> None:
+        descriptor = schema.to_descriptor()
+        descriptor["fields"] = [f for f in descriptor["fields"] if f["name"] != "C45"]
+        broken = Schema.from_descriptor(descriptor)
+        dataset = Dataset(children(PROBE))
+
+        scored = dataset.scores(vocabularies=published_vocabularies, schema=schema)
+        with pytest.raises(MissingSchemeError):
+            dataset.scores(vocabularies=published_vocabularies, schema=broken)
+
+        pandas.testing.assert_frame_equal(
+            scored, dataset.scores(vocabularies=published_vocabularies)
+        )
 
     def test_a_term_the_field_does_not_allow_is_scored_as_empty(
         self, published_vocabularies: Vocabularies

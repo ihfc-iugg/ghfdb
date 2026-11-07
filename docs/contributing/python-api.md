@@ -153,6 +153,8 @@ are then `Ux` and `Mx`. `marked` says whether the M-score carries the missing-in
 `own` columns are the scores of the child's gradient and conductivity before its corrections apply.
 Given the problems `Dataset.check` found, a cell a problem names is scored as empty, so the child is
 scored as the report scores it; without them, a value is scored as the scheme's pages say.
+Like `Dataset.check`, it takes the `schema` to read the fields against, the packaged one when
+none is given.
 
 ```python
 from pathlib import Path

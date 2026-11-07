@@ -130,7 +130,8 @@ resolves every concept the scheme names, by its URI, to the term its field accep
 vocabularies as published, and raises `MissingSchemeError` naming the concept when one is no
 longer published. `ghfdb.qc.scheme.Inputs` reads the scored fields of a table of children once:
 numbers as numbers, terms as concept URIs, and a value that is neither as empty. A cell holding a
-Python list holds several values. `ghfdb.qc.uncertainty.UScore` grades the uncertainty, and
+Python list holds several values. Every criterion returns a `Penalty`, the penalty and the
+mark of each child, and a T-score or TC-score is a `Score`. `ghfdb.qc.uncertainty.UScore` grades the uncertainty, and
 `ghfdb.qc.scores.Scores` routes each child to its rules and writes its perturbation flags.
 `ghfdb.qc.probe.ProbeRules` scores the children explored by probing, one method for each
 criterion of the probe-sensing rules. Each works on every child at once.

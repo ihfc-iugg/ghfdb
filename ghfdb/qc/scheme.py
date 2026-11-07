@@ -2,6 +2,7 @@
 
 import math
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 import pandas
 from frictionless import Schema
@@ -134,6 +135,34 @@ CONCEPTS: tuple[tuple[str, str], ...] = (
     *(("C44", uri) for uri in SATURATION_CONCEPTS),
     *(("C45", uri) for uri in CONDITIONS_CONCEPTS),
 )
+
+
+@dataclass(frozen=True)
+class Penalty:
+    """What one criterion adds to a score, for every child.
+
+    Attributes:
+        value: The penalty of each child, in the order of the children.
+        marked: Whether the criterion sets the missing-information mark for each child.
+    """
+
+    value: pandas.Series
+    marked: pandas.Series
+
+
+@dataclass(frozen=True)
+class Score:
+    """A T-score or a TC-score, for every child.
+
+    Attributes:
+        value: The score of each child, in the order of the children, ``<NA>`` for a
+            child the rules do not score.
+        marked: Whether the score carries the missing-information mark, ``<NA>`` where
+            the score is.
+    """
+
+    value: pandas.Series
+    marked: pandas.Series
 
 
 class Terms:

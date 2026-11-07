@@ -58,6 +58,8 @@ function for the `m-score` part, and compare with its expected scores.
   tilt) and both waivers for a child, and the own T-score without them. Worked examples: `probe-t`.
 - [ ] T007 [US2] The TC-score criteria (location, saturation cases, number with the literature
   exception, pT cases). Worked examples: `probe-tc`.
+- [x] T017 [US2] Move `Penalty` and `Score` from `ghfdb/qc/probe.py` to `ghfdb/qc/scheme.py`, where
+  the borehole rules can use them, and document them on the Python API page.
 
 ### Group 3 — the borehole and mine rules
 

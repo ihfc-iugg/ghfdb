@@ -14,7 +14,7 @@ from frictionless import Schema
 import ghfdb
 from ghfdb.fields import Vocabularies
 from ghfdb.qc.check import PROBLEM_COLUMNS, Kind
-from ghfdb.qc.report import SCORE_HEADINGS, Report
+from ghfdb.qc.report import NO, SCORE_HEADINGS, YES, Report
 from ghfdb.qc.rules import CF_1, CF_3
 from ghfdb.qc.workbook import CheckError
 
@@ -313,7 +313,8 @@ class TestPreviewScores:
     def test_says_which_children_have_problems(self, written: Path) -> None:
         first, second = read_scores(written)
 
-        assert first["Has problems"] != second["Has problems"]
+        assert first["Has problems"] == NO
+        assert second["Has problems"] == YES
 
     def test_a_check_of_no_children_has_the_headings_and_no_rows(
         self, workbook_path: Path, published_vocabularies: Vocabularies

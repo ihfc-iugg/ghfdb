@@ -19,6 +19,7 @@ from ghfdb.cli import main
 from ghfdb.dataset import Dataset
 from ghfdb.fields import Vocabularies
 from ghfdb.qc.check import Kind
+from ghfdb.qc.report import NO, YES
 from ghfdb.qc.rules import CF_3, RULES, Condition
 from ghfdb.qc.workbook import UploadWorkbook
 from ghfdb.template import FIRST_DATA_ROW
@@ -492,7 +493,8 @@ class TestPreviewScores:
 
         clean, broken = read_scores(report_of(path))
         assert broken["Quality code"] != ""
-        assert broken["Has problems"] != clean["Has problems"]
+        assert broken["Has problems"] == YES
+        assert clean["Has problems"] == NO
 
     def test_a_workbook_with_no_problem_is_scored(
         self, filled_workbook: Filler, valid_child: dict[str, Any]
@@ -504,7 +506,7 @@ class TestPreviewScores:
         lines = read_scores(report_of(path))
         assert [line["Excel row"] for line in lines] == ["9", "10"]
         assert all(line["Quality code"] for line in lines)
-        assert len({line["Has problems"] for line in lines}) == 1
+        assert {line["Has problems"] for line in lines} == {NO}
 
     def test_a_workbook_with_no_children_has_an_empty_scores_table(
         self, filled_workbook: Filler

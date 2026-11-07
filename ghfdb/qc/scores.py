@@ -2,7 +2,12 @@
 
 import numpy
 import pandas
+from frictionless import Schema
 
+from ghfdb.fields import Vocabularies
+from ghfdb.qc.borehole import BoreholeRules
+from ghfdb.qc.check import Kind
+from ghfdb.qc.probe import ProbeRules
 from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD, PROBE_SENSING
 from ghfdb.qc.scheme import (
     DECIMALS,
@@ -15,10 +20,33 @@ from ghfdb.qc.scheme import (
     Score,
     Terms,
 )
+from ghfdb.qc.uncertainty import UScore
 
 PROBE_RULES = "probe sensing"
 BOREHOLE_RULES = "borehole and mine"
 M_BOUNDARIES = (0.75, 0.50, 0.25)
+# The problems that name a cell whose value is scored as empty.
+BLANKING = (
+    Kind.MISSING,
+    Kind.WRONG_TYPE,
+    Kind.OUT_OF_RANGE,
+    Kind.NOT_IN_VOCABULARY,
+    Kind.RULE,
+)
+COLUMNS = (
+    "rules",
+    "U",
+    "T",
+    "TC",
+    "marked",
+    "M",
+    "flags",
+    "code",
+    "own_T",
+    "own_TC",
+    "own_T_marked",
+    "own_TC_marked",
+)
 
 
 class Scores:
@@ -36,6 +64,63 @@ class Scores:
     def __init__(self, inputs: Inputs, terms: Terms) -> None:
         self.inputs = inputs
         self.terms = terms
+
+    @classmethod
+    def build(
+        cls,
+        data: pandas.DataFrame,
+        schema: Schema,
+        problems: pandas.DataFrame | None = None,
+        vocabularies: Vocabularies | None = None,
+    ) -> "Scores":
+        """Read the scored fields of a table of children.
+
+        Args:
+            data: One row per child and one column per field, named by field code.
+            schema: The fields, which say where each takes its allowed values from.
+            problems: The problem table of a check of ``data``. Every cell it names
+                is scored as empty (see ``blank``).
+            vocabularies: Where the allowed values come from. Without it, the
+                vocabularies in the user's cache, downloaded when missing.
+
+        Returns:
+            The scores of the children.
+
+        Raises:
+            MissingSchemeError: A concept the scheme names is not an allowed value of
+                its field.
+            OSError: The vocabularies are not cached and cannot be downloaded.
+        """
+        terms = Terms(schema, vocabularies)
+        return cls(Inputs(cls.blank(data, problems), terms), terms)
+
+    @staticmethod
+    def blank(
+        data: pandas.DataFrame, problems: pandas.DataFrame | None
+    ) -> pandas.DataFrame:
+        """Empty the cells a problem table names.
+
+        A problem of the kind missing, wrong type, out of range, not in vocabulary or
+        rule blanks its cell, the field in ``code`` and never the one in ``related``.
+        A problem with the kind of a column blanks nothing
+        (docs/reference/quality-scheme/index.md, "Not determined" and the problem
+        kinds of the check).
+
+        Args:
+            data: The children.
+            problems: The problem table of a check of ``data``, or nothing.
+
+        Returns:
+            A copy of the children with the named cells empty.
+        """
+        cells = data.copy()
+        if problems is None:
+            return cells
+        named = problems[problems["kind"].isin(BLANKING)]
+        for code, rows in named.groupby("code")["row"]:
+            if code in cells.columns:
+                cells.loc[cells.index.isin(rows), code] = None
+        return cells
 
     def routing(self) -> pandas.Series:
         """Choose the set of rules that scores each child.
@@ -106,3 +191,63 @@ class Scores:
             index=product.index,
         )
         return grade.where(product.notna(), "Mx").astype("string")
+
+    @staticmethod
+    def either(probe: Score, borehole: Score) -> Score:
+        """Take the score of the rules that score each child.
+
+        Args:
+            probe: The score under the probe-sensing rules.
+            borehole: The score under the borehole and mine rules.
+
+        Returns:
+            The score of the rules each child is routed to, ``<NA>`` for a child neither
+            scores.
+        """
+        return Score(
+            probe.value.fillna(borehole.value),
+            probe.marked.fillna(borehole.marked),
+        )
+
+    def table(self) -> pandas.DataFrame:
+        """Assemble the scores of every child.
+
+        The quality code is the U-score, the M-score and the flags joined by points
+        (docs/reference/quality-scheme/index.md, "The quality code"). A child no rules
+        score has no T-score or TC-score and the M-score ``Mx``; an ``own`` score
+        leaves the child's corrections out ("Scores of a child and of its
+        measurements").
+
+        Returns:
+            One row for each child, in the order of the children, with the columns
+            ``rules``, ``U``, ``T``, ``TC``, ``marked``, ``M``, ``flags``, ``code``,
+            ``own_T``, ``own_TC``, ``own_T_marked`` and ``own_TC_marked``. The scores
+            are floats and the marks booleans, both ``<NA>`` where not determined.
+        """
+        probe = ProbeRules(self.inputs)
+        borehole = BoreholeRules(self.inputs)
+        t = self.either(probe.t_score(), borehole.t_score())
+        tc = self.either(probe.tc_score(), borehole.tc_score())
+        own_t = self.either(probe.own_t_score(), borehole.own_t_score())
+        own_tc = self.either(probe.own_tc_score(), borehole.own_tc_score())
+        grade = self.m_score(t, tc)
+        flags = self.flags()
+        uncertainty = UScore(self.inputs).scores()
+        table = pandas.DataFrame(
+            {
+                "rules": self.routing(),
+                "U": uncertainty,
+                "T": t.value,
+                "TC": tc.value,
+                "marked": (t.marked | tc.marked).where(grade != "Mx"),
+                "M": grade,
+                "flags": flags,
+                "code": uncertainty + "." + grade + "." + flags,
+                "own_T": own_t.value,
+                "own_TC": own_tc.value,
+                "own_T_marked": own_t.marked,
+                "own_TC_marked": own_tc.marked,
+            },
+            index=self.inputs.index,
+        )
+        return table[list(COLUMNS)]

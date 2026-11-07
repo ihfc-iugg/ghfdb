@@ -7,6 +7,7 @@ import pandas
 import pytest
 from frictionless import Schema
 
+from ghfdb.dataset import Dataset
 from ghfdb.fields import Vocabularies
 from ghfdb.qc.scheme import Inputs, Score, Terms
 from ghfdb.qc.scores import Scores
@@ -15,7 +16,7 @@ NOT_DETERMINED = "not determined"
 # The modules that run worked examples, each exposing the examples it runs as EXAMPLES.
 RUNNING = ("test_uncertainty", "test_scores", "test_probe", "test_borehole")
 # The parts no code scores yet. The group that builds a part removes it from here.
-PENDING = {"child"}
+PENDING: set[str] = set()
 
 
 def load_examples(part: str) -> list[Mapping[str, Any]]:
@@ -27,8 +28,9 @@ def load_examples(part: str) -> list[Mapping[str, Any]]:
 ROUTING = load_examples("routing")
 FLAGS = load_examples("perturbation-flags")
 M_SCORE = load_examples("m-score")
+CHILD = load_examples("child")
 # Every example this module runs, which the coverage test reads.
-EXAMPLES = [*ROUTING, *FLAGS, *M_SCORE]
+EXAMPLES = [*ROUTING, *FLAGS, *M_SCORE, *CHILD]
 
 
 def one_child(inputs: Mapping[str, Any]) -> pandas.DataFrame:
@@ -160,3 +162,25 @@ class TestMScore:
 
         assert grade.index.tolist() == [12, 9, 10, 11]
         assert grade.tolist() == ["M1", "M3x", "Mx", "M4"]
+
+
+class TestChildScores:
+    @pytest.mark.parametrize("example", CHILD, ids=lambda example: example["id"])
+    def test_worked_example(
+        self, published_vocabularies: Vocabularies, example: Mapping[str, Any]
+    ) -> None:
+        data = one_child(example["inputs"])
+        expected = example["expected"]
+
+        row = Dataset(data).scores(vocabularies=published_vocabularies).iloc[0]
+
+        for key in ("U", "T", "TC", "M", "flags", "code", "marked"):
+            if key in expected:
+                wanted = expected[key]
+                if wanted is None:
+                    assert pandas.isna(row[key]), key
+                else:
+                    assert row[key] == wanted, key
+        for key, column in (("T", "own_T"), ("TC", "own_TC")):
+            if "measurement" in expected:
+                assert row[column] == expected["measurement"][key], column

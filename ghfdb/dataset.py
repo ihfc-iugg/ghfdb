@@ -9,6 +9,7 @@ from frictionless import Schema
 from ghfdb.fields import Vocabularies, load_schema
 from ghfdb.qc.check import DatasetCheck
 from ghfdb.qc.rules import RULES, Rule
+from ghfdb.qc.scores import Scores
 from ghfdb.qc.workbook import UploadWorkbook
 
 
@@ -78,3 +79,34 @@ class Dataset:
         """
         schema = load_schema() if schema is None else schema
         return DatasetCheck(self.data, schema, rules, vocabularies).problems()
+
+    def scores(
+        self,
+        problems: pandas.DataFrame | None = None,
+        vocabularies: Vocabularies | None = None,
+    ) -> pandas.DataFrame:
+        """Score the children under the quality scheme.
+
+        See docs/reference/quality-scheme/index.md.
+
+        Args:
+            problems: The problem table of ``check``. Every cell it names, of the kinds
+                missing, wrong type, out of range, not in vocabulary and rule, is
+                scored as empty. Without it, a value is scored as the scheme's pages
+                say.
+            vocabularies: Where the allowed values come from. Without it, the
+                vocabularies in the user's cache, downloaded when missing.
+
+        Returns:
+            One row for each child, indexed like ``data``, with the columns ``rules``,
+            ``U``, ``T``, ``TC``, ``marked``, ``M``, ``flags``, ``code``, ``own_T``,
+            ``own_TC``, ``own_T_marked`` and ``own_TC_marked``. A score that is not
+            determined is ``<NA>``, or ``Ux`` and ``Mx`` for the grades.
+
+        Raises:
+            MissingSchemeError: A concept the scheme names is not an allowed value of
+                its field.
+            OSError: The vocabularies are not cached and cannot be downloaded.
+        """
+        schema = load_schema(vocabularies=vocabularies)
+        return Scores.build(self.data, schema, problems, vocabularies).table()

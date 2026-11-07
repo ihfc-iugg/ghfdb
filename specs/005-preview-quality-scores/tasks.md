@@ -111,3 +111,25 @@ each child's scores in the report with its expected scores.
 - [ ] T015 [US1] `docs/user-guide/check.md`: the scores in the report, and where each part is
   explained. `CONTEXT.md`'s **Report**. `README.md`: the package scores a workbook. `CHANGELOG.md` under **Added**. `docs/ROADMAP.md`: R6
   loses its deliverable about disagreements with another implementation.
+
+---
+
+## Phase 3: Review fixes
+
+- [ ] T018 [US2] REV-001: `poorest`, `cases` and `bands` become classmethods of `Penalty`,
+  `total` a classmethod of `Score`, and `combinations` a staticmethod of `Inputs`, in
+  `ghfdb/qc/scheme.py`, with the call sites and the Python API page updated. No behaviour changes.
+- [ ] T019 [US1] REV-002: the report and command tests assert "Has problems" against the report
+  module's own yes and no values, so an inverted value fails.
+- [ ] T020 [US1] REV-003: a report with no children says there is no child to score, as the spec's
+  edge case asks, with its test and the user guide line.
+- [ ] T021 [US2] REV-004: the scheme overview's "Several values in one field" states how the code
+  reads several values: number fields value by value and how `C1` and `C2` pair, routing, the
+  flags and the two probe waivers reading the first value, and a borehole gradient's case chosen
+  once for the child. Recorded under **Scheme changes** in the changelog.
+- [ ] T022 [US1] REV-005: the Python API page describes `Report` with its scores argument.
+- [ ] T023 [US2] REV-007: `Scores.blank` cites ADR 0007.
+- [ ] T024 [US2] REV-008: `Dataset.scores` takes an optional `schema`, as `Dataset.check` does, and
+  the command passes the schema it already loaded.
+- [ ] T025 [US1] REV-009: roadmap R6 says the report names the package version until R8, and
+  no longer says the scores go into a copy of the workbook.

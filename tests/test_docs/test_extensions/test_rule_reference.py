@@ -11,7 +11,7 @@ from ghfdb.qc.rules import BOREHOLE, PROBE_SENSING, RULES, Rule
 
 MISSING = "—"
 RELATED_FIELDS = {
-    "CF-1": ("P12", "C5", "C31", "C32"),
+    "CF-1": ("P12", "C4", "C5", "C31", "C32"),
     "CF-2": ("P12", "C6", "C23"),
     "CF-3": ("C42", "C41"),
 }

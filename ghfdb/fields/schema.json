@@ -595,7 +595,8 @@
       "valueFormat": null,
       "obligation": "R",
       "domain": [
-        "B"
+        "B",
+        "S"
       ],
       "qualityRelevance": null,
       "constraints": {},
@@ -784,8 +785,7 @@
       "valueFormat": null,
       "obligation": "M",
       "domain": [
-        "B",
-        "S"
+        "B"
       ],
       "qualityRelevance": "M-score",
       "constraints": {
@@ -1033,12 +1033,6 @@
           "uri": null,
           "label": "No",
           "notation": null
-        },
-        {
-          "term": "[unspecified]",
-          "uri": null,
-          "label": "unspecified",
-          "notation": null
         }
       ],
       "separator": null,
@@ -1213,7 +1207,7 @@
       "columnName": "corr_S_flag",
       "earlierColumnNames": [],
       "group": "child",
-      "title": "Flag sedimentation effect (temperature/heat flow correction)",
+      "title": "Flag sedimentation effect (heat flow correction)",
       "description": "Specifies if sedimentation/subsidence effects with respect to the reported heat-flow value were present and if corrections were performed.",
       "type": "string",
       "decimalPlaces": null,
@@ -1566,7 +1560,7 @@
       },
       "vocabulary": null,
       "separator": null,
-      "guidance": "Give the expedition cruise number, or the research vessel or drilling platform, in the forms [Expedition cruise number], [R/V Ship] and [D/V Platform].",
+      "guidance": "Give the expedition cruise number, or the research vessel or drilling platform, in the forms [R/V Ship], [D/V Platform], [D/V Glomar Challenger], [D/V JOIDES Resolution] and [Expedition-Cruise number].",
       "sources": {
         "code": "upload-template",
         "columnName": "upload-template",
@@ -1587,7 +1581,7 @@
         "termForm": "upload-template",
         "allowedValues": "upload-template",
         "separator": "upload-template",
-        "guidance": "decision:D-22"
+        "guidance": "upload-template"
       }
     },
     {
@@ -1731,10 +1725,12 @@
     },
     {
       "name": "C24",
-      "columnName": "water_temperature",
-      "earlierColumnNames": [],
+      "columnName": "Surface_temperature",
+      "earlierColumnNames": [
+        "water_temperature"
+      ],
       "group": "child",
-      "title": "Bottom-water temperature",
+      "title": "Surface/Bottom-water temperature",
       "description": "Seafloor temperature where surface heat-flow value (q) is taken. e.g. PT 100 or Mudline temperature for ocean drilling data.",
       "type": "number",
       "decimalPlaces": 2,
@@ -1742,6 +1738,7 @@
       "valueFormat": null,
       "obligation": "O",
       "domain": [
+        "B",
         "S"
       ],
       "qualityRelevance": null,
@@ -1755,7 +1752,7 @@
       "sources": {
         "code": "upload-template",
         "columnName": "upload-template",
-        "earlierColumnNames": "upload-template",
+        "earlierColumnNames": "decision:D-2",
         "group": "upload-template",
         "name": "upload-template",
         "meaning": "fuchs-2023-appendix-a",
@@ -1966,7 +1963,7 @@
       "columnName": "T_grad_mean_cor",
       "earlierColumnNames": [],
       "group": "child",
-      "title": "Mean temperature gradient corrected",
+      "title": "Corrected temperature gradient",
       "description": "Mean temperature gradient corrected for borehole (drilling/mud circulation) and environmental effects (terrain effects/topography, sedimentation, erosion, magmatic intrusions, paleoclimate, etc.). Name the correction method in the corresponding item.",
       "type": "number",
       "decimalPlaces": 2,
@@ -1974,8 +1971,7 @@
       "valueFormat": null,
       "obligation": "O",
       "domain": [
-        "B",
-        "S"
+        "B"
       ],
       "qualityRelevance": null,
       "constraints": {
@@ -2021,8 +2017,7 @@
       "valueFormat": null,
       "obligation": "O",
       "domain": [
-        "B",
-        "S"
+        "B"
       ],
       "qualityRelevance": null,
       "constraints": {
@@ -2429,6 +2424,194 @@
       }
     },
     {
+      "name": "C50",
+      "columnName": "T_top_mean",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Temperature top",
+      "description": "Absolute temperature at the top of the heat-flow interval used to calculate the temperature gradient.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "°C",
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": -99999.99,
+        "maximum": 99999.99
+      },
+      "vocabulary": null,
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2025-template-2026-03",
+        "type": "decision:D-18",
+        "decimalPlaces": "upload-template",
+        "maxLength": "upload-template",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C51",
+      "columnName": "T_top_uncertainty",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Temperature top uncertainty",
+      "description": "Uncertainty of the absolute temperature at the top of the heat-flow interval used to calculate the temperature gradient.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "°C",
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": -99999.99,
+        "maximum": 99999.99
+      },
+      "vocabulary": null,
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2025-template-2026-03",
+        "type": "decision:D-18",
+        "decimalPlaces": "upload-template",
+        "maxLength": "upload-template",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C52",
+      "columnName": "T_bot_mean",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Temperature bottom",
+      "description": "Absolute temperature at the bottom of the heat-flow interval used to calculate the temperature gradient.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "°C",
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": -99999.99,
+        "maximum": 99999.99
+      },
+      "vocabulary": null,
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2025-template-2026-03",
+        "type": "decision:D-18",
+        "decimalPlaces": "upload-template",
+        "maxLength": "upload-template",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
+      "name": "C53",
+      "columnName": "T_bot_uncertainty",
+      "earlierColumnNames": [],
+      "group": "child",
+      "title": "Temperature bottom uncertainty",
+      "description": "Uncertainty of the absolute temperature at the bottom of the heat-flow interval used to calculate the temperature gradient.",
+      "type": "number",
+      "decimalPlaces": 2,
+      "unit": "°C",
+      "valueFormat": null,
+      "obligation": "R",
+      "domain": [
+        "B",
+        "S"
+      ],
+      "qualityRelevance": null,
+      "constraints": {
+        "minimum": -99999.99,
+        "maximum": 99999.99
+      },
+      "vocabulary": null,
+      "separator": null,
+      "guidance": null,
+      "sources": {
+        "code": "upload-template",
+        "columnName": "upload-template",
+        "earlierColumnNames": "upload-template",
+        "group": "upload-template",
+        "name": "upload-template",
+        "meaning": "fuchs-2025-template-2026-03",
+        "type": "decision:D-18",
+        "decimalPlaces": "upload-template",
+        "maxLength": "upload-template",
+        "unit": "upload-template",
+        "valueFormat": "upload-template",
+        "obligation": "upload-template",
+        "domain": "upload-template",
+        "qualityRelevance": "upload-template",
+        "range": "upload-template",
+        "vocabulary": "upload-template",
+        "termForm": "upload-template",
+        "allowedValues": "upload-template",
+        "separator": "upload-template",
+        "guidance": "upload-template"
+      }
+    },
+    {
       "name": "C39",
       "columnName": "tc_mean",
       "earlierColumnNames": [],
@@ -2765,9 +2948,7 @@
     {
       "name": "C46",
       "columnName": "tc_pT_function",
-      "earlierColumnNames": [
-        "tc_pT_fuction"
-      ],
+      "earlierColumnNames": [],
       "group": "child",
       "title": "Thermal conductivity pT assumed function",
       "description": "Technique or approach used to correct the measured thermal conductivity towards in-situ pressure (p) and/or temperature (T) conditions.",
@@ -2775,7 +2956,7 @@
       "decimalPlaces": null,
       "unit": null,
       "valueFormat": null,
-      "obligation": "R",
+      "obligation": "M",
       "domain": [
         "B",
         "S"
@@ -2910,9 +3091,7 @@
     {
       "name": "C49",
       "columnName": "Ref_IGSN",
-      "earlierColumnNames": [
-        "Ref_ISGN"
-      ],
+      "earlierColumnNames": [],
       "group": "child",
       "title": "IGSN",
       "description": "International Generic Sample Numbers (IGSN, semicolon separated) for rock samples used for laboratory measurements of thermal conductivity in the heat flow calculation.",
@@ -3184,10 +3363,52 @@
       "obligation": null,
       "domain": [],
       "qualityRelevance": null,
-      "constraints": {
-        "maxLength": 255
-      },
+      "constraints": {},
       "vocabulary": null,
+      "allowedValues": [
+        {
+          "term": "Africa",
+          "uri": null,
+          "label": "Africa",
+          "notation": null
+        },
+        {
+          "term": "Antarctica",
+          "uri": null,
+          "label": "Antarctica",
+          "notation": null
+        },
+        {
+          "term": "Asia",
+          "uri": null,
+          "label": "Asia",
+          "notation": null
+        },
+        {
+          "term": "Australia",
+          "uri": null,
+          "label": "Australia",
+          "notation": null
+        },
+        {
+          "term": "Europe",
+          "uri": null,
+          "label": "Europe",
+          "notation": null
+        },
+        {
+          "term": "North America",
+          "uri": null,
+          "label": "North America",
+          "notation": null
+        },
+        {
+          "term": "South America",
+          "uri": null,
+          "label": "South America",
+          "notation": null
+        }
+      ],
       "separator": null,
       "guidance": null,
       "sources": {
@@ -3227,10 +3448,22 @@
       "obligation": null,
       "domain": [],
       "qualityRelevance": null,
-      "constraints": {
-        "maxLength": 255
-      },
+      "constraints": {},
       "vocabulary": null,
+      "allowedValues": [
+        {
+          "term": "continental",
+          "uri": null,
+          "label": "continental",
+          "notation": null
+        },
+        {
+          "term": "marine",
+          "uri": null,
+          "label": "marine",
+          "notation": null
+        }
+      ],
       "separator": null,
       "guidance": null,
       "sources": {

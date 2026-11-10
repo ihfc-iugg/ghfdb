@@ -53,7 +53,7 @@ class TestResolution:
     def test_the_borehole_rule_relates_the_fields_mandatory_for_boreholes_only(
         self, schema: Schema
     ) -> None:
-        assert CF_1.fields(schema) == ("P12", "C5", "C31", "C32")
+        assert CF_1.fields(schema) == ("P12", "C4", "C5", "C31", "C32")
 
     def test_the_probe_sensing_rule_relates_the_fields_mandatory_for_probing_only(
         self, schema: Schema

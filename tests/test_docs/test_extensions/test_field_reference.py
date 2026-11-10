@@ -61,7 +61,7 @@ class TestFieldReferenceEntries:
         expected = [f.name.lower() for f in schema.fields if f.custom["group"] == group]
         assert codes == expected
 
-    def test_the_three_groups_hold_all_seventy_fields(
+    def test_the_three_groups_hold_all_seventy_four_fields(
         self, schema: Schema, reference: FieldReference
     ) -> None:
         total = sum(
@@ -69,7 +69,7 @@ class TestFieldReferenceEntries:
             for g in ("parent", "child", "assessment")
         )
 
-        assert total == len(schema.fields) == 70
+        assert total == len(schema.fields) == 74
 
     def test_each_entry_has_a_target_for_its_code_and_for_its_column_name(
         self, schema: Schema, reference: FieldReference
@@ -368,11 +368,10 @@ class TestSeparatorsAndEarlierSpellings:
 
         assert "separat" not in section.lower()
 
-    @pytest.mark.parametrize("code", ["C46", "C49"])
     def test_an_earlier_spelling_is_given(
-        self, schema: Schema, reference: FieldReference, code: str
+        self, schema: Schema, reference: FieldReference
     ) -> None:
-        field = schema.get_field(code)
+        field = schema.get_field("C24")
         assert field.custom["earlierColumnNames"]
 
         section = section_of(entries_of(reference, field), field)
@@ -438,7 +437,7 @@ class TestFieldIndex:
             if line.startswith("| {ref}")
         ]
 
-        assert len(rows) == len(schema.fields) == 70
+        assert len(rows) == len(schema.fields) == 74
         for field, row in zip(schema.fields, rows, strict=True):
             name = column_name(field)
             code = f"{{ref}}`{field.name} <field-{field.name.lower()}>`"

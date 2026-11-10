@@ -3,7 +3,7 @@
 The field reference describes every column of the GHFDB upload template: what the column
 holds, its type, unit and range, whether it must be filled in, which kind of data it applies
 to, how it counts towards the quality score and, for columns that take terms from a controlled
-vocabulary, every term you may write. Each fact names the source it was taken from.
+vocabulary, every term you may write.
 
 The pages are built from the same field definitions that the `ghfdb` package ships, so they
 cannot disagree with it.
@@ -28,14 +28,14 @@ assessment
 
 ## Where the facts and allowed values come from
 
-Every fact in an entry comes from one of four places, named in the Source column:
+Every fact in an entry comes from one of four places:
 
 - **Upload template**: the GHFDB submission template, version 2026.03
   ([Fuchs et al., 2025](https://doi.org/10.5880/fidgeo.2025.042), CC BY 4.0).
 - **Fuchs et al. (2023), Appendix A**: the table of fields in the paper that describes the
   quality scheme.
-- **A recorded decision**: where the two disagree, or neither says, a decision was recorded and
-  is linked from the entry.
+- **A recorded decision**: where the two disagree, or neither says, a decision was recorded in
+  [the decisions log](https://github.com/ihfc-iugg/ghfdb/blob/main/specs/001-field-reference/decisions.md).
 - **IHFC Controlled Vocabularies**: the allowed values of a field that takes terms from a
   controlled vocabulary come from the vocabularies as currently published. The entry links to the
   permanent identifier of the concept scheme, and of the collection where there is one.

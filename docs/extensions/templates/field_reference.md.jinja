@@ -1,13 +1,13 @@
 {#- The Markdown of the field reference. field_reference.py supplies what is used here:
-    the schema, the filters address, cell, code and pipes, and the functions sources and
-    allowed_values. -#}
+    the schema, the filters address, cell, code and pipes, and the functions sources,
+    allowed_values and rules_of. -#}
 {%- set MISSING = "—" -%}
 {%- set OBLIGATIONS = {"M": "Mandatory (M)", "R": "Recommended (R)", "O": "Optional (O)"} -%}
 {%- set DOMAINS = {"B": "Borehole and mine (B)", "S": "Probe sensing (S)"} -%}
 
 {#- One table row, which starts on a new line. -#}
-{% macro row(fact, value, source) %}
-| {{ fact }} | {{ value | pipes }} | {{ source }} |{% endmacro %}
+{% macro row(fact, value) %}
+| {{ fact }} | {{ value | pipes }} |{% endmacro %}
 
 {#- The table of facts about one field. -#}
 {% macro facts(field, values) -%}
@@ -27,35 +27,32 @@
 {%- set has_length = constraints.maxLength is defined -%}
 {%- set rules = rules_of(field) -%}
 {%- set has_range = constraints.minimum is defined or constraints.maximum is defined -%}
-| Fact | Value | Source |
-|---|---|---|
-{{- row("Field code", field.name | code, sources(field, ["code"])) -}}
+| Fact | Value |
+|---|---|
+{{- row("Field code", field.name | code) -}}
 {{- row("Published column name",
         custom.columnName | code
-        ~ (" (earlier spelling: " ~ (earlier | map("code") | join(", ")) ~ ")" if earlier else ""),
-        sources(field, ["columnName", "earlierColumnNames"] if earlier else ["columnName"])) -}}
-{{- row("Name", field.title | cell, sources(field, ["name"])) -}}
-{{- row("Meaning", field.description | cell, sources(field, ["meaning"])) -}}
+        ~ (" (earlier spelling: " ~ (earlier | map("code") | join(", ")) ~ ")" if earlier else "")) -}}
+{{- row("Name", field.title | cell) -}}
+{{- row("Meaning", field.description | cell) -}}
 {{- row("Type",
         field.type | cell
         ~ (", " ~ custom.decimalPlaces ~ " decimal places" if has_places else "")
-        ~ (", up to " ~ constraints.maxLength ~ " characters" if has_length else ""),
-        sources(field, ["type"] + (["decimalPlaces"] if has_places else []) + (["maxLength"] if has_length else []))) -}}
-{{- row("Unit", unit | cell, sources(field, ["unit"])) -}}
-{{- row("Obligation", OBLIGATIONS.get(custom.obligation, MISSING), sources(field, ["obligation"])) -}}
-{{- row("Domain", domain, sources(field, ["domain"])) -}}
-{{- row("Quality relevance", quality | cell, sources(field, ["qualityRelevance"])) -}}
+        ~ (", up to " ~ constraints.maxLength ~ " characters" if has_length else "")) -}}
+{{- row("Unit", unit | cell) -}}
+{{- row("Obligation", OBLIGATIONS.get(custom.obligation, MISSING)) -}}
+{{- row("Domain", domain) -}}
+{{- row("Quality relevance", quality | cell) -}}
 {%- if has_range -%}
 {{- row("Range",
         (constraints.minimum if constraints.minimum is defined else MISSING)
-        ~ " to " ~ (constraints.maximum if constraints.maximum is defined else MISSING),
-        sources(field, ["range"])) -}}
+        ~ " to " ~ (constraints.maximum if constraints.maximum is defined else MISSING)) -}}
 {%- endif -%}
 {%- if custom.valueFormat is not none -%}
-{{- row("Format", custom.valueFormat | code, sources(field, ["valueFormat"])) -}}
+{{- row("Format", custom.valueFormat | code) -}}
 {%- endif -%}
 {%- if values -%}
-{{- row("Allowed values", values | length ~ " values, listed below", sources(field, ["allowedValues"])) -}}
+{{- row("Allowed values", values | length ~ " values, listed below") -}}
 {%- endif -%}
 {%- if rules -%}
 {%- set links -%}
@@ -63,7 +60,7 @@
 {{ "{ref}" }}`{{ rule.identifier }} <{{ rule.identifier | lower }}>`{{ ", " if not loop.last }}
 {%- endfor -%}
 {%- endset -%}
-{{- row("Rules", links, rule_sources(rules)) -}}
+{{- row("Rules", links) -}}
 {%- endif -%}
 {% endmacro %}
 

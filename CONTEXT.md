@@ -38,7 +38,7 @@ Other layouts exist, such as the GHFDB release format and the data assessment te
 | Term | Meaning |
 |---|---|
 | **Field** | One column of the GHFDB structure. |
-| **Field reference** | The documentation of every field of the upload template: what it holds, its type, unit, range, obligation, domain, quality relevance and allowed values, each fact with its source. Generated from the field schema. |
+| **Field reference** | The documentation of every field of the upload template: what it holds, its type, unit, range, obligation, domain, quality relevance and allowed values. Generated from the field schema. |
 | **Field code** | A field's short identifier: `P1`–`P13` for parent fields, `C1`–`C53` for child fields, `A1`–`A8` for assessment fields. The header row of the upload template. `C50`–`C53` sit between `C38` and `C39` in the template, so the fields run in the template's column order, not in numerical order. |
 | **Assessment fields** | `A1`–`A8`: the reviewer's name and comment, the date of the review, the country, region and continent of the site, the domain recorded in review and the child's unique ID. The data assessment team fills them in, not a contributor, so they have no obligation. |
 | **Domain** | Where a field applies: `B` for borehole and mine data, `S` for probe-sensing (marine) data. |

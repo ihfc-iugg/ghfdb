@@ -11,17 +11,14 @@ from frictionless import Schema
 
 from ghfdb.fields import MissingSchemeError, Vocabularies
 from ghfdb.fields.cells import concept_terms
-from ghfdb.qc import borehole, probe
+from ghfdb.qc.borehole import BoreholeRules
 from ghfdb.qc.penalties import Criterion, Table
+from ghfdb.qc.probe import ProbeRules
 
 CRITERIA: dict[str, Criterion[Table]] = {
     criterion.identifier: criterion
-    for criterion in (
-        *probe.T_CRITERIA,
-        *probe.TC_CRITERIA,
-        *borehole.T_CRITERIA,
-        *borehole.TC_CRITERIA,
-    )
+    for rules in (ProbeRules, BoreholeRules)
+    for criterion in rules.declared()
 }
 
 

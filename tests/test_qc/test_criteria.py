@@ -7,9 +7,10 @@ from conftest import worked_document
 from frictionless import Schema
 
 from ghfdb.fields import MissingSchemeError, Vocabularies, allowed_values
-from ghfdb.qc import borehole, probe
+from ghfdb.qc.borehole import BoreholeRules
 from ghfdb.qc.concepts import DRILLING, PRESENT_CORRECTED
 from ghfdb.qc.criteria import CRITERIA, term_uris
+from ghfdb.qc.probe import ProbeRules
 from ghfdb.qc.rules import EXPLORATION_METHOD
 from ghfdb.qc.scores import Scores
 
@@ -40,12 +41,7 @@ class TestCriteria:
         assert all(key == criterion.identifier for key, criterion in CRITERIA.items())
 
     def test_every_criterion_is_declared_once(self) -> None:
-        declared = [
-            *probe.T_CRITERIA,
-            *probe.TC_CRITERIA,
-            *borehole.T_CRITERIA,
-            *borehole.TC_CRITERIA,
-        ]
+        declared = [*ProbeRules.declared(), *BoreholeRules.declared()]
 
         assert len(CRITERIA) == len(declared)
 

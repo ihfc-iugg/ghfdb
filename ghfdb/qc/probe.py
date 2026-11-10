@@ -1,13 +1,9 @@
 """The probe-sensing rules.
 
 They give the T-score of a gradient and the TC-score of a conductivity. The criteria are
-declared here as tables (see ``penalties``). Only what a table cannot say is code: the
-two corrections that waive a criterion.
+declared here as tables (see ``penalties``), and the two corrections that waive a
+criterion are declared beside them in ``ProbeRules``.
 """
-
-from dataclasses import dataclass
-
-import numpy
 
 from ghfdb.fields import Field
 from ghfdb.qc.concepts import (
@@ -41,7 +37,6 @@ from ghfdb.qc.concepts import (
     WELL_LOG_DETERMINISTIC,
     WELL_LOG_EMPIRICAL,
 )
-from ghfdb.qc.inputs import Inputs
 from ghfdb.qc.penalties import (
     LARGEST,
     Band,
@@ -52,10 +47,10 @@ from ghfdb.qc.penalties import (
     Criterion,
     Depths,
     Group,
-    RuleScores,
     Score,
 )
 from ghfdb.qc.rules import Condition
+from ghfdb.qc.ruleset import RuleScores, RuleSet
 
 LABORATORY_METHODS = (
     POINT_SOURCE,
@@ -205,96 +200,37 @@ T_CRITERIA = (PENETRATION, RECORDINGS, WATER_DEPTH, TILT)
 TC_CRITERIA = (LOCATION, SATURATION, NUMBER, CONDITIONS)
 
 
-@dataclass(frozen=True)
-class ProbeRules:
+class ProbeRules(RuleSet):
     """Score the children explored by probing: the T-score and the TC-score.
 
     A field that holds several values is scored value by value and the poorest counts
-    (docs/reference/quality-scheme/index.md, "Several values in one field").
-
-    Attributes:
-        inputs: The scored fields of the children.
-        routed: Whether the probe-sensing rules score each child, in the order of the
-            children: the child is routed to them and has a field they read filled.
+    (docs/reference/quality-scheme/index.md, "Several values in one field"). A tilt
+    correction waives the tilt criterion and a bottom-water correction waives the water
+    depth, in the T-score but not in the own T-score.
     """
 
-    inputs: Inputs
-    routed: numpy.ndarray
-
-    @staticmethod
-    def reads() -> tuple[str, ...]:
-        """List the fields the rules read.
-
-        Returns:
-            The fields of the criteria and of the two corrections that waive one.
-        """
-        criteria = (*T_CRITERIA, *TC_CRITERIA)
-        corrections = (BOTTOM_WATER_CORRECTED, TILT_IS_CORRECTED)
-        return tuple(
-            dict.fromkeys(
-                (
-                    *(field for criterion in criteria for field in criterion.reads()),
-                    *(correction.field for correction in corrections),
-                )
-            )
-        )
-
-    @staticmethod
-    def concepts() -> tuple[tuple[str, str], ...]:
-        """List the concepts the rules name, with their fields.
-
-        Returns:
-            The concepts of the criteria and of the two corrections that waive one.
-        """
-        criteria = (*T_CRITERIA, *TC_CRITERIA)
-        corrections = (BOTTOM_WATER_CORRECTED, TILT_IS_CORRECTED)
-        return (
-            *(pair for criterion in criteria for pair in criterion.concepts()),
-            *((c.field, uri) for c in corrections for uri in c.concepts),
-        )
-
-    def has(self, correction: Condition) -> numpy.ndarray:
-        """Find the children that have a correction.
-
-        Args:
-            correction: The field of the correction and the concepts it must hold, read
-                at the child's first value.
-
-        Returns:
-            Whether each child has the correction.
-        """
-        first = self.inputs.first(self.inputs.concepts(correction.field))
-        return first.isin(correction.concepts).to_numpy(dtype=bool)
+    criteria = (*T_CRITERIA, *TC_CRITERIA)
+    waivers = {
+        WATER_DEPTH.identifier: BOTTOM_WATER_CORRECTED,
+        TILT.identifier: TILT_IS_CORRECTED,
+    }
 
     def scores(self) -> RuleScores:
         """Score every child, each criterion once.
 
-        A tilt correction waives the tilt criterion and a bottom-water correction waives
-        the water depth, in the T-score but not in the own T-score. The conductivity
-        reads nothing from the child, so the own TC-score is the TC-score. See
-        docs/reference/quality-scheme/probe-sensing.md, "T-score" and "TC-score", and
-        docs/reference/quality-scheme/index.md, "Scores of a child and of its
-        measurements".
+        The conductivity reads nothing from the child, so the own TC-score is the
+        TC-score. See docs/reference/quality-scheme/probe-sensing.md, "T-score" and
+        "TC-score", and docs/reference/quality-scheme/index.md, "Scores of a child and
+        of its measurements".
 
         Returns:
             The four scores and their marks for each child.
         """
-        penetration, recordings, water_depth, tilt = (
-            criterion.score(self.inputs) for criterion in T_CRITERIA
-        )
-        gradient = [penetration, recordings, water_depth, tilt]
-        corrected = [
-            penetration,
-            recordings,
-            water_depth.waived(self.has(BOTTOM_WATER_CORRECTED)),
-            tilt.waived(self.has(TILT_IS_CORRECTED)),
-        ]
-        tc = Score.total(
-            [criterion.score(self.inputs) for criterion in TC_CRITERIA], self.routed
-        )
+        t, own_t = self.penalties(T_CRITERIA)
+        tc, own_tc = self.penalties(TC_CRITERIA)
         return RuleScores(
-            t=Score.total(corrected, self.routed),
-            tc=tc,
-            own_t=Score.total(gradient, self.routed),
-            own_tc=tc,
+            t=Score.total(t, self.routed),
+            tc=Score.total(tc, self.routed),
+            own_t=Score.total(own_t, self.routed),
+            own_tc=Score.total(own_tc, self.routed),
         )

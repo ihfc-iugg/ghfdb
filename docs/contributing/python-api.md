@@ -203,10 +203,15 @@ uses the same ones.
 
 ### The rule classes
 
-What a table cannot say is code. `ghfdb.qc.probe.ProbeRules` reads the water depth from the
-elevation and applies the two corrections that waive a criterion.
-`ghfdb.qc.borehole.BoreholeRules` chooses which of the three cases a gradient is and applies the
-interval depth gate. `ghfdb.qc.uncertainty.UScore` grades the uncertainty.
+A set of rules is a `ghfdb.qc.ruleset.RuleSet`, which declares its `criteria`, and where it has
+them its `waivers`, `stand_ins`, `conditions` and `extra_fields`, as class attributes. The fields
+it reads and the concepts it names follow from those declarations, and so do the penalties of its
+criteria for a child and for a measurement on its own. `ghfdb.qc.probe.ProbeRules` scores the
+T-score and the TC-score from its two lists, and its waivers are the two corrections that leave
+the water depth or the tilt out of a child's T-score. `ghfdb.qc.borehole.BoreholeRules` scores
+the TC-score from its list, with the plain pT conditions standing in for their agreement with the
+in-situ correction in a measurement's own score, chooses which of the three cases a gradient is
+and applies the interval depth gate. `ghfdb.qc.uncertainty.UScore` grades the uncertainty.
 `ghfdb.qc.scores.Scores` routes each child to its rules once, hands each set of rules the
 children it scores, writes the perturbation flags, grades the M-score and assembles the table of
 scores.
@@ -223,10 +228,14 @@ To add a criterion:
    form `<rules>-<t or tc>.<name>` that is never reused, a title, the paper's table and row as
    `source`, and a `Bands`, `Classes` or `Cases` table over the `Field` members it reads. Name a
    concept by its constant in `ghfdb.qc.concepts`, adding the constant when it is new.
-2. Add it to that module's `T_CRITERIA` or `TC_CRITERIA`. The fields the rules read and the
-   concepts the scheme names are collected from those lists, so nothing else lists them. A
-   criterion of the probe T-score is also named in `ProbeRules.scores`, which decides which
-   corrections waive it.
+2. Add it to that module's `T_CRITERIA` or `TC_CRITERIA`. The rules score every criterion of the
+   list they score from, and the fields the rules read and the concepts the scheme names are
+   collected from the lists, so nothing else lists them. Two things are declared beside the
+   lists, in the class of the rules: a correction that waives a criterion for a child that has
+   it goes in `waivers`, by the criterion's identifier, and a criterion that replaces another in
+   a measurement's own score goes in `stand_ins`. The three criteria of the borehole T-score are
+   the three cases of a gradient and not a sum, so a new one is also chosen between in
+   `BoreholeRules.temperature_methods`.
 3. Add the criterion's identifier and a statement of it to `criteria` in
    `ghfdb/qc/worked_examples.json`, and a worked example that scores it, naming the criterion in
    its own `criteria`. A test fails while a declared criterion has no example, or an example
@@ -247,6 +256,9 @@ criterion, is code in the rule class and is not a `Criterion`.
    :members:
 
 .. automodule:: ghfdb.qc.criteria
+   :members:
+
+.. automodule:: ghfdb.qc.ruleset
    :members:
 
 .. automodule:: ghfdb.qc.uncertainty

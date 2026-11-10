@@ -1,8 +1,12 @@
 import pandas
+import pytest
 from conftest import Uris, one_child
 
+from ghfdb.fields import Field
+from ghfdb.qc import probe
 from ghfdb.qc.criteria import CRITERIA
 from ghfdb.qc.inputs import Inputs
+from ghfdb.qc.penalties import Band, Bands, Criterion
 from ghfdb.qc.probe import ProbeRules
 from ghfdb.qc.scores import Scores
 
@@ -47,6 +51,22 @@ class TestWaterDepth:
 
 
 class TestProbeTScore:
+    def test_a_criterion_added_to_the_list_is_scored(
+        self, uris: Uris, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        extra = Criterion(
+            "probe-t.extra",
+            "Every child",
+            Bands(Field.T_number, (Band(-0.3),)),
+            "Table 2",
+        )
+        monkeypatch.setattr(probe, "T_CRITERIA", (*probe.T_CRITERIA, extra))
+        child = {"P12": PROBE, "P6": -3000, "C6": 5, "C37": 6, "C23": 0}
+
+        score = rules_of(uris, one_child(child)).scores().t
+
+        assert score.value.iloc[0] == 0.8
+
     def test_the_own_score_applies_neither_waiver(self, uris: Uris) -> None:
         child = {
             "P12": PROBE,

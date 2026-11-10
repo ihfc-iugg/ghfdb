@@ -125,23 +125,6 @@ class Score:
 
 
 @dataclass(frozen=True)
-class RuleScores:
-    """The scores a set of rules gives every child.
-
-    Attributes:
-        t: The T-score, with the child's corrections applied.
-        tc: The TC-score, with the child's corrections applied.
-        own_t: The T-score of the gradient on its own, before the corrections apply.
-        own_tc: The TC-score of the conductivity on its own.
-    """
-
-    t: Score
-    tc: Score
-    own_t: Score
-    own_tc: Score
-
-
-@dataclass(frozen=True)
 class Band:
     """The numbers above an edge, which stand for one value.
 

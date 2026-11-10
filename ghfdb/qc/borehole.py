@@ -2,11 +2,8 @@
 
 They give the T-score of a gradient and the TC-score of a conductivity. The criteria are
 declared here as tables (see ``penalties``). Only what a table cannot say is code: which
-of the three cases a gradient is, the interval depth gate, and the agreement of the pT
-conditions with the in-situ correction.
+of the three cases a gradient is, and the interval depth gate.
 """
-
-from dataclasses import dataclass
 
 import numpy
 import pandas
@@ -68,7 +65,6 @@ from ghfdb.qc.concepts import (
     WELL_LOG,
     XEN,
 )
-from ghfdb.qc.inputs import Inputs
 from ghfdb.qc.penalties import (
     Band,
     Bands,
@@ -79,10 +75,10 @@ from ghfdb.qc.penalties import (
     Group,
     Outcome,
     Penalty,
-    RuleScores,
     Score,
 )
 from ghfdb.qc.rules import Condition
+from ghfdb.qc.ruleset import RuleScores, RuleSet
 
 # A gradient is a continuous log only with more than this many recordings.
 CONTINUOUS_LOG_RECORDINGS = 3
@@ -274,60 +270,23 @@ CONDITIONS_AGREEING = Criterion(
 )
 
 T_CRITERIA = (CONTINUOUS_LOG, SINGLE_POINTS, SURFACE_PLUS_ONE_POINT)
-CONDUCTIVITY_CRITERIA = (LOCATION, SOURCE, NUMBER, SATURATION)
-TC_CRITERIA = (*CONDUCTIVITY_CRITERIA, CONDITIONS, CONDITIONS_AGREEING)
+TC_CRITERIA = (LOCATION, SOURCE, NUMBER, SATURATION, CONDITIONS_AGREEING)
 
 
-@dataclass(frozen=True)
-class BoreholeRules:
+class BoreholeRules(RuleSet):
     """Score the children explored by drilling, mining or indirect methods.
 
     A field that holds several values is scored value by value and the poorest counts
-    (docs/reference/quality-scheme/index.md, "Several values in one field").
-
-    Attributes:
-        inputs: The scored fields of the children.
-        routed: Whether the borehole and mine rules score each child, in the order of
-            the children: the child is routed to them and has a field they read
-            filled.
+    (docs/reference/quality-scheme/index.md, "Several values in one field"). The three
+    criteria of the T-score are the three cases of a gradient, and the method
+    ``temperature_methods`` chooses between them. The TC-score is the sum of
+    ``TC_CRITERIA``, and a measurement on its own scores the pT conditions alone.
     """
 
-    inputs: Inputs
-    routed: numpy.ndarray
-
-    @staticmethod
-    def reads() -> tuple[str, ...]:
-        """List the fields the rules read.
-
-        Returns:
-            The fields of the criteria, the number of recordings that makes a gradient
-            a continuous log and the depths of the interval.
-        """
-        criteria = (*T_CRITERIA, *TC_CRITERIA)
-        return tuple(
-            dict.fromkeys(
-                (
-                    *(field for criterion in criteria for field in criterion.reads()),
-                    Field.T_number,
-                    *INTERVAL_DEPTHS,
-                )
-            )
-        )
-
-    @staticmethod
-    def concepts() -> tuple[tuple[str, str], ...]:
-        """List the concepts the rules name, with their fields.
-
-        Returns:
-            The concepts of the criteria and of the top method that makes a gradient a
-            surface plus one point.
-        """
-        criteria = (*T_CRITERIA, *TC_CRITERIA)
-        surface = TOP_METHOD_IS_SURFACE
-        return (
-            *(pair for criterion in criteria for pair in criterion.concepts()),
-            *((surface.field, uri) for uri in surface.concepts),
-        )
+    criteria = (*T_CRITERIA, *TC_CRITERIA)
+    stand_ins = {CONDITIONS_AGREEING.identifier: CONDITIONS}
+    conditions = (TOP_METHOD_IS_SURFACE,)
+    extra_fields = (Field.T_number, *INTERVAL_DEPTHS)
 
     def surface_case(self) -> numpy.ndarray:
         """Find the gradients that are a surface plus one point.
@@ -448,12 +407,5 @@ class BoreholeRules:
             The four scores and their marks for each child.
         """
         t = Score.total([self.temperature_methods()], self.routed)
-        conductivity = [
-            criterion.score(self.inputs) for criterion in CONDUCTIVITY_CRITERIA
-        ]
-        return RuleScores(
-            t=t,
-            tc=self.gated([*conductivity, CONDITIONS_AGREEING.score(self.inputs)]),
-            own_t=t,
-            own_tc=self.gated([*conductivity, CONDITIONS.score(self.inputs)]),
-        )
+        tc, own_tc = self.penalties(TC_CRITERIA)
+        return RuleScores(t=t, tc=self.gated(tc), own_t=t, own_tc=self.gated(own_tc))

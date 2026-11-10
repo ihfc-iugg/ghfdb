@@ -1,8 +1,12 @@
 import pandas
+import pytest
 from conftest import Uris, one_child
 
+from ghfdb.fields import Field
+from ghfdb.qc import borehole
 from ghfdb.qc.borehole import BoreholeRules
 from ghfdb.qc.inputs import Inputs
+from ghfdb.qc.penalties import Band, Bands, Criterion
 from ghfdb.qc.scores import Scores
 
 DRILLING = "[Drilling]"
@@ -145,6 +149,23 @@ class TestBoreholeTScore:
 
 
 class TestBoreholeTCScore:
+    def test_a_criterion_added_to_the_list_is_scored_in_both_scores(
+        self, uris: Uris, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        extra = Criterion(
+            "borehole-tc.extra",
+            "Every child",
+            Bands(Field.tc_number, (Band(-0.3),)),
+            "Table 3",
+        )
+        monkeypatch.setattr(borehole, "TC_CRITERIA", (*borehole.TC_CRITERIA, extra))
+        child = {**CONDUCTIVITY, "C11": "[Pressure and temperature considered]"}
+
+        scores = rules_of(uris, one_child(child)).scores()
+
+        assert scores.tc.value.iloc[0] == 0.7
+        assert scores.own_tc.value.iloc[0] == 0.7
+
     def test_the_own_score_reads_the_pT_conditions_without_the_in_situ_correction(
         self, uris: Uris
     ) -> None:

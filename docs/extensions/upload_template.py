@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from openpyxl import Workbook, load_workbook
+from openpyxl.utils import get_column_letter
 from sphinx.application import Sphinx
 
 import ghfdb
@@ -19,8 +20,6 @@ CHANGES_MARKER = re.compile(r"^\{upload-template-changes\}$", re.MULTILINE)
 HAND_MAINTAINED = (
     Path(__file__).parents[2] / "tests" / "sources" / "upload-template.xlsx"
 )
-PREVIOUS_LABELS = {"TC averaging method": "C48"}
-NAME_ROW = 5
 FIRST_DESCRIPTION_ROW = 2
 LAST_DESCRIPTION_ROW = 8
 FIRST_TERM_ROW = 3
@@ -121,49 +120,35 @@ class TemplateChanges:
                     rows.append((code, collapse(after.cell(row, 1).value), was, now))
         return rows
 
-    def previous_terms(self) -> dict[str, list[str]]:
-        """Read the terms of the hand-maintained template, by field code.
+    def terms(self, workbook: Workbook) -> dict[str, list[str]]:
+        """Read the terms of a template, by field code.
+
+        Each field's terms sit on the ``controlled vocabulary`` sheet in the column
+        the field has on ``data list``.
+
+        Args:
+            workbook: A template workbook.
 
         Returns:
             The terms of each field that has a list, in the order they are written.
 
         Raises:
-            ValueError: A column of terms matches no field by name or by
-                ``PREVIOUS_LABELS``, naming its label.
+            ValueError: A column of terms sits under no field code, naming its letter.
         """
-        data_list = self.previous["data list"]
-        by_name = {
-            collapse(data_list.cell(NAME_ROW, column).value).casefold(): code
-            for code, column in self.codes(self.previous).items()
-        }
-        vocabulary = self.previous["controlled vocabulary"]
+        by_column = {column: code for code, column in self.codes(workbook).items()}
+        vocabulary = workbook["controlled vocabulary"]
         terms: dict[str, list[str]] = {}
-        for column in vocabulary.iter_cols(min_col=2, min_row=1):
+        for number, column in enumerate(
+            vocabulary.iter_cols(min_col=2, min_row=1), start=2
+        ):
             values = [collapse(cell.value) for cell in column[FIRST_TERM_ROW - 1 :]]
             values = [value for value in values if value]
-            if not any("[" in value for value in values):
+            if not values:
                 continue
-            label = collapse(column[0].value)
-            code = PREVIOUS_LABELS.get(label) or by_name.get(label.casefold())
-            if code is None:
-                raise ValueError(f"No field matches the vocabulary column {label!r}")
-            terms[code] = values
-        return terms
-
-    def generated_terms(self) -> dict[str, list[str]]:
-        """Read the terms of the generated template, by field code.
-
-        Returns:
-            The terms of each field that has a list, in the order they are written.
-        """
-        vocabulary = self.generated["controlled vocabulary"]
-        terms: dict[str, list[str]] = {}
-        for column in vocabulary.iter_cols(min_col=2, min_row=1):
-            if column[0].value is None:
-                continue
-            code = str(column[0].value)
-            values = [collapse(cell.value) for cell in column[FIRST_TERM_ROW - 1 :]]
-            terms[code] = [value for value in values if value]
+            if number not in by_column:
+                letter = get_column_letter(number)
+                raise ValueError(f"No field sits in the vocabulary column {letter}")
+            terms[by_column[number]] = values
         return terms
 
     def choice_lists(
@@ -176,8 +161,8 @@ class TemplateChanges:
             both templates whose terms differ; the codes that gained a list; and the
             codes that lost one.
         """
-        before = self.previous_terms()
-        after = self.generated_terms()
+        before = self.terms(self.previous)
+        after = self.terms(self.generated)
         shared = [
             code
             for code in self.codes(self.previous)

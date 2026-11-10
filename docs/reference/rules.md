@@ -12,8 +12,8 @@ check.
 * **Required for a domain.** A child whose exploration method belongs to a domain has every
   field that is mandatory for that domain only filled. The fields are read from the field
   schema.
-* **Allowed when.** When one field holds given values, another field may hold only given
-  values.
+* **Allowed when.** When one field holds given values, or any of several fields does,
+  another field may hold only given values.
 
 ## Domains of the exploration methods
 

@@ -443,6 +443,32 @@ class TestColumnProblems:
         assert problems.iloc[0]["kind"] == "unknown column"
         assert pandas.isna(problems.iloc[0]["row"])
 
+    def test_offers_the_closest_published_column_name_for_an_unknown_column(
+        self, schema: Schema, filled_workbook: Filler, valid_child: dict[str, Any]
+    ) -> None:
+        field = schema.get_field("C37")
+        width = len(schema.fields) + 2
+        misspelled = field.custom["columnName"][:-1] + "x"
+        path = filled_workbook([valid_child])
+        edit(path, lambda sheet: sheet.cell(1, width, misspelled))
+        edit(path, lambda sheet: sheet.cell(FIRST_DATA_ROW, width, "x"))
+
+        problems = UploadWorkbook(path, schema).column_problems()
+
+        assert list(problems["suggestion"]) == [field.custom["columnName"]]
+
+    def test_offers_nothing_for_an_unknown_column_unlike_every_published_name(
+        self, schema: Schema, filled_workbook: Filler, valid_child: dict[str, Any]
+    ) -> None:
+        width = len(schema.fields) + 2
+        path = filled_workbook([valid_child])
+        edit(path, lambda sheet: sheet.cell(1, width, "Bogus"))
+        edit(path, lambda sheet: sheet.cell(FIRST_DATA_ROW, width, "x"))
+
+        problems = UploadWorkbook(path, schema).column_problems()
+
+        assert problems["suggestion"].isna().all()
+
     def test_finds_a_column_with_no_header_that_holds_values_by_its_letter(
         self, schema: Schema, filled_workbook: Filler, valid_child: dict[str, Any]
     ) -> None:

@@ -17,12 +17,32 @@ from ghfdb.fields import (
 
 COLOURS = "https://example.test/vocabularies/colours"
 SHAPES = "https://example.test/vocabularies/shapes"
+ROCKS = "https://example.test/schemes/rocks"
+ROCKS_FILE = "https://example.test/downloads/rocks.rdf"
+RDF_XML = "application/rdf+xml"
 
 
 def vocabulary(
     scheme: str, collection: str | None = None, term_form: str = "label"
 ) -> dict[str, str | None]:
     return {"scheme": scheme, "collection": collection, "termForm": term_form}
+
+
+def published_elsewhere(
+    collection: str | None = None, term_form: str = "localName"
+) -> dict[str, str | None]:
+    return vocabulary(ROCKS, collection, term_form) | {
+        "download": ROCKS_FILE,
+        "downloadFormat": RDF_XML,
+    }
+
+
+def publish_rocks(web: responses.RequestsMock, body: bytes | None = None) -> None:
+    web.get(
+        ROCKS_FILE,
+        body=(EXAMPLE_FILES / "rocks.rdf").read_bytes() if body is None else body,
+        headers={"ETag": '"one"', "Cache-Control": "max-age=0"},
+    )
 
 
 @pytest.fixture
@@ -131,6 +151,94 @@ class TestDownload:
 
         with pytest.raises(OSError, match="not Turtle"):
             Vocabularies(caching_session(tmp_path)).graph(COLOURS)
+
+
+class TestDownloadElsewhere:
+    def test_a_file_sent_with_no_cache_headers_is_kept_for_when_the_server_is_down(
+        self, web: responses.RequestsMock, tmp_path: Path
+    ) -> None:
+        body = (EXAMPLE_FILES / "rocks.rdf").read_bytes()
+        web.get(ROCKS_FILE, body=body)
+        web.get(ROCKS_FILE, body=ConnectionError("offline"))
+        session = caching_session(tmp_path)
+        Vocabularies(session).allowed_values(published_elsewhere())
+
+        values = Vocabularies(session).allowed_values(published_elsewhere())
+
+        assert {value.label for value in values} == {
+            "volcanic glass",
+            "sandstone",
+            "boundary",
+        }
+
+    def test_a_scheme_not_published_at_its_identifier_is_read_from_the_named_file(
+        self, web: responses.RequestsMock, tmp_path: Path
+    ) -> None:
+        publish_rocks(web)
+
+        values = Vocabularies(caching_session(tmp_path)).allowed_values(
+            published_elsewhere()
+        )
+
+        assert [call.request.url for call in web.calls] == [ROCKS_FILE]
+        assert {value.label for value in values} == {
+            "volcanic glass",
+            "sandstone",
+            "boundary",
+        }
+
+    def test_a_file_that_is_not_in_the_named_format_is_refused(
+        self, web: responses.RequestsMock, tmp_path: Path
+    ) -> None:
+        publish_rocks(web, b"@prefix skos: <http://www.w3.org/2004/02/skos/core#> .")
+
+        with pytest.raises(OSError, match="not RDF/XML"):
+            Vocabularies(caching_session(tmp_path)).allowed_values(
+                published_elsewhere()
+            )
+
+    def test_a_collection_gives_the_concepts_of_the_collections_it_holds(
+        self, web: responses.RequestsMock, tmp_path: Path
+    ) -> None:
+        publish_rocks(web)
+
+        values = Vocabularies(caching_session(tmp_path)).allowed_values(
+            published_elsewhere("https://example.test/rocks/all")
+        )
+
+        assert {value.uri for value in values} == {
+            "https://example.test/rocks/volcanic_glass",
+            "https://example.test/rocks/sandstone",
+        }
+
+    def test_the_local_name_form_writes_the_last_segment_of_the_uri_without_brackets(
+        self, web: responses.RequestsMock, tmp_path: Path
+    ) -> None:
+        publish_rocks(web)
+
+        values = Vocabularies(caching_session(tmp_path)).allowed_values(
+            published_elsewhere("https://example.test/rocks/igneous")
+        )
+
+        assert values == (
+            AllowedValue(
+                "volcanic_glass",
+                "volcanic glass",
+                "https://example.test/rocks/volcanic_glass",
+                None,
+            ),
+        )
+
+    def test_a_scheme_read_from_elsewhere_adds_no_release_and_breaks_nothing(
+        self, web: responses.RequestsMock, tmp_path: Path
+    ) -> None:
+        publish(web, "colours")
+        publish_rocks(web)
+        vocabularies = Vocabularies(caching_session(tmp_path))
+        vocabularies.allowed_values(published_elsewhere())
+        vocabularies.graph(COLOURS)
+
+        assert vocabularies.releases() == ["https://doi.org/10.0000/test.1"]
 
 
 class TestAllowedValues:
@@ -302,5 +410,23 @@ class TestPublishedVocabularies:
     def test_every_vocabulary_field_has_allowed_values(self, schema: Schema) -> None:
         bound = [f for f in schema.fields if f.custom["vocabulary"] is not None]
 
-        assert len(bound) == 25
+        assert len(bound) == 27
         assert all(field.constraints.get("enum") for field in bound)
+
+
+class TestExternalVocabularies:
+    def test_lithology_terms_are_the_local_names_of_the_cgi_concepts(
+        self, schema: Schema
+    ) -> None:
+        enum = schema.get_field("C25").constraints["enum"]
+
+        assert "acidic_igneous_material" in enum
+        assert not any(term.startswith("[") for term in enum)
+
+    def test_stratigraphic_age_terms_are_geochronologic_eras_only(
+        self, schema: Schema
+    ) -> None:
+        enum = schema.get_field("C26").constraints["enum"]
+
+        assert "LowerCretaceous" in enum
+        assert not any(term.startswith("Base") for term in enum)

@@ -90,7 +90,9 @@ only on values of the right type. A value that is not one of the field's terms i
 vocabulary`, and carries the closest term as a `suggestion` when one is alike enough
 (`DatasetCheck.suggestions`; `CLOSE_ENOUGH`, 0.8, is the least likeness it accepts). A field the data has no column for is one `no column` problem
 with no row, and a mandatory one is also `missing` on every child. `unknown column` and
-`duplicate column` come from `UploadWorkbook.column_problems`. When a field takes several
+`duplicate column` come from `UploadWorkbook.column_problems`. An unknown column carries as its
+`suggestion` the published column name it is closest to, when one is at least `CLOSE_ENOUGH`
+alike, so a misspelled header such as `Ref_ISGN` names `Ref_IGSN`. When a field takes several
 values in a cell, written with a separator, and has allowed values or a pattern, each value
 is checked on its own and the problem names that value.
 

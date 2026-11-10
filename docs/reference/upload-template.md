@@ -28,13 +28,15 @@ Every field is described in full in the [field reference](fields/index.md).
 
 ## Changes from the hand-maintained template
 
-This template replaces the one the GHFDB portal has distributed until now. The lists below are
-computed from the two workbooks each time the documentation is built, so they show every
-difference in the fields, the description rows and the allowed terms.
+This template follows version 2026.03 of the GHFDB submission template
+([Fuchs et al., 2025](https://doi.org/10.5880/fidgeo.2025.042), CC BY 4.0), which is maintained
+by hand and distributed by the GHFDB portal. The lists below are computed from the two workbooks each time the
+documentation is built, so they show every difference in the fields, the description rows and
+the allowed terms.
 
-The `controlled vocabulary` sheet is also laid out differently. Each field's terms sit under the
-same column letter as the field on `data list`, and the two rows above them hold the field code
-and the field's name.
+Both workbooks put each field's terms on the `controlled vocabulary` sheet under the same column
+letter as the field on `data list`. In this template the two rows above the terms hold the field
+code and the field's name.
 
 {upload-template-changes}
 

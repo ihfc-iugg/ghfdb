@@ -5,7 +5,6 @@ from typing import Any
 import pytest
 from extensions.upload_template import (
     HAND_MAINTAINED,
-    PREVIOUS_LABELS,
     TemplateChanges,
     read_hand_maintained,
     replace_markers,
@@ -94,12 +93,11 @@ class TestReplaceMarkers:
 def build_workbook(
     descriptions: dict[str, list[Any]],
     lists: dict[str, list[str]] | None = None,
-    previous: bool = False,
 ) -> Workbook:
     """Build a small workbook laid out like the template.
 
-    The previous layout labels each vocabulary column with the field's name, as the
-    hand-maintained template does; the generated layout labels it with the code.
+    Each field's terms sit on the vocabulary sheet in the column the field has on the
+    data list.
     """
     workbook = Workbook()
     data_list = workbook.active
@@ -114,11 +112,11 @@ def build_workbook(
         data_list.cell(1, index, code)
         for row, value in enumerate(rows, start=2):
             data_list.cell(row, index, value)
-    for index, (code, terms) in enumerate((lists or {}).items(), start=2):
-        label = descriptions[code][3] if previous else code
-        vocabulary.cell(1, index, label)
+    for code, terms in (lists or {}).items():
+        column = list(descriptions).index(code) + 2
+        vocabulary.cell(1, column, code)
         for row, term in enumerate(terms, start=3):
-            vocabulary.cell(row, index, f"[{term}]")
+            vocabulary.cell(row, column, f"[{term}]")
     return workbook
 
 
@@ -136,7 +134,7 @@ def compare(
     after_lists: dict[str, list[str]] | None = None,
 ) -> TemplateChanges:
     return TemplateChanges(
-        build_workbook(before, before_lists, previous=True),
+        build_workbook(before, before_lists),
         build_workbook(after, after_lists),
     )
 
@@ -228,35 +226,38 @@ class TestTemplateChangesChoiceLists:
 
         assert changes.choice_lists() == ([], ["X2"], ["X1"])
 
-    def test_a_vocabulary_column_without_brackets_is_not_a_list(self) -> None:
-        workbook = build_workbook({"X1": described("one")}, {"X1": ["a"]}, True)
-        workbook["controlled vocabulary"]["B3"] = "= Multiple choices ="
-
-        changes = TemplateChanges(
-            workbook, build_workbook({"X1": described("one")}, {"X1": ["b"]})
+    def test_a_list_of_terms_without_brackets_is_a_list(self) -> None:
+        changes = compare(
+            {"X1": described("one")},
+            {"X1": described("one")},
+            {"X1": ["a"]},
+            {"X1": ["a"]},
         )
+        changes.previous["controlled vocabulary"]["B3"] = "plain"
+        changes.generated["controlled vocabulary"]["B3"] = "plain"
 
-        assert changes.choice_lists() == ([], ["X1"], [])
+        assert changes.terms(changes.previous) == {"X1": ["plain"]}
 
-    def test_maps_the_one_label_that_is_not_a_name(self) -> None:
-        label = next(iter(PREVIOUS_LABELS))
-        code = PREVIOUS_LABELS[label]
-        workbook = build_workbook({code: described("other")}, {code: ["a"]}, True)
-        workbook["controlled vocabulary"]["B1"] = label
-
-        changes = TemplateChanges(
-            workbook, build_workbook({code: described("other")}, {code: ["a"]})
+    def test_finds_the_terms_by_the_column_of_the_field_not_by_the_label(self) -> None:
+        changes = compare(
+            {"X1": described("one"), "X2": described("two")},
+            {"X1": described("one"), "X2": described("two")},
+            {"X2": ["a"]},
+            {"X2": ["a"]},
         )
+        changes.previous["controlled vocabulary"]["C1"] = "Name of X2"
 
-        assert changes.choice_lists() == ([], [], [])
+        assert changes.terms(changes.previous) == {"X2": ["[a]"]}
 
-    def test_a_column_with_terms_that_matches_no_field_raises_naming_it(self) -> None:
-        workbook = build_workbook({"X1": described("one")}, {"X1": ["a"]}, True)
-        workbook["controlled vocabulary"]["B1"] = "Unknown label"
+    def test_a_column_with_terms_under_no_field_code_raises_naming_its_letter(
+        self,
+    ) -> None:
+        workbook = build_workbook({"X1": described("one")}, {"X1": ["a"]})
+        workbook["controlled vocabulary"]["C3"] = "[stray]"
 
         changes = TemplateChanges(workbook, build_workbook({"X1": described("one")}))
 
-        with pytest.raises(ValueError, match="Unknown label"):
+        with pytest.raises(ValueError, match="column C"):
             changes.choice_lists()
 
 

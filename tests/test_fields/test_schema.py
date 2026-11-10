@@ -107,7 +107,7 @@ class TestLoadSchema:
         assert label.custom["valueFormat"] == "YYYY-MM"
 
     def test_loads_the_packaged_file_without_a_path(self, schema: Schema) -> None:
-        assert len(schema.fields) == 70
+        assert len(schema.fields) == 74
 
     def test_a_field_that_is_not_a_vocabulary_field_keeps_its_hand_written_values(
         self, tmp_path: Path, three_fields: Schema
@@ -226,7 +226,9 @@ DECISIONS = ROOT / "specs" / "001-field-reference" / "decisions.md"
 
 CODES = (
     [f"P{n}" for n in range(1, 14)]
-    + [f"C{n}" for n in range(1, 50)]
+    + [f"C{n}" for n in range(1, 39)]
+    + [f"C{n}" for n in range(50, 54)]
+    + [f"C{n}" for n in range(39, 50)]
     + [f"A{n}" for n in range(1, 9)]
 )
 SOURCE_KEYS = [
@@ -251,7 +253,12 @@ SOURCE_KEYS = [
     "separator",
     "guidance",
 ]
-SOURCE_CODES = {"upload-template", "fuchs-2023-appendix-a", "vocabularies"}
+SOURCE_CODES = {
+    "upload-template",
+    "fuchs-2023-appendix-a",
+    "fuchs-2025-template-2026-03",
+    "vocabularies",
+}
 QUALITY = {"U score": "U-score", "M score": "M-score", "P Score": "perturbation flags"}
 GROUPS = {"P": "parent", "C": "child", "A": "assessment"}
 NUMBER = r"[\d,]+(?:\.\d+)?"
@@ -315,7 +322,7 @@ DECISION_IDS = set(re.findall(r"^### (D-\d+) ", DECISIONS.read_text(), re.MULTIL
 
 
 class TestShippedSchemaShape:
-    def test_has_the_seventy_fields_in_field_code_order(self) -> None:
+    def test_has_the_seventy_four_fields_in_the_order_of_the_template(self) -> None:
         assert [entry["name"] for entry in load_entries()] == CODES
 
     def test_codes_and_column_names_are_unique(self) -> None:
@@ -362,20 +369,25 @@ class TestShippedSchemaShape:
         for entry in data["fields"]:
             assert "enum" not in entry["constraints"], entry["name"]
             if entry["vocabulary"] is not None:
-                assert set(entry["vocabulary"]) == {
+                assert set(entry["vocabulary"]) - {"download", "downloadFormat"} == {
                     "scheme",
                     "collection",
                     "termForm",
                 }, entry["name"]
                 assert "allowedValues" not in entry, entry["name"]
 
-    def test_vocabulary_fields_point_at_permanent_identifiers(self) -> None:
+    def test_vocabulary_fields_point_at_permanent_identifiers_or_name_their_download(
+        self,
+    ) -> None:
         data = json.loads(SCHEMA_FILE.read_text(encoding="utf-8"))
         root = "https://w3id.org/ihfc-iugg/vocabularies/"
 
         for entry in data["fields"]:
             binding = entry["vocabulary"]
             if binding is None:
+                continue
+            if "download" in binding:
+                assert binding["downloadFormat"], entry["name"]
                 continue
             assert binding["scheme"].startswith(root), entry["name"]
             if binding["collection"] is not None:
@@ -462,7 +474,7 @@ def date_pattern() -> str:
 
 class TestDateOfAcquisitionFormat:
     @pytest.mark.parametrize(
-        "value", ["2005-01", "1998-12", "2005-01; 2007-12", "[Unspecified]"]
+        "value", ["2005-01", "1998-12", "2005-01; 2007-12", "[unspecified]"]
     )
     def test_a_month_a_range_of_months_or_unspecified_is_accepted(
         self, value: str

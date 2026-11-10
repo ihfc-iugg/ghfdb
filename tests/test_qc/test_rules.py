@@ -14,7 +14,9 @@ from ghfdb.qc.rules import (
     CF_3,
     CORE_SAMPLES,
     DRILLING,
+    EGRT,
     LITERATURE_OR_UNSPECIFIED,
+    PROBE_PULSE,
     PROBING_ONSHORE,
     RULES,
     Condition,
@@ -26,6 +28,8 @@ VOCABULARIES = "https://w3id.org/ihfc-iugg/vocabularies"
 EXPLORATION_METHODS = f"{VOCABULARIES}/exploration-methods"
 CONDUCTIVITY_LOCATION = f"{VOCABULARIES}/conductivity-location"
 CONDUCTIVITY_SOURCES = f"{VOCABULARIES}/conductivity-sources"
+CONDUCTIVITY_METHODS = f"{VOCABULARIES}/conductivity-methods"
+TEMPERATURE_METHOD = f"{VOCABULARIES}/temperature-method"
 
 
 class TestResolution:
@@ -53,7 +57,7 @@ class TestResolution:
     def test_the_borehole_rule_relates_the_fields_mandatory_for_boreholes_only(
         self, schema: Schema
     ) -> None:
-        assert CF_1.fields(schema) == ("P12", "C5", "C31", "C32")
+        assert CF_1.fields(schema) == ("P12", "C4", "C5", "C31", "C32")
 
     def test_the_probe_sensing_rule_relates_the_fields_mandatory_for_probing_only(
         self, schema: Schema
@@ -68,7 +72,7 @@ class TestResolution:
     def test_a_concept_that_is_not_an_allowed_value_of_its_field_names_the_rule(
         self, schema: Schema, children: Children, published_vocabularies: Vocabularies
     ) -> None:
-        elsewhere = f"{CONDUCTIVITY_SOURCES}/core_samples"
+        elsewhere = f"{CONDUCTIVITY_SOURCES}/core-samples"
         broken = replace(CF_3, when=Condition("C42", (elsewhere,)))
 
         with pytest.raises(MissingSchemeError) as error:
@@ -157,10 +161,12 @@ class TestResolution:
 
 OTHER_METHOD = f"{EXPLORATION_METHODS}/other"
 ACTUAL_LOCATION = f"{CONDUCTIVITY_LOCATION}/actual"
-CUTTING_SAMPLES = f"{CONDUCTIVITY_SOURCES}/cutting_samples"
+CUTTING_SAMPLES = f"{CONDUCTIVITY_SOURCES}/cutting-samples"
 DRILLING_TERM = ("P12", DRILLING)
 LITERATURE_TERM = ("C42", LITERATURE_OR_UNSPECIFIED)
 ASSUMED_TERM = ("C41", ASSUMED_FROM_LITERATURE)
+POINT_SOURCE = f"{CONDUCTIVITY_METHODS}/pointSource"
+OTHER_TEMPERATURE = f"{TEMPERATURE_METHOD}/other"
 
 
 def with_separator(schema: Schema, *codes: str) -> Schema:
@@ -360,6 +366,65 @@ class TestRuleProblems:
         found = self.lines(frame, with_separator(self.schema, "C42"))
 
         assert [(row, code) for row, code, *_ in found] == [(9, "C41")]
+
+    @pytest.mark.parametrize("method", ["C31", "C32"])
+    def test_an_egrt_temperature_method_requires_the_probe_pulse_conductivity_method(
+        self, children: Children, term: Terms, method: str
+    ) -> None:
+        egrt = term(method, EGRT)
+        other = term("C43", POINT_SOURCE)
+        frame = children({method: egrt, "C43": other})
+
+        problems = DatasetCheck(frame, self.schema, RULES, self.vocabularies).problems()
+
+        found = problems[problems["kind"] == "rule"]
+        column = self.schema.get_field(method).custom["columnName"]
+        assert list(found["code"]) == ["C43"]
+        assert list(found["rule"]) == ["CF-4"]
+        assert list(found["value"]) == [other]
+        assert list(found["related"]) == [f"{method} {column} {egrt}"]
+
+    @pytest.mark.parametrize(
+        ("top", "bottom", "conductivity"),
+        [
+            (EGRT, EGRT, PROBE_PULSE),
+            (EGRT, None, PROBE_PULSE),
+            (None, EGRT, PROBE_PULSE),
+            (OTHER_TEMPERATURE, OTHER_TEMPERATURE, POINT_SOURCE),
+            (None, None, POINT_SOURCE),
+        ],
+        ids=["both", "top", "bottom", "neither", "empty"],
+    )
+    def test_the_probe_pulse_conductivity_method_or_no_egrt_breaks_nothing(
+        self,
+        children: Children,
+        term: Terms,
+        top: str | None,
+        bottom: str | None,
+        conductivity: str,
+    ) -> None:
+        frame = children(
+            {
+                "C31": None if top is None else term("C31", top),
+                "C32": None if bottom is None else term("C32", bottom),
+                "C43": term("C43", conductivity),
+            }
+        )
+
+        assert [line for line in self.lines(frame) if line[2] == "CF-4"] == []
+
+    def test_an_egrt_at_the_bottom_names_the_bottom_when_the_top_has_another_method(
+        self, children: Children, term: Terms
+    ) -> None:
+        other_top = term("C31", OTHER_TEMPERATURE)
+        egrt = term("C32", EGRT)
+        frame = children(
+            {"C31": other_top, "C32": egrt, "C43": term("C43", POINT_SOURCE)}
+        )
+
+        found = [line for line in self.lines(frame) if line[2] == "CF-4"]
+
+        assert found == [(9, "C43", "CF-4", f"C32 T_method_bottom {egrt}")]
 
     @pytest.mark.parametrize("missing", ["P12", "C5", "C6", "C41", "C42"])
     def test_a_rule_whose_field_has_no_column_gives_no_line(

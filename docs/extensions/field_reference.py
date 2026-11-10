@@ -15,6 +15,7 @@ from ghfdb.fields import AllowedValue, Vocabularies, allowed_values, load_schema
 from ghfdb.qc.rules import RULES, Rule
 from ghfdb.template import VOCABULARIES
 
+TEMPLATE_DOI = "https://doi.org/10.5880/fidgeo.2025.042"
 DECISIONS_URL = "https://github.com/ihfc-iugg/ghfdb/blob/main/specs/001-field-reference/decisions.md"
 SCHEMA_COPY = Path("reference") / "fields" / "ghfdb-field-schema.json"
 TEMPLATES = Path(__file__).parent / "templates"
@@ -157,6 +158,8 @@ class FieldReference:
             return "Fuchs et al. (2023), Appendix A"
         if key == "fuchs-2023-table-4":
             return "Fuchs et al. (2023), Table 4"
+        if key == "fuchs-2025-template-2026-03":
+            return f"[Fuchs et al. (2025), template version 2026.03]({TEMPLATE_DOI})"
         if key == "vocabularies":
             return f"[IHFC Controlled Vocabularies]({VOCABULARIES})"
         if key.startswith("decision:"):

@@ -12,16 +12,15 @@ FS-001 was delivered after this specification was written. Read side by side:
   generated (`custom["obligation"]`, `custom["domain"]`, `custom["qualityRelevance"]`, `title`,
   `custom["columnName"]`, `custom["unit"]`, `constraints["minimum"]`/`["maximum"]`,
   `custom["valueFormat"]` of each Frictionless field).
-- **70 fields, not 62.** The schema holds the assessment fields `A1`–`A8` (FS-001 D-1), so row 1
-  of `data list` holds `ID` and 70 field codes. The assessment fields have no obligation (D-14).
+- **74 fields, not 66.** The schema holds the assessment fields `A1`–`A8` (FS-001 D-1), so row 1
+  of `data list` holds `ID` and 74 field codes. The assessment fields have no obligation (D-14).
 - **Two fields have a fixed set of values and no vocabulary.** P9 and C9 take `[Yes]`, `[No]` or
   `[Unspecified]` from Fuchs et al. (2023) (D-5). The specification promises a choice list on
   every vocabulary field and none on any other. Read against FS-001, the line it draws is between
   a field with a fixed list of allowed values and one without. Recorded as D-9.
 - **One field loses the list the hand-maintained template gave it.** C20 takes free text
-  (D-22), so it gets no choice list, and the differences page says so. C25 and C26 had no list
-  before either: their columns on `controlled vocabulary` hold `= Multiple choices =` and no
-  terms.
+  (D-22), so it gets no choice list, and the differences page says so. C25 and C26, which take their terms from external vocabularies (FS-001 D-5), get a list
+  like any other vocabulary field.
 - **Two published column names are spelled correctly** (`tc_pT_function`, `Ref_IGSN`, D-2), and
   quality relevance is written `U-score`, `M-score`, `perturbation flags` (D-16). The description
   rows show the schema's values, and the differences page lists each change.

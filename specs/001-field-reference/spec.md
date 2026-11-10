@@ -74,7 +74,8 @@ allowed values are exactly those the vocabulary publishes.
    a cell, each linked to its concept's URI.
 5. **Given** a field whose name in the current upload template is misspelled (`tc_pT_fuction`,
    `Ref_ISGN`), **When** an assessor reads its entry, **Then** it gives the correct published
-   column name and names the misspelled form as the template's earlier spelling.
+   column name only. **Given** a field whose published column name has changed between template
+   versions (C24), **Then** its entry names the earlier column name.
 6. **Given** a field that accepts several values (lithology, stratigraphic age), **When** an
    assessor reads its entry, **Then** it says that several values may be given and how they are
    separated.
@@ -178,19 +179,21 @@ confirm every identifier the field schema holds is defined in them.
 - A fact on which the template and Fuchs et al. (2023) Appendix A disagree: the field reference
   follows the current template and names it as the source, and the disagreement is recorded as a
   decision.
-- A field with a fixed set of values that no IHFC vocabulary publishes (P9, C9: yes, no or
-  unspecified): its values are listed with their source in Appendix A, and are not vocabulary
-  terms.
-- A field with an open set of values and no published vocabulary (C25 lithology, C26
-  stratigraphic age): no list of allowed values is given. The entry names the classification the
-  paper recommends as guidance.
+- A field with a fixed set of values that no IHFC vocabulary publishes (P9: yes, no or
+  unspecified; C9: yes or no): its values are listed with the template as their source, and are
+  not vocabulary terms.
+- A field whose terms come from a published vocabulary that is not an IHFC vocabulary (C25
+  lithology, C26 stratigraphic age): the allowed values are read from the file its owner
+  publishes, and the entry links to that file. Several values may be given, separated by
+  semicolons.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 - **FR-001**: The package MUST describe every field of the current upload template, the 13 parent
-  fields P1–P13, the 49 child fields C1–C49 and the 8 assessment fields A1–A8, in one field schema
+  fields P1–P13, the 53 child fields C1–C53 and the 8 assessment fields A1–A8, in the order of
+  the template's columns, in one field schema
   that is a valid Frictionless Table Schema. *(US2)*
 - **FR-002**: Every field MUST carry its field code and its published column name, and both MUST be
   unique across the schema. *(US1, US2)*
@@ -213,8 +216,9 @@ confirm every identifier the field schema holds is defined in them.
 - **FR-008**: The only missing value MUST be an empty cell. A vocabulary term such as
   `[Unspecified]` MUST be recorded as an allowed value, never as missing. *(US1, US2)*
 - **FR-009**: The two published column names misspelled in the current template MUST be recorded
-  with their correct spelling (`tc_pT_function`, `Ref_IGSN`), with the misspelled form kept as the
-  template's earlier spelling. *(US1, US2)*
+  with their correct spelling (`tc_pT_function`, `Ref_IGSN`) and not with the misspelled form,
+  which a check reports as an unknown column. An earlier column name that the template really
+  published MUST be recorded as such. *(US1, US2)*
 - **FR-010**: A developer MUST be able to load every field definition from the installed package
   and look a field up by field code or by published column name. A vocabulary file MUST be
   downloaded from its scheme's identifier with `.ttl` added on first use, through a caching HTTP
@@ -268,7 +272,7 @@ confirm every identifier the field schema holds is defined in them.
 
 ### Measurable Outcomes
 
-- **SC-001**: All 70 fields of the current upload template have exactly one definition in the
+- **SC-001**: All 74 fields of the current upload template have exactly one definition in the
   field schema and exactly one entry in the field reference.
 - **SC-002**: For every vocabulary field, the allowed values and the concepts the vocabularies
   currently publish for it are identical: zero added, zero missing, zero relabelled. They are
@@ -285,20 +289,20 @@ confirm every identifier the field schema holds is defined in them.
 ### Session 2026-11-03
 
 - Q: Which fields does the field reference cover: the parent and child fields only, or also the
-  assessment fields A1–A8 that the current template carries? → A: All 70 fields of the template,
+  assessment fields A1–A8 that the current template carries? → A: All 74 fields of the template,
   A1–A8 included, grouped separately. The template is what assessors fill in, and the generated
   template (#5) needs every column. Integrated into FR-001 and US1 scenario 1.
 - Q: Which spelling is recorded for the two published column names misspelled in the template? →
-  A: The correct spelling, as the GHFDB portal and the vocabularies use, with the misspelled
-  form kept as the template's earlier spelling. Integrated into FR-009 and US1 scenario 5.
+  A: The correct spelling, as the GHFDB portal and the vocabularies use. The misspelled form is
+  not recorded, so a check rejects it. Integrated into FR-009 and US1 scenario 5.
 - Q: Where the template and Fuchs et al. (2023) Appendix A disagree on a fact, which wins? → A: The
   current template, named as the source, with each disagreement recorded as a decision. Integrated
   into Edge Cases and FR-004.
 - Q: Is `[Unspecified]`, or any other term, a missing value? → A: No. An empty cell is the only
   missing value, and `[Unspecified]` is an allowed term. Integrated into FR-008 and Edge Cases.
 - Q: What are the allowed values of a field with no published vocabulary? → A: A fixed set that
-  the paper defines (P9, C9) is listed with its source in Appendix A. An open set (C25, C26) has no
-  list, and its entry names the classification the paper recommends. Integrated into Edge Cases.
+  the template defines (P9, C9) is listed with the template as its source. C25 and C26 take their terms
+  from the two external vocabularies the template names (D-5). Integrated into Edge Cases.
 
 ## Assumptions
 

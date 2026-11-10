@@ -17,8 +17,8 @@ There are two kinds of rule:
 * ``RequiredWhen``: a child whose exploration method belongs to a domain has every field
   that is mandatory for that domain only filled. The fields are read from the field
   schema.
-* ``AllowedWhen``: when one field holds a given concept, another field may hold only a
-  given concept.
+* ``AllowedWhen``: when one field holds a given concept, or any of several fields
+  holds one, another field may hold only a given concept.
 
 To add a rule of an existing kind, write its ``Example`` and add it to ``RULES``, with a
 new identifier that is never reused. To add a rule of a new kind:
@@ -39,6 +39,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from functools import reduce
 from typing import TYPE_CHECKING, Any
 
 import pandas
@@ -51,18 +52,23 @@ VOCABULARIES = "https://w3id.org/ihfc-iugg/vocabularies"
 EXPLORATION_METHODS = f"{VOCABULARIES}/exploration-methods"
 CONDUCTIVITY_LOCATION = f"{VOCABULARIES}/conductivity-location"
 CONDUCTIVITY_SOURCES = f"{VOCABULARIES}/conductivity-sources"
+CONDUCTIVITY_METHODS = f"{VOCABULARIES}/conductivity-methods"
+TEMPERATURE_METHOD = f"{VOCABULARIES}/temperature-method"
 
 DRILLING = f"{EXPLORATION_METHODS}/drilling"
-DRILLING_CLUSTERED = f"{EXPLORATION_METHODS}/drilling_clustering"
+DRILLING_CLUSTERED = f"{EXPLORATION_METHODS}/drilling-clustering"
 MINING = f"{EXPLORATION_METHODS}/mining"
 TUNNELING = f"{EXPLORATION_METHODS}/tunneling"
 INDIRECT = f"{EXPLORATION_METHODS}/indirect"
-PROBING_ONSHORE = f"{EXPLORATION_METHODS}/probing_onshore"
-PROBING_OFFSHORE = f"{EXPLORATION_METHODS}/probing_offshore"
-PROBING_CLUSTERED = f"{EXPLORATION_METHODS}/probing_clustering"
+PROBING_ONSHORE = f"{EXPLORATION_METHODS}/probing-onshore"
+PROBING_OFFSHORE = f"{EXPLORATION_METHODS}/probing-offshore"
+PROBING_CLUSTERED = f"{EXPLORATION_METHODS}/probing-clustering"
 LITERATURE_OR_UNSPECIFIED = f"{CONDUCTIVITY_LOCATION}/literature"
-ASSUMED_FROM_LITERATURE = f"{CONDUCTIVITY_SOURCES}/assumed_from_literature"
-CORE_SAMPLES = f"{CONDUCTIVITY_SOURCES}/core_samples"
+ASSUMED_FROM_LITERATURE = f"{CONDUCTIVITY_SOURCES}/assumed-from-literature"
+CORE_SAMPLES = f"{CONDUCTIVITY_SOURCES}/core-samples"
+EGRT = f"{TEMPERATURE_METHOD}/EGRT"
+PROBE_PULSE = f"{CONDUCTIVITY_METHODS}/probePulse"
+POINT_SOURCE = f"{CONDUCTIVITY_METHODS}/pointSource"
 
 EXPLORATION_METHOD = "P12"
 
@@ -287,19 +293,30 @@ class RequiredWhen(Rule):
 
 @dataclass(frozen=True)
 class AllowedWhen(Rule):
-    """When one field holds given concepts, another may hold only given concepts.
+    """When a field holds given concepts, another may hold only given concepts.
 
     Attributes:
         when: The field and the concepts that make the rule apply.
         then: The field and the only concepts it may then hold.
+        alternatives: Further fields and concepts, any one of which makes the rule
+            apply as well.
     """
 
     when: Condition
     then: Condition
+    alternatives: tuple[Condition, ...] = ()
+
+    def conditions(self) -> tuple[Condition, ...]:
+        """List every condition that makes the rule apply.
+
+        Returns:
+            ``when``, then the alternatives.
+        """
+        return (self.when, *self.alternatives)
 
     def fields(self, schema: Schema) -> tuple[str, ...]:
-        """Name the condition field, then the field the rule limits."""
-        return (self.when.field, self.then.field)
+        """Name the condition fields, then the field the rule limits."""
+        return (*(c.field for c in self.conditions()), self.then.field)
 
     def problems(self, check: DatasetCheck) -> pandas.DataFrame:
         """Report each value the field may not hold when the condition holds.
@@ -316,7 +333,8 @@ class AllowedWhen(Rule):
         nothing = pandas.Series(dtype="string")
         field = check.schema.get_field(self.then.field)
         found = [check.rule_lines(self, field, nothing, nothing)]
-        applies = check.holds(self.when)
+        held = [check.holds(condition) for condition in self.conditions()]
+        applies = pandas.concat(held, axis=1).any(axis=1)
         if applies.any() and field.name in check.data.columns:
             column = check.data[field.name].astype("string")
             values = check.each_value(field, column[applies & ~check.blank(column)])
@@ -324,7 +342,15 @@ class AllowedWhen(Rule):
             published = values.isin(field.constraints.get("enum", []))
             whole = published.groupby(level=0).transform("all")
             wrong = values[whole & ~values.isin(allowed)]
-            found.append(check.rule_lines(self, field, wrong, check.found(self.when)))
+            related = reduce(
+                pandas.Series.combine_first,
+                [
+                    check.found(condition).where(holds)
+                    for condition, holds in zip(self.conditions(), held, strict=True)
+                    if holds.any()
+                ],
+            )
+            found.append(check.rule_lines(self, field, wrong, related))
         return pandas.concat(found)
 
     @staticmethod
@@ -341,21 +367,24 @@ class AllowedWhen(Rule):
         return " or ".join(terms[condition.field, uri] for uri in condition.concepts)
 
     def concepts(self) -> tuple[tuple[str, str], ...]:
-        """List the condition's concepts, the allowed ones, then the example's."""
+        """List the conditions' concepts, the allowed ones, then the example's."""
         named = [
-            *((self.when.field, uri) for uri in self.when.concepts),
+            *((c.field, uri) for c in self.conditions() for uri in c.concepts),
             *((self.then.field, uri) for uri in self.then.concepts),
         ]
         return (*named, *self.example.concepts())
 
     def diagram(self, schema: Schema, terms: Mapping[tuple[str, str], str]) -> str:
         """Draw the condition leading to the limit on the other field."""
-        when = self.label(schema, self.when.field)
+        when = " or ".join(
+            f"{self.label(schema, c.field)} is {self.named(c, terms)}"
+            for c in self.conditions()
+        )
         then = self.label(schema, self.then.field)
         return "\n".join(
             [
                 "flowchart LR",
-                f'    when["{when} is {self.named(self.when, terms)}"]',
+                f'    when["{when}"]',
                 f'    then["{then} must be {self.named(self.then, terms)}"]',
                 "    when --> then",
             ]
@@ -412,4 +441,24 @@ CF_3 = AllowedWhen(
     then=Condition("C41", (ASSUMED_FROM_LITERATURE,)),
 )
 
-RULES: tuple[Rule, ...] = (CF_1, CF_2, CF_3)
+CF_4 = AllowedWhen(
+    identifier="CF-4",
+    statement=(
+        "A child whose temperature method at the top or at the bottom is the enhanced "
+        "geothermal response test has the thermal conductivity method probe - pulse "
+        "technique."
+    ),
+    source="fuchs-2025-template-2026-03",
+    reasoning=(
+        "Section 6.1 of the description of version 2026.03 of the submission template "
+        "asks that, when the enhanced geothermal response test is used as the "
+        "temperature method, the thermal conductivity method is the probe pulse "
+        "technique, so that thermal conductivity is reported consistently."
+    ),
+    example=Example({"C31": EGRT, "C43": POINT_SOURCE}, ("C43",)),
+    when=Condition("C31", (EGRT,)),
+    then=Condition("C43", (PROBE_PULSE,)),
+    alternatives=(Condition("C32", (EGRT,)),),
+)
+
+RULES: tuple[Rule, ...] = (CF_1, CF_2, CF_3, CF_4)

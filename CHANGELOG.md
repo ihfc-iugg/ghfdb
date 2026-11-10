@@ -9,14 +9,15 @@ All notable changes to this project are recorded here. The format follows
 ### Added
 
 - The `ghfdb` package, with an empty `ghfdb.qc` subpackage for quality control.
-- `ghfdb.fields`, which describes the 70 fields of the upload template (`P1`-`P13`,
-  `C1`-`C49` and the assessment fields `A1`-`A8`): published column name, meaning, type,
+- `ghfdb.fields`, which describes the 74 fields of version 2026.03 of the submission template
+  ([Fuchs et al., 2025](https://doi.org/10.5880/fidgeo.2025.042), `P1`-`P13`, `C1`-`C53` in the
+  template's column order, and the assessment fields `A1`-`A8`): published column name, meaning, type,
   unit, range, obligation, domain, quality relevance and allowed values, each fact with its
   source. `load_schema()` reads them from a file shipped in the package with Frictionless
   and returns a `frictionless.Schema`. A field is looked up by its code with `get_field`, and by
   its published column name with `field_for_column()`. The facts Table Schema has no property for
   are in each field's `custom` dictionary.
-- The allowed values of the 25 fields that take terms from a controlled vocabulary, read
+- The allowed values of the 27 fields that take terms from a controlled vocabulary, read
   from the IHFC Controlled Vocabularies as currently published when the field definitions are
   loaded. The field schema links each of these fields to the permanent identifier of its
   concept scheme and, where it narrows the choice, its collection, and holds no term and no
@@ -50,6 +51,18 @@ All notable changes to this project are recorded here. The format follows
   problem of the new kind `rule`. The report shows the rule's identifier linked to its entry
   in the published reference, its statement and the field that made it apply.
   `ghfdb.qc.rules` declares the rules.
+- Four temperature fields from version 2026.03 of the submission template, after `C38`: `C50`
+  (`T_top_mean`), `C51` (`T_top_uncertainty`), `C52` (`T_bot_mean`) and `C53`
+  (`T_bot_uncertainty`), the absolute temperature at the top and bottom of the heat-flow interval
+  used to calculate the temperature gradient, and its uncertainty.
+- An `AllowedWhen` rule may have `alternatives`: further conditions, any one of which makes the
+  rule apply. Rule CF-4 uses one.
+- A field's `vocabulary` object may have `download` and `downloadFormat`, which name the file to
+  download and its RDF format (`text/turtle` or `application/rdf+xml`) for a scheme that is not
+  published as Turtle at its identifier, and a `termForm` of `localName`, which writes a term as
+  the last segment of the concept's URI without square brackets. `Vocabularies.graph` takes the
+  address and the format. The members of a collection that holds other collections are the
+  members of all of them.
 
 ### Changed
 
@@ -70,15 +83,58 @@ All notable changes to this project are recorded here. The format follows
   was loaded without one before. The diagrams are drawn as before. `docs/conf.py` holds the
   version and hash, with the command that produces a new hash for an upgrade.
 
+- The reference template is version 2026.03 of the submission template. The documentation lists
+  how the generated upload template differs from it, and reads its `controlled vocabulary` sheet
+  by column letter.
+- The fields are in the order of the template's columns, so `C50` to `C53` come between `C38`
+  and `C39`.
+- `C13` is titled "Flag sedimentation effect (heat flow correction)", `C24` "Surface/Bottom-water
+  temperature" and `C29` "Corrected temperature gradient". The published column name of `C24` is
+  `Surface_temperature`, and `water_temperature` is its earlier column name.
+- The cross-field rules name the concepts by the hyphenated identifiers the vocabularies now
+  publish (`drilling-clustering`, `probing-onshore`, `probing-offshore`, `probing-clustering`,
+  `assumed-from-literature`, `core-samples`). With the underscored identifiers `ghfdb check`
+  stopped with status 2.
+- An unknown column carries as its suggestion the published column name it is closest to.
+- A vocabulary file whose server sends no `ETag`, `Last-Modified` or `Cache-Control` is kept and
+  used for a day, and downloaded again after that. Such a file was not kept at all before.
+- Lithology and stratigraphic age take their terms from the CGI simple lithology vocabulary and
+  the 2020 International Chronostratigraphic Chart, and still take several values separated by
+  `;`. Article XI of the constitution allows them
+  ([ADR 0007](docs/adr/0007-lithology-and-age-take-terms-from-external-vocabularies.md)).
+
+### Removed
+
+- `tc_pT_fuction` and `Ref_ISGN`, the misspelled column names that version 2026.03 of the
+  template still prints, are no longer accepted as earlier names of `C46` and `C49`.
+- The free-text guidance and the length limit of the lithology and stratigraphic age fields.
+
 ### Scheme changes
 
 - Added rule CF-1: a child explored by drilling, clustered drilling, mining, tunneling or
   indirect estimation has every field mandatory for borehole and mine data only filled
-  (`C5`, `C31`, `C32`).
+  (`C4`, `C5`, `C31`, `C32`).
 - Added rule CF-2: a child explored by probing, onshore, offshore or clustered, has every field
   mandatory for probe sensing only filled (`C6`, `C23`).
 - Added rule CF-3: a thermal conductivity location of literature or unspecified (`C42`) is
   allowed only when the thermal conductivity source (`C41`) is assumed from literature.
+- Added rule CF-4: a child whose temperature method at the top or at the bottom (`C31` or
+  `C32`) is the enhanced geothermal response test has the thermal conductivity method (`C43`)
+  probe - pulse technique. The source is section 6.1 of the description of version 2026.03 of
+  the submission template.
+- A workbook whose header carries `tc_pT_fuction` or `Ref_ISGN` has an unknown column, with
+  `tc_pT_function` or `Ref_IGSN` as the suggestion, and the field has no column.
+- The values `C25` (lithology) and `C26` (stratigraphic age) accept are now the 265 concepts of
+  the CGI simple lithology vocabulary and the 178 geochronologic eras of the 2020 chart, written
+  as the local name of the concept without brackets. Superseded names such as `CambrianStage5`
+  are not accepted.
+- Obligation and domain follow version 2026.03: `C46` is mandatory, `C4`, `C29` and `C30` are
+  for borehole and mine data only, `P13` and `C24` are for both domains, so `C4` is now also
+  required by CF-1. `C9` no longer accepts `[unspecified]`, `C38` accepts `[unspecified]` where
+  it accepted `[Unspecified]`, and `A6` and `A7` take the continents and domains the template
+  lists.
+- `C24` keeps the range −9.99 to 999.99 and `C50` to `C53` take −99,999.99 to 99,999.99, the
+  values of row 8 of the `data list` sheet where the template's two sheets differ.
 - A field mandatory in one domain only is no longer left unchecked: when it is empty for a
   child of that domain, it is reported as a `rule` problem.
 - The quality scheme is written down as a complete specification, the reference for how a child

@@ -79,7 +79,7 @@
 {%- if custom.vocabulary %}
 
 The allowed values come from the concept scheme <{{ custom.vocabulary.scheme | address }}>
-{%- if custom.vocabulary.collection %}, limited to the collection <{{ custom.vocabulary.collection | address }}>{% endif %}, in the IHFC Controlled Vocabularies as currently published.
+{%- if custom.vocabulary.collection %}, limited to the collection <{{ custom.vocabulary.collection | address }}>{% endif %}, {% if custom.vocabulary.get("download") %}in the vocabulary as currently published at <{{ custom.vocabulary.download | address }}>{% else %}in the IHFC Controlled Vocabularies as currently published{% endif %}.
 {%- endif %}
 {%- if values %}
 

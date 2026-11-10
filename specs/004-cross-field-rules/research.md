@@ -45,8 +45,8 @@ The paper's domains are "boreholes and mines on the continents" (`B`) and "shall
 data (`S`), and its exploration methods are drilling, mining, tunnelling, the two probing methods,
 other and unspecified. Drilling, mining and tunnelling read as `B`, the probing methods as `S`.
 
-The vocabularies have three concepts the paper does not: `drilling_clustering`,
-`probing_clustering` and `indirect`. The clustered methods are their base method standing for a
+The vocabularies have three concepts the paper does not: `drilling-clustering`,
+`probing-clustering` and `indirect`. The clustered methods are their base method standing for a
 cluster of sites (`skos:definition` of each), so they take its domain. Indirect methods follow the
 old tool and D-1. The ruling is recorded in `decisions.md` and raised with the issues so the data
 assessment team can confirm it. `other` and `unspecified` belong to no domain.

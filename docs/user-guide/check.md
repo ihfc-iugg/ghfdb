@@ -91,7 +91,7 @@ and the number of children with problems. When there is no problem it says so.
 | `out of range` | A number is below the minimum or above the maximum, or text is longer than the maximum length. | A latitude of 120. |
 | `not in vocabulary` | A value is not one of the field's allowed terms. | `granit` where `granite` is allowed, with `granite` as the suggestion. |
 | `rule` | A cross-field rule is broken: the fields of one child do not say what the rule requires together. The problem is the field to fill in or to change, and the `Rule` and `Related` columns say which rule and why it applies. | An empty field that is mandatory for borehole and mine data only, in a child explored by drilling. |
-| `unknown column` | A column of the workbook names no field. | A column headed `Notes`. |
+| `unknown column` | A column of the workbook names no field. When its header is close to a published column name, that name is the suggestion. | A column headed `Notes`, or `Ref_ISGN` with `Ref_IGSN` as the suggestion. |
 | `no column` | The workbook has no column for a field. A mandatory field is also `missing` on every child. | An upload template with a column deleted. |
 | `duplicate column` | Two columns name the same field. The first is checked. | Two columns headed `P1`. |
 

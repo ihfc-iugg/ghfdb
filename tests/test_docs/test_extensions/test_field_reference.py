@@ -61,7 +61,7 @@ class TestFieldReferenceEntries:
         expected = [f.name.lower() for f in schema.fields if f.custom["group"] == group]
         assert codes == expected
 
-    def test_the_three_groups_hold_all_seventy_fields(
+    def test_the_three_groups_hold_all_seventy_four_fields(
         self, schema: Schema, reference: FieldReference
     ) -> None:
         total = sum(
@@ -69,7 +69,7 @@ class TestFieldReferenceEntries:
             for g in ("parent", "child", "assessment")
         )
 
-        assert total == len(schema.fields) == 70
+        assert total == len(schema.fields) == 74
 
     def test_each_entry_has_a_target_for_its_code_and_for_its_column_name(
         self, schema: Schema, reference: FieldReference
@@ -174,6 +174,8 @@ class TestVocabularyEntries:
             assert f"<{named['scheme']}>" in section, field.name
             if named["collection"] is not None:
                 assert f"<{named['collection']}>" in section, field.name
+            if "download" in named:
+                assert f"<{named['download']}>" in section, field.name
 
     def test_every_allowed_term_is_linked_to_its_concept(
         self,
@@ -207,7 +209,7 @@ class TestVocabularyEntries:
             for value in allowed_values(field, published_vocabularies):
                 assert f"`{value.term}`" in section, code
                 assert f"[`{value.term}`](" not in section, code
-            assert "Fuchs et al. (2023), Appendix A" in section
+            assert "Upload template" in section
 
 
 def hostile_reference(
@@ -368,11 +370,10 @@ class TestSeparatorsAndEarlierSpellings:
 
         assert "separat" not in section.lower()
 
-    @pytest.mark.parametrize("code", ["C46", "C49"])
     def test_an_earlier_spelling_is_given(
-        self, schema: Schema, reference: FieldReference, code: str
+        self, schema: Schema, reference: FieldReference
     ) -> None:
-        field = schema.get_field(code)
+        field = schema.get_field("C24")
         assert field.custom["earlierColumnNames"]
 
         section = section_of(entries_of(reference, field), field)
@@ -383,12 +384,12 @@ class TestSeparatorsAndEarlierSpellings:
     def test_guidance_is_given_when_the_field_has_it(
         self, schema: Schema, reference: FieldReference
     ) -> None:
-        field = schema.get_field("C25")
+        field = schema.get_field("C20")
         assert field.custom["guidance"] is not None
 
         section = section_of(entries_of(reference, field), field)
 
-        assert "http://resource.geosciml.org/classifier/cgi/lithology" in section
+        assert reference.cell(field.custom["guidance"]) in section
 
     def test_range_is_shown_for_a_bounded_number(
         self, schema: Schema, reference: FieldReference
@@ -438,7 +439,7 @@ class TestFieldIndex:
             if line.startswith("| {ref}")
         ]
 
-        assert len(rows) == len(schema.fields) == 70
+        assert len(rows) == len(schema.fields) == 74
         for field, row in zip(schema.fields, rows, strict=True):
             name = column_name(field)
             code = f"{{ref}}`{field.name} <field-{field.name.lower()}>`"

@@ -245,6 +245,8 @@ BOREHOLE_METHOD = "[Drilling]"
 PROBING_METHOD = "[Probing (onshore, lake, river, etc.)]"
 LITERATURE_LOCATION = "[Literature or unspecified]"
 CORE_SAMPLES_SOURCE = "[Core samples]"
+EGRT_METHOD = "[EGRT]"
+POINT_SOURCE_METHOD = "[Lab - point source]"
 
 
 @pytest.mark.usefixtures("vocabularies_cached")
@@ -258,6 +260,7 @@ class TestRules:
                 valid_child | {"P12": BOREHOLE_METHOD, "C5": None},
                 valid_child | {"P12": PROBING_METHOD, "C6": None},
                 valid_child | {"C42": LITERATURE_LOCATION, "C41": CORE_SAMPLES_SOURCE},
+                valid_child | {"C32": EGRT_METHOD, "C43": POINT_SOURCE_METHOD},
             ]
         )
 
@@ -269,8 +272,14 @@ class TestRules:
             (10, "C5", str(Kind.RULE)),
             (11, "C6", str(Kind.RULE)),
             (12, "C41", str(Kind.RULE)),
+            (13, "C43", str(Kind.RULE)),
         ]
-        assert [line[6].split()[0] for line in found] == ["CF-1", "CF-2", "CF-3"]
+        assert [line[6].split()[0] for line in found] == [
+            "CF-1",
+            "CF-2",
+            "CF-3",
+            "CF-4",
+        ]
 
     def test_a_rule_whose_concept_is_not_published_gives_status_2_naming_the_rule(
         self,
@@ -362,6 +371,35 @@ class TestEndToEnd:
         found = read_problems(report_of(path))
         assert {(line[0], line[1], line[3]) for line in found} == expected
         assert len(found) == len(expected)
+
+    @pytest.mark.usefixtures("vocabularies_cached")
+    @pytest.mark.parametrize(
+        ("code", "misspelled"), [("C46", "tc_pT_fuction"), ("C49", "Ref_ISGN")]
+    )
+    def test_a_misspelled_published_name_is_an_unknown_column_with_the_right_name(
+        self,
+        schema: Schema,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+        code: str,
+        misspelled: str,
+    ) -> None:
+        path = filled_workbook([valid_child])
+        workbook = load_workbook(path)
+        sheet = workbook["data list"]
+        sheet.cell(1, column_of(sheet, code)).value = misspelled
+        workbook.save(path)
+
+        main(["check", str(path)])
+
+        found = read_problems(report_of(path))
+        by_column = {line[3]: line for line in found if line[0] is None}
+        unknown, absent = by_column["unknown column"], by_column["no column"]
+        assert (unknown[2], unknown[5]) == (
+            misspelled,
+            schema.get_field(code).custom["columnName"],
+        )
+        assert absent[1] == code
 
     @pytest.mark.usefixtures("vocabularies_cached")
     def test_the_same_valid_data_in_the_hand_maintained_template_has_no_problem(

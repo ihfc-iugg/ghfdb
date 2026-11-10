@@ -70,8 +70,10 @@ labelled in column A (`ghfdb.template.ROW_LABELS`). The check:
 3. reads every later row as a child when at least one field's cell is filled. A row holding only
    an `ID`, or nothing, is not a child (FR-008). Cells of spaces only count as empty.
 
-The field schema's `earlierColumnNames` already holds the two renamed columns (`tc_pT_fuction`,
-`Ref_ISGN`), so recognising an earlier template's columns needs no new data.
+The field schema's `earlierColumnNames` already holds the column a template version renamed
+(`water_temperature`, now `Surface_temperature`), so recognising an earlier template's columns
+needs no new data. The two misspelled names (`tc_pT_fuction`, `Ref_ISGN`) are not recorded, so a
+workbook that carries one has an unknown column.
 
 ## Checking the values
 
@@ -166,9 +168,9 @@ published file missing a scheme raises `MissingSchemeError`. Both become the cou
 
 ## Several values in one cell
 
-Three fields have a separator (`C25`, `C26`, `C49`), and all three constrain only the cell's
-length, which applies to the cell as a whole. No field with a separator has a vocabulary or a
-pattern today. For one that does, the per-value check is `str.split(separator)` and `explode`
+Three fields have a separator (`C25`, `C26`, `C49`). `C49` constrains only the cell's length,
+which applies to the cell as a whole, and `C25` and `C26` have a vocabulary, so each of their
+values is checked on its own. The per-value check is `str.split(separator)` and `explode`
 before the vocabulary or pattern expression, which keeps the Excel row of each value, so it costs
 two lines in the same place. A test schema exercises it (AS 1.10).
 

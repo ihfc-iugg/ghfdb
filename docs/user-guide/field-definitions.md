@@ -1,11 +1,12 @@
 # Field definitions
 
-The package ships what the GHFDB upload template records about each of its 70 fields: the
+The package ships what the GHFDB upload template records about each of its 74 fields: the
 field code and published column name, the title and meaning, the type, unit and range, the
 obligation, the domain, how the field enters the quality score, and the allowed values of
 every field that takes terms from a controlled vocabulary. Every fact names the source it was
 taken from. The definitions are read from a file inside the package. The allowed values of the
-vocabulary fields are read from the IHFC Controlled Vocabularies that the file links to. Their
+vocabulary fields are read from the IHFC Controlled Vocabularies that the file links to, and
+for lithology and stratigraphic age from the two external vocabularies the template names. Their
 files are downloaded the first time you load the definitions and kept in a cache directory
 after that, so only the first load needs network access.
 
@@ -19,11 +20,12 @@ after that, so only the first load needs network access.
    schema = load_schema()
    ```
 
-2. Count or iterate the fields. They come in field-code order: `P1` to `P13`, `C1` to
-   `C49`, then the assessment fields `A1` to `A8`.
+2. Count or iterate the fields. They come in the order of the upload template's columns: `P1`
+   to `P13`, `C1` to `C38`, `C50` to `C53`, `C39` to `C49`, then the assessment fields `A1` to
+   `A8`.
 
    ```python
-   len(schema.fields)                           # 70
+   len(schema.fields)                           # 74
    schema.field_names[:3]                       # ['P1', 'P2', 'P3']
    ```
 
@@ -33,7 +35,8 @@ a `frictionless.Schema`, so everything Frictionless does with a schema works on 
 Each vocabulary field links to the permanent identifier of its concept scheme, such as
 `https://w3id.org/ihfc-iugg/vocabularies/exploration-methods`. The scheme's file, at the
 identifier with `.ttl` added, is downloaded into the `vocabularies` directory of the user cache
-directory for `ghfdb` (`~/.cache/ghfdb/vocabularies` on Linux) the first time it is needed.
+directory for `ghfdb` (`~/.cache/ghfdb/vocabularies` on Linux) the first time it is needed. The
+two external vocabularies are downloaded from the address their field names.
 After that the server's `ETag` and `Cache-Control` decide whether the cached file is still
 current, so a change in the vocabularies reaches you without a fixed delay, and a cached file is
 used when you are offline. Delete the directory to refresh everything now.

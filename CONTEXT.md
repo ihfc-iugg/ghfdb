@@ -39,7 +39,7 @@ Other layouts exist, such as the GHFDB release format and the data assessment te
 |---|---|
 | **Field** | One column of the GHFDB structure. |
 | **Field reference** | The documentation of every field of the upload template: what it holds, its type, unit, range, obligation, domain, quality relevance and allowed values, each fact with its source. Generated from the field schema. |
-| **Field code** | A field's short identifier: `P1`–`P13` for parent fields, `C1`–`C49` for child fields, `A1`–`A8` for assessment fields. The header row of the upload template. |
+| **Field code** | A field's short identifier: `P1`–`P13` for parent fields, `C1`–`C53` for child fields, `A1`–`A8` for assessment fields. The header row of the upload template. `C50`–`C53` sit between `C38` and `C39` in the template, so the fields run in the template's column order, not in numerical order. |
 | **Assessment fields** | `A1`–`A8`: the reviewer's name and comment, the date of the review, the country, region and continent of the site, the domain recorded in review and the child's unique ID. The data assessment team fills them in, not a contributor, so they have no obligation. |
 | **Domain** | Where a field applies: `B` for borehole and mine data, `S` for probe-sensing (marine) data. |
 | **Quality relevance** | How a field enters the quality score: `U-score`, `M-score` or `perturbation flags`, or none. |
@@ -76,9 +76,9 @@ Avoid "determination", "entry" and "record" for a row. Say **child**.
 
 | Term | Meaning |
 |---|---|
-| **Controlled vocabulary** | One of the IHFC Controlled Vocabularies: a SKOS concept scheme with a permanent identifier, published as a Turtle file at that identifier with `.ttl` added. Reserve "vocabulary" for these. A list of column names is not a vocabulary. |
+| **Controlled vocabulary** | One of the IHFC Controlled Vocabularies: a SKOS concept scheme with a permanent identifier, published as a Turtle file at that identifier with `.ttl` added. Lithology and stratigraphic age instead take the terms of two external SKOS schemes the upload template names, each read from a file the field names. Reserve "vocabulary" for these. A list of column names is not a vocabulary. |
 | **Concept** | One entry of a controlled vocabulary, identified by its URI. |
-| **Term** | How a concept is written in a workbook cell: its label or notation in square brackets, such as `[Core samples]` or `[LOGeq]`. |
+| **Term** | How a concept is written in a workbook cell: its label or notation in square brackets, such as `[Core samples]` or `[LOGeq]`, or for lithology and stratigraphic age the last segment of its URI, bare, such as `acidic_igneous_material`. |
 | **Vocabulary identifier** | The permanent address of a concept scheme or collection, such as `https://w3id.org/ihfc-iugg/vocabularies/exploration-methods`. A vocabulary field links to it in the field schema, and its allowed values are read from the file published there. |
 
 ## Quality

@@ -6,7 +6,7 @@ The investigation behind `plan.md`. Every answer below was read from the source 
 
 | Source | What was taken from it |
 |---|---|
-| The current upload template, `template.xlsx` as distributed with the GHFDB portal, sheet `data list` | Rows 1–8 of the 70 field columns: field code, obligation, domain, quality relevance, name, published column name, unit, allowed range. The sheet `controlled vocabulary` shows how terms are written in a cell. |
+| Version 2026.03 of the GHFDB submission template (Fuchs et al., 2025, doi:10.5880/fidgeo.2025.042, CC BY 4.0), sheet `data list` | Rows 1–8 of the 74 field columns: field code, obligation, domain, quality relevance, name, published column name, unit, allowed range. The sheet `controlled vocabulary` shows how terms are written in a cell. |
 | Fuchs et al. (2023), Appendix A, as the spreadsheet `Appendix_A.XLSX` | Every field's type, meaning (`Field Description`), and the paper's own name, unit, obligation, domain, quality relevance and range, for comparison with the template. It covers all 70 fields, `A1`–`A8` included, with codes written `P01`, `C01`. |
 | IHFC Controlled Vocabularies, published at `https://w3id.org/ihfc-iugg/vocabularies/<scheme>` (read in the release v2026.1, DOI 10.5880/fidgeo.2026.065, and as currently published) | 15 concept schemes, one Turtle file each, with labels, notations, collections and a scope note naming the fields each scheme serves. |
 | FS-002, `specs/002-upload-template/spec.md` | What the generated template reads from the field definitions. |

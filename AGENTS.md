@@ -41,9 +41,12 @@ build the docs (3.13)"]`, from `.github/workflows/checks.yml`.
 
 ## Releasing
 
-Never create a release, a tag or a Publish run yourself. Releases are made by a maintainer, who
-publishes a GitHub release tagged `v<version>` matching `pyproject.toml`. The Publish workflow
-then builds the package and uploads it to PyPI through trusted publishing.
+Never create a release, a tag or a Publish run yourself. A maintainer runs Prepare Release from
+the Actions tab with a bump (patch, minor, major or an explicit version). It opens a pull request
+that sets the version in `pyproject.toml` and `uv.lock` and opens a CHANGELOG section for it.
+Merging that pull request is the release: Tag Release creates the `v<version>` tag and GitHub
+release, and the Publish workflow builds the package and uploads it to PyPI through trusted
+publishing. Both release workflows need the `RELEASE_TOKEN` secret.
 
 ## Automated contributions
 

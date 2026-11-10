@@ -1,8 +1,12 @@
+import json
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from functools import cache
 from html.parser import HTMLParser
+from importlib import resources
 from pathlib import Path
 from typing import Any
 
+import pandas
 import pytest
 import responses
 import xlsxwriter
@@ -10,7 +14,12 @@ from frictionless import Field, Schema
 from openpyxl import load_workbook
 
 from ghfdb.fields import Vocabularies, caching_session, load_schema
+from ghfdb.qc.criteria import term_uris
+from ghfdb.qc.scores import Scores
 from ghfdb.template import FIRST_DATA_ROW, ROW_LABELS, UploadTemplate
+
+Example = Mapping[str, Any]
+Uris = dict[str, dict[str, str]]
 
 
 class TableReader(HTMLParser):
@@ -159,6 +168,42 @@ def published_vocabularies(cache_directory: Path) -> Vocabularies:
 @pytest.fixture(scope="session")
 def schema(published_vocabularies: Vocabularies) -> Schema:
     return load_schema(vocabularies=published_vocabularies)
+
+
+@pytest.fixture(scope="session")
+def uris(schema: Schema, published_vocabularies: Vocabularies) -> Uris:
+    """The URI of every concept the scoring reads, by field code and term."""
+    return term_uris(schema, Scores.concepts(), published_vocabularies)
+
+
+@cache
+def worked_document() -> Mapping[str, Any]:
+    """Read the file of worked examples the package ships."""
+    text = (resources.files("ghfdb.qc") / "worked_examples.json").read_text("utf-8")
+    document: Mapping[str, Any] = json.loads(text)
+    return document
+
+
+def examples_of(*parts: str) -> list[Example]:
+    """The worked examples of the given parts, or every example when none is given."""
+    examples: list[Example] = worked_document()["examples"]
+    return [e for e in examples if not parts or e["part"] in parts]
+
+
+def one_child(inputs: Mapping[str, Any]) -> pandas.DataFrame:
+    """Build a dataset of one child from an example: numbers as text, lists kept."""
+    cells = {
+        code: [value if isinstance(value, list) else str(value)]
+        for code, value in inputs.items()
+    }
+    return pandas.DataFrame(cells, index=pandas.Index([9], name="row"), dtype=object)
+
+
+def column_children(**columns: list[Any]) -> pandas.DataFrame:
+    """Build children from Excel row 9: one list of cells for each field code."""
+    rows = len(next(iter(columns.values())))
+    index = pandas.Index(range(9, 9 + rows), name="row")
+    return pandas.DataFrame(columns, index=index, dtype=object)
 
 
 @pytest.fixture

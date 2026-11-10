@@ -1,69 +1,159 @@
-import json
-from collections.abc import Mapping
-from importlib import import_module, resources
+from collections.abc import Callable, Mapping
 from typing import Any
 
 import pandas
 import pytest
-from frictionless import Schema
+from conftest import Example, Uris, examples_of, one_child
 
 from ghfdb.dataset import Dataset
 from ghfdb.fields import Vocabularies
-from ghfdb.qc.criteria import term_uris
 from ghfdb.qc.inputs import Inputs
 from ghfdb.qc.penalties import Score
 from ghfdb.qc.scores import Scores
-
-Uris = dict[str, dict[str, str]]
+from ghfdb.qc.uncertainty import UScore
 
 NOT_DETERMINED = "not determined"
-# The modules that run worked examples, each exposing the examples it runs as EXAMPLES.
-RUNNING = ("test_uncertainty", "test_scores", "test_probe", "test_borehole")
-# The parts no code scores yet. The group that builds a part removes it from here.
-PENDING: set[str] = set()
 
 
-def load_examples(part: str) -> list[Mapping[str, Any]]:
-    text = (resources.files("ghfdb.qc") / "worked_examples.json").read_text("utf-8")
-    examples: list[Mapping[str, Any]] = json.loads(text)["examples"]
-    return [example for example in examples if example["part"] == part]
+def sub_score(value: Any, marked: bool) -> Score:
+    """Build the score of one child from an example's value and mark."""
+    number = pandas.NA if value == NOT_DETERMINED else value
+    return Score(
+        pandas.Series([number], index=[9], dtype="Float64"),
+        pandas.Series([pandas.NA if number is pandas.NA else marked], dtype="boolean"),
+    )
 
 
-ROUTING = load_examples("routing")
-FLAGS = load_examples("perturbation-flags")
-M_SCORE = load_examples("m-score")
-CHILD = load_examples("child")
-# Every example this module runs, which the coverage test reads.
-EXAMPLES = [*ROUTING, *FLAGS, *M_SCORE, *CHILD]
+def assert_score(score: Score, expected: Mapping[str, Any], key: str) -> None:
+    """Assert a one-child score is the expected value and, when given, the mark."""
+    assert score.value.iloc[0] == expected[key]
+    if "marked" in expected:
+        assert score.marked.iloc[0] == expected["marked"]
 
 
-def one_child(inputs: Mapping[str, Any]) -> pandas.DataFrame:
-    """Build a dataset of one child from an example: numbers as text, lists kept."""
-    cells = {
-        code: [value if isinstance(value, list) else str(value)]
-        for code, value in inputs.items()
-    }
-    return pandas.DataFrame(cells, index=pandas.Index([9], name="row"), dtype=object)
+class ExampleRunner:
+    """Score one worked example as the scoring does and assert what it expects.
 
+    Args:
+        uris: The URI of every concept the scoring reads.
+        vocabularies: The published vocabularies the whole dataset scoring reads.
+    """
 
-@pytest.fixture(scope="module")
-def uris(schema: Schema, published_vocabularies: Vocabularies) -> Uris:
-    return term_uris(schema, Scores.concepts(), published_vocabularies)
+    def __init__(self, uris: Uris, vocabularies: Vocabularies) -> None:
+        self.uris = uris
+        self.vocabularies = vocabularies
 
+    def scores(self, example: Example) -> Scores:
+        """Build the scoring of the one child an example describes."""
+        return Scores(Inputs(one_child(example["inputs"]), self.uris))
 
-class TestRouting:
-    @pytest.mark.parametrize("example", ROUTING, ids=lambda example: example["id"])
-    def test_worked_example(self, uris: Uris, example: Mapping[str, Any]) -> None:
-        data = one_child(example["inputs"])
+    def u_score(self, example: Example) -> None:
+        grades = UScore(Inputs(one_child(example["inputs"]), {})).grades()
+
+        assert grades.iloc[0] == example["expected"]["U"]
+
+    def routing(self, example: Example) -> None:
         wanted = example["expected"].get("rules")
 
-        rules = Scores(Inputs(data, uris)).routing
+        rules = self.scores(example).routing
 
         if wanted in (None, NOT_DETERMINED):
             assert pandas.isna(rules.iloc[0])
         else:
             assert rules.iloc[0] == wanted
 
+    def flags(self, example: Example) -> None:
+        flags = self.scores(example).flags()
+
+        assert flags.iloc[0] == example["expected"]["flags"]
+
+    def m_score(self, example: Example) -> None:
+        inputs = example["inputs"]
+        t = sub_score(inputs["T"], inputs.get("T_marked", False))
+        tc = sub_score(inputs["TC"], inputs.get("TC_marked", False))
+
+        grade = Scores(Inputs(one_child({}), self.uris)).grades(t, tc)
+
+        assert grade.iloc[0] == example["expected"]["M"]
+
+    def probe_t(self, example: Example) -> None:
+        assert_score(self.scores(example).probe.scores().t, example["expected"], "T")
+
+    def probe_tc(self, example: Example) -> None:
+        scores = self.scores(example).probe.scores()
+
+        assert_score(scores.tc, example["expected"], "TC")
+        assert scores.own_tc.value.equals(scores.tc.value)
+        assert scores.own_tc.marked.equals(scores.tc.marked)
+
+    def borehole_t(self, example: Example) -> None:
+        scores = self.scores(example).borehole.scores()
+
+        assert_score(scores.t, example["expected"], "T")
+        assert scores.own_t.value.equals(scores.t.value)
+        assert scores.own_t.marked.equals(scores.t.marked)
+
+    def borehole_tc(self, example: Example) -> None:
+        scores = self.scores(example).borehole.scores()
+
+        score = scores.own_tc if example["scoring"] == "measurement" else scores.tc
+
+        assert_score(score, example["expected"], "TC")
+
+    def child(self, example: Example) -> None:
+        data = one_child(example["inputs"])
+        expected = example["expected"]
+
+        row = Dataset(data).scores(vocabularies=self.vocabularies).iloc[0]
+
+        for key in ("U", "T", "TC", "M", "flags", "code", "marked"):
+            if key in expected:
+                wanted = expected[key]
+                if wanted is None:
+                    assert pandas.isna(row[key]), key
+                else:
+                    assert row[key] == wanted, key
+        for key, column in (("T", "own_T"), ("TC", "own_TC")):
+            if "measurement" in expected:
+                assert row[column] == expected["measurement"][key], column
+
+
+# The runner of each part of the worked examples. A part with no runner here has its
+# examples left out of RUN, which TestWorkedExamples reports.
+RUNNERS: dict[str, Callable[[ExampleRunner, Example], None]] = {
+    "u-score": ExampleRunner.u_score,
+    "routing": ExampleRunner.routing,
+    "perturbation-flags": ExampleRunner.flags,
+    "m-score": ExampleRunner.m_score,
+    "probe-t": ExampleRunner.probe_t,
+    "probe-tc": ExampleRunner.probe_tc,
+    "borehole-t": ExampleRunner.borehole_t,
+    "borehole-tc": ExampleRunner.borehole_tc,
+    "child": ExampleRunner.child,
+}
+RUN = [example for example in examples_of() if example["part"] in RUNNERS]
+
+
+class TestWorkedExamples:
+    def test_every_example_outside_inheritance_has_a_runner(self) -> None:
+        wanted = sorted(
+            example["id"]
+            for example in examples_of()
+            if example["part"] != "inheritance"
+        )
+
+        assert sorted(example["id"] for example in RUN) == wanted
+
+    @pytest.mark.parametrize("example", RUN, ids=lambda example: example["id"])
+    def test_every_example_scores_as_expected(
+        self, uris: Uris, published_vocabularies: Vocabularies, example: Example
+    ) -> None:
+        runner = ExampleRunner(uris, published_vocabularies)
+
+        RUNNERS[example["part"]](runner, example)
+
+
+class TestRouting:
     def test_every_child_of_a_dataset_is_routed_under_its_own_index(
         self, uris: Uris
     ) -> None:
@@ -81,34 +171,7 @@ class TestRouting:
         assert rules.iloc[[1, 3]].isna().all()
 
 
-class TestWorkedExampleCoverage:
-    def test_every_example_outside_inheritance_is_run_by_exactly_one_test(self) -> None:
-        text = (resources.files("ghfdb.qc") / "worked_examples.json").read_text("utf-8")
-        examples = json.loads(text)["examples"]
-        expected = sorted(
-            example["id"]
-            for example in examples
-            if example["part"] != "inheritance" and example["part"] not in PENDING
-        )
-
-        run = sorted(
-            example["id"]
-            for name in RUNNING
-            for example in import_module(f"{__package__}.{name}").EXAMPLES
-        )
-
-        assert run == expected
-
-
 class TestPerturbationFlags:
-    @pytest.mark.parametrize("example", FLAGS, ids=lambda example: example["id"])
-    def test_worked_example(self, uris: Uris, example: Mapping[str, Any]) -> None:
-        data = one_child(example["inputs"])
-
-        flags = Scores(Inputs(data, uris)).flags()
-
-        assert flags.iloc[0] == example["expected"]["flags"]
-
     def test_every_child_of_a_dataset_gets_its_own_flags_under_its_own_index(
         self, uris: Uris
     ) -> None:
@@ -127,26 +190,7 @@ class TestPerturbationFlags:
         assert flags.tolist() == ["S-----x", "------X", "-------"]
 
 
-def sub_score(value: Any, marked: bool) -> Score:
-    """Build the score of one child from an example's value and mark."""
-    number = pandas.NA if value == NOT_DETERMINED else value
-    return Score(
-        pandas.Series([number], index=[9], dtype="Float64"),
-        pandas.Series([pandas.NA if number is pandas.NA else marked], dtype="boolean"),
-    )
-
-
 class TestMScore:
-    @pytest.mark.parametrize("example", M_SCORE, ids=lambda example: example["id"])
-    def test_worked_example(self, uris: Uris, example: Mapping[str, Any]) -> None:
-        inputs = example["inputs"]
-        t = sub_score(inputs["T"], inputs.get("T_marked", False))
-        tc = sub_score(inputs["TC"], inputs.get("TC_marked", False))
-
-        grade = Scores(Inputs(one_child({}), uris)).grades(t, tc)
-
-        assert grade.iloc[0] == example["expected"]["M"]
-
     def test_every_child_is_graded_under_its_own_index(self, uris: Uris) -> None:
         index = pandas.Index([12, 9, 10, 11], name="row")
         t = Score(
@@ -164,25 +208,3 @@ class TestMScore:
 
         assert grade.index.tolist() == [12, 9, 10, 11]
         assert grade.tolist() == ["M1", "M3x", "Mx", "M4"]
-
-
-class TestChildScores:
-    @pytest.mark.parametrize("example", CHILD, ids=lambda example: example["id"])
-    def test_worked_example(
-        self, published_vocabularies: Vocabularies, example: Mapping[str, Any]
-    ) -> None:
-        data = one_child(example["inputs"])
-        expected = example["expected"]
-
-        row = Dataset(data).scores(vocabularies=published_vocabularies).iloc[0]
-
-        for key in ("U", "T", "TC", "M", "flags", "code", "marked"):
-            if key in expected:
-                wanted = expected[key]
-                if wanted is None:
-                    assert pandas.isna(row[key]), key
-                else:
-                    assert row[key] == wanted, key
-        for key, column in (("T", "own_T"), ("TC", "own_TC")):
-            if "measurement" in expected:
-                assert row[column] == expected["measurement"][key], column

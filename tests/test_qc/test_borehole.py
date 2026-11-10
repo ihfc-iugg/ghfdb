@@ -1,21 +1,10 @@
-import json
-from collections.abc import Mapping
-from importlib import resources
-from typing import Any
-
 import pandas
-import pytest
-from frictionless import Schema
+from conftest import Uris, one_child
 
-from ghfdb.fields import Vocabularies
 from ghfdb.qc.borehole import BoreholeRules
-from ghfdb.qc.criteria import term_uris
 from ghfdb.qc.inputs import Inputs
 from ghfdb.qc.scores import Scores
 
-Uris = dict[str, dict[str, str]]
-
-PARTS = ("borehole-t", "borehole-tc")
 DRILLING = "[Drilling]"
 GRADIENT = {
     "P12": DRILLING,
@@ -37,51 +26,11 @@ CONDUCTIVITY = {
 }
 
 
-def load_examples() -> list[Mapping[str, Any]]:
-    text = (resources.files("ghfdb.qc") / "worked_examples.json").read_text("utf-8")
-    examples: list[Mapping[str, Any]] = json.loads(text)["examples"]
-    return [example for example in examples if example["part"] in PARTS]
-
-
-EXAMPLES = load_examples()
-
-
-def one_child(inputs: Mapping[str, Any]) -> pandas.DataFrame:
-    """Build a dataset of one child from an example: numbers as text, lists kept."""
-    cells = {
-        code: [value if isinstance(value, list) else str(value)]
-        for code, value in inputs.items()
-    }
-    return pandas.DataFrame(cells, index=pandas.Index([9], name="row"), dtype=object)
-
-
-@pytest.fixture(scope="module")
-def uris(schema: Schema, published_vocabularies: Vocabularies) -> Uris:
-    return term_uris(schema, Scores.concepts(), published_vocabularies)
-
-
 def rules_of(uris: Uris, data: pandas.DataFrame) -> BoreholeRules:
     return Scores(Inputs(data, uris)).borehole
 
 
 class TestBoreholeTScore:
-    @pytest.mark.parametrize(
-        "example",
-        [e for e in EXAMPLES if e["part"] == "borehole-t"],
-        ids=lambda example: example["id"],
-    )
-    def test_worked_example(self, uris: Uris, example: Mapping[str, Any]) -> None:
-        rules = rules_of(uris, one_child(example["inputs"]))
-
-        score = rules.scores().t
-
-        assert score.value.iloc[0] == example["expected"]["T"]
-        if "marked" in example["expected"]:
-            assert score.marked.iloc[0] == example["expected"]["marked"]
-        own = rules.scores().own_t
-        assert own.value.equals(score.value)
-        assert own.marked.equals(score.marked)
-
     def test_an_empty_number_of_recordings_is_not_a_continuous_log_and_sets_no_mark(
         self, uris: Uris
     ) -> None:
@@ -196,23 +145,6 @@ class TestBoreholeTScore:
 
 
 class TestBoreholeTCScore:
-    @pytest.mark.parametrize(
-        "example",
-        [e for e in EXAMPLES if e["part"] == "borehole-tc"],
-        ids=lambda example: example["id"],
-    )
-    def test_worked_example(self, uris: Uris, example: Mapping[str, Any]) -> None:
-        rules = rules_of(uris, one_child(example["inputs"]))
-
-        if example["scoring"] == "measurement":
-            score = rules.scores().own_tc
-        else:
-            score = rules.scores().tc
-
-        assert score.value.iloc[0] == example["expected"]["TC"]
-        if "marked" in example["expected"]:
-            assert score.marked.iloc[0] == example["expected"]["marked"]
-
     def test_the_own_score_reads_the_pT_conditions_without_the_in_situ_correction(
         self, uris: Uris
     ) -> None:

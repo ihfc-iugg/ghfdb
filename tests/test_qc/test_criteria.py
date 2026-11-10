@@ -1,10 +1,9 @@
-import json
 import re
 from collections.abc import Mapping
-from importlib import resources
 from typing import Any
 
 import pytest
+from conftest import worked_document
 from frictionless import Schema
 
 from ghfdb.fields import MissingSchemeError, Vocabularies, allowed_values
@@ -17,8 +16,7 @@ from ghfdb.qc.scores import Scores
 
 @pytest.fixture(scope="module")
 def worked_criteria() -> Mapping[str, str]:
-    text = (resources.files("ghfdb.qc") / "worked_examples.json").read_text("utf-8")
-    criteria: Mapping[str, str] = json.loads(text)["criteria"]
+    criteria: Mapping[str, str] = worked_document()["criteria"]
     return criteria
 
 

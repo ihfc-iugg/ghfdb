@@ -3,6 +3,7 @@ from typing import Any
 import numpy
 import pandas
 import pytest
+from conftest import column_children
 
 from ghfdb.fields import Field
 from ghfdb.qc.inputs import Inputs
@@ -29,15 +30,8 @@ URIS: dict[str, dict[str, str]] = {
 }
 
 
-def children(**columns: list[Any]) -> pandas.DataFrame:
-    """Build children from Excel row 9: one list of cells for each field code."""
-    rows = len(next(iter(columns.values())))
-    index = pandas.Index(range(9, 9 + rows), name="row")
-    return pandas.DataFrame(columns, index=index, dtype=object)
-
-
 def inputs_of(**columns: list[Any]) -> Inputs:
-    return Inputs(children(**columns), URIS)
+    return Inputs(column_children(**columns), URIS)
 
 
 def penalties(penalty: Penalty) -> list[float]:
@@ -259,7 +253,7 @@ class TestClasses:
         uris: dict[str, dict[str, str]] = {
             Field.tc_location: {"[red]": RED, "[other]": "c:other"}
         }
-        inputs = Inputs(children(C42=["[other]"]), uris)
+        inputs = Inputs(column_children(C42=["[other]"]), uris)
 
         penalty = Classes(
             (Field.tc_location,),
@@ -284,7 +278,7 @@ class TestClasses:
             Field.T_method_top: {"[red]": RED, "[blue]": BLUE},
             Field.T_method_bottom: {"[red]": RED, "[blue]": BLUE},
         }
-        data = children(C31=["[red]", "[blue]"], C32=["[blue]", "[red]"])
+        data = column_children(C31=["[red]", "[blue]"], C32=["[blue]", "[red]"])
         table = Classes(
             (Field.T_method_top, Field.T_method_bottom),
             (Group(0.0, (RED,)), Group(-0.1, (BLUE,))),
@@ -301,7 +295,7 @@ class TestClasses:
             Field.T_method_top: {"[red]": RED, "[blue]": BLUE},
             Field.T_method_bottom: {"[red]": RED, "[blue]": BLUE},
         }
-        data = children(C31=[None, None, "[blue]"], C32=["[red]", None, "[red]"])
+        data = column_children(C31=[None, None, "[blue]"], C32=["[red]", None, "[red]"])
         table = Classes(
             (Field.T_method_top, Field.T_method_bottom),
             (Group(0.0, (RED,)), Group(-0.1, (BLUE,))),

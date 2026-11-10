@@ -1,16 +1,20 @@
-import json
 import shutil
 import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
-from importlib import resources
 from pathlib import Path
 from typing import Any
 
 import pandas
 import pytest
 import responses
-from conftest import LARGE_CHILDREN, SEEDED_EVERY, read_problems, read_scores
+from conftest import (
+    LARGE_CHILDREN,
+    SEEDED_EVERY,
+    examples_of,
+    read_problems,
+    read_scores,
+)
 from frictionless import Schema
 from openpyxl import Workbook, load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
@@ -431,12 +435,10 @@ BREAKS_A_RULE = "B9-everything-unspecified"
 
 def single_value_examples() -> list[Mapping[str, Any]]:
     """The ``child`` worked examples a workbook can hold: one value in each cell."""
-    text = (resources.files("ghfdb.qc") / "worked_examples.json").read_text("utf-8")
     return [
         example
-        for example in json.loads(text)["examples"]
-        if example["part"] == "child"
-        and not any(isinstance(value, list) for value in example["inputs"].values())
+        for example in examples_of("child")
+        if not any(isinstance(value, list) for value in example["inputs"].values())
     ]
 
 

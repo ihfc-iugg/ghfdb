@@ -17,9 +17,10 @@ Three rules are checked in this feature (`research.md`):
 
 | Id | Rule | Kind | Source |
 |---|---|---|---|
-| CF-1 | A child whose exploration method is borehole or mine data has every field mandatory for that domain filled: `C5`, `C31`, `C32` | required when | Fuchs et al. (2023), Table 4 (obligation and domain of the five fields), with D-1 for the domain of each exploration method. The fields are read from the field schema's obligation and domain |
+| CF-1 | A child whose exploration method is borehole or mine data has every field mandatory for that domain filled: `C4`, `C5`, `C31`, `C32` | required when | Fuchs et al. (2023), Table 4 (obligation and domain of the five fields), with D-1 for the domain of each exploration method. The fields are read from the field schema's obligation and domain |
 | CF-2 | A child whose exploration method is probe sensing has every field mandatory for that domain filled: `C6`, `C23` | required when | as CF-1 |
 | CF-3 | The thermal conductivity location (`C42`) is `[Literature or unspecified]` only if the thermal conductivity source (`C41`) is `[Assumed from literature]` | allowed when | Fuchs et al. (2023), Appendix A, field `C42` |
+| CF-4 | A child whose temperature method at the top (`C31`) or at the bottom (`C32`) is `[EGRT]` has the thermal conductivity method (`C43`) `[Probe - pulse technique]` | allowed when, with the second condition as an alternative | Fuchs et al. (2025), description of version 2026.03 of the submission template, section 6.1 |
 
 Seven questions are raised as issues for the data assessment team (`research.md`, first section).
 
@@ -109,8 +110,9 @@ class RequiredWhen(Rule):
 class AllowedWhen(Rule):
     when: Condition          # a field and the concepts that make the rule apply
     then: Condition          # a field and the concepts it may then hold
+    alternatives: tuple[Condition, ...] = ()   # further conditions, any one of which also applies
 
-RULES: tuple[Rule, ...] = (CF_1, CF_2, CF_3)
+RULES: tuple[Rule, ...] = (CF_1, CF_2, CF_3, CF_4)
 ```
 
 - `Domain` and `Condition` are frozen dataclasses: a field code and a tuple of concept URIs.
@@ -131,7 +133,7 @@ RULES: tuple[Rule, ...] = (CF_1, CF_2, CF_3)
     found.
 - `RequiredWhen.problems()`: on the rows where the child's exploration method is in the domain, one
   line per required field that is empty.
-- `AllowedWhen.problems()`: on the rows where `when` holds, the `then` field split into its values.
+- `AllowedWhen.problems()`: on the rows where `when` or any alternative holds, the `then` field split into its values.
   A value that is in the field's allowed values and is not a term of `then` is one line. A value
   not in the vocabulary already has its own problem and is skipped.
 - A rule whose fields have no column in the workbook returns no lines, and the column problem

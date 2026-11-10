@@ -14,6 +14,7 @@ RELATED_FIELDS = {
     "CF-1": ("P12", "C4", "C5", "C31", "C32"),
     "CF-2": ("P12", "C6", "C23"),
     "CF-3": ("C42", "C41"),
+    "CF-4": ("C31", "C32", "C43"),
 }
 
 
@@ -56,8 +57,8 @@ def terms_of(
 
 
 class TestRuleEntries:
-    def test_the_rules_are_the_three_declared_ones(self) -> None:
-        assert {rule.identifier for rule in RULES} == {"CF-1", "CF-2", "CF-3"}
+    def test_the_rules_are_the_four_declared_ones(self) -> None:
+        assert {rule.identifier for rule in RULES} == {"CF-1", "CF-2", "CF-3", "CF-4"}
 
     def test_each_rule_has_one_entry_anchored_by_its_lowercased_identifier(
         self, reference: RuleReference
@@ -65,7 +66,7 @@ class TestRuleEntries:
         markdown = reference.entries()
 
         anchors = re.findall(r"^\(([^)]+)\)=$", markdown, re.MULTILINE)
-        assert anchors == ["cf-1", "cf-2", "cf-3"]
+        assert anchors == ["cf-1", "cf-2", "cf-3", "cf-4"]
 
     def test_the_heading_sits_one_level_below_the_page_title(
         self, reference: RuleReference

@@ -68,7 +68,7 @@ class TestResolution:
     def test_a_concept_that_is_not_an_allowed_value_of_its_field_names_the_rule(
         self, schema: Schema, children: Children, published_vocabularies: Vocabularies
     ) -> None:
-        elsewhere = f"{CONDUCTIVITY_SOURCES}/core_samples"
+        elsewhere = f"{CONDUCTIVITY_SOURCES}/core-samples"
         broken = replace(CF_3, when=Condition("C42", (elsewhere,)))
 
         with pytest.raises(MissingSchemeError) as error:
@@ -157,7 +157,7 @@ class TestResolution:
 
 OTHER_METHOD = f"{EXPLORATION_METHODS}/other"
 ACTUAL_LOCATION = f"{CONDUCTIVITY_LOCATION}/actual"
-CUTTING_SAMPLES = f"{CONDUCTIVITY_SOURCES}/cutting_samples"
+CUTTING_SAMPLES = f"{CONDUCTIVITY_SOURCES}/cutting-samples"
 DRILLING_TERM = ("P12", DRILLING)
 LITERATURE_TERM = ("C42", LITERATURE_OR_UNSPECIFIED)
 ASSUMED_TERM = ("C41", ASSUMED_FROM_LITERATURE)

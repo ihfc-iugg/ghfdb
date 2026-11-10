@@ -2,7 +2,7 @@
 
 ## Field definitions
 
-The names `ghfdb.fields` provides: `load_schema`, `field_for_column`, `allowed_values`,
+The names `ghfdb.fields` provides: `Field`, `load_schema`, `field_for_column`, `allowed_values`,
 `AllowedValue`, `Vocabularies`, `caching_session` and `MissingSchemeError`. They read the
 packaged field schema, which is a `frictionless.Schema`, and the vocabularies it links to.
 `Vocabularies.releases` lists the releases of the vocabularies read so far, as the
@@ -12,6 +12,18 @@ identifiers the concept schemes say they are part of.
 .. automodule:: ghfdb.fields
    :members:
 ```
+
+### Naming a field in code
+
+`Field` has one member for each field of the schema, named by the field's published column name
+and valued by its code, so `Field.tc_location == "C42"`. Python source in ghfdb names a field
+through `Field` and never writes a code. The data stays keyed by field code: `Dataset.data`, the
+worked examples and the workbooks do not change, and a member is a string, so `data[Field.tc_location]`
+reads the column `C42`.
+
+`ghfdb/fields/names.py` is generated from `schema.json`. After the schema changes, write it again
+with `python -m ghfdb.fields.generate`. A test fails while the file differs from what the schema
+generates.
 
 ## Upload template
 

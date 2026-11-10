@@ -437,7 +437,7 @@
         "range": "upload-template",
         "vocabulary": "decision:D-5",
         "termForm": "upload-template",
-        "allowedValues": "fuchs-2023-appendix-a",
+        "allowedValues": "upload-template",
         "separator": "upload-template",
         "guidance": "upload-template"
       }
@@ -1055,7 +1055,7 @@
         "range": "upload-template",
         "vocabulary": "decision:D-5",
         "termForm": "upload-template",
-        "allowedValues": "fuchs-2023-appendix-a",
+        "allowedValues": "upload-template",
         "separator": "upload-template",
         "guidance": "upload-template"
       }

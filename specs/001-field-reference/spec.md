@@ -179,9 +179,9 @@ confirm every identifier the field schema holds is defined in them.
 - A fact on which the template and Fuchs et al. (2023) Appendix A disagree: the field reference
   follows the current template and names it as the source, and the disagreement is recorded as a
   decision.
-- A field with a fixed set of values that no IHFC vocabulary publishes (P9, C9: yes, no or
-  unspecified): its values are listed with their source in Appendix A, and are not vocabulary
-  terms.
+- A field with a fixed set of values that no IHFC vocabulary publishes (P9: yes, no or
+  unspecified; C9: yes or no): its values are listed with the template as their source, and are
+  not vocabulary terms.
 - A field whose terms come from a published vocabulary that is not an IHFC vocabulary (C25
   lithology, C26 stratigraphic age): the allowed values are read from the file its owner
   publishes, and the entry links to that file. Several values may be given, separated by
@@ -301,7 +301,7 @@ confirm every identifier the field schema holds is defined in them.
 - Q: Is `[Unspecified]`, or any other term, a missing value? → A: No. An empty cell is the only
   missing value, and `[Unspecified]` is an allowed term. Integrated into FR-008 and Edge Cases.
 - Q: What are the allowed values of a field with no published vocabulary? → A: A fixed set that
-  the paper defines (P9, C9) is listed with its source in Appendix A. C25 and C26 take their terms
+  the template defines (P9, C9) is listed with the template as its source. C25 and C26 take their terms
   from the two external vocabularies the template names (D-5). Integrated into Edge Cases.
 
 ## Assumptions

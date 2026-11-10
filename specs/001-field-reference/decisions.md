@@ -64,10 +64,10 @@ value and missing data.
 
 ### D-5 — Fields with no published vocabulary
 
-- **A fixed set the paper defines** (P9 heat production flag, C9 relevant child: yes, no or
-  unspecified) is listed with its source in Appendix A. These are not vocabulary terms, so
-  Article XI does not apply, but they are flagged as the first candidates if the vocabularies ever
-  publish them.
+- **A fixed set the template defines** (P9 heat production flag: yes, no or unspecified; C9
+  relevant child: yes or no) is listed with the template as its source. These are not vocabulary
+  terms, so Article XI does not apply, but they are flagged as the first candidates if the
+  vocabularies ever publish them.
 - **Two external vocabularies** (C25 lithology, C26 stratigraphic age) are published by their
   owners, not by the IHFC. The template writes their terms as the last segment of the concept's
   URI. The allowed values are read from the file each owner publishes, as ADR 0007 records, and

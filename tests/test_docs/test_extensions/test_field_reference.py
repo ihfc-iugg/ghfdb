@@ -209,7 +209,7 @@ class TestVocabularyEntries:
             for value in allowed_values(field, published_vocabularies):
                 assert f"`{value.term}`" in section, code
                 assert f"[`{value.term}`](" not in section, code
-            assert "Fuchs et al. (2023), Appendix A" in section
+            assert "Upload template" in section
 
 
 def hostile_reference(

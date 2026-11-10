@@ -18,7 +18,7 @@ from ghfdb.qc.criteria import term_uris
 from ghfdb.qc.inputs import Inputs
 from ghfdb.qc.penalties import SCORE_DECIMALS, Band, Score
 from ghfdb.qc.probe import ProbeRules
-from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD, PROBE_SENSING
+from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD, PROBE_SENSING, Domain
 from ghfdb.qc.uncertainty import UScore
 
 # The class of the product of the T-score and the TC-score: M1 from 0.75, M2 from 0.50,
@@ -91,8 +91,27 @@ class Scores:
         for domain in (PROBE_SENSING, BOREHOLE):
             routing = routing.mask(methods.isin(domain.concepts), domain.rules)
         self.routing = routing
-        self.probe = ProbeRules(inputs, routing.isin([PROBE_SENSING.rules]).to_numpy())
-        self.borehole = BoreholeRules(inputs, routing.isin([BOREHOLE.rules]).to_numpy())
+        self.probe = ProbeRules(inputs, self.scored(PROBE_SENSING, ProbeRules.reads()))
+        self.borehole = BoreholeRules(
+            inputs, self.scored(BOREHOLE, BoreholeRules.reads())
+        )
+
+    def scored(self, domain: Domain, reads: tuple[str, ...]) -> numpy.ndarray:
+        """Find the children that a set of rules scores.
+
+        A child that is routed to the rules, yet leaves every field they read empty, is
+        not scored: its scores are not determined
+        (docs/reference/quality-scheme/m-score.md, "Not determined").
+
+        Args:
+            domain: The exploration methods the rules score.
+            reads: The fields the rules read, other than the exploration method.
+
+        Returns:
+            Whether the rules score each child, in the order of the children.
+        """
+        routed = self.routing.isin([domain.rules]).to_numpy(dtype=bool)
+        return numpy.asarray(routed & self.inputs.any_filled(reads), dtype=bool)
 
     @classmethod
     def build(

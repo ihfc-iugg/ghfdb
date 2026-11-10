@@ -109,6 +109,21 @@ class TestProbeTScore:
             assert score.value.isna().tolist() == [True, True, False]
             assert score.marked.isna().tolist() == [True, True, False]
 
+    def test_a_child_with_every_scored_field_empty_is_not_determined(
+        self, uris: Uris
+    ) -> None:
+        rules = rules_of(uris, one_child({"P12": PROBE, "C6": " "}))
+
+        for score in (rules.scores().t, rules.scores().own_t):
+            assert score.value.isna().all()
+            assert score.marked.isna().all()
+
+    def test_one_filled_field_is_enough_to_score_the_child(self, uris: Uris) -> None:
+        score = rules_of(uris, one_child({"P12": PROBE, "C37": 6})).scores().t
+
+        assert score.value.iloc[0] == 0.5
+        assert score.marked.iloc[0]
+
     def test_every_child_of_a_dataset_is_scored_under_its_own_index(
         self, uris: Uris
     ) -> None:
@@ -207,6 +222,21 @@ class TestProbeTCScore:
 
         assert score.value.isna().tolist() == [True, False]
         assert score.marked.isna().tolist() == [True, False]
+
+    def test_a_child_with_every_scored_field_empty_is_not_determined(
+        self, uris: Uris
+    ) -> None:
+        rules = rules_of(uris, one_child({"P12": PROBE, "C41": " "}))
+
+        for score in (rules.scores().tc, rules.scores().own_tc):
+            assert score.value.isna().all()
+            assert score.marked.isna().all()
+
+    def test_one_filled_field_is_enough_to_score_the_child(self, uris: Uris) -> None:
+        score = rules_of(uris, one_child({"P12": PROBE, "C6": 12})).scores().tc
+
+        assert score.value.iloc[0] == 0.2
+        assert score.marked.iloc[0]
 
     def test_every_child_of_a_dataset_is_scored_under_its_own_index(
         self, uris: Uris

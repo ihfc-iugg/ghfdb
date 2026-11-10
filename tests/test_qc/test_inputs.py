@@ -140,3 +140,21 @@ class TestPerChild:
 
         assert inputs.any_value(above).tolist() == [True, True, False]
         assert inputs.every_value(above).tolist() == [False, True, False]
+
+    def test_a_child_is_filled_when_any_field_holds_a_value_that_is_not_blank(
+        self,
+    ) -> None:
+        data = children(
+            C1=["1", None, " ", [None, "2"], None],
+            C2=[None, None, "", None, "abc"],
+        )
+        inputs = Inputs(data, URIS)
+
+        filled = inputs.any_filled([Field.qc, Field.qc_uncertainty])
+
+        assert filled.tolist() == [True, False, False, True, True]
+
+    def test_a_field_the_dataset_lacks_leaves_a_child_unfilled(self) -> None:
+        inputs = Inputs(children(C1=["1", None]), URIS)
+
+        assert inputs.any_filled([Field.qc_uncertainty]).tolist() == [False, False]

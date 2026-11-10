@@ -159,6 +159,21 @@ class TestBoreholeTScore:
             assert score.value.isna().tolist() == [True, True, False]
             assert score.marked.isna().tolist() == [True, True, False]
 
+    def test_a_child_with_every_scored_field_empty_is_not_determined(
+        self, uris: Uris
+    ) -> None:
+        rules = rules_of(uris, one_child({"P12": DRILLING, "C31": " "}))
+
+        for score in (rules.scores().t, rules.scores().own_t):
+            assert score.value.isna().all()
+            assert score.marked.isna().all()
+
+    def test_one_filled_field_is_enough_to_score_the_child(self, uris: Uris) -> None:
+        score = rules_of(uris, one_child({"P12": DRILLING, "C4": 0})).scores().t
+
+        assert score.value.iloc[0] == 0.5
+        assert score.marked.iloc[0]
+
     def test_every_child_of_a_dataset_is_scored_under_its_own_index(
         self, uris: Uris
     ) -> None:
@@ -245,9 +260,27 @@ class TestBoreholeTCScore:
         assert score.value.iloc[0] == 0.1
         assert score.marked.iloc[0]
 
+    def test_a_child_with_every_scored_field_empty_is_not_determined(
+        self, uris: Uris
+    ) -> None:
+        rules = rules_of(uris, one_child({"P12": DRILLING, "C41": " "}))
+
+        for score in (rules.scores().tc, rules.scores().own_tc):
+            assert score.value.isna().all()
+            assert score.marked.isna().all()
+
+    def test_one_filled_field_is_enough_to_score_the_child(self, uris: Uris) -> None:
+        score = rules_of(uris, one_child({"P12": DRILLING, "C41": "[Other]"})).scores()
+
+        assert score.tc.value.iloc[0] == 0.1
+        assert score.tc.marked.iloc[0]
+
     def test_a_child_that_other_rules_score_is_not_determined(self, uris: Uris) -> None:
         data = pandas.DataFrame(
-            {"P12": ["[Probing (offshore, ocean)]", None, DRILLING]},
+            {
+                "P12": ["[Probing (offshore, ocean)]", None, DRILLING],
+                "C41": ["[Other]", "[Other]", "[Other]"],
+            },
             index=pandas.Index([12, 9, 10], name="row"),
             dtype=object,
         )

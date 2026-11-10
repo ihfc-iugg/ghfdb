@@ -6,6 +6,15 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Scheme changes
+
+- A child whose exploration method sends it to the probe-sensing or the borehole and mine
+  rules, and whose every other field those rules read is empty, now has no T-score and no
+  TC-score, and its M-score is `Mx`. The same holds for the scores of its own measurements. This
+  is the sentence the corrigendum of Fuchs et al. (2023) adds to Section 3.2 (Fuchs et al.,
+  2026, Tectonophysics 934, 231226): "If all metadata fields required for the scoring are
+  missing, the M-score will appear as Mx."
+
 ### Changed
 
 - The field reference pages no longer have a Source column in each field's table. The field

@@ -74,7 +74,8 @@
     "not-determined.tc": "TC-score not determined",
     "not-determined.m": "M-score not determined",
     "multi-valued.poorest": "A field holding several values takes the poorest",
-    "child.whole": "A child scored from its fields to its quality code"
+    "child.whole": "A child scored from its fields to its quality code",
+    "not-determined.all-empty": "Every field the rules read is empty, so the scores are not determined"
   },
   "examples": [
     {
@@ -5083,6 +5084,60 @@
         "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_a_child_without_a_gradient_or_a_conductivity_is_not_determined"
       ],
       "criteria": [
+        "not-determined.t",
+        "not-determined.tc",
+        "not-determined.m"
+      ]
+    },
+    {
+      "id": "N4-probe-nothing-scored",
+      "part": "child",
+      "title": "A probe-sensing child with only its exploration method: nothing to score",
+      "inputs": {
+        "P12": "[Probing (onshore, lake, river, etc.)]",
+        "C1": 70,
+        "C2": 7
+      },
+      "expected": {
+        "U": "U2",
+        "T": null,
+        "TC": null,
+        "M": "Mx",
+        "flags": "-------",
+        "code": "U2.Mx.-------"
+      },
+      "portal_tests": [
+        "tests/test_qc/test_scores.py::TestChildScores::test_worked_example[N4-probe-nothing-scored]"
+      ],
+      "criteria": [
+        "not-determined.all-empty",
+        "not-determined.t",
+        "not-determined.tc",
+        "not-determined.m"
+      ]
+    },
+    {
+      "id": "N5-borehole-nothing-scored",
+      "part": "child",
+      "title": "A borehole child with only its exploration method: nothing to score",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C1": 70,
+        "C2": 7
+      },
+      "expected": {
+        "U": "U2",
+        "T": null,
+        "TC": null,
+        "M": "Mx",
+        "flags": "-------",
+        "code": "U2.Mx.-------"
+      },
+      "portal_tests": [
+        "tests/test_qc/test_scores.py::TestChildScores::test_worked_example[N5-borehole-nothing-scored]"
+      ],
+      "criteria": [
+        "not-determined.all-empty",
         "not-determined.t",
         "not-determined.tc",
         "not-determined.m"

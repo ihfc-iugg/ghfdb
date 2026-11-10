@@ -569,6 +569,10 @@ class Criterion[T: Table]:
     table: T
     source: str
 
+    def reads(self) -> tuple[str, ...]:
+        """List the fields the criterion reads."""
+        return self.table.reads()
+
     def concepts(self) -> tuple[tuple[str, str], ...]:
         """List the concepts the criterion names, with their fields."""
         return self.table.concepts()

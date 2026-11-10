@@ -1,6 +1,6 @@
 """The fields the quality scheme scores, read once from a table of children."""
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 
 import numpy
 import pandas
@@ -114,6 +114,22 @@ class Inputs:
             with no filled value.
         """
         return values.groupby(level=0, sort=False).first().reindex(self.index)
+
+    def any_filled(self, fields: Iterable[str]) -> numpy.ndarray:
+        """Say for each child whether any of the fields holds a value.
+
+        A cell that holds only blank text is empty, as the scoring reads it.
+
+        Args:
+            fields: The fields' codes.
+
+        Returns:
+            One boolean for each child in the order of the children.
+        """
+        filled = numpy.zeros(len(self.index), dtype=bool)
+        for field in fields:
+            filled |= self.any_value(self.text(field).fillna("") != "")
+        return filled
 
     def any_value(self, holds: pandas.Series) -> numpy.ndarray:
         """Say for each child whether the test holds for any of its values.

@@ -97,6 +97,7 @@ ESTIMATED_TEMPERATURE = (
     OTHER_TEMPERATURE,
 )
 TEMPERATURE_METHODS = (Field.T_method_top, Field.T_method_bottom)
+INTERVAL_DEPTHS = (Field.q_top, Field.q_bottom)
 LARGEST_CONTINUOUS_LOG = Outcome(-0.1, marked=True)
 LARGEST_SINGLE_POINTS = Outcome(-0.5, marked=True)
 LARGEST_SURFACE_PLUS_ONE_POINT = Outcome(-0.6, marked=True)
@@ -287,11 +288,31 @@ class BoreholeRules:
     Attributes:
         inputs: The scored fields of the children.
         routed: Whether the borehole and mine rules score each child, in the order of
-            the children.
+            the children: the child is routed to them and has a field they read
+            filled.
     """
 
     inputs: Inputs
     routed: numpy.ndarray
+
+    @staticmethod
+    def reads() -> tuple[str, ...]:
+        """List the fields the rules read.
+
+        Returns:
+            The fields of the criteria, the number of recordings that makes a gradient
+            a continuous log and the depths of the interval.
+        """
+        criteria = (*T_CRITERIA, *TC_CRITERIA)
+        return tuple(
+            dict.fromkeys(
+                (
+                    *(field for criterion in criteria for field in criterion.reads()),
+                    Field.T_number,
+                    *INTERVAL_DEPTHS,
+                )
+            )
+        )
 
     @staticmethod
     def concepts() -> tuple[tuple[str, str], ...]:
@@ -391,7 +412,7 @@ class BoreholeRules:
         """
         top, bottom = (
             self.inputs.first(self.inputs.numbers(field)).notna().to_numpy()
-            for field in (Field.q_top, Field.q_bottom)
+            for field in INTERVAL_DEPTHS
         )
         return top | bottom
 

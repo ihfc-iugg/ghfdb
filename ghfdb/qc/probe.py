@@ -223,11 +223,29 @@ class ProbeRules:
     Attributes:
         inputs: The scored fields of the children.
         routed: Whether the probe-sensing rules score each child, in the order of the
-            children.
+            children: the child is routed to them and has a field they read filled.
     """
 
     inputs: Inputs
     routed: numpy.ndarray
+
+    @staticmethod
+    def reads() -> tuple[str, ...]:
+        """List the fields the rules read.
+
+        Returns:
+            The fields of the criteria and of the two corrections that waive one.
+        """
+        criteria = (*T_CRITERIA, *TC_CRITERIA)
+        corrections = (BOTTOM_WATER_CORRECTED, TILT_IS_CORRECTED)
+        return tuple(
+            dict.fromkeys(
+                (
+                    *(field for criterion in criteria for field in criterion.reads()),
+                    *(correction.field for correction in corrections),
+                )
+            )
+        )
 
     @staticmethod
     def concepts() -> tuple[tuple[str, str], ...]:

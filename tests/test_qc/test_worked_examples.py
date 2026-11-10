@@ -22,6 +22,7 @@ FIELD_PARTS = {
     "child",
 }
 FLAGS = re.compile("".join(f"[{letter}{letter.lower()}Xx\\-]" for letter in "SETPVCR"))
+RULE_PARTS = {"probe-t", "probe-tc", "borehole-t", "borehole-tc"}
 SCORE_RANGE = (0.1, 1.2)
 U_SCORES = {"U1", "U2", "U3", "U4", "Ux"}
 M_SCORES = {"M1", "M2", "M3", "M4", "M1x", "M2x", "M3x", "M4x", "Mx"}
@@ -129,6 +130,15 @@ class TestExpected:
                 assert score is None or SCORE_RANGE[0] <= score <= SCORE_RANGE[1], (
                     example["id"]
                 )
+
+    def test_a_score_of_a_set_of_rules_states_whether_it_is_marked(
+        self, examples: list[Mapping[str, Any]]
+    ) -> None:
+        for example in examples:
+            if example["part"] in RULE_PARTS:
+                assert isinstance(example["expected"].get("marked"), bool), example[
+                    "id"
+                ]
 
 
 class TestCriteria:

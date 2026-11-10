@@ -29,11 +29,14 @@ to turn a value into a penalty:
 * `Classes`: a term against groups of concepts.
 * `Cases`: rows of conditions on several fields, the poorest row that holds counting.
 
-Each table scores every child at once, keeps the poorest of a child's values, and lists its rows
-and the concepts it names as data. The criteria are declared as module-level constants in
-`ghfdb.qc.probe` and `ghfdb.qc.borehole` and listed in `ghfdb.qc.criteria`. What a table cannot
-say stays code: the water depth read from the elevation, the corrections that waive a criterion,
-which of the three cases a borehole gradient is, and the interval depth gate.
+Each table scores every child at once, keeps the poorest of a child's values, takes its largest
+penalty from its own rows, and lists the concepts it names. A table may read its number through a
+declared conversion, as the water depth reads the elevation with its sign reversed. The criteria
+are declared as module-level constants in `ghfdb.qc.probe` and `ghfdb.qc.borehole`. Each set of
+rules is a `RuleSet` in `ghfdb.qc.ruleset` that lists the criteria its scores add up, the
+corrections that waive one, and the criterion that stands in for another in a measurement's own
+score, and `ghfdb.qc.criteria` lists every declared criterion from them. What a table cannot say
+stays code: which of the three cases a borehole gradient is, and the interval depth gate.
 
 The scheme pages render each criterion's penalty table from its declaration, through the
 `criterion()` function of the documentation extension. A diagram keeps the structure of the
@@ -47,7 +50,8 @@ changes one line of the generated names and no worked example.
 
 ## Consequences
 
-* A change of a penalty, an edge or a group is one edit to a declaration. The page that states it
+* A change of a penalty, an edge or a group is one edit to a declaration, and a new criterion is
+  scored once it is listed in its set of rules. The page that states it
   and the tests that run it follow, and a criterion that a worked example does not reach is
   found, because every declared criterion has an example.
 * A scheme change that adds a kind of condition adds it to the table that needs it. The probe

@@ -8,7 +8,7 @@ from ghfdb.fields import Field
 from ghfdb.qc.concepts import DRILLING, MINING, PROBING_ONSHORE
 from ghfdb.qc.inputs import Inputs
 
-URIS = {
+URIS: dict[str, dict[str, str]] = {
     Field.explo_method: {
         "[Drilling]": DRILLING,
         "[Mining]": MINING,

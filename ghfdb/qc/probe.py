@@ -1,18 +1,34 @@
 """The probe-sensing rules: the T-score of a gradient and the TC-score of a probe.
 
-Every method works on the whole table of children at once. A criterion reads its fields
-from ``Inputs`` and returns the penalty and the missing-information mark of every child.
+The criteria are declared here as tables (see ``penalties``). Only what a table cannot
+say is code: the water depth read from the elevation, and the two corrections that waive
+a criterion.
 """
 
-import numpy
-import pandas
+from dataclasses import dataclass
 
+import numpy
+
+from ghfdb.fields import Field
 from ghfdb.qc.concepts import (
     ACTUAL_IN_SITU,
     ACTUAL_LOCATION,
+    AMBIENT_OR_UNSPECIFIED,
+    CHLORINE_CONTENT,
+    DRY_UNSPECIFIED_OR_OTHER,
+    FULL_IN_SITU,
     IN_SITU_PROBE,
+    LABORATORY_OTHER,
+    LINE_SOURCE_FULL,
+    LINE_SOURCE_HALF,
     LITERATURE_OR_UNSPECIFIED,
+    LITHOLOGY,
+    MINERAL_COMPOSITION,
     OTHER_LOCATION,
+    PARTIAL_IN_SITU,
+    PLANE_SOURCE_FULL,
+    PLANE_SOURCE_HALF,
+    POINT_SOURCE,
     PRESENT_CORRECTED,
     PROBE_PULSE,
     RECOVERED,
@@ -20,95 +36,227 @@ from ghfdb.qc.concepts import (
     SATURATED_IN_SITU,
     SATURATED_MEASURED,
     TILT_CORRECTED,
+    UNSPECIFIED_METHOD,
+    WATER_CONTENT,
+    WELL_LOG_DETERMINISTIC,
+    WELL_LOG_EMPIRICAL,
 )
-from ghfdb.qc.rules import EXPLORATION_METHOD, PROBE_SENSING
-from ghfdb.qc.scheme import (
-    AMBIENT_OR_UNSPECIFIED,
-    DRY_UNSPECIFIED_OR_OTHER,
-    ESTIMATED_FROM_LITERATURE,
-    ESTIMATED_FROM_OTHER,
-    FULL_IN_SITU,
-    LABORATORY_METHODS,
-    LARGEST_PENALTY,
-    PARTIAL_IN_SITU,
-    Inputs,
+from ghfdb.qc.inputs import Inputs
+from ghfdb.qc.penalties import (
+    LARGEST,
+    Band,
+    Bands,
+    Case,
+    Cases,
+    Classes,
+    Criterion,
+    Group,
     Penalty,
     Score,
 )
+from ghfdb.qc.rules import Condition
+
+LABORATORY_METHODS = (
+    POINT_SOURCE,
+    LINE_SOURCE_FULL,
+    LINE_SOURCE_HALF,
+    PLANE_SOURCE_FULL,
+    PLANE_SOURCE_HALF,
+    LABORATORY_OTHER,
+)
+ESTIMATED_FROM_LITERATURE = (LITHOLOGY, WELL_LOG_DETERMINISTIC, WELL_LOG_EMPIRICAL)
+ESTIMATED_FROM_OTHER = (
+    WATER_CONTENT,
+    MINERAL_COMPOSITION,
+    CHLORINE_CONTENT,
+    UNSPECIFIED_METHOD,
+)
+
+PENETRATION = Criterion(
+    "probe-t.penetration",
+    "Probe penetration",
+    Bands(
+        Field.probe_penetration,
+        (Band(0.1, 10), Band(0.0, 3), Band(-0.1, 1), Band(-0.2)),
+    ),
+    "Table 2, Probe penetration",
+)
+RECORDINGS = Criterion(
+    "probe-t.recordings",
+    "Number of temperature recordings",
+    Bands(
+        Field.T_number,
+        (Band(0.1, 5), Band(0.0, 2), Band(-0.1, 1), Band(-0.2)),
+    ),
+    "Table 2, Number of temperature points",
+)
+# The bands are in metres of water depth: the elevation with its sign reversed, which
+# ProbeRules.water_depth reads. An elevation at or above sea level is an empty depth.
+WATER_DEPTH = Criterion(
+    "probe-t.water-depth",
+    "Water depth",
+    Bands(Field.elevation, (Band(0.0, 2500), Band(-0.1, 1500), Band(-0.2))),
+    "Table 2, Water depth",
+)
+TILT = Criterion(
+    "probe-t.tilt",
+    "Probe tilt",
+    Bands(
+        Field.probe_tilt,
+        (Band(-0.2, 30), Band(-0.1, 10), Band(0.0, 0, inclusive=True)),
+    ),
+    "Table 2, Tilt",
+)
+BOTTOM_WATER_CORRECTED = Condition(Field.corr_SUR_flag, (PRESENT_CORRECTED,))
+TILT_IS_CORRECTED = Condition(Field.corr_T_flag, (TILT_CORRECTED,))
+
+LOCATION = Criterion(
+    "probe-tc.location",
+    "Conductivity location",
+    Classes(
+        (Field.tc_location,),
+        (
+            Group(0.0, (ACTUAL_LOCATION,)),
+            Group(-0.1, (OTHER_LOCATION,)),
+            Group(-0.2, (LITERATURE_OR_UNSPECIFIED,)),
+        ),
+        unmatched=LARGEST,
+    ),
+    "Table 2, Localization",
+)
+SATURATION = Criterion(
+    "probe-tc.saturation",
+    "Saturation, method, source and location together",
+    Cases(
+        (
+            Case(
+                0.1,
+                {
+                    Field.tc_saturation: (SATURATED_IN_SITU,),
+                    Field.tc_method: (PROBE_PULSE,),
+                    Field.tc_source: (IN_SITU_PROBE,),
+                },
+            ),
+            Case(
+                0.0,
+                {
+                    Field.tc_saturation: (RECOVERED, SATURATED_MEASURED),
+                    Field.tc_method: (PROBE_PULSE,),
+                    Field.tc_source: (IN_SITU_PROBE,),
+                },
+            ),
+            Case(
+                0.0,
+                {
+                    Field.tc_saturation: (RECOVERED, SATURATED_MEASURED),
+                    Field.tc_method: LABORATORY_METHODS,
+                },
+            ),
+            Case(
+                -0.1,
+                {
+                    Field.tc_saturation: (SATURATED_CALCULATED,),
+                    Field.tc_method: LABORATORY_METHODS,
+                },
+            ),
+            Case(
+                -0.2,
+                {
+                    Field.tc_saturation: DRY_UNSPECIFIED_OR_OTHER,
+                    Field.tc_method: LABORATORY_METHODS,
+                },
+            ),
+            Case(
+                -0.1,
+                {
+                    Field.tc_method: ESTIMATED_FROM_LITERATURE,
+                    Field.tc_location: (LITERATURE_OR_UNSPECIFIED,),
+                },
+            ),
+            Case(-0.2, {Field.tc_method: ESTIMATED_FROM_OTHER}),
+        )
+    ),
+    "Table 2, Source type and saturation",
+)
+NUMBER = Criterion(
+    "probe-tc.number",
+    "Number of conductivity measurements",
+    Bands(
+        Field.tc_number,
+        (Band(0.0, 3), Band(-0.1, 1), Band(-0.2)),
+        left_out_when={Field.tc_location: (LITERATURE_OR_UNSPECIFIED,)},
+    ),
+    "Table 2, Number of conductivities",
+)
+CONDITIONS = Criterion(
+    "probe-tc.pT",
+    "pT conditions and method",
+    Cases(
+        (
+            Case(
+                0.1,
+                {
+                    Field.tc_pT_conditions: (ACTUAL_IN_SITU,),
+                    Field.tc_method: (PROBE_PULSE,),
+                },
+            ),
+            Case(0.0, {Field.tc_pT_conditions: FULL_IN_SITU}),
+            Case(-0.1, {Field.tc_pT_conditions: PARTIAL_IN_SITU}),
+            Case(-0.2, {Field.tc_pT_conditions: AMBIENT_OR_UNSPECIFIED}),
+        )
+    ),
+    "Table 2, pT conditions",
+)
+
+T_CRITERIA = (PENETRATION, RECORDINGS, WATER_DEPTH, TILT)
+TC_CRITERIA = (LOCATION, SATURATION, NUMBER, CONDITIONS)
 
 
+@dataclass(frozen=True)
 class ProbeRules:
     """Score the children explored by probing: the T-score and the TC-score.
 
     A field that holds several values is scored value by value and the poorest counts
-    (docs/reference/quality-scheme/index.md, "Several values in one field"). A criterion
-    that reads several fields scores every combination of their values.
-
-    Args:
-        inputs: The scored fields of the children.
+    (docs/reference/quality-scheme/index.md, "Several values in one field").
 
     Attributes:
         inputs: The scored fields of the children.
+        routed: Whether the probe-sensing rules score each child, in the order of the
+            children.
     """
 
-    def __init__(self, inputs: Inputs) -> None:
-        self.inputs = inputs
+    inputs: Inputs
+    routed: numpy.ndarray
 
-    def routed(self) -> pandas.Series:
-        """Find the children the probe-sensing rules score.
+    @staticmethod
+    def concepts() -> tuple[tuple[str, str], ...]:
+        """List the concepts the rules name, with their fields.
 
         Returns:
-            Whether the first exploration method of each child is a probing method.
+            The concepts of the criteria and of the two corrections that waive one.
         """
-        methods = self.inputs.first(self.inputs.concepts[EXPLORATION_METHOD])
-        return methods.isin(PROBE_SENSING.concepts)
+        criteria = (*T_CRITERIA, *TC_CRITERIA)
+        corrections = (BOTTOM_WATER_CORRECTED, TILT_IS_CORRECTED)
+        return (
+            *(pair for criterion in criteria for pair in criterion.concepts()),
+            *((c.field, uri) for c in corrections for uri in c.concepts),
+        )
 
-    def waive(self, penalty: Penalty, code: str, concept: str) -> Penalty:
-        """Take away a penalty and its mark from the children a correction waives.
+    def has(self, correction: Condition) -> numpy.ndarray:
+        """Find the children that have a correction.
 
         Args:
-            penalty: The criterion's penalty.
-            code: The code of the correction field, read at its first value.
-            concept: The concept of the correction that waives the criterion.
+            correction: The field of the correction and the concepts it must hold, read
+                at the child's first value.
 
         Returns:
-            The penalty, ``0`` without the mark where the correction is the concept.
+            Whether each child has the correction.
         """
-        waived = self.inputs.first(self.inputs.concepts[code]).eq(concept).fillna(False)
-        return Penalty(
-            penalty.value.mask(waived, 0.0), penalty.marked.mask(waived, False)
-        )
-
-    def penetration(self) -> Penalty:
-        """Score the probe penetration, ``C6``, in metres.
-
-        See docs/reference/quality-scheme/probe-sensing.md, "Penetration".
-
-        Returns:
-            The penalty and the mark of each child.
-        """
-        return Penalty.bands(
-            self.inputs.numbers["C6"],
-            [(10, 0.1), (3, 0.0), (1, -0.1)],
-            self.inputs.index,
-        )
-
-    def recordings(self) -> Penalty:
-        """Score the number of temperature recordings, ``C37``.
-
-        See docs/reference/quality-scheme/probe-sensing.md, "Number of temperature
-        recordings".
-
-        Returns:
-            The penalty and the mark of each child.
-        """
-        numbers = self.inputs.numbers["C37"]
-        return Penalty.bands(
-            numbers, [(5, 0.1), (2, 0.0), (1, -0.1)], self.inputs.index
-        )
+        first = self.inputs.first(self.inputs.concepts(correction.field))
+        return first.isin(correction.concepts).to_numpy(dtype=bool)
 
     def water_depth(self) -> Penalty:
-        """Score the water depth, the elevation ``P6`` with its sign reversed.
+        """Score the water depth, the elevation with its sign reversed.
 
         An elevation of zero or above has no water depth and counts as empty. This is
         the criterion before the bottom-water correction waives it. See
@@ -117,50 +265,40 @@ class ProbeRules:
         Returns:
             The penalty and the mark of each child.
         """
-        elevation = self.inputs.numbers["P6"]
+        elevation = self.inputs.numbers(Field.elevation)
         depth = (-elevation).where(elevation < 0)
-        return Penalty.bands(depth, [(2500, 0.0), (1500, -0.1)], self.inputs.index)
+        penalty, marked = WATER_DEPTH.table.values(depth)
+        return Penalty.poorest(penalty, marked, self.inputs.index)
 
-    def tilt(self) -> Penalty:
-        """Score the probe tilt, ``C23``, in degrees.
+    def gradient(self, *, waived: bool) -> Score:
+        """Score the gradient of each child.
 
-        A tilt below zero fits no class and takes the largest penalty without the mark.
-        This is the criterion before the tilt correction waives it. See
-        docs/reference/quality-scheme/probe-sensing.md, "Tilt".
+        See docs/reference/quality-scheme/probe-sensing.md, "T-score".
+
+        Args:
+            waived: Whether the child's corrections apply: a tilt correction waives the
+                tilt criterion and a bottom-water correction waives the water depth.
 
         Returns:
-            The penalty and the mark of each child.
+            The score and its mark for each child.
         """
-        degrees = self.inputs.numbers["C23"]
-        penalty = pandas.Series(
-            numpy.select(
-                [degrees > 30, degrees > 10, degrees >= 0],
-                [LARGEST_PENALTY, -0.1, 0.0],
-                LARGEST_PENALTY,
-            ),
-            index=degrees.index,
+        penetration, recordings, tilt = (
+            criterion.score(self.inputs)
+            for criterion in (PENETRATION, RECORDINGS, TILT)
         )
-        return Penalty.poorest(penalty, degrees.isna(), self.inputs.index)
+        water_depth = self.water_depth()
+        if waived:
+            water_depth = water_depth.waived(self.has(BOTTOM_WATER_CORRECTED))
+            tilt = tilt.waived(self.has(TILT_IS_CORRECTED))
+        return Score.total([penetration, recordings, water_depth, tilt], self.routed)
 
     def t_score(self) -> Score:
         """Score the gradient of each child, with both corrections applied.
 
-        A tilt correction waives the tilt criterion and a bottom-water correction waives
-        the water-depth criterion (docs/reference/quality-scheme/probe-sensing.md,
-        "T-score").
-
         Returns:
             The T-score and its mark for each child.
         """
-        return Score.total(
-            [
-                self.penetration(),
-                self.recordings(),
-                self.waive(self.water_depth(), "C17", PRESENT_CORRECTED),
-                self.waive(self.tilt(), "C12", TILT_CORRECTED),
-            ],
-            self.routed(),
-        )
+        return self.gradient(waived=True)
 
     def own_t_score(self) -> Score:
         """Score the gradient on its own, before the child's corrections apply.
@@ -171,124 +309,7 @@ class ProbeRules:
         Returns:
             The own T-score and its mark for each child.
         """
-        return Score.total(
-            [self.penetration(), self.recordings(), self.water_depth(), self.tilt()],
-            self.routed(),
-        )
-
-    def location(self) -> Penalty:
-        """Score where the conductivity was measured, ``C42``.
-
-        See docs/reference/quality-scheme/probe-sensing.md, "Location".
-
-        Returns:
-            The penalty and the mark of each child.
-        """
-        location = self.inputs.concepts["C42"]
-        penalty = pandas.Series(
-            numpy.select(
-                [
-                    location.eq(ACTUAL_LOCATION).fillna(False).to_numpy(dtype=bool),
-                    location.eq(OTHER_LOCATION).fillna(False).to_numpy(dtype=bool),
-                ],
-                [0.0, -0.1],
-                LARGEST_PENALTY,
-            ),
-            index=location.index,
-        )
-        return Penalty.poorest(penalty, location.isna(), self.inputs.index)
-
-    def saturation(self) -> Penalty:
-        """Score the saturation with the method, the source and the location.
-
-        See docs/reference/quality-scheme/probe-sensing.md, "Saturation".
-
-        Returns:
-            The penalty and the mark of each child.
-        """
-        concepts = self.inputs.concepts
-        rows = Inputs.combinations(
-            {
-                "saturation": concepts["C44"],
-                "method": concepts["C43"],
-                "source": concepts["C41"],
-                "location": concepts["C42"],
-            }
-        )
-        saturation, method = rows["saturation"], rows["method"]
-        in_situ = rows["source"].eq(IN_SITU_PROBE) & method.eq(PROBE_PULSE)
-        measured = saturation.isin([RECOVERED, SATURATED_MEASURED])
-        laboratory = method.isin(LABORATORY_METHODS)
-        return Penalty.cases(
-            rows,
-            [
-                (0.1, saturation.eq(SATURATED_IN_SITU) & in_situ),
-                (0.0, measured & in_situ),
-                (0.0, measured & laboratory),
-                (-0.1, saturation.eq(SATURATED_CALCULATED) & laboratory),
-                (-0.2, saturation.isin(DRY_UNSPECIFIED_OR_OTHER) & laboratory),
-                (
-                    -0.1,
-                    method.isin(ESTIMATED_FROM_LITERATURE)
-                    & rows["location"].eq(LITERATURE_OR_UNSPECIFIED),
-                ),
-                (-0.2, method.isin(ESTIMATED_FROM_OTHER)),
-            ],
-            self.inputs.index,
-        )
-
-    def number(self) -> Penalty:
-        """Score the number of conductivity measurements, ``C47``.
-
-        The criterion is left out for a literature location, whatever the number. See
-        docs/reference/quality-scheme/probe-sensing.md, "Number of conductivity
-        measurements".
-
-        Returns:
-            The penalty and the mark of each child.
-        """
-        rows = Inputs.combinations(
-            {
-                "number": self.inputs.numbers["C47"],
-                "location": self.inputs.concepts["C42"],
-            }
-        )
-        numbers = rows["number"]
-        penalty = pandas.Series(
-            numpy.select([numbers > 3, numbers > 1], [0.0, -0.1], LARGEST_PENALTY),
-            index=rows.index,
-        )
-        skipped = rows["location"].eq(LITERATURE_OR_UNSPECIFIED).fillna(False)
-        return Penalty.poorest(
-            penalty.mask(skipped, 0.0),
-            numbers.isna().mask(skipped, False),
-            self.inputs.index,
-        )
-
-    def conditions(self) -> Penalty:
-        """Score the pressure and temperature conditions with the method.
-
-        See docs/reference/quality-scheme/probe-sensing.md, "Pressure and temperature
-        conditions".
-
-        Returns:
-            The penalty and the mark of each child.
-        """
-        concepts = self.inputs.concepts
-        rows = Inputs.combinations(
-            {"conditions": concepts["C45"], "method": concepts["C43"]}
-        )
-        conditions = rows["conditions"]
-        return Penalty.cases(
-            rows,
-            [
-                (0.1, conditions.eq(ACTUAL_IN_SITU) & rows["method"].eq(PROBE_PULSE)),
-                (0.0, conditions.isin(FULL_IN_SITU)),
-                (-0.1, conditions.isin(PARTIAL_IN_SITU)),
-                (-0.2, conditions.isin(AMBIENT_OR_UNSPECIFIED)),
-            ],
-            self.inputs.index,
-        )
+        return self.gradient(waived=False)
 
     def tc_score(self) -> Score:
         """Score the conductivity of each child.
@@ -301,8 +322,7 @@ class ProbeRules:
             The TC-score and its mark for each child.
         """
         return Score.total(
-            [self.location(), self.saturation(), self.number(), self.conditions()],
-            self.routed(),
+            [criterion.score(self.inputs) for criterion in TC_CRITERIA], self.routed
         )
 
     def own_tc_score(self) -> Score:

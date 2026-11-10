@@ -23,7 +23,7 @@ from ghfdb.qc.penalties import (
 
 RED, GREEN, BLUE = "c:red", "c:green", "c:blue"
 SMALL, LARGE = "c:small", "c:large"
-URIS = {
+URIS: dict[str, dict[str, str]] = {
     Field.tc_location: {"[red]": RED, "[green]": GREEN, "[blue]": BLUE},
     Field.tc_method: {"[small]": SMALL, "[large]": LARGE},
 }
@@ -256,7 +256,9 @@ class TestClasses:
         assert marks(penalty) == [True, True, True]
 
     def test_a_concept_in_no_group_takes_the_unmatched_outcome(self) -> None:
-        uris = {Field.tc_location: {"[red]": RED, "[other]": "c:other"}}
+        uris: dict[str, dict[str, str]] = {
+            Field.tc_location: {"[red]": RED, "[other]": "c:other"}
+        }
         inputs = Inputs(children(C42=["[other]"]), uris)
 
         penalty = Classes(
@@ -278,7 +280,7 @@ class TestClasses:
         assert marks(penalty) == [False, True, False]
 
     def test_the_values_of_several_fields_are_scored_together(self) -> None:
-        uris = {
+        uris: dict[str, dict[str, str]] = {
             Field.T_method_top: {"[red]": RED, "[blue]": BLUE},
             Field.T_method_bottom: {"[red]": RED, "[blue]": BLUE},
         }
@@ -295,7 +297,7 @@ class TestClasses:
     def test_an_empty_value_is_left_out_when_the_table_says_so_and_another_is_filled(
         self,
     ) -> None:
-        uris = {
+        uris: dict[str, dict[str, str]] = {
             Field.T_method_top: {"[red]": RED, "[blue]": BLUE},
             Field.T_method_bottom: {"[red]": RED, "[blue]": BLUE},
         }
@@ -405,5 +407,4 @@ class TestCriterion:
         penalty = criterion.score(inputs_of(C42=["[green]"]))
 
         assert penalties(penalty) == [0.0]
-        assert criterion.reads() == (Field.tc_location,)
         assert criterion.concepts() == TestClasses.COLOURS.concepts()

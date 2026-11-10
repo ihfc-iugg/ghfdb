@@ -8,8 +8,12 @@ import pytest
 from frictionless import Schema
 
 from ghfdb.fields import Vocabularies
+from ghfdb.qc.criteria import term_uris
+from ghfdb.qc.inputs import Inputs
 from ghfdb.qc.probe import ProbeRules
-from ghfdb.qc.scheme import Inputs, Terms
+from ghfdb.qc.scores import Scores
+
+Uris = dict[str, dict[str, str]]
 
 PARTS = ("probe-t", "probe-tc")
 PROBE = "[Probing (offshore, ocean)]"
@@ -43,12 +47,12 @@ def one_child(inputs: Mapping[str, Any]) -> pandas.DataFrame:
 
 
 @pytest.fixture(scope="module")
-def terms(schema: Schema, published_vocabularies: Vocabularies) -> Terms:
-    return Terms(schema, published_vocabularies)
+def uris(schema: Schema, published_vocabularies: Vocabularies) -> Uris:
+    return term_uris(schema, Scores.concepts(), published_vocabularies)
 
 
-def rules_of(terms: Terms, data: pandas.DataFrame) -> ProbeRules:
-    return ProbeRules(Inputs(data, terms))
+def rules_of(uris: Uris, data: pandas.DataFrame) -> ProbeRules:
+    return Scores(Inputs(data, uris)).probe
 
 
 class TestProbeTScore:
@@ -57,8 +61,8 @@ class TestProbeTScore:
         [e for e in EXAMPLES if e["part"] == "probe-t"],
         ids=lambda example: example["id"],
     )
-    def test_worked_example(self, terms: Terms, example: Mapping[str, Any]) -> None:
-        rules = rules_of(terms, one_child(example["inputs"]))
+    def test_worked_example(self, uris: Uris, example: Mapping[str, Any]) -> None:
+        rules = rules_of(uris, one_child(example["inputs"]))
 
         score = rules.t_score()
 
@@ -66,7 +70,7 @@ class TestProbeTScore:
         if "marked" in example["expected"]:
             assert score.marked.iloc[0] == example["expected"]["marked"]
 
-    def test_the_own_score_applies_neither_waiver(self, terms: Terms) -> None:
+    def test_the_own_score_applies_neither_waiver(self, uris: Uris) -> None:
         child = {
             "P12": PROBE,
             "C6": 5,
@@ -74,7 +78,7 @@ class TestProbeTScore:
             "C12": "[Tilt corrected]",
             "C17": "[Present and corrected]",
         }
-        rules = rules_of(terms, one_child(child))
+        rules = rules_of(uris, one_child(child))
 
         child_score = rules.t_score()
         own_score = rules.own_t_score()
@@ -83,32 +87,30 @@ class TestProbeTScore:
         assert (own_score.value.iloc[0], own_score.marked.iloc[0]) == (0.7, True)
 
     def test_a_negative_tilt_takes_the_largest_penalty_without_the_mark(
-        self, terms: Terms
+        self, uris: Uris
     ) -> None:
         child = {"P12": PROBE, "P6": -3000, "C6": 5, "C37": 6, "C23": -1}
 
-        score = rules_of(terms, one_child(child)).t_score()
+        score = rules_of(uris, one_child(child)).t_score()
 
         assert score.value.iloc[0] == 0.9
         assert not score.marked.iloc[0]
 
-    def test_a_child_that_other_rules_score_is_not_determined(
-        self, terms: Terms
-    ) -> None:
+    def test_a_child_that_other_rules_score_is_not_determined(self, uris: Uris) -> None:
         data = pandas.DataFrame(
             {"P12": ["[Drilling]", None, PROBE], "C6": ["5", "5", "5"]},
             index=pandas.Index([12, 9, 10], name="row"),
             dtype=object,
         )
 
-        rules = rules_of(terms, data)
+        rules = rules_of(uris, data)
 
         for score in (rules.t_score(), rules.own_t_score()):
             assert score.value.isna().tolist() == [True, True, False]
             assert score.marked.isna().tolist() == [True, True, False]
 
     def test_every_child_of_a_dataset_is_scored_under_its_own_index(
-        self, terms: Terms
+        self, uris: Uris
     ) -> None:
         data = pandas.DataFrame(
             {
@@ -122,15 +124,15 @@ class TestProbeTScore:
             dtype=object,
         )
 
-        score = rules_of(terms, data).t_score()
+        score = rules_of(uris, data).t_score()
 
         assert score.value.index.tolist() == [12, 9, 10]
         assert score.value.tolist() == [1.2, 0.9, 0.8]
 
-    def test_several_values_score_as_the_poorest(self, terms: Terms) -> None:
+    def test_several_values_score_as_the_poorest(self, uris: Uris) -> None:
         child = {"P12": PROBE, "P6": -3000, "C6": [12, 0.5], "C23": 0, "C37": 6}
 
-        score = rules_of(terms, one_child(child)).t_score()
+        score = rules_of(uris, one_child(child)).t_score()
 
         assert score.value.iloc[0] == 0.9
 
@@ -141,8 +143,8 @@ class TestProbeTCScore:
         [e for e in EXAMPLES if e["part"] == "probe-tc"],
         ids=lambda example: example["id"],
     )
-    def test_worked_example(self, terms: Terms, example: Mapping[str, Any]) -> None:
-        rules = rules_of(terms, one_child(example["inputs"]))
+    def test_worked_example(self, uris: Uris, example: Mapping[str, Any]) -> None:
+        rules = rules_of(uris, one_child(example["inputs"]))
 
         score = rules.tc_score()
 
@@ -154,20 +156,20 @@ class TestProbeTCScore:
         assert own.marked.equals(score.marked)
 
     def test_a_method_that_fits_no_saturation_case_takes_no_mark(
-        self, terms: Terms
+        self, uris: Uris
     ) -> None:
         child = {
             **BEST_CONDUCTIVITY,
             "C43": "[Probe - continuous heating technique]",
         }
 
-        score = rules_of(terms, one_child(child)).tc_score()
+        score = rules_of(uris, one_child(child)).tc_score()
 
         assert score.value.iloc[0] == 0.6
         assert not score.marked.iloc[0]
 
     def test_a_literature_location_among_several_leaves_the_number_to_the_rest(
-        self, terms: Terms
+        self, uris: Uris
     ) -> None:
         child = {
             **BEST_CONDUCTIVITY,
@@ -175,27 +177,25 @@ class TestProbeTCScore:
         }
         del child["C47"]
 
-        score = rules_of(terms, one_child(child)).tc_score()
+        score = rules_of(uris, one_child(child)).tc_score()
 
         assert score.value.iloc[0] == 0.8
         assert score.marked.iloc[0]
 
-    def test_a_child_that_other_rules_score_is_not_determined(
-        self, terms: Terms
-    ) -> None:
+    def test_a_child_that_other_rules_score_is_not_determined(self, uris: Uris) -> None:
         data = pandas.DataFrame(
             {"P12": ["[Mining]", PROBE], "C47": ["4", "4"]},
             index=pandas.Index([12, 9], name="row"),
             dtype=object,
         )
 
-        score = rules_of(terms, data).tc_score()
+        score = rules_of(uris, data).tc_score()
 
         assert score.value.isna().tolist() == [True, False]
         assert score.marked.isna().tolist() == [True, False]
 
     def test_every_child_of_a_dataset_is_scored_under_its_own_index(
-        self, terms: Terms
+        self, uris: Uris
     ) -> None:
         data = pandas.DataFrame(
             {
@@ -211,7 +211,7 @@ class TestProbeTCScore:
             dtype=object,
         )
 
-        score = rules_of(terms, data).tc_score()
+        score = rules_of(uris, data).tc_score()
 
         assert score.value.index.tolist() == [12, 9]
         assert score.value.tolist() == [1.2, 0.5]

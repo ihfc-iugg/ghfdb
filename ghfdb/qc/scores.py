@@ -4,7 +4,7 @@ import numpy
 import pandas
 from frictionless import Schema
 
-from ghfdb.fields import Vocabularies
+from ghfdb.fields import Field, Vocabularies
 from ghfdb.qc.borehole import BoreholeRules
 from ghfdb.qc.check import Kind
 from ghfdb.qc.concepts import (
@@ -12,15 +12,33 @@ from ghfdb.qc.concepts import (
     PRESENT_CORRECTED,
     PRESENT_NOT_CORRECTED,
     PRESENT_NOT_SIGNIFICANT,
+    UNSPECIFIED_CORRECTION,
 )
+from ghfdb.qc.criteria import term_uris
+from ghfdb.qc.inputs import Inputs
+from ghfdb.qc.penalties import SCORE_DECIMALS, Band, Score
 from ghfdb.qc.probe import ProbeRules
 from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD, PROBE_SENSING
-from ghfdb.qc.scheme import DECIMALS, FLAG_FIELDS, Inputs, Score, Terms
 from ghfdb.qc.uncertainty import UScore
 
-PROBE_RULES = "probe sensing"
-BOREHOLE_RULES = "borehole and mine"
-M_BOUNDARIES = (0.75, 0.50, 0.25)
+# The class of the product of the T-score and the TC-score: M1 from 0.75, M2 from 0.50,
+# M3 from 0.25 and M4 below. A product on an edge takes the better class.
+PRODUCT_CLASSES = (
+    Band(1, 0.75, inclusive=True),
+    Band(2, 0.50, inclusive=True),
+    Band(3, 0.25, inclusive=True),
+    Band(4),
+)
+# The correction field of each perturbation flag, in the order the flags are written.
+FLAGS = {
+    Field.corr_S_flag: "S",
+    Field.corr_E_flag: "E",
+    Field.corr_TOPO_flag: "T",
+    Field.corr_PAL_flag: "P",
+    Field.corr_SUR_flag: "V",
+    Field.corr_CONV_flag: "C",
+    Field.corr_HR_flag: "R",
+}
 # The problems that name a cell whose value is scored as empty.
 BLANKING = (
     Kind.MISSING,
@@ -29,7 +47,8 @@ BLANKING = (
     Kind.NOT_IN_VOCABULARY,
     Kind.RULE,
 )
-COLUMNS = (
+# The columns of the table of scores, in order.
+SCORE_COLUMNS = (
     "rules",
     "U",
     "T",
@@ -43,23 +62,37 @@ COLUMNS = (
     "own_T_marked",
     "own_TC_marked",
 )
+# The columns a report shows for each child.
+REPORT_COLUMNS = ("rules", "U", "T", "TC", "M", "flags", "code")
 
 
 class Scores:
-    """Routing and perturbation flags of the children of a dataset.
+    """Routing, perturbation flags and grades of the children of a dataset.
+
+    The exploration method routes each child to a set of rules once, and both sets of
+    rules are given the children they score.
 
     Args:
         inputs: The scored fields of the children.
-        terms: The terms the scheme's concepts resolve to.
 
     Attributes:
         inputs: The scored fields of the children.
-        terms: The terms the scheme's concepts resolve to.
+        routing: The name of the set of rules that scores each child, in the order of
+            the children, ``<NA>`` where the exploration method selects none because it
+            is other, unspecified or empty.
+        probe: The probe-sensing rules.
+        borehole: The borehole and mine rules.
     """
 
-    def __init__(self, inputs: Inputs, terms: Terms) -> None:
+    def __init__(self, inputs: Inputs) -> None:
         self.inputs = inputs
-        self.terms = terms
+        methods = inputs.first(inputs.concepts(EXPLORATION_METHOD))
+        routing = pandas.Series(pandas.NA, index=methods.index, dtype="string")
+        for domain in (PROBE_SENSING, BOREHOLE):
+            routing = routing.mask(methods.isin(domain.concepts), domain.rules)
+        self.routing = routing
+        self.probe = ProbeRules(inputs, routing.isin([PROBE_SENSING.rules]).to_numpy())
+        self.borehole = BoreholeRules(inputs, routing.isin([BOREHOLE.rules]).to_numpy())
 
     @classmethod
     def build(
@@ -87,8 +120,30 @@ class Scores:
                 its field.
             OSError: The vocabularies are not cached and cannot be downloaded.
         """
-        terms = Terms(schema, vocabularies)
-        return cls(Inputs(cls.blank(data, problems), terms), terms)
+        uris = term_uris(schema, cls.concepts(), vocabularies)
+        return cls(Inputs(cls.blank(data, problems), uris))
+
+    @staticmethod
+    def concepts() -> tuple[tuple[str, str], ...]:
+        """List every concept the scheme names, with its field.
+
+        Returns:
+            The concepts of the exploration methods, of the perturbation flags and of
+            both sets of rules, each once.
+        """
+        methods = tuple(
+            (EXPLORATION_METHOD, uri)
+            for domain in (PROBE_SENSING, BOREHOLE)
+            for uri in domain.concepts
+        )
+        flags = tuple(
+            (field, uri) for field in FLAGS for uri in Scores.flag_characters("S")
+        )
+        return tuple(
+            dict.fromkeys(
+                (*methods, *flags, *ProbeRules.concepts(), *BoreholeRules.concepts())
+            )
+        )
 
     @staticmethod
     def blank(
@@ -117,56 +172,52 @@ class Scores:
                 cells.loc[cells.index.isin(rows), code] = None
         return cells
 
-    def routing(self) -> pandas.Series:
-        """Choose the set of rules that scores each child.
+    @staticmethod
+    def flag_characters(letter: str) -> dict[str, str]:
+        """Say how each state of a correction is written in a flag.
 
-        The exploration method decides, as in "Which rules score a child" of the
-        overview of the quality scheme (docs/reference/quality-scheme/index.md).
+        Args:
+            letter: The flag's letter.
 
         Returns:
-            ``probe sensing`` or ``borehole and mine`` for each child, in the order of
-            the children, and ``<NA>`` where the method selects no rules because it
-            is other, unspecified or empty.
+            The character of each correction concept: the upper-case letter for present
+            and corrected, the lower-case letter for present and not corrected, ``X``
+            for present and not significant, ``x`` for not recognised and ``-`` for
+            unspecified (docs/reference/quality-scheme/perturbation-flags.md, "How
+            each flag is written").
         """
-        methods = self.inputs.first(self.inputs.concepts[EXPLORATION_METHOD])
-        rules = pandas.Series(pandas.NA, index=methods.index, dtype="string")
-        rules = rules.mask(methods.isin(PROBE_SENSING.concepts), PROBE_RULES)
-        return rules.mask(methods.isin(BOREHOLE.concepts), BOREHOLE_RULES)
+        return {
+            PRESENT_CORRECTED: letter,
+            PRESENT_NOT_CORRECTED: letter.lower(),
+            PRESENT_NOT_SIGNIFICANT: "X",
+            NOT_RECOGNIZED: "x",
+            UNSPECIFIED_CORRECTION: "-",
+        }
 
     def flags(self) -> pandas.Series:
         """Write the seven perturbation flags of each child.
 
-        The characters are in the order S E T P V C R, from the correction fields C13
-        to C19: the upper-case letter for present and corrected, the lower-case letter
-        for present and not corrected, ``X`` for present and not significant, ``x`` for
-        not recognised, and ``-`` for unspecified, empty or a term the field does not
-        allow (docs/reference/quality-scheme/perturbation-flags.md, "How each flag is
-        written").
+        A correction that is empty, or a term its field does not allow, is written
+        ``-`` like an unspecified one.
 
         Returns:
             The flags of each child, in the order of the children.
         """
         flags = pandas.Series("", index=self.inputs.index, dtype="string")
-        for code, letter in zip(FLAG_FIELDS, "SETPVCR", strict=True):
-            characters = {
-                PRESENT_CORRECTED: letter,
-                PRESENT_NOT_CORRECTED: letter.lower(),
-                PRESENT_NOT_SIGNIFICANT: "X",
-                NOT_RECOGNIZED: "x",
-            }
-            state = self.inputs.first(self.inputs.concepts[code])
+        for field, letter in FLAGS.items():
+            state = self.inputs.first(self.inputs.concepts(field))
+            characters = self.flag_characters(letter)
             flags = flags + state.map(characters).fillna("-").astype("string")
         return flags
 
     @staticmethod
-    def m_score(t: Score, tc: Score) -> pandas.Series:
+    def grades(t: Score, tc: Score) -> pandas.Series:
         """Grade the methods used to find each child's heat-flow value.
 
         The grade is the class of the product of the T-score and the TC-score rounded
-        to three places: ``M1`` from 0.75, ``M2`` from 0.50, ``M3`` from 0.25 and ``M4``
-        below, a product on a boundary taking the better class. An ``x`` follows the
-        grade when either score carries the missing-information mark. The grade is
-        ``Mx``, without the ``x`` mark, when either score is not determined
+        to three places (``PRODUCT_CLASSES``). An ``x`` follows the grade when either
+        score carries the missing-information mark. The grade is ``Mx``, without the
+        ``x`` mark, when either score is not determined
         (docs/reference/quality-scheme/m-score.md, "The product and its classes",
         "The missing-information mark" and "Not determined").
 
@@ -177,9 +228,9 @@ class Scores:
         Returns:
             The M-score of each child, in the order of the children.
         """
-        product = (t.value * tc.value).round(DECIMALS)
+        product = (t.value * tc.value).round(SCORE_DECIMALS)
         figures = product.to_numpy(dtype="float64", na_value=numpy.nan)
-        rank = 1 + numpy.sum([figures < edge for edge in M_BOUNDARIES], axis=0)
+        rank = Band.select(PRODUCT_CLASSES, pandas.Series(figures), 0).astype(int)
         marks = numpy.where((t.marked | tc.marked).fillna(False), "x", "")
         grade = pandas.Series(
             numpy.char.add(numpy.char.add("M", rank.astype(str)), marks),
@@ -214,23 +265,20 @@ class Scores:
         measurements").
 
         Returns:
-            One row for each child, in the order of the children, with the columns
-            ``rules``, ``U``, ``T``, ``TC``, ``marked``, ``M``, ``flags``, ``code``,
-            ``own_T``, ``own_TC``, ``own_T_marked`` and ``own_TC_marked``. The scores
-            are floats and the marks booleans, both ``<NA>`` where not determined.
+            One row for each child, in the order of the children, with the
+            ``SCORE_COLUMNS``. The scores are floats and the marks booleans, both
+            ``<NA>`` where not determined.
         """
-        probe = ProbeRules(self.inputs)
-        borehole = BoreholeRules(self.inputs)
-        t = self.either(probe.t_score(), borehole.t_score())
-        tc = self.either(probe.tc_score(), borehole.tc_score())
-        own_t = self.either(probe.own_t_score(), borehole.own_t_score())
-        own_tc = self.either(probe.own_tc_score(), borehole.own_tc_score())
-        grade = self.m_score(t, tc)
+        t = self.either(self.probe.t_score(), self.borehole.t_score())
+        tc = self.either(self.probe.tc_score(), self.borehole.tc_score())
+        own_t = self.either(self.probe.own_t_score(), self.borehole.own_t_score())
+        own_tc = self.either(self.probe.own_tc_score(), self.borehole.own_tc_score())
+        grade = self.grades(t, tc)
         flags = self.flags()
-        uncertainty = UScore(self.inputs).scores()
+        uncertainty = UScore(self.inputs).grades()
         table = pandas.DataFrame(
             {
-                "rules": self.routing(),
+                "rules": self.routing,
                 "U": uncertainty,
                 "T": t.value,
                 "TC": tc.value,
@@ -245,4 +293,4 @@ class Scores:
             },
             index=self.inputs.index,
         )
-        return table[list(COLUMNS)]
+        return table[list(SCORE_COLUMNS)]

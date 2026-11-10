@@ -13,7 +13,9 @@ from markupsafe import Markup
 
 from ghfdb import __version__
 from ghfdb.fields import Vocabularies
+from ghfdb.qc.penalties import SCORE_DECIMALS
 from ghfdb.qc.rules import RULES
+from ghfdb.qc.scores import REPORT_COLUMNS
 from ghfdb.qc.workbook import CheckError
 
 TEMPLATES = Environment(loader=PackageLoader("ghfdb.qc", "templates"), autoescape=True)
@@ -46,7 +48,6 @@ SCORE_PAGES = {
     "Has problems": None,
 }
 SCORE_HEADINGS = list(SCORE_PAGES)
-SCORE_COLUMNS = ["rules", "U", "T", "TC", "M", "flags", "code"]
 YES = "yes"
 NO = "no"
 
@@ -171,9 +172,9 @@ class Report:
             the cells of a row: the Excel row, the scores as text with an empty cell
             for a score not determined, and whether the child has problems.
         """
-        text = self.scores[SCORE_COLUMNS].astype(object)
-        text["T"] = self.scores["T"].round(3).astype("string")
-        text["TC"] = self.scores["TC"].round(3).astype("string")
+        text = self.scores[list(REPORT_COLUMNS)].astype(object)
+        for column in ("T", "TC"):
+            text[column] = self.scores[column].round(SCORE_DECIMALS).astype("string")
         text = text.where(text.notna(), "")
         text.insert(0, "row", self.scores.index.astype(str))
         has_problems = self.scores.index.isin(self.problems["row"].dropna())

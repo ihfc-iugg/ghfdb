@@ -2,9 +2,10 @@
 
 A concept is named by its URI: the vocabulary's identifier and the concept's local name,
 as the vocabularies publish them. Every URI the checks and the scoring need is defined
-here, once, grouped by vocabulary. ``DatasetCheck`` and ``Terms`` resolve each one to
-the term its field accepts, and refuse a URI the published vocabulary does not hold, so
-a local name the vocabulary renames fails when the vocabularies are loaded.
+here, once, grouped by vocabulary, with the groups of concepts that two criteria of the
+scheme share. The check and the scoring resolve each one to the term its field accepts,
+and refuse a URI the published vocabulary does not hold, so a local name the vocabulary
+renames fails when the vocabularies are loaded.
 """
 
 VOCABULARIES = "https://w3id.org/ihfc-iugg/vocabularies"
@@ -120,3 +121,9 @@ CORRECTED_T = f"{CONDUCTIVITY_CONDITIONS}/correctedT"
 RECORDED_AMBIENT = f"{CONDUCTIVITY_CONDITIONS}/recordedAmbient"
 UNRECORDED_AMBIENT = f"{CONDUCTIVITY_CONDITIONS}/unrecordedAmbient"
 UNSPECIFIED_CONDITIONS = f"{CONDUCTIVITY_CONDITIONS}/unspecified"
+
+# Groups of concepts that more than one criterion of the scheme names
+DRY_UNSPECIFIED_OR_OTHER = (DRY_MEASURED, UNSPECIFIED_SATURATION, OTHER_SATURATION)
+FULL_IN_SITU = (REPLICATED_PT, CORRECTED_PT)
+PARTIAL_IN_SITU = (REPLICATED_P, CORRECTED_P, REPLICATED_T, CORRECTED_T)
+AMBIENT_OR_UNSPECIFIED = (RECORDED_AMBIENT, UNRECORDED_AMBIENT, UNSPECIFIED_CONDITIONS)

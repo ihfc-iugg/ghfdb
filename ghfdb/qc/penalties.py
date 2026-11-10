@@ -240,11 +240,11 @@ def settle(
 class Table(Protocol):
     """What every kind of table offers."""
 
-    def reads(self) -> tuple[Field, ...]:
+    def reads(self) -> tuple[str, ...]:
         """List the fields the table reads."""
         ...
 
-    def concepts(self) -> tuple[tuple[Field, str], ...]:
+    def concepts(self) -> tuple[tuple[str, str], ...]:
         """List the field and concept URI of every concept the table names."""
         ...
 
@@ -279,11 +279,11 @@ class Bands:
     unmatched: Outcome = LARGEST
     left_out_when: Conditions | None = None
 
-    def reads(self) -> tuple[Field, ...]:
+    def reads(self) -> tuple[str, ...]:
         """List the number field, then the fields of ``left_out_when``."""
         return (self.field, *(self.left_out_when or ()))
 
-    def concepts(self) -> tuple[tuple[Field, str], ...]:
+    def concepts(self) -> tuple[tuple[str, str], ...]:
         """List the concepts of ``left_out_when``."""
         return tuple(
             (field, uri)
@@ -376,11 +376,11 @@ class Classes:
     unmatched: Outcome = LARGEST_MARKED
     skip_empty: bool = False
 
-    def reads(self) -> tuple[Field, ...]:
+    def reads(self) -> tuple[str, ...]:
         """List the fields."""
         return self.fields
 
-    def concepts(self) -> tuple[tuple[Field, str], ...]:
+    def concepts(self) -> tuple[tuple[str, str], ...]:
         """List every concept of every group, for each field."""
         return tuple(
             (field, uri)
@@ -487,13 +487,13 @@ class Cases:
     empty: Outcome = LARGEST_MARKED
     unmatched: Outcome = LARGEST
 
-    def reads(self) -> tuple[Field, ...]:
+    def reads(self) -> tuple[str, ...]:
         """List the fields the rows name, in order of first mention."""
         return tuple(
             dict.fromkeys(field for case in self.cases for field in case.conditions)
         )
 
-    def concepts(self) -> tuple[tuple[Field, str], ...]:
+    def concepts(self) -> tuple[tuple[str, str], ...]:
         """List the concepts of every row, with their fields, each once."""
         return tuple(
             dict.fromkeys(
@@ -536,7 +536,7 @@ class Cases:
 
 
 @dataclass(frozen=True)
-class Criterion:
+class Criterion[T: Table]:
     """One criterion of the quality scheme.
 
     Attributes:
@@ -549,14 +549,10 @@ class Criterion:
 
     identifier: str
     title: str
-    table: Table
+    table: T
     source: str
 
-    def reads(self) -> tuple[Field, ...]:
-        """List the fields the criterion reads."""
-        return self.table.reads()
-
-    def concepts(self) -> tuple[tuple[Field, str], ...]:
+    def concepts(self) -> tuple[tuple[str, str], ...]:
         """List the concepts the criterion names, with their fields."""
         return self.table.concepts()
 

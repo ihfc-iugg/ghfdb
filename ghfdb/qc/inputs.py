@@ -5,7 +5,6 @@ from collections.abc import Mapping
 import numpy
 import pandas
 
-from ghfdb.fields import Field
 from ghfdb.fields.cells import parse_numbers
 
 
@@ -26,7 +25,7 @@ class Inputs:
     """
 
     def __init__(
-        self, data: pandas.DataFrame, uris: Mapping[Field, Mapping[str, str]]
+        self, data: pandas.DataFrame, uris: Mapping[str, Mapping[str, str]]
     ) -> None:
         self.index = data.index
         self.data = data
@@ -49,7 +48,7 @@ class Inputs:
             )
         return self.data[field].explode().astype("string").str.strip()
 
-    def numbers(self, field: Field) -> pandas.Series:
+    def numbers(self, field: str) -> pandas.Series:
         """Read a number field.
 
         Args:
@@ -63,7 +62,7 @@ class Inputs:
             self.read_numbers[field] = parse_numbers(self.text(field))
         return self.read_numbers[field]
 
-    def concepts(self, field: Field) -> pandas.Series:
+    def concepts(self, field: str) -> pandas.Series:
         """Read a vocabulary field as concepts.
 
         Args:

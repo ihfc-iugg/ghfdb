@@ -137,25 +137,33 @@ problem are described in [Check a workbook](../user-guide/check.md).
 
 ## Quality scores
 
-The quality scheme is computed by four classes, one for each part the
-[quality scheme](../reference/quality-scheme/index.md) separates. `ghfdb.qc.scheme.Terms`
-resolves every concept the scheme names, by its URI, to the term its field accepts in the
-vocabularies as published, and raises `MissingSchemeError` naming the concept when one is no
-longer published. `ghfdb.qc.scheme.Inputs` reads the scored fields of a table of children once:
-numbers as numbers, terms as concept URIs, and a value that is neither as empty. A cell holding a
-Python list holds several values. Every criterion returns a `Penalty`, the penalty and the
-mark of each child, and a T-score or TC-score is a `Score`. `ghfdb.qc.uncertainty.UScore` grades the uncertainty, and
-`ghfdb.qc.scores.Scores` routes each child to its rules, writes its perturbation flags, grades the
-M-score and assembles the table of scores.
-`ghfdb.qc.probe.ProbeRules` scores the children explored by probing, one method for each
-criterion of the probe-sensing rules. `ghfdb.qc.borehole.BoreholeRules` scores the children
-explored by drilling, mining and indirect methods in the same way, with one method for each
-criterion of the borehole and mine rules, whose groups of concepts are lists of `Groups`: a
-penalty and the concepts that earn it. Each works on every child at once. Both sets of rules
-share the methods of `ghfdb.qc.scheme` that keep the poorest of a child's values
-(`Penalty.poorest`), pair the values of several fields (`Inputs.combinations`), score bands of
-numbers (`Penalty.bands`) or a list of cases (`Penalty.cases`), and add the criteria into one
-score (`Score.total`).
+Each criterion of the [quality scheme](../reference/quality-scheme/index.md) is declared once,
+as a `Criterion` in `ghfdb.qc.probe` or `ghfdb.qc.borehole`, with the identifier the worked
+examples use, a title, the paper's table and row it comes from, and a table that gives the
+penalties. There are three kinds of table in `ghfdb.qc.penalties`: `Bands` score a number
+against ordered edges, `Classes` score a term against groups of concepts, and `Cases` score
+several fields together by rows of conditions, the poorest row that holds counting. Every table
+scores all the children at once, keeps the poorest of a child's values, and lists its rows as data
+with `rows()`. `ghfdb.qc.criteria.CRITERIA` lists every criterion by its identifier. A change to
+one penalty, one group of concepts or one edge is a change to one declaration.
+
+Concept URIs come from `ghfdb.qc.concepts`. The concepts the scoring names are collected from
+the declarations (`Scores.concepts`), and `ghfdb.qc.criteria.term_uris` resolves them to the term
+each field accepts in the vocabularies as published, raising `MissingSchemeError` naming the
+field and the concept when one is no longer published. `ghfdb.qc.inputs.Inputs` reads a scored
+field of a table of children the first time it is asked: numbers as numbers, terms as concept
+URIs, and a value that is neither as empty. A cell holding a Python list holds several values.
+A criterion gives a `Penalty`, the penalty and the mark of each child, and a T-score or TC-score
+is a `Score`.
+
+What a table cannot say is code. `ghfdb.qc.probe.ProbeRules` reads the water depth from the
+elevation and applies the two corrections that waive a criterion. `ghfdb.qc.borehole.BoreholeRules`
+chooses which of the three cases a gradient is and applies the interval depth gate.
+`ghfdb.qc.uncertainty.UScore` grades the uncertainty. `ghfdb.qc.scores.Scores` routes each child
+to its rules once, hands each set of rules the children it scores, writes the perturbation flags,
+grades the M-score and assembles the table of scores, whose columns are `SCORE_COLUMNS`. The term
+lookup and the number parser that `ghfdb.qc.check` uses are in `ghfdb.fields.cells`, and the scoring
+uses the same ones.
 
 `Dataset.scores` scores the children and returns one row for each, indexed like `data`. The columns
 are `rules`, `U`, `T`, `TC`, `marked`, `M`, `flags`, `code`, `own_T`, `own_TC`, `own_T_marked` and
@@ -179,7 +187,13 @@ scores[["M", "code"]]
 ```
 
 ```{eval-rst}
-.. automodule:: ghfdb.qc.scheme
+.. automodule:: ghfdb.qc.inputs
+   :members:
+
+.. automodule:: ghfdb.qc.penalties
+   :members:
+
+.. automodule:: ghfdb.qc.criteria
    :members:
 
 .. automodule:: ghfdb.qc.uncertainty

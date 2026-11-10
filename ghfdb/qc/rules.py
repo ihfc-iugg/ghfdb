@@ -93,12 +93,15 @@ class Domain:
         concepts: The URIs of the exploration methods in the domain.
         description: What a child of the domain is, as the end of "the exploration
             method is ...".
+        rules: The name of the set of quality-scheme rules that score a child of the
+            domain.
     """
 
     code: str
     field: str
     concepts: tuple[str, ...]
     description: str
+    rules: str
 
     @property
     def condition(self) -> Condition:
@@ -111,12 +114,14 @@ BOREHOLE = Domain(
     EXPLORATION_METHOD,
     (DRILLING, DRILLING_CLUSTERED, MINING, TUNNELING, INDIRECT),
     "a borehole and mine method",
+    "borehole and mine",
 )
 PROBE_SENSING = Domain(
     "S",
     EXPLORATION_METHOD,
     (PROBING_ONSHORE, PROBING_OFFSHORE, PROBING_CLUSTERED),
     "a probe-sensing method",
+    "probe sensing",
 )
 
 

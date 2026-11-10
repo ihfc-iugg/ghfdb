@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [v0.1.0] - 2026-11-10
+
 ### Added
 
 - The `ghfdb` package, with an empty `ghfdb.qc` subpackage for quality control.

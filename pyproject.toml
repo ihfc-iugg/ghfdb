@@ -1,6 +1,6 @@
 [project]
 name = "ghfdb"
-version = "0.0.1"
+version = "0.1.0"
 description = "Python tools for working with the Global Heat Flow Database."
 readme = "README.md"
 license = "MIT"

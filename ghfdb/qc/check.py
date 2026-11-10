@@ -1,14 +1,14 @@
 """The check of a table of children against the field schema."""
 
 import difflib
-import math
 from collections.abc import Iterable, Sequence
 from enum import StrEnum
 
 import pandas
 from frictionless import Field, Schema
 
-from ghfdb.fields import MissingSchemeError, Vocabularies, allowed_values
+from ghfdb.fields import MissingSchemeError, Vocabularies
+from ghfdb.fields.cells import concept_terms, parse_numbers
 from ghfdb.qc.rules import Condition, Rule
 
 PROBLEM_COLUMNS = [
@@ -116,14 +116,7 @@ class DatasetCheck:
         Returns:
             The term of each allowed value that belongs to a vocabulary.
         """
-        if not any(field.name == code for field in self.schema.fields):
-            return {}
-        field = self.schema.get_field(code)
-        return {
-            value.uri: value.term
-            for value in allowed_values(field, vocabularies)
-            if value.uri
-        }
+        return concept_terms(self.schema, code, vocabularies)
 
     def problems(self) -> pandas.DataFrame:
         """Find what is wrong with the children.
@@ -437,10 +430,8 @@ class DatasetCheck:
         Returns:
             Lines for the cells that are not numbers and for the numbers out of range.
         """
-        numbers = pandas.to_numeric(filled.str.strip(), errors="coerce").astype(
-            "float64"
-        )
-        wrong = numbers.isna() | numbers.abs().eq(math.inf)
+        numbers = parse_numbers(filled)
+        wrong = numbers.isna()
         if field.type == "integer":
             wrong |= numbers != numbers.round()
         constraints = field.constraints

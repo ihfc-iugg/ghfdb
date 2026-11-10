@@ -101,10 +101,9 @@ class Dataset:
                 Without it, the packaged schema.
 
         Returns:
-            One row for each child, indexed like ``data``, with the columns ``rules``,
-            ``U``, ``T``, ``TC``, ``marked``, ``M``, ``flags``, ``code``, ``own_T``,
-            ``own_TC``, ``own_T_marked`` and ``own_TC_marked``. A score that is not
-            determined is ``<NA>``, or ``Ux`` and ``Mx`` for the grades.
+            One row for each child, indexed like ``data``, with the columns of
+            ``ghfdb.qc.scores.SCORE_COLUMNS``. A score that is not determined is
+            ``<NA>``, or ``Ux`` and ``Mx`` for the grades.
 
         Raises:
             MissingSchemeError: A concept the scheme names is not an allowed value of

@@ -47,7 +47,8 @@ BLANKING = (
     Kind.NOT_IN_VOCABULARY,
     Kind.RULE,
 )
-# The columns of the table of scores, in order.
+# The columns of the table of scores, in order. ``Scores.table`` gives the values of
+# each in this order.
 SCORE_COLUMNS = (
     "rules",
     "U",
@@ -294,21 +295,20 @@ class Scores:
         grade = self.grades(t, tc)
         flags = self.flags()
         uncertainty = UScore(self.inputs).grades()
-        table = pandas.DataFrame(
-            {
-                "rules": self.routing,
-                "U": uncertainty,
-                "T": t.value,
-                "TC": tc.value,
-                "marked": (t.marked | tc.marked).where(grade != "Mx"),
-                "M": grade,
-                "flags": flags,
-                "code": uncertainty + "." + grade + "." + flags,
-                "own_T": own_t.value,
-                "own_TC": own_tc.value,
-                "own_T_marked": own_t.marked,
-                "own_TC_marked": own_tc.marked,
-            },
-            index=self.inputs.index,
+        columns = (
+            self.routing,
+            uncertainty,
+            t.value,
+            tc.value,
+            (t.marked | tc.marked).where(grade != "Mx"),
+            grade,
+            flags,
+            uncertainty + "." + grade + "." + flags,
+            own_t.value,
+            own_tc.value,
+            own_t.marked,
+            own_tc.marked,
         )
-        return table[list(SCORE_COLUMNS)]
+        return pandas.DataFrame(
+            dict(zip(SCORE_COLUMNS, columns, strict=True)), index=self.inputs.index
+        )

@@ -194,6 +194,34 @@ class TestScores:
         assert scores.index.tolist() == [12, 9]
         assert scores["rules"].tolist() == ["probe sensing", pandas.NA]
 
+    def test_each_column_holds_what_its_name_says(
+        self, published_vocabularies: Vocabularies
+    ) -> None:
+        child = {
+            "P12": "[Probing (offshore, ocean)]",
+            "C6": "5",
+            "C37": "6",
+            "C12": "[Tilt corrected]",
+            "C17": "[Present and corrected]",
+        }
+
+        scores = Dataset(children(child)).scores(vocabularies=published_vocabularies)
+
+        assert scores.iloc[0].to_dict() == {
+            "rules": "probe sensing",
+            "U": "Ux",
+            "T": 1.1,
+            "TC": 0.2,
+            "marked": True,
+            "M": "M4x",
+            "flags": "----V--",
+            "code": "Ux.M4x.----V--",
+            "own_T": 0.7,
+            "own_TC": 0.2,
+            "own_T_marked": True,
+            "own_TC_marked": True,
+        }
+
     def test_a_child_that_cannot_be_scored_shows_not_determined_never_zero(
         self, published_vocabularies: Vocabularies
     ) -> None:

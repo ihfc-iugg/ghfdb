@@ -14,6 +14,14 @@ All notable changes to this project are recorded here. The format follows
   is the sentence the corrigendum of Fuchs et al. (2023) adds to Section 3.2 (Fuchs et al.,
   2026, Tectonophysics 934, 231226): "If all metadata fields required for the scoring are
   missing, the M-score will appear as Mx."
+- In the borehole and mine temperature gradient, `[cDTS]` is no longer one of the methods of
+  equilibrium or corrected multiple single points: the corrected Table 3 lists it only with the
+  continuous log. With three recordings or fewer, a gradient measured by `[cDTS]` therefore fits
+  no group and takes the largest penalty of the multiple single points, -0.5, with the
+  missing-information mark.
+- For a surface temperature plus one point, `[cDST]` at the bottom is now scored as an
+  equilibrium or corrected method, -0.3, as the corrected Table 3 lists it. `[DST]` is still in
+  no group.
 
 ### Changed
 

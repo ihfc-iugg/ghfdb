@@ -21,6 +21,7 @@ from ghfdb.qc.concepts import (
     BLK,
     BSR,
     C_BHT,
+    C_DST,
     C_DTS,
     C_HT_FT,
     C_LOG,
@@ -137,7 +138,6 @@ SINGLE_POINTS = Criterion(
                     ODTT_TP,
                     EGRT,
                     GRT,
-                    C_DTS,
                 ),
             ),
             Group(-0.3, (LOG_PERT, DTS_PERT, BHT, HT_FT_PERT, RTD_PERT, BLK)),
@@ -157,7 +157,7 @@ SURFACE_PLUS_ONE_POINT = Criterion(
         (
             Group(
                 -0.3,
-                (C_BHT, RTD_EQ, C_RTD, ODTT_PC, ODTT_TP, C_HT_FT, EGRT, GRT),
+                (C_BHT, C_DST, RTD_EQ, C_RTD, ODTT_PC, ODTT_TP, C_HT_FT, EGRT, GRT),
             ),
             Group(-0.5, (BHT, HT_FT_PERT, RTD_PERT)),
             Group(-0.6, ESTIMATED_TEMPERATURE),

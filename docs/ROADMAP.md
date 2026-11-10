@@ -130,7 +130,7 @@ Serves G4, G5 and G3. Out of scope: publishing the scheme as a citable release (
 
 ### R6 — Preview quality scores for each child
 
-*multi-feature · advances G3*
+*delivered in [#46](https://github.com/ihfc-iugg/ghfdb/issues/46) · advances G3*
 
 The check also scores every child: its U-score, its T-score and TC-score, its M-score with the
 missing-information mark, its perturbation flags and its quality code, written into the report,

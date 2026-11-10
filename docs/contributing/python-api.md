@@ -22,8 +22,26 @@ worked examples and the workbooks do not change, and a member is a string, so `d
 reads the column `C42`.
 
 `ghfdb/fields/names.py` is generated from `schema.json`. After the schema changes, write it again
-with `python -m ghfdb.fields.generate`. A test fails while the file differs from what the schema
-generates.
+with `python -m ghfdb.fields.generate`, which calls `FieldNames.write`. `FieldNames.render` makes
+the source of the file from the schema's fields. A test fails while the file differs from what
+the schema generates.
+
+```{eval-rst}
+.. automodule:: ghfdb.fields.generate
+   :members:
+```
+
+### Reading the cells of a field
+
+`ghfdb.fields.cells` holds the two readings that the check and the scoring share, so that both
+read a cell the same way. `parse_numbers` reads text cells as numbers, empty where a cell is
+empty, is not a number or is infinite. `concept_terms` maps the concept URI of each allowed value
+of a field to its term.
+
+```{eval-rst}
+.. automodule:: ghfdb.fields.cells
+   :members:
+```
 
 ## Upload template
 
@@ -180,12 +198,18 @@ Each criterion of the scheme is declared once, as a `Criterion` in `ghfdb.qc.pro
 gives its penalties. `ghfdb.qc.criteria.CRITERIA` lists every criterion by its identifier, and
 the pages of the scheme render each criterion's penalty table from its declaration.
 
-There are three kinds of table in `ghfdb.qc.penalties`:
+There are three kinds of table in `ghfdb.qc.penalties`, and each is a `Table`, which is what the
+scoring and the pages ask of one: the fields it reads, the concepts it names, its largest penalty
+and its `score` of every child.
 
-* `Bands` score a number against ordered edges, each a `Band`.
+* `Bands` score a number against ordered edges, each a `Band`. `Depths` are bands of a depth
+  below sea level, read from the elevation of the site.
 * `Classes` score a term against groups of concepts, each a `Group`.
 * `Cases` score several fields together by rows of conditions, each a `Case`, the poorest row
   that holds counting.
+
+The conditions of a row of cases, and the conditions that leave a band out, are `Conditions`: the
+concepts each named field may hold.
 
 Every table scores all the children at once and keeps the poorest of a child's values. A value
 that is empty, or that fits no row, takes the largest penalty of its table, the lowest of its
@@ -210,7 +234,8 @@ uses the same ones.
 A set of rules is a `ghfdb.qc.ruleset.RuleSet`, which declares its `criteria`, and where it has
 them its `waivers`, `stand_ins`, `conditions` and `extra_fields`, as class attributes. The fields
 it reads and the concepts it names follow from those declarations, and so do the penalties of its
-criteria for a child and for a measurement on its own. `ghfdb.qc.probe.ProbeRules` scores the
+criteria for a child and for a measurement on its own, as the `RuleScores` of its T-score,
+TC-score and their own scores. `ghfdb.qc.probe.ProbeRules` scores the
 T-score and the TC-score from its two lists, and its waivers are the two corrections that leave
 the water depth or the tilt out of a child's T-score. `ghfdb.qc.borehole.BoreholeRules` scores
 the TC-score from its list, with the plain pT conditions standing in for their agreement with the

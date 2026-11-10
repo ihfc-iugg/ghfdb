@@ -196,7 +196,7 @@ is scored for `[other (specify in comments)]`, because the vocabulary has no ter
 **Why**: D-10. The condition matters only for several values, which come only from a dataset built
 in code (D-6).
 
-**ADR:** none.
+**ADR:** none. It follows from D-10 and is recorded under **Scheme changes**.
 
 ## D-14: Each criterion is declared once, and code names fields by column name
 
@@ -228,7 +228,7 @@ slowdown by a large factor but never a design chosen for clarity.
 **Why**: the ruling. A limit set at the target fails on a loaded machine with no change to the code,
 and would push every design towards speed.
 
-**ADR:** none.
+**ADR:** none. It is a ruling on this feature's success criterion, recorded in the spec.
 
 ## D-16: An empty field counts only when no row of the criterion holds without it
 

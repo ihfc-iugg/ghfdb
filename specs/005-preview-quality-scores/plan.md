@@ -4,14 +4,19 @@
 
 ## Summary
 
-A new module scores every child of a dataset under the quality scheme, on whole columns, and
-`Dataset.scores()` returns the result as one row per child. The check command passes the problems
-it found, so their cells are scored as empty, and the report gains a second table of preview
-scores. The worked examples become the test of the scoring.
+The scoring declares each criterion of the quality scheme once, as data, and a small engine
+scores every child of a dataset on whole columns from those declarations. `Dataset.scores()`
+returns one row per child. The check command passes the problems it found, so their cells are
+scored as empty, and the report gains a second table of preview scores. The scheme pages render
+each criterion's penalty table from the same declaration, and the worked examples are the test of
+the scoring.
+
+The scheme follows Fuchs et al. (2023) as corrected in 2026: the corrigendum (Tectonophysics 934,
+231226) and its corrected Tables 1 to 5 and Appendices A and B.
 
 ## Technical context
 
-- Python 3.12 and 3.13, pandas, frictionless, Jinja2 for the report. No new dependency.
+- Python 3.12 and 3.13, pandas and numpy, frictionless, Jinja2 and markupsafe for the report.
 - Tests: pytest, mirroring the source tree (`docs/contributing/standards/testing.md`). The
   vocabularies come from the cached release the existing tests use (`vocabularies_cached`).
 - Performance: SC-004, the 90,000-child workbook checked, scored and reported in under 15 s,
@@ -19,81 +24,94 @@ scores. The worked examples become the test of the scoring.
 
 ## Constitution check
 
-- **Simplicity.** One module per part of the scheme the pages separate, no class hierarchy for
-  criteria: each criterion is a function from the inputs to a penalty and a mark.
-- **Every rule traceable.** Each criterion's docstring names its page and section of the scheme,
-  so the code can be read against the documentation.
+- **Simplicity.** A criterion is a declaration, not a method. Three kinds of penalty table cover
+  every criterion of the scheme, and only the parts of the scheme that are procedure (routing, the
+  waivers, the borehole depth gate, choosing the borehole case, the pT agreement) are code.
+- **Every rule traceable.** Each declaration names its source in the corrected paper, and the
+  scheme page renders its table from the declaration, so the page and the code cannot disagree.
 - **Report-only.** The workbook is never changed. The report holds the scores and no copy of the
   data.
 
 ## Design
 
+### Column names, never field codes
+
+`ghfdb/fields/names.py` holds `Field`, a `StrEnum` generated from `ghfdb/fields/schema.json`: one
+member per field, named by the field's published column name, whose value is the field's code
+(`Field.tc_location == "C42"`). Python source in `ghfdb/` refers to a field only through `Field`.
+The data stays keyed by code (ADR 0005), so a corrected column name changes the member's name and
+the type checker finds every use, while workbooks, worked examples and the dataset keep their
+keys. `python -m ghfdb.fields.names` writes the module, and a test fails when the file differs
+from what the schema generates.
+
 ### Modules
 
 | Module | Holds |
 |---|---|
-| `ghfdb/qc/scheme.py` | Every concept URI the scheme names, by the field it belongs to, and `Terms`: the concepts resolved to the terms of the published vocabularies, failing with `MissingSchemeError` naming the concept. `Inputs`: a dataset's scored fields as numbers, terms and the several values of a cell, with an unknown value read as empty |
-| `ghfdb/qc/uncertainty.py` | `UScore`: the U-score |
-| `ghfdb/qc/probe.py` | `ProbeRules`: the probe-sensing T-score and TC-score, own and child, one method per criterion |
-| `ghfdb/qc/borehole.py` | `BoreholeRules`: the borehole and mine T-score and TC-score, own and child, one method per criterion |
-| `ghfdb/qc/scores.py` | `Scores`: routing, the M-score, the perturbation flags, the quality code, and the table of scores assembled from the other three |
+| `ghfdb/fields/names.py` | `Field`, generated |
+| `ghfdb/qc/concepts.py` | Every concept URI the cross-field rules and the scheme name, grouped by vocabulary, with the groups the scheme reads (laboratory methods, the borehole method groups, and so on) |
+| `ghfdb/qc/penalties.py` | `Penalty`, and the three kinds of table: `Bands` (a number against ordered edges), `Classes` (a term against groups of concepts) and `Cases` (rows of conditions on several fields, the poorest matching row winning). Each scores whole columns and lists its rows for the documentation |
+| `ghfdb/qc/criteria.py` | `Criterion`: an identifier (the worked examples' criterion identifier, such as `probe-t.penetration`), the fields it reads, its table, what an empty input scores, and its source. `CRITERIA` lists every one. The concepts the scheme reads are collected from the declarations, and resolved and checked against the vocabularies on load (FR-010) |
+| `ghfdb/qc/uncertainty.py` | The U-score |
+| `ghfdb/qc/probe.py` | The probe-sensing declarations, and the two waivers |
+| `ghfdb/qc/borehole.py` | The borehole and mine declarations, the depth gate, the choice of case and the pT agreement with the in-situ correction |
+| `ghfdb/qc/scores.py` | `Scores`: routing once, the T-score and TC-score as totals of their criteria, the M-score, not determined, the perturbation flags, the quality code and the table of scores |
 
-Each part is one class whose methods share the `Inputs` and `Terms` it is built with
-(constitution Article VIII). There is no base class: the four classes have nothing to share
-beyond those two objects.
+The term lookup and the number parsing are shared with the check: `ghfdb.fields` resolves concept
+URIs to the terms a field accepts, and one function parses a number cell for both the check and
+the scoring. Constants such as the rounding and the output columns are defined once and imported
+where they are needed, including by the report and the documentation extension.
 
 ### Shapes
 
-- A criterion is a method that reads the `Inputs` and returns a `Penalty`: two aligned Series over the children,
-  the penalty and whether it sets the mark. A T-score or TC-score is 1.0 plus the sum of its
-  criteria's penalties, rounded to three places, marked when any criterion is.
-- A field with several values is held exploded, one row per value with the child's index. A
-  criterion that reads it scores each value and keeps the poorest per child. A workbook holds one
-  value in each scored field, so several values reach the scoring only from a dataset built in
-  code, as a Python list in the cell (D-6). Four worked examples give one: PC-12, BT-14, BC-38 and
-  B5-drilling-clustering.
-- Numbers are parsed the way the check parses a number field, so a cell the check accepts is a
-  number to the scoring and a cell it rejects is empty.
-- `Dataset.scores(problems=None, vocabularies=None)` returns one row per child, indexed like
-  `data`, with the columns `rules`, `U`, `T`, `TC`, `marked`, `M`, `flags`, `code`, `own_T`,
-  `own_TC`, `own_T_marked` and `own_TC_marked`. A score not determined is `<NA>`, or `Ux` and `Mx`.
+- A criterion scores to a `Penalty`: two aligned Series over the children, the penalty and
+  whether it sets the mark. A T-score or TC-score is 1.0 plus the sum of its criteria's
+  penalties, rounded to three places, marked when any criterion is.
+- A field with several values is held exploded, one row per value with the child's index, and a
+  criterion keeps the poorest value per child. Several values reach the scoring only from a
+  dataset built in code, as a Python list in the cell (D-6).
+- `Dataset.scores(problems=None, vocabularies=None, schema=None)` returns one row per child,
+  indexed like `data`, with the columns `rules`, `U`, `T`, `TC`, `marked`, `M`, `flags`, `code`,
+  `own_T`, `own_TC`, `own_T_marked` and `own_TC_marked`. A score not determined is `<NA>`, or `Ux`
+  and `Mx`.
 - `problems`, when given, is the problem table of a check. Every cell it names with the kind
   missing, wrong type, out of range, not in vocabulary or rule is blanked before scoring (D-1,
-  D-3). A rule problem blanks the field it names in `code`, never the field in `related`.
+  D-3).
 
 ### Report
 
 - A second table, **Preview scores**, after the problems: Excel row, rules, U-score, T-score,
-  TC-score, M-score, perturbation flags, quality code, and whether the child has problems. Each
-  heading of a score links to its page of the scheme reference, the way a rule links to its entry.
-- The summary gains "Quality scheme", linking the scheme's overview. The package version it
-  already states is the version that made the scores (FR-006).
-- The cells of the scores table are plain strings in tuples, prepared in one pass over the scores
-  frame with `itertuples`, and the template writes each row with one `join`. The links sit in the
-  headings, so no cell needs a dictionary. Timed in review: about 1.4 s for 90,000 rows against
-  3.9 s for a dictionary per cell rendered through Jinja, with the check alone at 7.9 s of the
-  15 s (SC-004).
+  TC-score, M-score, perturbation flags, quality code, and whether the child has problems. One
+  list of (heading, column, scheme page) drives the headings, the cells and the links.
+- The summary gains "Quality scheme", linking the scheme's overview, and names the package version
+  that made the scores (FR-006).
+- The cells are plain strings prepared in one pass over the scores frame, and the template writes
+  each row with one `join`.
 
 ### Documentation
 
-- `docs/user-guide/check.md`: the scores in the report.
-- `docs/contributing/python-api.md`: `Dataset.scores`.
-- `docs/reference/quality-scheme/index.md` and `worked-examples.md`: no longer say that no code
-  computes the scores or runs the examples.
-- `CONTEXT.md`: **Report**, **Quality scheme**, **Worked example** and **Preview score**.
-- `CHANGELOG.md`: an **Added** entry.
-- `README.md`: no longer says the package does not yet score a workbook.
-- `docs/ROADMAP.md`: R6 loses its deliverable about disagreements with another implementation.
+- The scheme pages render each criterion's penalty table from its declaration with a directive of
+  the documentation extension, the way the rule reference renders the cross-field rules (ADR
+  0006). Each page's diagram shows the structure of its criteria, with no penalty values.
+- The scheme pages cite the corrected paper. The departures page lists only where the scheme still
+  differs from it.
+- `docs/contributing/python-api.md`: `Field`, the criteria and `Dataset.scores`.
+- `docs/user-guide/check.md`, `CONTEXT.md`, `README.md`, `CHANGELOG.md` and `docs/ROADMAP.md` as
+  before, and every change to a score under **Scheme changes**.
 
 ## Order
 
-US-2 is built first, because the report reads its scores. US-1 follows on the same branch.
+1. `Field` and the shared concepts module, which also bring the concept identifiers in line with
+   the vocabularies as now published, so the rebased branch is green again.
+2. The criteria engine and the declarations, with the current scheme unchanged: every worked
+   example passes before and after.
+3. The changes of the corrigendum, the scheme pages and the departures page.
+4. The tests and the report tidied, and the Python API page.
 
 ## Risks
 
 - **Time.** The report's second table has 90,000 rows, and CI runs the suite under coverage. If
-  SC-004 fails with the plain-string rows, the remedy is to profile the scoring before touching the
-  report. Leaving children out of the table would change US-1 and needs a re-gate.
-- **A page and an example that disagree.** The examples were written from the pages, but if the
-  code meets an example it cannot satisfy without contradicting a page, it stops there and the
-  disagreement is recorded, not coded around (FR-013).
+  SC-004 fails, the remedy is to profile the scoring before touching the report.
+- **A page and an example that disagree.** If the code meets an example it cannot satisfy without
+  contradicting the corrected paper, it stops there and the disagreement is recorded, not coded
+  around (FR-013).

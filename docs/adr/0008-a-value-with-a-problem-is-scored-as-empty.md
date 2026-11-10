@@ -1,4 +1,4 @@
-# ADR 0007 — A value with a problem is scored as empty
+# ADR 0008 — A value with a problem is scored as empty
 
 **Status:** accepted
 

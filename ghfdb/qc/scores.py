@@ -103,7 +103,7 @@ class Scores:
         A problem of the kind missing, wrong type, out of range, not in vocabulary or
         rule blanks its cell, the field in ``code`` and never the one in ``related``.
         A problem with the kind of a column blanks nothing
-        (docs/adr/0007-a-value-with-a-problem-is-scored-as-empty.md).
+        (docs/adr/0008-a-value-with-a-problem-is-scored-as-empty.md).
 
         Args:
             data: The children.

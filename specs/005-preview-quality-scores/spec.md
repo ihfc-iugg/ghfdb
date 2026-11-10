@@ -39,8 +39,9 @@ A developer gets the same scores from Python, for a dataset read from a workbook
 - Numbered, citable releases of the scheme (R8). Until they exist, the report names the package
   version the scores were made with.
 - Writing the scores into a copy of the workbook. The report is where they go for now.
-- Settling the open questions of the scheme. The code follows the pages as they read today, and a
-  later ruling changes a page, its worked examples and the code together.
+- Settling the open questions of the scheme that the corrected paper leaves open. The scheme
+  follows Fuchs et al. (2023) as corrected in 2026, and a later ruling changes a page, its worked
+  examples and the code together.
 - Any comparison with scores computed elsewhere.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -130,7 +131,8 @@ result with the example's expected scores.
   give each child's U-score, T-score, TC-score, M-score with its missing-information mark,
   perturbation flags and quality code against its Excel row. (US1)
 - **FR-002**: Every score MUST follow the quality scheme as the reference documentation writes it
-  down, including which rules apply, the empty and unspecified inputs, the missing-information
+  down, which follows Fuchs et al. (2023) with its 2026 corrigendum and corrected tables,
+  including which rules apply, the empty and unspecified inputs, the missing-information
   mark, not determined and several values in one field. (US1, US2)
 - **FR-003**: The report MUST say which rules gave each child's T-score and TC-score, or that none
   applied. (US1)
@@ -172,8 +174,8 @@ result with the example's expected scores.
 
 ### Measurable Outcomes
 
-- **SC-001**: All 184 worked examples other than the 21 for an inherited code pass, with exactly
-  their expected scores.
+- **SC-001**: Every worked example other than the 21 for an inherited code passes, with exactly
+  its expected scores.
 - **SC-002**: A workbook whose children are the worked examples that describe a whole child is
   checked, and the report gives each child exactly its example's expected scores.
 - **SC-003**: For every child of a checked workbook, the scores in the report and the scores from

@@ -1,0 +1,22 @@
+name: Tag Release
+
+# When a merged release pull request changes the version in pyproject.toml, creates
+# the v<version> tag and the GitHub release from the merge commit. Versions without
+# a CHANGELOG section are skipped, so only prepared releases are tagged.
+#
+# The release is created with RELEASE_TOKEN because a release created with
+# GITHUB_TOKEN fires no release event, and Publish would never run.
+
+on:
+  push:
+    branches: [main]
+    paths: [pyproject.toml]
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    uses: django-mvp/shared/.github/workflows/tag-release.yml@v0.6.0
+    secrets:
+      RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}

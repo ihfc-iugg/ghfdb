@@ -1,8 +1,9 @@
-"""The borehole and mine rules: the T-score of a gradient and the TC-score of a probe.
+"""The borehole and mine rules.
 
-The criteria are declared here as tables (see ``penalties``). Only what a table cannot
-say is code: which of the three cases a gradient is, the interval depth gate, and the
-agreement of the pT conditions with the in-situ correction.
+They give the T-score of a gradient and the TC-score of a conductivity. The criteria are
+declared here as tables (see ``penalties``). Only what a table cannot say is code: which
+of the three cases a gradient is, the interval depth gate, and the agreement of the pT
+conditions with the in-situ correction.
 """
 
 from dataclasses import dataclass

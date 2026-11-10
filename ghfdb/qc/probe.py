@@ -1,8 +1,8 @@
-"""The probe-sensing rules: the T-score of a gradient and the TC-score of a probe.
+"""The probe-sensing rules.
 
-The criteria are declared here as tables (see ``penalties``). Only what a table cannot
-say is code: the water depth read from the elevation, and the two corrections that waive
-a criterion.
+They give the T-score of a gradient and the TC-score of a conductivity. The criteria are
+declared here as tables (see ``penalties``). Only what a table cannot say is code: the
+water depth read from the elevation, and the two corrections that waive a criterion.
 """
 
 from dataclasses import dataclass

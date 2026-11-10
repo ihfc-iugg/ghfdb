@@ -480,10 +480,45 @@ class Case:
         penalty: The penalty when the row holds.
         conditions: The concepts each named field must hold. A field the row does not
             name may hold anything.
+        every: The concepts every value of each named field must be among, which only
+            matters for a field that holds several values.
     """
 
     penalty: float
     conditions: Conditions
+    every: Conditions | None = None
+
+    def fields(self) -> tuple[Field, ...]:
+        """List the fields the row names, in order of first mention."""
+        return tuple(dict.fromkeys((*self.conditions, *(self.every or ()))))
+
+    def concepts(self) -> tuple[tuple[Field, str], ...]:
+        """List the concepts the row names, with their fields."""
+        return tuple(
+            (field, uri)
+            for conditions in (self.conditions, self.every or {})
+            for field, concepts in conditions.items()
+            for uri in concepts
+        )
+
+    def holds(self, rows: pandas.DataFrame, inputs: Inputs) -> numpy.ndarray:
+        """Say which combinations of values the row holds for.
+
+        Args:
+            rows: The concepts of each field, one row for each combination of values.
+            inputs: The scored fields, from which every value of a child is read.
+
+        Returns:
+            Whether the row holds in each combination.
+        """
+        holds = hold_all(rows, self.conditions)
+        for field, concepts in (self.every or {}).items():
+            every = pandas.Series(
+                inputs.every_value(inputs.concepts(field).isin(concepts)),
+                index=inputs.index,
+            )
+            holds &= every.reindex(rows.index).to_numpy(dtype=bool)
+        return holds
 
 
 @dataclass(frozen=True)
@@ -507,18 +542,13 @@ class Cases:
     def reads(self) -> tuple[str, ...]:
         """List the fields the rows name, in order of first mention."""
         return tuple(
-            dict.fromkeys(field for case in self.cases for field in case.conditions)
+            dict.fromkeys(field for case in self.cases for field in case.fields())
         )
 
     def concepts(self) -> tuple[tuple[str, str], ...]:
         """List the concepts of every row, with their fields, each once."""
         return tuple(
-            dict.fromkeys(
-                (field, uri)
-                for case in self.cases
-                for field, concepts in case.conditions.items()
-                for uri in concepts
-            )
+            dict.fromkeys(pair for case in self.cases for pair in case.concepts())
         )
 
     def rows(self) -> tuple[Case, ...]:
@@ -537,7 +567,7 @@ class Cases:
         rows = combine({field: inputs.concepts(field) for field in self.reads()})
         penalties = numpy.column_stack(
             [
-                numpy.where(hold_all(rows, case.conditions), case.penalty, numpy.inf)
+                numpy.where(case.holds(rows, inputs), case.penalty, numpy.inf)
                 for case in self.cases
             ]
         ).min(axis=1)

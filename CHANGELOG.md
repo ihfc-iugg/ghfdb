@@ -22,6 +22,11 @@ All notable changes to this project are recorded here. The format follows
 - For a surface temperature plus one point, `[cDST]` at the bottom is now scored as an
   equilibrium or corrected method, -0.3, as the corrected Table 3 lists it. `[DST]` is still in
   no group.
+- In the probe-sensing thermal conductivity, the laboratory rows of the saturation criterion
+  hold only when every value of the thermal conductivity method is a laboratory method, as the
+  corrected Table 2 requires ("`{tc_method}` is all with `[Lab - ...]`"). A child that lists a
+  laboratory method beside another method is scored by the rows of the other method, and a method
+  that fits no row takes -0.2.
 
 ### Changed
 

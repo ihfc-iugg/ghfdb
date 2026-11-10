@@ -148,24 +148,18 @@ SATURATION = Criterion(
             ),
             Case(
                 0.0,
-                {
-                    Field.tc_saturation: (RECOVERED, SATURATED_MEASURED),
-                    Field.tc_method: LABORATORY_METHODS,
-                },
+                {Field.tc_saturation: (RECOVERED, SATURATED_MEASURED)},
+                every={Field.tc_method: LABORATORY_METHODS},
             ),
             Case(
                 -0.1,
-                {
-                    Field.tc_saturation: (SATURATED_CALCULATED,),
-                    Field.tc_method: LABORATORY_METHODS,
-                },
+                {Field.tc_saturation: (SATURATED_CALCULATED,)},
+                every={Field.tc_method: LABORATORY_METHODS},
             ),
             Case(
                 -0.2,
-                {
-                    Field.tc_saturation: DRY_UNSPECIFIED_OR_OTHER,
-                    Field.tc_method: LABORATORY_METHODS,
-                },
+                {Field.tc_saturation: DRY_UNSPECIFIED_OR_OTHER},
+                every={Field.tc_method: LABORATORY_METHODS},
             ),
             Case(
                 -0.1,

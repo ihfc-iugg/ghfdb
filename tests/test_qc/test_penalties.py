@@ -394,6 +394,35 @@ class TestCases:
             (Field.tc_method, LARGE),
         )
 
+    def test_a_row_that_needs_every_value_of_a_field_holds_only_when_all_of_them_do(
+        self,
+    ) -> None:
+        table = Cases(
+            (Case(0.0, {Field.tc_location: (RED,)}, every={Field.tc_method: (SMALL,)}),)
+        )
+        inputs = inputs_of(
+            C42=["[red]", "[red]", "[red]"],
+            C43=[["[small]", "[small]"], ["[small]", "[large]"], "[small]"],
+        )
+
+        penalty = table.score(inputs)
+
+        assert penalties(penalty) == [0.0, -0.2, 0.0]
+        assert marks(penalty) == [False, False, False]
+
+    def test_lists_the_fields_and_concepts_of_a_row_that_needs_every_value(
+        self,
+    ) -> None:
+        table = Cases(
+            (Case(0.0, {Field.tc_location: (RED,)}, every={Field.tc_method: (SMALL,)}),)
+        )
+
+        assert table.reads() == (Field.tc_location, Field.tc_method)
+        assert table.concepts() == (
+            (Field.tc_location, RED),
+            (Field.tc_method, SMALL),
+        )
+
 
 class TestCriterion:
     def test_scores_with_its_table_and_says_what_it_reads(self) -> None:

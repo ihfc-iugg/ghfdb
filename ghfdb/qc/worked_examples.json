@@ -1480,6 +1480,33 @@
       ]
     },
     {
+      "id": "PC-15",
+      "part": "probe-tc",
+      "title": "Two conductivity methods, one laboratory and one an estimate: the laboratory rows do not hold, so the saturation takes -0.2 and TC is 0.6",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[Assumed from literature]",
+        "C42": "[Literature or unspecified]",
+        "C43": [
+          "[Lab - line source - full space]",
+          "[Estimation - from lithology and literature]"
+        ],
+        "C44": "[Saturated measured]",
+        "C45": "[Replicated in-situ (pT)]"
+      },
+      "expected": {
+        "TC": 0.6,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_qc/test_probe.py::TestProbeTCScore::test_worked_example[PC-15]"
+      ],
+      "criteria": [
+        "probe-tc.saturation",
+        "multi-valued.poorest"
+      ]
+    },
+    {
       "id": "BT-01",
       "part": "borehole-t",
       "title": "Four recordings of an equilibrium log: a continuous log",

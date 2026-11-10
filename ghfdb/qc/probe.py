@@ -2,7 +2,7 @@
 
 They give the T-score of a gradient and the TC-score of a conductivity. The criteria are
 declared here as tables (see ``penalties``). Only what a table cannot say is code: the
-water depth read from the elevation, and the two corrections that waive a criterion.
+two corrections that waive a criterion.
 """
 
 from dataclasses import dataclass
@@ -50,8 +50,8 @@ from ghfdb.qc.penalties import (
     Cases,
     Classes,
     Criterion,
+    Depths,
     Group,
-    Penalty,
     RuleScores,
     Score,
 )
@@ -91,12 +91,10 @@ RECORDINGS = Criterion(
     ),
     "Table 2, Number of temperature points",
 )
-# The bands are in metres of water depth: the elevation with its sign reversed, which
-# ProbeRules.water_depth reads. An elevation at or above sea level is an empty depth.
 WATER_DEPTH = Criterion(
     "probe-t.water-depth",
     "Water depth",
-    Bands(Field.elevation, (Band(0.0, 2500), Band(-0.1, 1500), Band(-0.2))),
+    Depths(Field.elevation, (Band(0.0, 2500), Band(-0.1, 1500), Band(-0.2))),
     "Table 2, Water depth",
 )
 TILT = Criterion(
@@ -268,21 +266,6 @@ class ProbeRules:
         first = self.inputs.first(self.inputs.concepts(correction.field))
         return first.isin(correction.concepts).to_numpy(dtype=bool)
 
-    def water_depth(self) -> Penalty:
-        """Score the water depth, the elevation with its sign reversed.
-
-        An elevation of zero or above has no water depth and counts as empty. This is
-        the criterion before the bottom-water correction waives it. See
-        docs/reference/quality-scheme/probe-sensing.md, "Water depth".
-
-        Returns:
-            The penalty and the mark of each child.
-        """
-        elevation = self.inputs.numbers(Field.elevation)
-        depth = (-elevation).where(elevation < 0)
-        penalty, marked = WATER_DEPTH.table.values(depth)
-        return Penalty.poorest(penalty, marked, self.inputs.index)
-
     def scores(self) -> RuleScores:
         """Score every child, each criterion once.
 
@@ -296,11 +279,9 @@ class ProbeRules:
         Returns:
             The four scores and their marks for each child.
         """
-        penetration, recordings, tilt = (
-            criterion.score(self.inputs)
-            for criterion in (PENETRATION, RECORDINGS, TILT)
+        penetration, recordings, water_depth, tilt = (
+            criterion.score(self.inputs) for criterion in T_CRITERIA
         )
-        water_depth = self.water_depth()
         gradient = [penetration, recordings, water_depth, tilt]
         corrected = [
             penetration,

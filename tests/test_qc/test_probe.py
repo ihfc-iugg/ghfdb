@@ -1,6 +1,7 @@
 import pandas
 from conftest import Uris, one_child
 
+from ghfdb.qc.criteria import CRITERIA
 from ghfdb.qc.inputs import Inputs
 from ghfdb.qc.probe import ProbeRules
 from ghfdb.qc.scores import Scores
@@ -19,6 +20,30 @@ BEST_CONDUCTIVITY = {
 
 def rules_of(uris: Uris, data: pandas.DataFrame) -> ProbeRules:
     return Scores(Inputs(data, uris)).probe
+
+
+class TestWaterDepth:
+    def score(self, uris: Uris, elevation: float) -> float:
+        inputs = Inputs(one_child({"P6": elevation}), uris)
+
+        return float(CRITERIA["probe-t.water-depth"].score(inputs).value.iloc[0])
+
+    def test_the_criterion_scores_the_depth_below_sea_level_whatever_scores_it(
+        self, uris: Uris
+    ) -> None:
+        assert self.score(uris, -3000) == 0.0
+        assert self.score(uris, -2000) == -0.1
+        assert self.score(uris, -1000) == -0.2
+
+    def test_an_elevation_at_or_above_sea_level_has_no_depth_and_is_empty(
+        self, uris: Uris
+    ) -> None:
+        inputs = Inputs(one_child({"P6": 0}), uris)
+
+        penalty = CRITERIA["probe-t.water-depth"].score(inputs)
+
+        assert penalty.value.iloc[0] == -0.2
+        assert penalty.marked.iloc[0]
 
 
 class TestProbeTScore:

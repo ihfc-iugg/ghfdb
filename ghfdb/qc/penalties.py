@@ -312,6 +312,17 @@ class Bands:
         """List the bands."""
         return self.bands
 
+    def read(self, inputs: Inputs) -> pandas.Series:
+        """Read the numbers the bands hold.
+
+        Args:
+            inputs: The scored fields.
+
+        Returns:
+            The number of every value of the field, under its child's index.
+        """
+        return inputs.numbers(self.field)
+
     def values(self, numbers: pandas.Series) -> tuple[pandas.Series, pandas.Series]:
         """Give each number its penalty.
 
@@ -340,7 +351,7 @@ class Bands:
         Returns:
             The poorest penalty of each child.
         """
-        numbers = inputs.numbers(self.field)
+        numbers = self.read(inputs)
         if self.left_out_when is None:
             return Penalty.poorest(*self.values(numbers), inputs.index)
         rows = combine(
@@ -354,6 +365,27 @@ class Bands:
         return Penalty.poorest(
             penalty.mask(left_out, 0.0), marked.mask(left_out, False), inputs.index
         )
+
+
+class Depths(Bands):
+    """Bands of a depth below sea level, read from the elevation of the site.
+
+    The depth is the elevation with its sign reversed. An elevation of zero or above has
+    no depth, which counts as empty.
+    """
+
+    def read(self, inputs: Inputs) -> pandas.Series:
+        """Read the depth of every value of the elevation.
+
+        Args:
+            inputs: The scored fields.
+
+        Returns:
+            The depth in the unit of the elevation, empty where the elevation is not
+            below zero.
+        """
+        elevation = inputs.numbers(self.field)
+        return (-elevation).where(elevation < 0)
 
 
 @dataclass(frozen=True)

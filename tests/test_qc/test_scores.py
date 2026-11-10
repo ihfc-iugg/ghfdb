@@ -153,6 +153,36 @@ class TestWorkedExamples:
         RUNNERS[example["part"]](runner, example)
 
 
+class TestScoreTable:
+    def test_each_column_holds_what_its_name_says(
+        self, published_vocabularies: Vocabularies
+    ) -> None:
+        child = {
+            "P12": "[Probing (offshore, ocean)]",
+            "C6": 5,
+            "C37": 6,
+            "C12": "[Tilt corrected]",
+            "C17": "[Present and corrected]",
+        }
+
+        scores = Dataset(one_child(child)).scores(vocabularies=published_vocabularies)
+
+        assert scores.iloc[0].to_dict() == {
+            "rules": "probe sensing",
+            "U": "Ux",
+            "T": 1.1,
+            "TC": 0.2,
+            "marked": True,
+            "M": "M4x",
+            "flags": "----V--",
+            "code": "Ux.M4x.----V--",
+            "own_T": 0.7,
+            "own_TC": 0.2,
+            "own_T_marked": True,
+            "own_TC_marked": True,
+        }
+
+
 class TestRouting:
     def test_every_child_of_a_dataset_is_routed_under_its_own_index(
         self, uris: Uris

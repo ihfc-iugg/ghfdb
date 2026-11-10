@@ -12,7 +12,6 @@ from ghfdb.qc.rules import (
     CF_1,
     CF_2,
     CF_3,
-    CF_4,
     CORE_SAMPLES,
     DRILLING,
     EGRT,
@@ -419,7 +418,9 @@ class TestRuleProblems:
     ) -> None:
         other_top = term("C31", OTHER_TEMPERATURE)
         egrt = term("C32", EGRT)
-        frame = children({"C31": other_top, "C32": egrt, "C43": term("C43", POINT_SOURCE)})
+        frame = children(
+            {"C31": other_top, "C32": egrt, "C43": term("C43", POINT_SOURCE)}
+        )
 
         found = [line for line in self.lines(frame) if line[2] == "CF-4"]
 

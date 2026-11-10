@@ -369,20 +369,25 @@ class TestShippedSchemaShape:
         for entry in data["fields"]:
             assert "enum" not in entry["constraints"], entry["name"]
             if entry["vocabulary"] is not None:
-                assert set(entry["vocabulary"]) == {
+                assert set(entry["vocabulary"]) - {"download", "downloadFormat"} == {
                     "scheme",
                     "collection",
                     "termForm",
                 }, entry["name"]
                 assert "allowedValues" not in entry, entry["name"]
 
-    def test_vocabulary_fields_point_at_permanent_identifiers(self) -> None:
+    def test_vocabulary_fields_point_at_permanent_identifiers_or_name_their_download(
+        self,
+    ) -> None:
         data = json.loads(SCHEMA_FILE.read_text(encoding="utf-8"))
         root = "https://w3id.org/ihfc-iugg/vocabularies/"
 
         for entry in data["fields"]:
             binding = entry["vocabulary"]
             if binding is None:
+                continue
+            if "download" in binding:
+                assert binding["downloadFormat"], entry["name"]
                 continue
             assert binding["scheme"].startswith(root), entry["name"]
             if binding["collection"] is not None:

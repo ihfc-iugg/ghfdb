@@ -20,11 +20,11 @@ to.
 
 ### D-1 — The assessment fields A1–A8 are included
 
-The current template has 70 fields: the 62 parent and child fields and eight assessment fields,
+The current template has 74 fields: the 66 parent and child fields and eight assessment fields,
 `A1`–`A8` (reviewer name, reviewer comment, review date, country, region, continent, domain,
 unique entry ID). `CONTEXT.md` defines field codes as `P` and `C` only.
 
-**Chosen:** all 70 are described, the assessment fields grouped separately, with the template as
+**Chosen:** all 74 are described, the assessment fields grouped separately, with the template as
 their source. The template is what assessors fill in, and the generated template (#5) has to
 reproduce every column. `CONTEXT.md` gains the assessment fields.
 
@@ -68,10 +68,12 @@ value and missing data.
   unspecified) is listed with its source in Appendix A. These are not vocabulary terms, so
   Article XI does not apply, but they are flagged as the first candidates if the vocabularies ever
   publish them.
-- **An open set** (C25 lithology, C26 stratigraphic age) has no list of allowed values. Its entry
-  names the classification the paper recommends as guidance and says that several values may be
-  given, separated by semicolons. The old tool's copied lists for these fields had no source or
-  version, and copying them again would be the same defect.
+- **Two external vocabularies** (C25 lithology, C26 stratigraphic age) are published by their
+  owners, not by the IHFC. The template writes their terms as the last segment of the concept's
+  URI. The allowed values are read from the file each owner publishes, as ADR 0007 records, and
+  the entry links to that file and says that several values may be given, separated by
+  semicolons. The old tool's copied lists for these fields had no source or version, and copying
+  them again would be the same defect.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 
@@ -156,6 +158,7 @@ template.
 ### D-14 — Obligation follows the template, and the assessment fields have none
 
 C2 and C37 are recommended in the template and mandatory in Appendix A. **Chosen:** recommended.
+C46 is mandatory in the template. **Chosen:** mandatory.
 The assessment fields are `-` in the template and `A` in Appendix A. **Chosen:** no obligation.
 They are filled in by the data assessment team, not by a contributor, and the field reference says
 so.
@@ -164,7 +167,8 @@ so.
 
 ### D-15 — Domain follows the template
 
-P12 and C20 are `B,S` in the template, `B` and `S` in Appendix A. **Chosen:** `B,S`.
+P12, P13 and C20 are `B,S` in the template, `B` and `S` in Appendix A. **Chosen:** `B,S`. C4,
+C29 and C30 are `B` in the template. **Chosen:** `B`.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 
@@ -183,6 +187,13 @@ C4, C5 and C6 run to one decimal place in the template and two in Appendix A. C2
 in the template and `90` in Appendix A. **Chosen:** the template's. C27–C30 are written
 `– 99,999.99 – 99,999.99` in the template. **Chosen:** the leading dash is the minus sign, so the
 range is −99,999.99 to 99,999.99, as Appendix A writes it.
+
+Version 2026.03 of the template gives some fields two ranges, one in row 8 of the `data list`
+sheet and one in row 2 of the `controlled vocabulary` sheet. C24 is −9.99 to 999.99 on the first
+and −273.15 to 999.99 on the second, and C50–C53 are ±99,999.99 on the first and −999.99 to
+9,999.99 on the second. **Chosen:** where the two sheets disagree, the `data list` row 8 value,
+because that is the row the template describes the column with. C24 keeps −9.99 to 999.99 and
+C50–C53 take −99,999.99 to 99,999.99.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 
@@ -226,10 +237,11 @@ are the exception: they keep the collection's order, because the vocabularies ga
 
 ### D-22 — Example values and formats in Appendix A are guidance, not rules
 
-C20 lists `[Expedition cruise number]`, `[R/V Ship]` and similar, which no vocabulary publishes,
-and C7 and C8 show a reference format (`[First author_Year_Title_Journal/ Publisher_doi]`).
+C20 lists `[R/V Ship]`, `[D/V Platform]`, `[D/V Glomar Challenger]`,
+`[D/V JOIDES Resolution]` and `[Expedition-Cruise number]` as examples, which no vocabulary
+publishes, and C7 and C8 show a reference format (`[First author_Year_Title_Journal/ Publisher_doi]`).
 **Chosen:** these fields take free text, and the examples are recorded as guidance, sourced to
-Appendix A.
+the template for C20 and to Appendix A for C7 and C8.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 
@@ -237,8 +249,8 @@ Appendix A.
 
 Lithology and stratigraphic age (C25, C26) take several values separated by semicolons (D-5), and
 Appendix A says the same of the IGSNs in C49. **Chosen:** these three fields record the semicolon
-as their separator. No vocabulary field is recorded as taking several values: neither the template
-nor Appendix A says one does.
+as their separator. C25 and C26 are the only vocabulary fields that take several values: the
+template writes their terms separated by semicolons, and says so of no other vocabulary field.
 
 ## Made at the design review
 
@@ -284,7 +296,7 @@ the package would leave it untyped and uncovered by the checks every other modul
 
 Appendix A's meaning for C38 asks for a range of months, written `YYYY-MM; YYYY-MM`, when the
 data were acquired over more than one month, and the template's unit row gives only `YYYY-MM`.
-**Chosen:** C38 accepts one month, a range written as Appendix A writes it, or `[Unspecified]`.
+**Chosen:** C38 accepts one month, a range written as Appendix A writes it, or `[unspecified]`.
 Its format is sourced to this decision.
 
 **ADR:** none — a reading of the sources for one field

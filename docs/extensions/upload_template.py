@@ -138,12 +138,13 @@ class TemplateChanges:
         by_column = {column: code for code, column in self.codes(workbook).items()}
         vocabulary = workbook["controlled vocabulary"]
         terms: dict[str, list[str]] = {}
-        for column in vocabulary.iter_cols(min_col=2, min_row=1):
+        for number, column in enumerate(
+            vocabulary.iter_cols(min_col=2, min_row=1), start=2
+        ):
             values = [collapse(cell.value) for cell in column[FIRST_TERM_ROW - 1 :]]
             values = [value for value in values if value]
             if not values:
                 continue
-            number = column[0].column
             if number not in by_column:
                 letter = get_column_letter(number)
                 raise ValueError(f"No field sits in the vocabulary column {letter}")

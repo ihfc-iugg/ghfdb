@@ -1789,12 +1789,16 @@
         "S"
       ],
       "qualityRelevance": null,
-      "constraints": {
-        "maxLength": 255
+      "constraints": {},
+      "vocabulary": {
+        "scheme": "http://resource.geosciml.org/classifierScheme/cgi/2016.01/simplelithology",
+        "collection": null,
+        "termForm": "localName",
+        "download": "https://geosciml.org/resource/vocabulary/cgi/2016/simplelithology.rdf",
+        "downloadFormat": "application/rdf+xml"
       },
-      "vocabulary": null,
       "separator": ";",
-      "guidance": "Use existing CGI simple lithology (http://resource.geosciml.org/classifier/cgi/lithology) scheme for naming the lithology.",
+      "guidance": null,
       "sources": {
         "code": "upload-template",
         "columnName": "upload-template",
@@ -1815,7 +1819,7 @@
         "termForm": "upload-template",
         "allowedValues": "decision:D-5",
         "separator": "decision:D-5",
-        "guidance": "fuchs-2023-appendix-a"
+        "guidance": "upload-template"
       }
     },
     {
@@ -1835,12 +1839,16 @@
         "S"
       ],
       "qualityRelevance": null,
-      "constraints": {
-        "maxLength": 255
+      "constraints": {},
+      "vocabulary": {
+        "scheme": "http://resource.geosciml.org/vocabulary/timescale/gts2020",
+        "collection": "http://resource.geosciml.org/classifier/ics/ischart/GeochronologicEras",
+        "termForm": "localName",
+        "download": "https://vocabs.ardc.edu.au/registry/api/resource/downloads/1211/isc2020.ttl",
+        "downloadFormat": "text/turtle"
       },
-      "vocabulary": null,
       "separator": ";",
-      "guidance": "Use the existing International Chronostratigraphic Chart of the International Commission on Stratigraphy (https://stratigraphy.org).",
+      "guidance": null,
       "sources": {
         "code": "upload-template",
         "columnName": "upload-template",
@@ -1861,7 +1869,7 @@
         "termForm": "upload-template",
         "allowedValues": "decision:D-5",
         "separator": "decision:D-5",
-        "guidance": "fuchs-2023-appendix-a"
+        "guidance": "upload-template"
       }
     },
     {

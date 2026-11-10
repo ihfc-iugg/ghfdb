@@ -14,7 +14,8 @@ Heat Flow Commission's compilation of terrestrial and marine heat-flow measureme
 
 The first part, `ghfdb.qc`, is quality control for GHFDB data template workbooks. It
 checks a workbook against the field schema and the
-[IHFC Controlled Vocabularies](https://github.com/ihfc-iugg/controlled-vocabularies),
+[IHFC Controlled Vocabularies](https://github.com/ihfc-iugg/controlled-vocabularies)
+(and, for lithology and stratigraphic age, the two vocabularies the template names),
 and scores each heat-flow determination with the GHFDB quality scheme: the uncertainty
 score, the methodological score and the perturbation flags of Fuchs et al. (2023),
 [doi:10.1016/j.tecto.2023.229976](https://doi.org/10.1016/j.tecto.2023.229976).
@@ -34,7 +35,9 @@ when it could not run. See [Check a workbook](https://ihfc-iugg.github.io/ghfdb/
 
 ## Field definitions
 
-`ghfdb.fields` holds what the upload template records about each of its 70 fields: the
+`ghfdb.fields` holds what version 2026.03 of the submission template
+([Fuchs et al., 2025](https://doi.org/10.5880/fidgeo.2025.042), CC BY 4.0) records about
+each of its 74 fields: the
 published column name, meaning, type, unit, range, obligation, domain and quality relevance,
 and the allowed values of every field that takes terms from a controlled vocabulary, each
 fact with its source. The first load downloads the vocabularies the definitions link to
@@ -81,7 +84,8 @@ against agreed worked examples.
 
 **Tie-break principles**
 
-- The published IHFC vocabularies are the only source of allowed terms.
+- The published vocabularies are the only source of allowed terms: the IHFC vocabularies,
+  and for lithology and stratigraphic age the two vocabularies the template names.
 - Every rule is documented, versioned and covered by a worked example. A rule that is
   not written down is a defect.
 - A problem is reported exactly as it is: an invalid value is never reported as a

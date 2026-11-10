@@ -331,17 +331,19 @@ def with_separator(schema: Schema, field: Field) -> Schema:
 
 
 class TestSeveralValuesInACell:
-    def test_no_packaged_field_has_a_separator_together_with_terms_or_a_pattern(
-        self, schema: Schema
+    @pytest.mark.parametrize("code", ["C25", "C26"])
+    def test_the_terms_in_a_cell_of_a_packaged_field_are_checked_on_their_own(
+        self, schema: Schema, children: Children, code: str
     ) -> None:
-        both = [
-            field.name
-            for field in schema.fields
-            if field.custom["separator"]
-            and ({"enum", "pattern"} & set(field.constraints))
-        ]
+        first, second = schema.get_field(code).constraints["enum"][:2]
+        frame = children({code: f"{first}; nonsense; {second}"})
 
-        assert both == []
+        problems = DatasetCheck(frame, schema).problems()
+
+        assert [(p["row"], p["value"]) for p in problems.to_dict("records")] == [
+            (9, "nonsense")
+        ]
+        assert set(problems["kind"]) == {Kind.NOT_IN_VOCABULARY}
 
     def test_each_term_in_a_cell_is_checked_on_its_own(
         self, schema: Schema, children: Children, vocabulary_field: Field

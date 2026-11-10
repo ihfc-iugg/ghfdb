@@ -1,7 +1,9 @@
 # ADR 0003 — Vocabulary terms are read from the vocabularies' permanent identifiers
 
 **Status:** accepted. [ADR 0004](0004-the-field-schema-is-read-with-frictionless.md) replaces how the
-schema file is read and where the cache is kept; the rest stands.
+schema file is read and where the cache is kept. [ADR 0007](0007-lithology-and-age-take-terms-from-external-vocabularies.md)
+adds how a scheme that is not published at its identifier is read, and keeps a file sent
+without cache headers for a day; the rest stands.
 
 ## Decision
 

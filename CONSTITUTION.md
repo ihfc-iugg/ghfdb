@@ -67,7 +67,9 @@ request records the change in `CHANGELOG.md` under a **Scheme changes** heading.
 ### Article XI — The vocabulary comes from the published vocabularies
 No vocabulary term is typed into the code or the field schema by hand. Allowed values come from
 the IHFC Controlled Vocabularies as published at their permanent identifiers, which the field
-schema links to.
+schema links to. The one exception is a field whose terms the upload template takes from another
+published vocabulary, as lithology and stratigraphic age do. Its terms come from that vocabulary
+as its owner publishes it.
 
 ### Article XII — Report, never modify
 No code path writes to a workbook it was given to check. Every problem is reported as what it is:
@@ -112,4 +114,4 @@ Read at plan and review; applies to every change.
 
 ---
 
-**Version**: 1.1.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-04
+**Version**: 1.2.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-10

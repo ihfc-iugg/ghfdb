@@ -174,6 +174,8 @@ class TestVocabularyEntries:
             assert f"<{named['scheme']}>" in section, field.name
             if named["collection"] is not None:
                 assert f"<{named['collection']}>" in section, field.name
+            if "download" in named:
+                assert f"<{named['download']}>" in section, field.name
 
     def test_every_allowed_term_is_linked_to_its_concept(
         self,
@@ -382,12 +384,12 @@ class TestSeparatorsAndEarlierSpellings:
     def test_guidance_is_given_when_the_field_has_it(
         self, schema: Schema, reference: FieldReference
     ) -> None:
-        field = schema.get_field("C25")
+        field = schema.get_field("C20")
         assert field.custom["guidance"] is not None
 
         section = section_of(entries_of(reference, field), field)
 
-        assert "http://resource.geosciml.org/classifier/cgi/lithology" in section
+        assert reference.cell(field.custom["guidance"]) in section
 
     def test_range_is_shown_for_a_bounded_number(
         self, schema: Schema, reference: FieldReference

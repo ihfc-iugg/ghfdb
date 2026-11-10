@@ -30,7 +30,8 @@ assessment
 
 Every fact in an entry comes from one of four places, named in the Source column:
 
-- **Upload template**: the current GHFDB upload template.
+- **Upload template**: the GHFDB submission template, version 2026.03
+  ([Fuchs et al., 2025](https://doi.org/10.5880/fidgeo.2025.042), CC BY 4.0).
 - **Fuchs et al. (2023), Appendix A**: the table of fields in the paper that describes the
   quality scheme.
 - **A recorded decision**: where the two disagree, or neither says, a decision was recorded and
@@ -38,6 +39,8 @@ Every fact in an entry comes from one of four places, named in the Source column
 - **IHFC Controlled Vocabularies**: the allowed values of a field that takes terms from a
   controlled vocabulary come from the vocabularies as currently published. The entry links to the
   permanent identifier of the concept scheme, and of the collection where there is one.
+  Lithology and stratigraphic age take theirs from two external vocabularies the template names,
+  and their entries link to the file the terms are read from.
 
 ```{mermaid}
 flowchart LR

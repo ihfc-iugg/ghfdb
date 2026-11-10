@@ -41,7 +41,7 @@ cache directory outside the repository, one per scheme; `tests/sources/upload-te
 **Constraints**: mypy strict; deptry clean; ruff line length 88; documentation builds with
 warnings as errors.
 
-**Scale/Scope**: 70 fields, 15 concept schemes, about 200 concepts.
+**Scale/Scope**: 74 fields, 17 concept schemes, about 650 concepts.
 
 ## Constitution Check
 
@@ -198,7 +198,7 @@ A Frictionless Table Schema (research.md, "Frictionless Table Schema shape"):
   C13–C19: `…/generic`), sorted by term ignoring case (D-21). The term is `[<notation>]` where
   `termForm` is `notation` and the concept has one, otherwise `[<English preferred label>]`
   (D-20).
-- Fields are in field-code order: P1–P13, C1–C49, A1–A8.
+- Fields are in the order of the template's columns: P1–P13, C1–C38, C50–C53, C39–C49, A1–A8.
 
 ### `ghfdb.fields.schema`
 

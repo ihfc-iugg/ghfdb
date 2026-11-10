@@ -182,16 +182,18 @@ confirm every identifier the field schema holds is defined in them.
 - A field with a fixed set of values that no IHFC vocabulary publishes (P9, C9: yes, no or
   unspecified): its values are listed with their source in Appendix A, and are not vocabulary
   terms.
-- A field with an open set of values and no published vocabulary (C25 lithology, C26
-  stratigraphic age): no list of allowed values is given. The entry names the classification the
-  paper recommends as guidance.
+- A field whose terms come from a published vocabulary that is not an IHFC vocabulary (C25
+  lithology, C26 stratigraphic age): the allowed values are read from the file its owner
+  publishes, and the entry links to that file. Several values may be given, separated by
+  semicolons.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 - **FR-001**: The package MUST describe every field of the current upload template, the 13 parent
-  fields P1–P13, the 49 child fields C1–C49 and the 8 assessment fields A1–A8, in one field schema
+  fields P1–P13, the 53 child fields C1–C53 and the 8 assessment fields A1–A8, in the order of
+  the template's columns, in one field schema
   that is a valid Frictionless Table Schema. *(US2)*
 - **FR-002**: Every field MUST carry its field code and its published column name, and both MUST be
   unique across the schema. *(US1, US2)*
@@ -270,7 +272,7 @@ confirm every identifier the field schema holds is defined in them.
 
 ### Measurable Outcomes
 
-- **SC-001**: All 70 fields of the current upload template have exactly one definition in the
+- **SC-001**: All 74 fields of the current upload template have exactly one definition in the
   field schema and exactly one entry in the field reference.
 - **SC-002**: For every vocabulary field, the allowed values and the concepts the vocabularies
   currently publish for it are identical: zero added, zero missing, zero relabelled. They are
@@ -287,7 +289,7 @@ confirm every identifier the field schema holds is defined in them.
 ### Session 2026-11-03
 
 - Q: Which fields does the field reference cover: the parent and child fields only, or also the
-  assessment fields A1–A8 that the current template carries? → A: All 70 fields of the template,
+  assessment fields A1–A8 that the current template carries? → A: All 74 fields of the template,
   A1–A8 included, grouped separately. The template is what assessors fill in, and the generated
   template (#5) needs every column. Integrated into FR-001 and US1 scenario 1.
 - Q: Which spelling is recorded for the two published column names misspelled in the template? →
@@ -299,8 +301,8 @@ confirm every identifier the field schema holds is defined in them.
 - Q: Is `[Unspecified]`, or any other term, a missing value? → A: No. An empty cell is the only
   missing value, and `[Unspecified]` is an allowed term. Integrated into FR-008 and Edge Cases.
 - Q: What are the allowed values of a field with no published vocabulary? → A: A fixed set that
-  the paper defines (P9, C9) is listed with its source in Appendix A. An open set (C25, C26) has no
-  list, and its entry names the classification the paper recommends. Integrated into Edge Cases.
+  the paper defines (P9, C9) is listed with its source in Appendix A. C25 and C26 take their terms
+  from the two external vocabularies the template names (D-5). Integrated into Edge Cases.
 
 ## Assumptions
 

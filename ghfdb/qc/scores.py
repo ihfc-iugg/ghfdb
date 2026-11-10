@@ -62,8 +62,6 @@ SCORE_COLUMNS = (
     "own_T_marked",
     "own_TC_marked",
 )
-# The columns a report shows for each child.
-REPORT_COLUMNS = ("rules", "U", "T", "TC", "M", "flags", "code")
 
 
 class Scores:

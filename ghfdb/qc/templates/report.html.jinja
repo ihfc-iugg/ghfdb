@@ -45,7 +45,7 @@ thead th { background: #eee; position: sticky; top: 0; }
 </thead>
 <tbody>
 {% for row in scores %}
-<tr><td>{{ row }}</td></tr>
+<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
 {% endfor %}
 </tbody>
 </table>

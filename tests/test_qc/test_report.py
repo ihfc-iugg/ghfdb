@@ -13,10 +13,13 @@ from frictionless import Schema
 
 import ghfdb
 from ghfdb.fields import Vocabularies
+from ghfdb.qc import report
 from ghfdb.qc.check import PROBLEM_COLUMNS, Kind
-from ghfdb.qc.report import NO, SCORE_HEADINGS, YES, Report
+from ghfdb.qc.report import NO, SCORE_TABLE, YES, Report
 from ghfdb.qc.rules import CF_1, CF_3
 from ghfdb.qc.workbook import CheckError
+
+SCORE_HEADINGS = [column.heading for column in SCORE_TABLE]
 
 
 def problem_table(*lines: dict[str, Any]) -> pandas.DataFrame:
@@ -364,6 +367,30 @@ class TestPreviewScores:
             link = links[heading]
             assert link is not None, heading
             assert page_of(link).is_file(), heading
+
+    def test_reordering_the_columns_moves_each_heading_with_its_cells(
+        self,
+        workbook_path: Path,
+        published_vocabularies: Vocabularies,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setattr(report, "SCORE_TABLE", SCORE_TABLE[::-1])
+        scores = score_table(
+            {"row": 9, "rules": "probe sensing", "U": "U1", "T": 1.1, "M": "M1"}
+        )
+
+        path = Report(
+            workbook_path, problem_table(), 1, published_vocabularies, scores
+        ).write()
+
+        headings = [text for text, _ in read_headings(path, "scores")]
+        first = read_scores(path)[0]
+        assert headings == SCORE_HEADINGS[::-1]
+        assert first["Excel row"] == "9"
+        assert first["Rules"] == "probe sensing"
+        assert first["U-score"] == "U1"
+        assert float(first["T-score"]) == pytest.approx(1.1)
+        assert first["M-score"] == "M1"
 
     def test_the_summary_links_to_the_overview_of_the_scheme(
         self, written: Path

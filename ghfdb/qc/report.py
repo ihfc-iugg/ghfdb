@@ -3,6 +3,7 @@
 import contextlib
 import os
 import tempfile
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -15,7 +16,6 @@ from ghfdb import __version__
 from ghfdb.fields import Vocabularies
 from ghfdb.qc.penalties import SCORE_DECIMALS
 from ghfdb.qc.rules import RULES
-from ghfdb.qc.scores import REPORT_COLUMNS
 from ghfdb.qc.workbook import CheckError
 
 TEMPLATES = Environment(loader=PackageLoader("ghfdb.qc", "templates"), autoescape=True)
@@ -34,20 +34,38 @@ RULE_REFERENCE = "https://ihfc-iugg.github.io/ghfdb/reference/rules.html"
 STATEMENTS = {rule.identifier: rule.statement for rule in RULES}
 RULE_COLUMN = HEADINGS.index("Rule")
 SCHEME_REFERENCE = "https://ihfc-iugg.github.io/ghfdb/reference/quality-scheme/"
-# The heading of each column of the scores table and the page of the scheme reference
-# that explains it, if any.
-SCORE_PAGES = {
-    "Excel row": None,
-    "Rules": "index",
-    "U-score": "u-score",
-    "T-score": "index",
-    "TC-score": "index",
-    "M-score": "m-score",
-    "Perturbation flags": "perturbation-flags",
-    "Quality code": "index",
-    "Has problems": None,
-}
-SCORE_HEADINGS = list(SCORE_PAGES)
+
+
+@dataclass(frozen=True)
+class ScoreColumn:
+    """A column of the table of preview scores.
+
+    Attributes:
+        heading: The heading the column carries.
+        column: What the column shows: ``row`` for the Excel row, ``problems`` for
+            whether the child has problems, any other value a column of
+            ``Dataset.scores``.
+        page: The page of the scheme reference that explains the column, without its
+            extension, or None for a column the scheme does not define.
+    """
+
+    heading: str
+    column: str
+    page: str | None
+
+
+# The columns of the table of preview scores, in the order the report shows them.
+SCORE_TABLE = (
+    ScoreColumn("Excel row", "row", None),
+    ScoreColumn("Rules", "rules", "index"),
+    ScoreColumn("U-score", "U", "u-score"),
+    ScoreColumn("T-score", "T", "index"),
+    ScoreColumn("TC-score", "TC", "index"),
+    ScoreColumn("M-score", "M", "m-score"),
+    ScoreColumn("Perturbation flags", "flags", "perturbation-flags"),
+    ScoreColumn("Quality code", "code", "index"),
+    ScoreColumn("Has problems", "problems", None),
+)
 YES = "yes"
 NO = "no"
 
@@ -144,8 +162,11 @@ class Report:
             headings=HEADINGS,
             problems=self.cells(),
             score_headings=[
-                (heading, f"{SCHEME_REFERENCE}{page}.html" if page else None)
-                for heading, page in SCORE_PAGES.items()
+                (
+                    column.heading,
+                    f"{SCHEME_REFERENCE}{column.page}.html" if column.page else None,
+                )
+                for column in SCORE_TABLE
             ],
             scores=self.score_rows(),
         )
@@ -164,25 +185,25 @@ class Report:
             for problem in self.problems.itertuples(index=False)
         ]
 
-    def score_rows(self) -> list[Markup]:
+    def score_rows(self) -> list[tuple[str, ...]]:
         """List the preview scores as table rows, one for each child.
 
         Returns:
-            For each child, in the order of the scores, its cells escaped and joined as
-            the cells of a row: the Excel row, the scores as text with an empty cell
-            for a score not determined, and whether the child has problems.
+            For each child, in the order of the scores, the text of its cells in the
+            order of ``SCORE_TABLE``: an empty cell for a score not determined, never
+            zero.
         """
-        text = self.scores[list(REPORT_COLUMNS)].astype(object)
+        text = self.scores.astype(object)
         for column in ("T", "TC"):
             text[column] = self.scores[column].round(SCORE_DECIMALS).astype("string")
         text = text.where(text.notna(), "")
-        text.insert(0, "row", self.scores.index.astype(str))
+        text["row"] = self.scores.index.astype(str)
         has_problems = self.scores.index.isin(self.problems["row"].dropna())
         text["problems"] = pandas.Series(has_problems, index=text.index).map(
             {True: YES, False: NO}
         )
-        separator = Markup("</td><td>")
-        return [separator.join(row) for row in text.itertuples(index=False)]
+        shown = text[[column.column for column in SCORE_TABLE]]
+        return list(shown.itertuples(index=False, name=None))
 
     @staticmethod
     def cell(position: int, value: Any) -> dict[str, str]:

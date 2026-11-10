@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 from extensions.field_reference import FieldReference
-from extensions.quality_scheme import SchemeReference
+from extensions.quality_scheme import SchemeReference, ScoreRange
 from frictionless import Schema
 
 from ghfdb.fields import Field, Vocabularies
@@ -296,6 +296,62 @@ def location(penalty: float) -> Criterion[Classes]:
         ),
         "Table 2, Localization",
     )
+
+
+class TestScoreRange:
+    DEPTH = Criterion(
+        "t.depth",
+        "Depth",
+        Bands(Field.probe_penetration, (Band(0.1, 10), Band(0.0, 3), Band(-0.2))),
+        "Table 2, Probe penetration",
+    )
+    TILT = Criterion(
+        "t.tilt",
+        "Tilt",
+        Bands(Field.probe_tilt, (Band(-0.3, 30), Band(0.0, 0, inclusive=True))),
+        "Table 2, Tilt",
+    )
+
+    def test_criteria_that_add_up_add_their_best_and_their_largest_penalties(
+        self,
+    ) -> None:
+        added = ScoreRange((self.DEPTH, self.TILT), added_up=True)
+
+        assert (added.lowest(), added.highest()) == (0.5, 1.1)
+
+    def test_criteria_of_which_one_applies_take_the_best_and_the_largest_of_them(
+        self,
+    ) -> None:
+        chosen = ScoreRange((self.DEPTH, self.TILT), added_up=False)
+
+        assert (chosen.lowest(), chosen.highest()) == (0.7, 1.1)
+
+    def test_a_fixed_score_widens_the_range(self) -> None:
+        gated = ScoreRange((self.DEPTH,), added_up=True, fixed=(0.1,))
+
+        assert (gated.lowest(), gated.highest()) == (0.1, 1.1)
+
+    def test_the_range_of_each_part_follows_from_the_declared_tables(
+        self, schema: Schema
+    ) -> None:
+        reference = reference_of(schema)
+
+        ranges = {
+            part: (reference.lowest(part), reference.highest(part))
+            for part in ("probe-t", "probe-tc", "borehole-t", "borehole-tc")
+        }
+
+        assert ranges == {
+            "probe-t": ("0.2", "1.2"),
+            "probe-tc": ("0.2", "1.2"),
+            "borehole-t": ("0.4", "1.1"),
+            "borehole-tc": ("0.1", "1.1"),
+        }
+
+    def test_the_range_of_the_scheme_spans_every_part(self, schema: Schema) -> None:
+        reference = reference_of(schema)
+
+        assert (reference.lowest(), reference.highest()) == ("0.1", "1.2")
 
 
 class TestCriterionTable:

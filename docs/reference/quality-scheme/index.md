@@ -98,7 +98,7 @@ different sets of rules.
 
 Both scores start at 1.0. Each criterion adds a penalty, which is negative for a worse method
 and positive for a better one, and the score is the sum. The scores are rounded to three decimal
-places. In practice a T-score or TC-score lies between 0.1 and 1.2. Source: Fuchs et al. (2023),
+places. In practice a T-score or TC-score lies between {{ lowest() }} and {{ highest() }}. Source: Fuchs et al. (2023),
 Section 3.2.
 
 ## Empty, unspecified and the missing-information mark

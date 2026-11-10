@@ -13,7 +13,8 @@ Table 2. Later sources cite the corrigendum's table as "corrected Table 2".
 ## T-score
 
 The T-score has four criteria: the probe penetration, the number of temperature recordings,
-the water depth and the probe tilt. Its lowest value is 0.2 and its highest 1.2.
+the water depth and the probe tilt. Its lowest value is {{ lowest('probe-t') }} and its highest
+{{ highest('probe-t') }}.
 
 ### Fields read
 
@@ -88,8 +89,9 @@ Source: corrected Table 2, "Tilt".
 ## TC-score
 
 The TC-score has four criteria: the location, the saturation, the number of conductivity
-measurements and the pT conditions. Its lowest value is 0.2 and its highest 1.2. It reads
-nothing from the child, so the child's own score and its TC-score are the same.
+measurements and the pT conditions. Its lowest value is {{ lowest('probe-tc') }} and its highest
+{{ highest('probe-tc') }}. It reads nothing from the child, so the child's own score and its
+TC-score are the same.
 
 ### Fields read
 

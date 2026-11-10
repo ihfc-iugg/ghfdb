@@ -13,7 +13,8 @@ Table 3. Later sources cite the corrigendum's table as "corrected Table 3".
 ## T-score
 
 The T-score has one criterion, the temperature methods used at the top and the bottom of the
-interval, read in one of three cases. Its lowest value is 0.4 and its highest 1.1.
+interval, read in one of three cases. Its lowest value is {{ lowest('borehole-t') }} and its
+highest {{ highest('borehole-t') }}.
 
 ### Fields read
 
@@ -89,7 +90,9 @@ writes each method.
 ## TC-score
 
 The TC-score has a gate and five criteria: the location, the source, the number of conductivity
-measurements, the saturation and the pT conditions. Its lowest value is 0.1 and its highest 1.2.
+measurements, the saturation and the pT conditions. Its lowest value is {{ lowest('borehole-tc') }}
+and its highest {{ highest('borehole-tc') }}. The header of the corrected Table 3 gives the range 0.1 to
+1.2, which none of its rows reaches.
 
 ### Fields read
 

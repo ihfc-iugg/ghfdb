@@ -16,8 +16,10 @@ from sphinx.application import Sphinx
 from extensions.field_reference import FieldReference
 from ghfdb.fields import Field, Vocabularies, load_schema
 from ghfdb.fields.cells import concept_terms
+from ghfdb.qc import borehole, probe
 from ghfdb.qc.criteria import CRITERIA
 from ghfdb.qc.penalties import (
+    SCORE_DECIMALS,
     Bands,
     Cases,
     Classes,
@@ -72,6 +74,72 @@ MINUS = "−"
 ANY = "any"
 EMPTY = "Empty"
 OTHER_VALUE = "Any other value"
+
+
+@dataclass(frozen=True)
+class ScoreRange:
+    """The lowest and the highest score that a set of criteria allow.
+
+    Attributes:
+        criteria: The criteria.
+        added_up: Whether the penalties of all the criteria are added to 1.0, as those
+            of a TC-score are, or only one criterion applies, as one of the cases of a
+            borehole gradient does.
+        fixed: Scores a child can have besides, such as that of the interval depth
+            gate.
+    """
+
+    criteria: tuple[Criterion[Any], ...]
+    added_up: bool
+    fixed: tuple[float, ...] = ()
+
+    @staticmethod
+    def best(table: Table) -> float:
+        """Give the highest penalty of a table.
+
+        Args:
+            table: The table.
+
+        Returns:
+            The highest penalty of its bands, groups or rows.
+
+        Raises:
+            TypeError: The table is of a kind this class cannot read.
+        """
+        penalties: list[float]
+        match table:
+            case Bands() as bands:
+                penalties = [band.value for band in bands.bands]
+            case Classes() as classes:
+                penalties = [group.penalty for group in classes.groups]
+            case Cases() as cases:
+                penalties = [case.penalty for case in cases.cases]
+            case _:
+                raise TypeError(f"{table}: no penalties to read")
+        return max(penalties)
+
+    def lowest(self) -> float:
+        """Give the lowest score, with every criterion at its largest penalty."""
+        penalties = [criterion.table.largest() for criterion in self.criteria]
+        score = 1 + (sum(penalties) if self.added_up else min(penalties))
+        return float(round(min((score, *self.fixed)), SCORE_DECIMALS))
+
+    def highest(self) -> float:
+        """Give the highest score, with every criterion at its best penalty."""
+        penalties = [self.best(criterion.table) for criterion in self.criteria]
+        score = 1 + (sum(penalties) if self.added_up else max(penalties))
+        return float(round(max((score, *self.fixed)), SCORE_DECIMALS))
+
+
+# The criteria whose penalties make up each score, which the pages state the range of.
+RANGES = {
+    "probe-t": ScoreRange(probe.T_CRITERIA, added_up=True),
+    "probe-tc": ScoreRange(probe.TC_CRITERIA, added_up=True),
+    "borehole-t": ScoreRange(borehole.T_CRITERIA, added_up=False),
+    "borehole-tc": ScoreRange(
+        borehole.TC_CRITERIA, added_up=True, fixed=(borehole.GATE_SCORE,)
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -366,12 +434,42 @@ class SchemeReference:
         )
         self.environment.globals.update(
             decision=self.decision,
+            lowest=self.lowest,
+            highest=self.highest,
             criterion=self.criterion,
             fields=self.fields,
             examples=self.examples,
             field_legend=self.field_legend,
             coverage=self.coverage,
         )
+
+    @staticmethod
+    def lowest(part: str | None = None) -> str:
+        """Write the lowest score of a part of the scheme, from its declarations.
+
+        Args:
+            part: ``probe-t``, ``probe-tc``, ``borehole-t`` or ``borehole-tc``. Without
+                it, the lowest of them all.
+
+        Returns:
+            The score, such as ``0.2``.
+        """
+        ranges = RANGES.values() if part is None else [RANGES[part]]
+        return f"{min(each.lowest() for each in ranges):g}"
+
+    @staticmethod
+    def highest(part: str | None = None) -> str:
+        """Write the highest score of a part of the scheme, from its declarations.
+
+        Args:
+            part: ``probe-t``, ``probe-tc``, ``borehole-t`` or ``borehole-tc``. Without
+                it, the highest of them all.
+
+        Returns:
+            The score, such as ``1.2``.
+        """
+        ranges = RANGES.values() if part is None else [RANGES[part]]
+        return f"{max(each.highest() for each in ranges):g}"
 
     @staticmethod
     def decision(number: int) -> str:

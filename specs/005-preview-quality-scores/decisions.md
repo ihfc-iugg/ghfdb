@@ -187,15 +187,14 @@ corrigendum treats both `[DTSeq]` and `[cDTS]`.
 ## D-13: A probe laboratory case needs every method to be a laboratory method
 
 **Found**: the corrected Table 2 adds the condition "`{tc_method}` is all with `[Lab - ...]`" to
-the onshore laboratory rows of the saturation criterion, and lists `[Other]` among the −0.2
-estimates.
+the onshore laboratory rows of the saturation criterion, and lists `[other (specify in
+comments)]` among the −0.2 estimates. The vocabulary of `C43` has no such term.
 
-**Chosen**: the laboratory rows hold only when every value of `C43` is a laboratory method.
-`[Other]` is listed with the −0.2 estimates.
+**Chosen**: the laboratory rows hold only when every value of `C43` is a laboratory method. Nothing
+is scored for `[other (specify in comments)]`, because the vocabulary has no term to score.
 
 **Why**: D-10. The condition matters only for several values, which come only from a dataset built
-in code (D-6). `[Other]` already scored −0.2 as a value that fits no row, so its score does not
-change.
+in code (D-6).
 
 **ADR:** none.
 

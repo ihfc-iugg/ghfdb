@@ -7,14 +7,9 @@ from frictionless import Schema
 from pandas.testing import assert_series_equal
 
 from ghfdb.fields import MissingSchemeError, Vocabularies, allowed_values
-from ghfdb.qc.rules import DRILLING, EXPLORATION_METHOD, MINING, PROBING_ONSHORE
-from ghfdb.qc.scheme import (
-    CONCEPTS,
-    FLAG_FIELDS,
-    PRESENT_CORRECTED,
-    Inputs,
-    Terms,
-)
+from ghfdb.qc.concepts import DRILLING, MINING, PRESENT_CORRECTED, PROBING_ONSHORE
+from ghfdb.qc.rules import EXPLORATION_METHOD
+from ghfdb.qc.scheme import CONCEPTS, FLAG_FIELDS, Inputs, Terms
 
 SCORED_TERM_FIELDS = (
     "C11",

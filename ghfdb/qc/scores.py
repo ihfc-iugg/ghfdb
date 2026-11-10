@@ -7,19 +7,15 @@ from frictionless import Schema
 from ghfdb.fields import Vocabularies
 from ghfdb.qc.borehole import BoreholeRules
 from ghfdb.qc.check import Kind
-from ghfdb.qc.probe import ProbeRules
-from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD, PROBE_SENSING
-from ghfdb.qc.scheme import (
-    DECIMALS,
-    FLAG_FIELDS,
+from ghfdb.qc.concepts import (
     NOT_RECOGNIZED,
     PRESENT_CORRECTED,
     PRESENT_NOT_CORRECTED,
     PRESENT_NOT_SIGNIFICANT,
-    Inputs,
-    Score,
-    Terms,
 )
+from ghfdb.qc.probe import ProbeRules
+from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD, PROBE_SENSING
+from ghfdb.qc.scheme import DECIMALS, FLAG_FIELDS, Inputs, Score, Terms
 from ghfdb.qc.uncertainty import UScore
 
 PROBE_RULES = "probe sensing"

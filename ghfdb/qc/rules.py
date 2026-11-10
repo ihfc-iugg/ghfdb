@@ -45,32 +45,28 @@ from typing import TYPE_CHECKING, Any
 import pandas
 from frictionless import Schema
 
+from ghfdb.fields import Field
+from ghfdb.qc.concepts import (
+    ASSUMED_FROM_LITERATURE,
+    CORE_SAMPLES,
+    DRILLING,
+    DRILLING_CLUSTERED,
+    EGRT,
+    INDIRECT,
+    LITERATURE_OR_UNSPECIFIED,
+    MINING,
+    POINT_SOURCE,
+    PROBE_PULSE,
+    PROBING_CLUSTERED,
+    PROBING_OFFSHORE,
+    PROBING_ONSHORE,
+    TUNNELING,
+)
+
 if TYPE_CHECKING:
     from ghfdb.qc.check import DatasetCheck
 
-VOCABULARIES = "https://w3id.org/ihfc-iugg/vocabularies"
-EXPLORATION_METHODS = f"{VOCABULARIES}/exploration-methods"
-CONDUCTIVITY_LOCATION = f"{VOCABULARIES}/conductivity-location"
-CONDUCTIVITY_SOURCES = f"{VOCABULARIES}/conductivity-sources"
-CONDUCTIVITY_METHODS = f"{VOCABULARIES}/conductivity-methods"
-TEMPERATURE_METHOD = f"{VOCABULARIES}/temperature-method"
-
-DRILLING = f"{EXPLORATION_METHODS}/drilling"
-DRILLING_CLUSTERED = f"{EXPLORATION_METHODS}/drilling-clustering"
-MINING = f"{EXPLORATION_METHODS}/mining"
-TUNNELING = f"{EXPLORATION_METHODS}/tunneling"
-INDIRECT = f"{EXPLORATION_METHODS}/indirect"
-PROBING_ONSHORE = f"{EXPLORATION_METHODS}/probing-onshore"
-PROBING_OFFSHORE = f"{EXPLORATION_METHODS}/probing-offshore"
-PROBING_CLUSTERED = f"{EXPLORATION_METHODS}/probing-clustering"
-LITERATURE_OR_UNSPECIFIED = f"{CONDUCTIVITY_LOCATION}/literature"
-ASSUMED_FROM_LITERATURE = f"{CONDUCTIVITY_SOURCES}/assumed-from-literature"
-CORE_SAMPLES = f"{CONDUCTIVITY_SOURCES}/core-samples"
-EGRT = f"{TEMPERATURE_METHOD}/EGRT"
-PROBE_PULSE = f"{CONDUCTIVITY_METHODS}/probePulse"
-POINT_SOURCE = f"{CONDUCTIVITY_METHODS}/pointSource"
-
-EXPLORATION_METHOD = "P12"
+EXPLORATION_METHOD = Field.explo_method
 
 
 @dataclass(frozen=True)
@@ -404,7 +400,9 @@ CF_1 = RequiredWhen(
         "methods belong to the domain is set out with the rules, and is open to "
         "confirmation by the data assessment team."
     ),
-    example=Example({"P12": DRILLING, "C5": None}, ("C5",)),
+    example=Example(
+        {Field.explo_method: DRILLING, Field.q_bottom: None}, (Field.q_bottom,)
+    ),
     domain=BOREHOLE,
 )
 CF_2 = RequiredWhen(
@@ -420,7 +418,10 @@ CF_2 = RequiredWhen(
         "belong to the domain is set out with the rules, and is open to confirmation "
         "by the data assessment team."
     ),
-    example=Example({"P12": PROBING_ONSHORE, "C6": None}, ("C6",)),
+    example=Example(
+        {Field.explo_method: PROBING_ONSHORE, Field.probe_penetration: None},
+        (Field.probe_penetration,),
+    ),
     domain=PROBE_SENSING,
 )
 CF_3 = AllowedWhen(
@@ -436,9 +437,12 @@ CF_3 = AllowedWhen(
         "measured on samples or in situ was measured somewhere, so its location is "
         "known."
     ),
-    example=Example({"C42": LITERATURE_OR_UNSPECIFIED, "C41": CORE_SAMPLES}, ("C41",)),
-    when=Condition("C42", (LITERATURE_OR_UNSPECIFIED,)),
-    then=Condition("C41", (ASSUMED_FROM_LITERATURE,)),
+    example=Example(
+        {Field.tc_location: LITERATURE_OR_UNSPECIFIED, Field.tc_source: CORE_SAMPLES},
+        (Field.tc_source,),
+    ),
+    when=Condition(Field.tc_location, (LITERATURE_OR_UNSPECIFIED,)),
+    then=Condition(Field.tc_source, (ASSUMED_FROM_LITERATURE,)),
 )
 
 CF_4 = AllowedWhen(
@@ -455,10 +459,12 @@ CF_4 = AllowedWhen(
         "temperature method, the thermal conductivity method is the probe pulse "
         "technique, so that thermal conductivity is reported consistently."
     ),
-    example=Example({"C31": EGRT, "C43": POINT_SOURCE}, ("C43",)),
-    when=Condition("C31", (EGRT,)),
-    then=Condition("C43", (PROBE_PULSE,)),
-    alternatives=(Condition("C32", (EGRT,)),),
+    example=Example(
+        {Field.T_method_top: EGRT, Field.tc_method: POINT_SOURCE}, (Field.tc_method,)
+    ),
+    when=Condition(Field.T_method_top, (EGRT,)),
+    then=Condition(Field.tc_method, (PROBE_PULSE,)),
+    alternatives=(Condition(Field.T_method_bottom, (EGRT,)),),
 )
 
 RULES: tuple[Rule, ...] = (CF_1, CF_2, CF_3, CF_4)

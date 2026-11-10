@@ -7,20 +7,12 @@ from ``Inputs`` and returns the penalty and the missing-information mark of ever
 import numpy
 import pandas
 
-from ghfdb.qc.rules import EXPLORATION_METHOD, LITERATURE_OR_UNSPECIFIED, PROBE_SENSING
-from ghfdb.qc.scheme import (
+from ghfdb.qc.concepts import (
     ACTUAL_IN_SITU,
     ACTUAL_LOCATION,
-    AMBIENT_OR_UNSPECIFIED,
-    DRY_UNSPECIFIED_OR_OTHER,
-    ESTIMATED_FROM_LITERATURE,
-    ESTIMATED_FROM_OTHER,
-    FULL_IN_SITU,
     IN_SITU_PROBE,
-    LABORATORY_METHODS,
-    LARGEST_PENALTY,
+    LITERATURE_OR_UNSPECIFIED,
     OTHER_LOCATION,
-    PARTIAL_IN_SITU,
     PRESENT_CORRECTED,
     PROBE_PULSE,
     RECOVERED,
@@ -28,6 +20,17 @@ from ghfdb.qc.scheme import (
     SATURATED_IN_SITU,
     SATURATED_MEASURED,
     TILT_CORRECTED,
+)
+from ghfdb.qc.rules import EXPLORATION_METHOD, PROBE_SENSING
+from ghfdb.qc.scheme import (
+    AMBIENT_OR_UNSPECIFIED,
+    DRY_UNSPECIFIED_OR_OTHER,
+    ESTIMATED_FROM_LITERATURE,
+    ESTIMATED_FROM_OTHER,
+    FULL_IN_SITU,
+    LABORATORY_METHODS,
+    LARGEST_PENALTY,
+    PARTIAL_IN_SITU,
     Inputs,
     Penalty,
     Score,

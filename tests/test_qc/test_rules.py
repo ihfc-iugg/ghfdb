@@ -7,21 +7,16 @@ from frictionless import Schema
 
 from ghfdb.fields import MissingSchemeError, Vocabularies
 from ghfdb.qc.check import DatasetCheck
-from ghfdb.qc.rules import (
+from ghfdb.qc.concepts import (
     ASSUMED_FROM_LITERATURE,
-    CF_1,
-    CF_2,
-    CF_3,
     CORE_SAMPLES,
     DRILLING,
     EGRT,
     LITERATURE_OR_UNSPECIFIED,
     PROBE_PULSE,
     PROBING_ONSHORE,
-    RULES,
-    Condition,
-    Rule,
 )
+from ghfdb.qc.rules import CF_1, CF_2, CF_3, RULES, Condition, Rule
 
 Children = Callable[..., pandas.DataFrame]
 VOCABULARIES = "https://w3id.org/ihfc-iugg/vocabularies"

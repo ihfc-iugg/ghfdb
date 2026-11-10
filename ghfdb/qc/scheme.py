@@ -10,94 +10,68 @@ import pandas
 from frictionless import Schema
 
 from ghfdb.fields import MissingSchemeError, Vocabularies, allowed_values
-from ghfdb.qc.rules import (
-    ASSUMED_FROM_LITERATURE,
-    BOREHOLE,
-    CONDUCTIVITY_LOCATION,
-    CONDUCTIVITY_SOURCES,
-    CORE_SAMPLES,
-    EXPLORATION_METHOD,
-    LITERATURE_OR_UNSPECIFIED,
-    PROBE_SENSING,
-    VOCABULARIES,
-)
+from ghfdb.qc import concepts as c
+from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD, PROBE_SENSING
 
 LARGEST_PENALTY = -0.2
 DECIMALS = 3
 
-HEAT_FLOW_CORRECTIONS = f"{VOCABULARIES}/heat-flow-corrections"
-PRESENT_CORRECTED = f"{HEAT_FLOW_CORRECTIONS}/present_corrected"
-PRESENT_NOT_CORRECTED = f"{HEAT_FLOW_CORRECTIONS}/present_not_corrected"
-PRESENT_NOT_SIGNIFICANT = f"{HEAT_FLOW_CORRECTIONS}/present_not_significant"
-NOT_RECOGNIZED = f"{HEAT_FLOW_CORRECTIONS}/not_recognized"
-UNSPECIFIED_CORRECTION = f"{HEAT_FLOW_CORRECTIONS}/unspecified"
-TILT_CORRECTED = f"{HEAT_FLOW_CORRECTIONS}/tiltCorrected"
-CONSIDERED_PT = f"{HEAT_FLOW_CORRECTIONS}/consideredPT"
-CONSIDERED_P_OR_T = tuple(
-    f"{HEAT_FLOW_CORRECTIONS}/{name}" for name in ("consideredP", "consideredT")
-)
-NOT_CONSIDERED_OR_UNSPECIFIED = (
-    f"{HEAT_FLOW_CORRECTIONS}/notConsidered",
-    UNSPECIFIED_CORRECTION,
-)
+CONSIDERED_P_OR_T = (c.CONSIDERED_P, c.CONSIDERED_T)
+NOT_CONSIDERED_OR_UNSPECIFIED = (c.NOT_CONSIDERED, c.UNSPECIFIED_CORRECTION)
 IN_SITU_CORRECTIONS = (
-    CONSIDERED_PT,
+    c.CONSIDERED_PT,
     *CONSIDERED_P_OR_T,
     *NOT_CONSIDERED_OR_UNSPECIFIED,
 )
 
-TEMPERATURE_METHODS = f"{VOCABULARIES}/temperature-method"
-SURFACE = f"{TEMPERATURE_METHODS}/SUR"
-CONTINUOUS_LOG_BEST = tuple(
-    f"{TEMPERATURE_METHODS}/{name}" for name in ("LOGeq", "cLOG", "DTSeq", "cDTS")
-)
-CONTINUOUS_LOG_PERTURBED = (f"{TEMPERATURE_METHODS}/LOGpert",)
+CONTINUOUS_LOG_BEST = (c.LOG_EQ, c.C_LOG, c.DTS_EQ, c.C_DTS)
+CONTINUOUS_LOG_PERTURBED = (c.LOG_PERT,)
 CONTINUOUS_LOG_METHODS = (*CONTINUOUS_LOG_BEST, *CONTINUOUS_LOG_PERTURBED)
-SINGLE_POINTS_EQUILIBRIUM = tuple(
-    f"{TEMPERATURE_METHODS}/{name}"
-    for name in (
-        "LOGeq",
-        "cLOG",
-        "cBHT",
-        "HT_FT",
-        "cHT_FT",
-        "RTDeq",
-        "cRTD",
-        "ODTT_PC",
-        "ODTT_TP",
-        "EGRT",
-        "GRT",
-        "cDTS",
-    )
+SINGLE_POINTS_EQUILIBRIUM = (
+    c.LOG_EQ,
+    c.C_LOG,
+    c.C_BHT,
+    c.HT_FT,
+    c.C_HT_FT,
+    c.RTD_EQ,
+    c.C_RTD,
+    c.ODTT_PC,
+    c.ODTT_TP,
+    c.EGRT,
+    c.GRT,
+    c.C_DTS,
 )
-SINGLE_POINTS_PERTURBED = tuple(
-    f"{TEMPERATURE_METHODS}/{name}"
-    for name in ("LOGpert", "DTSpert", "BHT", "HT_FTpert", "RTDpert", "BLK")
+SINGLE_POINTS_PERTURBED = (
+    c.LOG_PERT,
+    c.DTS_PERT,
+    c.BHT,
+    c.HT_FT_PERT,
+    c.RTD_PERT,
+    c.BLK,
 )
-ESTIMATED_TEMPERATURE = tuple(
-    f"{TEMPERATURE_METHODS}/{name}"
-    for name in ("CPD", "XEN", "GTM", "BSR", "unspecified", "other")
+ESTIMATED_TEMPERATURE = (
+    c.CPD,
+    c.XEN,
+    c.GTM,
+    c.BSR,
+    c.UNSPECIFIED_TEMPERATURE,
+    c.OTHER_TEMPERATURE,
 )
-SURFACE_BOTTOM_CORRECTED = tuple(
-    f"{TEMPERATURE_METHODS}/{name}"
-    for name in (
-        "cBHT",
-        "RTDeq",
-        "cRTD",
-        "ODTT_PC",
-        "ODTT_TP",
-        "cHT_FT",
-        "EGRT",
-        "GRT",
-    )
+SURFACE_BOTTOM_CORRECTED = (
+    c.C_BHT,
+    c.RTD_EQ,
+    c.C_RTD,
+    c.ODTT_PC,
+    c.ODTT_TP,
+    c.C_HT_FT,
+    c.EGRT,
+    c.GRT,
 )
-SURFACE_BOTTOM_PERTURBED = tuple(
-    f"{TEMPERATURE_METHODS}/{name}" for name in ("BHT", "HT_FTpert", "RTDpert")
-)
+SURFACE_BOTTOM_PERTURBED = (c.BHT, c.HT_FT_PERT, c.RTD_PERT)
 TEMPERATURE_METHOD_CONCEPTS = tuple(
     dict.fromkeys(
         (
-            SURFACE,
+            c.SURFACE,
             *CONTINUOUS_LOG_METHODS,
             *SINGLE_POINTS_EQUILIBRIUM,
             *SINGLE_POINTS_PERTURBED,
@@ -108,95 +82,71 @@ TEMPERATURE_METHOD_CONCEPTS = tuple(
     )
 )
 
-ACTUAL_LOCATION = f"{CONDUCTIVITY_LOCATION}/actual"
-OTHER_LOCATION = f"{CONDUCTIVITY_LOCATION}/other"
-LOCATIONS = (ACTUAL_LOCATION, OTHER_LOCATION, LITERATURE_OR_UNSPECIFIED)
+LOCATIONS = (c.ACTUAL_LOCATION, c.OTHER_LOCATION, c.LITERATURE_OR_UNSPECIFIED)
 
-IN_SITU_PROBE = f"{CONDUCTIVITY_SOURCES}/insitu_probe"
-BEST_SOURCES = (IN_SITU_PROBE, f"{CONDUCTIVITY_SOURCES}/core_log")
-SAMPLED_SOURCES = tuple(
-    f"{CONDUCTIVITY_SOURCES}/{name}"
-    for name in ("cutting_samples", "outcrop_samples", "well_log")
-)
+BEST_SOURCES = (c.IN_SITU_PROBE, c.CORE_LOG)
+SAMPLED_SOURCES = (c.CUTTING_SAMPLES, c.OUTCROP_SAMPLES, c.WELL_LOG)
 ESTIMATED_SOURCES = (
-    *(
-        f"{CONDUCTIVITY_SOURCES}/{name}"
-        for name in ("mineral_computation", "unspecified", "other")
-    ),
-    ASSUMED_FROM_LITERATURE,
+    c.MINERAL_COMPUTATION,
+    c.UNSPECIFIED_SOURCE,
+    c.OTHER_SOURCE,
+    c.ASSUMED_FROM_LITERATURE,
 )
 SOURCE_CONCEPTS = (
     *BEST_SOURCES,
-    CORE_SAMPLES,
+    c.CORE_SAMPLES,
     *SAMPLED_SOURCES,
     *ESTIMATED_SOURCES,
 )
 
-CONDUCTIVITY_METHODS = f"{VOCABULARIES}/conductivity-methods"
-PROBE_PULSE = f"{CONDUCTIVITY_METHODS}/probePulse"
-LABORATORY_METHODS = tuple(
-    f"{CONDUCTIVITY_METHODS}/{name}"
-    for name in (
-        "pointSource",
-        "lineSourceFull",
-        "lineSourceHalf",
-        "planeSourceFull",
-        "planeSourceHalf",
-        "laboratoryOther",
-    )
+LABORATORY_METHODS = (
+    c.POINT_SOURCE,
+    c.LINE_SOURCE_FULL,
+    c.LINE_SOURCE_HALF,
+    c.PLANE_SOURCE_FULL,
+    c.PLANE_SOURCE_HALF,
+    c.LABORATORY_OTHER,
 )
-ESTIMATED_FROM_LITERATURE = tuple(
-    f"{CONDUCTIVITY_METHODS}/{name}"
-    for name in ("lithology", "wellLogDeterministic", "wellLogEmpirical")
+ESTIMATED_FROM_LITERATURE = (
+    c.LITHOLOGY,
+    c.WELL_LOG_DETERMINISTIC,
+    c.WELL_LOG_EMPIRICAL,
 )
-ESTIMATED_FROM_OTHER = tuple(
-    f"{CONDUCTIVITY_METHODS}/{name}"
-    for name in ("waterContent", "mineralComposition", "chlorineContent", "unspecified")
+ESTIMATED_FROM_OTHER = (
+    c.WATER_CONTENT,
+    c.MINERAL_COMPOSITION,
+    c.CHLORINE_CONTENT,
+    c.UNSPECIFIED_METHOD,
 )
 CONDUCTIVITY_METHOD_CONCEPTS = (
-    PROBE_PULSE,
+    c.PROBE_PULSE,
     *LABORATORY_METHODS,
     *ESTIMATED_FROM_LITERATURE,
     *ESTIMATED_FROM_OTHER,
 )
 
-CONDUCTIVITY_SATURATION = f"{VOCABULARIES}/conductivity-saturation"
-SATURATED_IN_SITU = f"{CONDUCTIVITY_SATURATION}/saturatedInSitu"
-SATURATED_MEASURED = f"{CONDUCTIVITY_SATURATION}/saturatedMeasured"
-RECOVERED = f"{CONDUCTIVITY_SATURATION}/recovered"
-SATURATED_CALCULATED = f"{CONDUCTIVITY_SATURATION}/saturatedCalculated"
-DRY_UNSPECIFIED_OR_OTHER = tuple(
-    f"{CONDUCTIVITY_SATURATION}/{name}"
-    for name in ("dryMeasured", "unspecified", "other")
+DRY_UNSPECIFIED_OR_OTHER = (
+    c.DRY_MEASURED,
+    c.UNSPECIFIED_SATURATION,
+    c.OTHER_SATURATION,
 )
 SATURATION_CONCEPTS = (
-    SATURATED_IN_SITU,
-    SATURATED_MEASURED,
-    RECOVERED,
-    SATURATED_CALCULATED,
+    c.SATURATED_IN_SITU,
+    c.SATURATED_MEASURED,
+    c.RECOVERED,
+    c.SATURATED_CALCULATED,
     *DRY_UNSPECIFIED_OR_OTHER,
 )
 
-CONDUCTIVITY_CONDITIONS = f"{VOCABULARIES}/conductivity-conditions"
-ACTUAL_IN_SITU = f"{CONDUCTIVITY_CONDITIONS}/actualInSitu"
-FULL_IN_SITU = tuple(
-    f"{CONDUCTIVITY_CONDITIONS}/{name}" for name in ("replicatedPT", "correctedPT")
-)
-PARTIAL_IN_SITU = tuple(
-    f"{CONDUCTIVITY_CONDITIONS}/{name}"
-    for name in (
-        "replicatedP",
-        "correctedP",
-        "replicatedT",
-        "correctedT",
-    )
-)
-AMBIENT_OR_UNSPECIFIED = tuple(
-    f"{CONDUCTIVITY_CONDITIONS}/{name}"
-    for name in ("recordedAmbient", "unrecordedAmbient", "unspecified")
+FULL_IN_SITU = (c.REPLICATED_PT, c.CORRECTED_PT)
+PARTIAL_IN_SITU = (c.REPLICATED_P, c.CORRECTED_P, c.REPLICATED_T, c.CORRECTED_T)
+AMBIENT_OR_UNSPECIFIED = (
+    c.RECORDED_AMBIENT,
+    c.UNRECORDED_AMBIENT,
+    c.UNSPECIFIED_CONDITIONS,
 )
 CONDITIONS_CONCEPTS = (
-    ACTUAL_IN_SITU,
+    c.ACTUAL_IN_SITU,
     *FULL_IN_SITU,
     *PARTIAL_IN_SITU,
     *AMBIENT_OR_UNSPECIFIED,
@@ -205,11 +155,11 @@ CONDITIONS_CONCEPTS = (
 # The correction fields in the order of the perturbation flags S E T P V C R.
 FLAG_FIELDS = ("C13", "C14", "C15", "C16", "C17", "C18", "C19")
 CORRECTIONS = (
-    PRESENT_CORRECTED,
-    PRESENT_NOT_CORRECTED,
-    PRESENT_NOT_SIGNIFICANT,
-    NOT_RECOGNIZED,
-    UNSPECIFIED_CORRECTION,
+    c.PRESENT_CORRECTED,
+    c.PRESENT_NOT_CORRECTED,
+    c.PRESENT_NOT_SIGNIFICANT,
+    c.NOT_RECOGNIZED,
+    c.UNSPECIFIED_CORRECTION,
 )
 
 NUMBER_FIELDS = ("C1", "C2", "P6", "C4", "C5", "C6", "C23", "C37", "C47")
@@ -232,7 +182,7 @@ CONCEPTS: tuple[tuple[str, str], ...] = (
     *((EXPLORATION_METHOD, uri) for uri in BOREHOLE.concepts + PROBE_SENSING.concepts),
     *((code, uri) for code in FLAG_FIELDS for uri in CORRECTIONS),
     *(("C11", uri) for uri in IN_SITU_CORRECTIONS),
-    ("C12", TILT_CORRECTED),
+    ("C12", c.TILT_CORRECTED),
     *(("C31", uri) for uri in TEMPERATURE_METHOD_CONCEPTS),
     *(("C32", uri) for uri in TEMPERATURE_METHOD_CONCEPTS),
     *(("C41", uri) for uri in SOURCE_CONCEPTS),

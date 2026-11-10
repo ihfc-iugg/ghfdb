@@ -8,8 +8,6 @@ from conftest import column_children
 from ghfdb.fields import Field
 from ghfdb.qc.inputs import Inputs
 from ghfdb.qc.penalties import (
-    LARGEST,
-    LARGEST_MARKED,
     Band,
     Bands,
     Case,
@@ -17,7 +15,6 @@ from ghfdb.qc.penalties import (
     Classes,
     Criterion,
     Group,
-    Outcome,
     Penalty,
     Score,
 )
@@ -48,7 +45,7 @@ class TestPenalty:
         values = pandas.Series([0.1, -0.1, 0.0, 0.0], index=[12, 9, 9, 10])
         marked = pandas.Series([False, False, True, False], index=values.index)
 
-        poorest = Penalty.poorest(values, marked, index)
+        poorest = Penalty(values, marked).poorest(index)
 
         assert poorest.value.index.tolist() == [12, 9, 10]
         assert penalties(poorest) == [0.1, -0.1, 0.0]
@@ -58,9 +55,28 @@ class TestPenalty:
         values = pandas.Series([-0.2, 0.0, -0.1, -0.1], index=[9, 9, 10, 10])
         marked = pandas.Series([False, True, True, False], index=values.index)
 
-        poorest = Penalty.poorest(values, marked, index)
+        poorest = Penalty(values, marked).poorest(index)
 
         assert marks(poorest) == [False, True]
+
+    def test_choosing_takes_the_penalty_and_the_mark_of_the_first_condition_that_holds(
+        self,
+    ) -> None:
+        index = pandas.Index([9, 10, 11])
+
+        def uniform(value: float, mark: bool) -> Penalty:
+            return Penalty(
+                pandas.Series(value, index=index), pandas.Series(mark, index=index)
+            )
+
+        chosen = Penalty.choose(
+            [numpy.array([True, False, False]), numpy.array([True, True, False])],
+            [uniform(-0.1, True), uniform(-0.3, False)],
+            uniform(-0.5, True),
+        )
+
+        assert penalties(chosen) == [-0.1, -0.3, -0.5]
+        assert marks(chosen) == [True, False, True]
 
     def test_waiving_takes_away_the_penalty_and_the_mark(self) -> None:
         index = pandas.Index([9, 10])
@@ -158,18 +174,28 @@ class TestBands:
         assert penalties(penalty) == [-0.2, 0.0]
         assert marks(penalty) == [False, False]
 
-    def test_the_outcomes_of_a_table_are_the_ones_it_declares(self) -> None:
+    def test_the_empty_and_unmatched_penalty_is_the_largest_of_the_table(self) -> None:
+        bands = Bands(Field.tc_number, (Band(0.0, 15), Band(-0.4, 5)))
+
+        penalty = bands.score(inputs_of(C47=[None, "2", "20"]))
+
+        assert penalties(penalty) == [-0.4, -0.4, 0.0]
+        assert marks(penalty) == [True, False, False]
+
+    def test_a_table_declares_only_whether_the_empty_and_unmatched_outcomes_mark(
+        self,
+    ) -> None:
         bands = Bands(
             Field.tc_number,
-            (Band(0.0, 15),),
-            empty=Outcome(-0.1, marked=True),
-            unmatched=Outcome(-0.1),
+            (Band(0.0, 15), Band(-0.4, 5)),
+            empty_marked=False,
+            unmatched_marked=True,
         )
 
-        penalty = bands.score(inputs_of(C47=["20", "15", None]))
+        penalty = bands.score(inputs_of(C47=[None, "2"]))
 
-        assert penalties(penalty) == [0.0, -0.1, -0.1]
-        assert marks(penalty) == [False, False, True]
+        assert penalties(penalty) == [-0.4, -0.4]
+        assert marks(penalty) == [False, True]
 
     def test_several_values_keep_the_poorest(self) -> None:
         inputs = inputs_of(C6=[[12, 0.5], [12, ""], [12, 5]])
@@ -184,7 +210,7 @@ class TestBands:
     ) -> None:
         bands = Bands(
             Field.tc_number,
-            (Band(0.0, 3),),
+            (Band(0.0, 3), Band(-0.2)),
             left_out_when={Field.tc_location: (RED,)},
         )
         inputs = inputs_of(
@@ -199,7 +225,9 @@ class TestBands:
 
     def test_a_value_left_out_among_several_leaves_the_others_to_score(self) -> None:
         bands = Bands(
-            Field.tc_number, (Band(0.0, 3),), left_out_when={Field.tc_location: (RED,)}
+            Field.tc_number,
+            (Band(0.0, 3), Band(-0.2)),
+            left_out_when={Field.tc_location: (RED,)},
         )
         inputs = inputs_of(C47=[None], C42=[["[green]", "[red]"]])
 
@@ -208,12 +236,16 @@ class TestBands:
         assert penalties(penalty) == [-0.2]
         assert marks(penalty) == [True]
 
-    def test_lists_its_bands_and_what_it_reads_for_the_documentation(self) -> None:
+    def test_lists_what_it_reads_and_its_largest_penalty_for_the_documentation(
+        self,
+    ) -> None:
         bands = Bands(
-            Field.tc_number, (Band(0.0, 3),), left_out_when={Field.tc_location: (RED,)}
+            Field.tc_number,
+            (Band(0.0, 3), Band(-0.2)),
+            left_out_when={Field.tc_location: (RED,)},
         )
 
-        assert bands.rows() == (Band(0.0, 3),)
+        assert bands.largest() == -0.2
         assert bands.reads() == (Field.tc_number, Field.tc_location)
         assert bands.concepts() == ((Field.tc_location, RED),)
 
@@ -229,8 +261,7 @@ class TestClasses:
     COLOURS = Classes(
         (Field.tc_location,),
         (Group(0.0, (RED, GREEN)), Group(-0.1, (BLUE,))),
-        empty=LARGEST_MARKED,
-        unmatched=LARGEST,
+        unmatched_marked=False,
     )
 
     def test_a_value_takes_the_penalty_of_its_group(self) -> None:
@@ -246,31 +277,48 @@ class TestClasses:
 
         penalty = self.COLOURS.score(inputs)
 
-        assert penalties(penalty) == [-0.2, -0.2, -0.2]
+        assert penalties(penalty) == [-0.1, -0.1, -0.1]
         assert marks(penalty) == [True, True, True]
 
-    def test_a_concept_in_no_group_takes_the_unmatched_outcome(self) -> None:
+    def test_the_empty_and_unmatched_penalty_is_the_largest_of_the_table(self) -> None:
+        uris: dict[str, dict[str, str]] = {
+            Field.tc_location: {"[red]": RED, "[other]": "c:other"}
+        }
+        inputs = Inputs(column_children(C42=["[red]", "[other]", None]), uris)
+        table = Classes(
+            (Field.tc_location,),
+            (Group(0.0, (RED,)), Group(-0.3, (BLUE,))),
+            unmatched_marked=False,
+        )
+
+        penalty = table.score(inputs)
+
+        assert penalties(penalty) == [0.0, -0.3, -0.3]
+        assert marks(penalty) == [False, False, True]
+
+    def test_a_concept_in_no_group_sets_the_mark_unless_the_table_says_not_to(
+        self,
+    ) -> None:
         uris: dict[str, dict[str, str]] = {
             Field.tc_location: {"[red]": RED, "[other]": "c:other"}
         }
         inputs = Inputs(column_children(C42=["[other]"]), uris)
+        groups = (Group(0.0, (RED,)), Group(-0.3, (BLUE,)))
 
-        penalty = Classes(
-            (Field.tc_location,),
-            (Group(0.0, (RED,)),),
-            empty=Outcome(-0.5, marked=True),
-            unmatched=Outcome(-0.3, marked=True),
-        ).score(inputs)
+        marked = Classes((Field.tc_location,), groups).score(inputs)
+        unmarked = Classes((Field.tc_location,), groups, unmatched_marked=False).score(
+            inputs
+        )
 
-        assert penalties(penalty) == [-0.3]
-        assert marks(penalty) == [True]
+        assert marks(marked) == [True]
+        assert marks(unmarked) == [False]
 
     def test_several_values_keep_the_poorest_and_its_mark(self) -> None:
         inputs = inputs_of(C42=[["[red]", "[blue]"], ["[blue]", None], ["[red]"]])
 
         penalty = self.COLOURS.score(inputs)
 
-        assert penalties(penalty) == [-0.1, -0.2, 0.0]
+        assert penalties(penalty) == [-0.1, -0.1, 0.0]
         assert marks(penalty) == [False, True, False]
 
     def test_the_values_of_several_fields_are_scored_together(self) -> None:
@@ -298,14 +346,13 @@ class TestClasses:
         data = column_children(C31=[None, None, "[blue]"], C32=["[red]", None, "[red]"])
         table = Classes(
             (Field.T_method_top, Field.T_method_bottom),
-            (Group(0.0, (RED,)), Group(-0.1, (BLUE,))),
-            empty=Outcome(-0.5, marked=True),
+            (Group(0.0, (RED,)), Group(-0.5, (BLUE,))),
             skip_empty=True,
         )
 
         penalty = table.score(Inputs(data, uris))
 
-        assert penalties(penalty) == [0.0, -0.5, -0.1]
+        assert penalties(penalty) == [0.0, -0.5, -0.5]
         assert marks(penalty) == [False, True, False]
 
     def test_tells_which_values_fit_a_group(self) -> None:
@@ -313,11 +360,10 @@ class TestClasses:
 
         assert self.COLOURS.fits(concepts).tolist() == [True, True, False, False]
 
-    def test_lists_its_groups_and_what_it_reads_for_the_documentation(self) -> None:
-        assert self.COLOURS.rows() == (
-            Group(0.0, (RED, GREEN)),
-            Group(-0.1, (BLUE,)),
-        )
+    def test_lists_what_it_reads_and_its_largest_penalty_for_the_documentation(
+        self,
+    ) -> None:
+        assert self.COLOURS.largest() == -0.1
         assert self.COLOURS.reads() == (Field.tc_location,)
         assert self.COLOURS.concepts() == (
             (Field.tc_location, RED),
@@ -360,15 +406,23 @@ class TestCases:
 
         penalty = self.TABLE.score(inputs)
 
-        assert penalties(penalty) == [-0.2, -0.2]
+        assert penalties(penalty) == [-0.1, -0.1]
         assert marks(penalty) == [True, True]
+
+    def test_the_empty_and_unmatched_penalty_is_the_largest_of_the_table(self) -> None:
+        inputs = inputs_of(C42=["[blue]", None], C43=["[small]", "[small]"])
+
+        penalty = self.TABLE.score(inputs)
+
+        assert penalties(penalty) == [-0.1, -0.1]
+        assert marks(penalty) == [False, True]
 
     def test_no_case_holding_takes_the_unmatched_outcome(self) -> None:
         inputs = inputs_of(C42=["[blue]"], C43=["[small]"])
 
         penalty = self.TABLE.score(inputs)
 
-        assert penalties(penalty) == [-0.2]
+        assert penalties(penalty) == [-0.1]
         assert marks(penalty) == [False]
 
     def test_several_values_are_scored_in_every_combination_and_the_poorest_counts(
@@ -380,14 +434,13 @@ class TestCases:
 
         penalty = self.TABLE.score(inputs)
 
-        assert penalties(penalty) == [-0.2, 0.0]
+        assert penalties(penalty) == [-0.1, 0.0]
         assert marks(penalty) == [False, False]
 
-    def test_lists_its_cases_and_what_it_reads_for_the_documentation(self) -> None:
-        assert self.TABLE.rows()[0] == Case(
-            0.1, {Field.tc_location: (RED,), Field.tc_method: (SMALL,)}
-        )
-        assert len(self.TABLE.rows()) == 3
+    def test_lists_what_it_reads_and_its_largest_penalty_for_the_documentation(
+        self,
+    ) -> None:
+        assert self.TABLE.largest() == -0.1
         assert self.TABLE.reads() == (Field.tc_location, Field.tc_method)
         assert self.TABLE.concepts() == (
             (Field.tc_location, RED),
@@ -400,7 +453,12 @@ class TestCases:
         self,
     ) -> None:
         table = Cases(
-            (Case(0.0, {Field.tc_location: (RED,)}, every={Field.tc_method: (SMALL,)}),)
+            (
+                Case(
+                    0.0, {Field.tc_location: (RED,)}, every={Field.tc_method: (SMALL,)}
+                ),
+                Case(-0.2, {Field.tc_location: (BLUE,)}),
+            )
         )
         inputs = inputs_of(
             C42=["[red]", "[red]", "[red]"],

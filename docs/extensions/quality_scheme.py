@@ -22,7 +22,6 @@ from ghfdb.qc.penalties import (
     Cases,
     Classes,
     Criterion,
-    Outcome,
     Table,
 )
 
@@ -144,17 +143,18 @@ class CriterionTable:
         return f"{value:+.1f}".replace("-", MINUS)
 
     @classmethod
-    def outcome(cls, outcome: Outcome) -> str:
+    def outcome(cls, table: Table, marked: bool) -> str:
         """Write what an empty or unmatched value scores.
 
         Args:
-            outcome: The penalty and whether the value sets the mark.
+            table: The table, whose largest penalty the value takes.
+            marked: Whether the value sets the mark.
 
         Returns:
             The penalty, with ``, with the mark`` when it sets it.
         """
-        written = cls.penalty(outcome.penalty)
-        return f"{written}, with the mark" if outcome.marked else written
+        written = cls.penalty(table.largest())
+        return f"{written}, with the mark" if marked else written
 
     def terms_of(self, field: str, uris: tuple[str, ...]) -> str:
         """Write concepts as the terms their field accepts.
@@ -224,9 +224,9 @@ class CriterionTable:
             [self.band_label(table, index), self.penalty(band.value)]
             for index, band in enumerate(table.bands)
         ]
-        rows.append([EMPTY, self.outcome(table.empty)])
+        rows.append([EMPTY, self.outcome(table, table.empty_marked)])
         if table.bands[-1].above is not None:
-            rows.append([OTHER_VALUE, self.outcome(table.unmatched)])
+            rows.append([OTHER_VALUE, self.outcome(table, table.unmatched_marked)])
         notes = [
             f"Left out when {self.title(field)} is "
             f"{self.terms_of(field, tuple(concepts))}: "
@@ -250,8 +250,8 @@ class CriterionTable:
             [self.terms_of(field, group.concepts), self.penalty(group.penalty)]
             for group in table.groups
         ]
-        rows.append([EMPTY, self.outcome(table.empty)])
-        rows.append([OTHER_VALUE, self.outcome(table.unmatched)])
+        rows.append([EMPTY, self.outcome(table, table.empty_marked)])
+        rows.append([OTHER_VALUE, self.outcome(table, table.unmatched_marked)])
         notes = (
             [f"An empty value is left out when another of {heading} is filled."]
             if table.skip_empty
@@ -284,8 +284,8 @@ class CriterionTable:
         blank = [MISSING] * (len(fields) - 1)
         empty = "No row holds, and a field is empty"
         unmatched = "No row holds, and no field is empty"
-        rows.append([empty, *blank, self.outcome(table.empty)])
-        rows.append([unmatched, *blank, self.outcome(table.unmatched)])
+        rows.append([empty, *blank, self.outcome(table, table.empty_marked)])
+        rows.append([unmatched, *blank, self.outcome(table, table.unmatched_marked)])
         headers = [self.title(field) for field in fields]
         return TableText([*headers, "Penalty"], rows, [])
 

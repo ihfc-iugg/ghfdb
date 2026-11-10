@@ -7,8 +7,10 @@ combination of values of several fields, a penalty. There are three kinds:
 * ``Classes``: a term against groups of concepts.
 * ``Cases``: rows of conditions on several fields, the poorest row that holds counting.
 
-Each table scores every child at once from ``Inputs``, keeps the poorest of a child's
-values, and lists its rows as data so the documentation can render them.
+Each table scores every child at once from ``Inputs`` and keeps the poorest of a
+child's values. A value that has no penalty of its own, because it is empty or fits no
+row, takes the largest penalty of the table. The table declares only whether that sets
+the missing-information mark.
 """
 
 from collections.abc import Mapping, Sequence
@@ -26,23 +28,6 @@ Conditions = Mapping[Field, Sequence[str]]
 
 
 @dataclass(frozen=True)
-class Outcome:
-    """What an input scores when it has no penalty of its own.
-
-    Attributes:
-        penalty: The penalty.
-        marked: Whether the input sets the missing-information mark.
-    """
-
-    penalty: float
-    marked: bool = False
-
-
-LARGEST = Outcome(-0.2)
-LARGEST_MARKED = Outcome(-0.2, marked=True)
-
-
-@dataclass(frozen=True)
 class Penalty:
     """What one criterion adds to a score, for every child.
 
@@ -55,25 +40,86 @@ class Penalty:
     marked: pandas.Series
 
     @classmethod
-    def poorest(
-        cls, penalty: pandas.Series, marked: pandas.Series, index: pandas.Index
+    def settle(
+        cls,
+        table: "Table",
+        index: pandas.Index,
+        penalty: numpy.ndarray,
+        matched: numpy.ndarray,
+        empty: numpy.ndarray,
     ) -> Self:
+        """Give every value its penalty, or the largest penalty of its table.
+
+        Args:
+            table: The table that scores the values.
+            index: The index of the values.
+            penalty: The penalty of each value that matched.
+            matched: Whether each value matched a row of the table.
+            empty: Whether each value is empty, whatever the rows hold.
+
+        Returns:
+            The penalty of each value, and whether it sets the mark.
+        """
+        marked = numpy.where(
+            empty, table.empty_marked, ~matched & table.unmatched_marked
+        )
+        return cls(
+            pandas.Series(numpy.where(matched, penalty, table.largest()), index=index),
+            pandas.Series(marked, index=index),
+        )
+
+    @classmethod
+    def choose(
+        cls,
+        conditions: Sequence[numpy.ndarray],
+        choices: Sequence[Self],
+        default: Self,
+    ) -> Self:
+        """Take the penalty of the first choice whose condition holds, for each child.
+
+        Args:
+            conditions: Whether each choice applies to each child.
+            choices: The penalty to take for each condition, in the same order.
+            default: The penalty of a child no condition holds for.
+
+        Returns:
+            The chosen penalty and mark of each child.
+        """
+        return cls(
+            pandas.Series(
+                numpy.select(
+                    conditions,
+                    [choice.value.to_numpy() for choice in choices],
+                    default.value.to_numpy(),
+                ),
+                index=default.value.index,
+            ),
+            pandas.Series(
+                numpy.select(
+                    conditions,
+                    [choice.marked.to_numpy() for choice in choices],
+                    default.marked.to_numpy(),
+                ),
+                index=default.marked.index,
+            ),
+        )
+
+    def poorest(self, index: pandas.Index) -> Self:
         """Keep the poorest of the values of each child.
 
         Args:
-            penalty: The penalty of every value, under the index of its child.
-            marked: Whether each value sets the mark.
-            index: The index of the children.
+            index: The index of the children. The penalty has a row for each value,
+                under the index of its child.
 
         Returns:
             The lowest penalty of each child, marked when a value with that penalty is.
         """
-        if penalty.index.is_unique:
-            return cls(penalty.reindex(index), marked.reindex(index))
-        lowest = penalty.groupby(level=0, sort=False).transform("min")
-        chosen = marked & (penalty == lowest)
-        return cls(
-            penalty.groupby(level=0, sort=False).min().reindex(index),
+        if self.value.index.is_unique:
+            return type(self)(self.value.reindex(index), self.marked.reindex(index))
+        lowest = self.value.groupby(level=0, sort=False).transform("min")
+        chosen = self.marked & (self.value == lowest)
+        return type(self)(
+            self.value.groupby(level=0, sort=False).min().reindex(index),
             chosen.groupby(level=0, sort=False).any().reindex(index),
         )
 
@@ -174,71 +220,18 @@ class Band:
         )
 
 
-def combine(columns: Mapping[str, pandas.Series]) -> pandas.DataFrame:
-    """Pair every value of each field with every value of the others, per child.
-
-    Args:
-        columns: The values of each field, one row for each value, by the name of the
-            field.
-
-    Returns:
-        One row for each combination, under the index of its child.
-    """
-    names = iter(columns)
-    first = next(names)
-    rows = columns[first].rename(first).to_frame()
-    for name in names:
-        rows = rows.join(columns[name].rename(name))
-    return rows
-
-
-def hold_all(rows: pandas.DataFrame, conditions: Conditions) -> numpy.ndarray:
-    """Say which rows satisfy every condition.
-
-    Args:
-        rows: The concepts of each field, one row for each combination of values.
-        conditions: The concepts each named field may hold.
-
-    Returns:
-        Whether every condition holds in each row. A row holds every condition of an
-        empty set.
-    """
-    holds = numpy.ones(len(rows), dtype=bool)
-    for field, concepts in conditions.items():
-        holds &= rows[field].isin(concepts).to_numpy(dtype=bool)
-    return holds
-
-
-def settle(
-    index: pandas.Index,
-    penalty: numpy.ndarray,
-    matched: numpy.ndarray,
-    empty_values: numpy.ndarray,
-    empty: Outcome,
-    unmatched: Outcome,
-) -> tuple[pandas.Series, pandas.Series]:
-    """Give every value its penalty, or the outcome of an empty or unmatched value.
-
-    Args:
-        index: The index of the values.
-        penalty: The penalty of each value that matched.
-        matched: Whether each value matched a row of the table.
-        empty_values: Whether each value is empty. An empty value is never matched.
-        empty: The outcome of an empty value.
-        unmatched: The outcome of a value that matches no row.
-
-    Returns:
-        The penalty of each value and whether it sets the mark.
-    """
-    penalties = numpy.where(matched, penalty, unmatched.penalty)
-    marks = ~matched & unmatched.marked
-    penalties = numpy.where(empty_values, empty.penalty, penalties)
-    marks = numpy.where(empty_values, empty.marked, marks)
-    return pandas.Series(penalties, index=index), pandas.Series(marks, index=index)
-
-
 class Table(Protocol):
     """What every kind of table offers."""
+
+    @property
+    def empty_marked(self) -> bool:
+        """Whether an empty value sets the missing-information mark."""
+        ...
+
+    @property
+    def unmatched_marked(self) -> bool:
+        """Whether a value that fits no row sets the mark."""
+        ...
 
     def reads(self) -> tuple[str, ...]:
         """List the fields the table reads."""
@@ -248,8 +241,8 @@ class Table(Protocol):
         """List the field and concept URI of every concept the table names."""
         ...
 
-    def rows(self) -> Sequence[object]:
-        """List the rows of the table, as data."""
+    def largest(self) -> float:
+        """Give the largest penalty of the table, its lowest."""
         ...
 
     def score(self, inputs: Inputs) -> Penalty:
@@ -262,21 +255,21 @@ class Bands:
     """A number field against ordered edges.
 
     The first band that holds a number gives its penalty. A number that is empty or not
-    a number takes ``empty``, and one that no band holds takes ``unmatched``.
+    a number, or that no band holds, takes the largest penalty of the table.
 
     Attributes:
         field: The number field.
         bands: The bands, the highest first.
-        empty: The outcome of an empty number.
-        unmatched: The outcome of a number no band holds.
+        empty_marked: Whether an empty number sets the mark.
+        unmatched_marked: Whether a number no band holds sets the mark.
         left_out_when: Conditions on other fields that leave the criterion out for a
             value: it then adds no penalty and no mark.
     """
 
     field: Field
     bands: tuple[Band, ...]
-    empty: Outcome = LARGEST_MARKED
-    unmatched: Outcome = LARGEST
+    empty_marked: bool = True
+    unmatched_marked: bool = False
     left_out_when: Conditions | None = None
 
     def reads(self) -> tuple[str, ...]:
@@ -291,9 +284,9 @@ class Bands:
             for uri in concepts
         )
 
-    def rows(self) -> tuple[Band, ...]:
-        """List the bands."""
-        return self.bands
+    def largest(self) -> float:
+        """Give the lowest penalty of the bands."""
+        return min(band.value for band in self.bands)
 
     def read(self, inputs: Inputs) -> pandas.Series:
         """Read the numbers the bands hold.
@@ -306,7 +299,7 @@ class Bands:
         """
         return inputs.numbers(self.field)
 
-    def values(self, numbers: pandas.Series) -> tuple[pandas.Series, pandas.Series]:
+    def values(self, numbers: pandas.Series) -> Penalty:
         """Give each number its penalty.
 
         Args:
@@ -315,14 +308,13 @@ class Bands:
         Returns:
             The penalty of each number and whether it sets the mark.
         """
-        holds = [band.holds(numbers) for band in self.bands]
-        return settle(
+        chosen = Band.select(self.bands, numbers, numpy.nan)
+        return Penalty.settle(
+            self,
             numbers.index,
-            numpy.select(holds, [band.value for band in self.bands], 0.0),
-            numpy.any(holds, axis=0),
+            chosen,
+            ~numpy.isnan(chosen),
             numbers.isna().to_numpy(),
-            self.empty,
-            self.unmatched,
         )
 
     def score(self, inputs: Inputs) -> Penalty:
@@ -336,18 +328,15 @@ class Bands:
         """
         numbers = self.read(inputs)
         if self.left_out_when is None:
-            return Penalty.poorest(*self.values(numbers), inputs.index)
-        rows = combine(
+            return self.values(numbers).poorest(inputs.index)
+        rows = Inputs.combine(
             {
                 self.field: numbers,
                 **{field: inputs.concepts(field) for field in self.left_out_when},
             }
         )
-        penalty, marked = self.values(rows[self.field])
-        left_out = hold_all(rows, self.left_out_when)
-        return Penalty.poorest(
-            penalty.mask(left_out, 0.0), marked.mask(left_out, False), inputs.index
-        )
+        left_out = Case.hold_all(rows, self.left_out_when)
+        return self.values(rows[self.field]).waived(left_out).poorest(inputs.index)
 
 
 class Depths(Bands):
@@ -388,15 +377,15 @@ class Group:
 class Classes:
     """A term field against groups of concepts.
 
-    A value takes the penalty of the group its concept is in. A value that is empty
-    takes ``empty``, and one whose concept is in no group takes ``unmatched``.
+    A value takes the penalty of the group its concept is in. A value that is empty, or
+    whose concept is in no group, takes the largest penalty of the table.
 
     Attributes:
         fields: The fields read. Their values are scored together, and the poorest
             counts.
         groups: The groups.
-        empty: The outcome of an empty value.
-        unmatched: The outcome of a concept in no group.
+        empty_marked: Whether an empty value sets the mark.
+        unmatched_marked: Whether a concept in no group sets the mark.
         skip_empty: Whether an empty value is left out when the child holds another,
             as the temperature method at one end of an interval is when the other end
             has one.
@@ -404,8 +393,8 @@ class Classes:
 
     fields: tuple[Field, ...]
     groups: tuple[Group, ...]
-    empty: Outcome = LARGEST_MARKED
-    unmatched: Outcome = LARGEST_MARKED
+    empty_marked: bool = True
+    unmatched_marked: bool = True
     skip_empty: bool = False
 
     def reads(self) -> tuple[str, ...]:
@@ -421,9 +410,9 @@ class Classes:
             for uri in group.concepts
         )
 
-    def rows(self) -> tuple[Group, ...]:
-        """List the groups."""
-        return self.groups
+    def largest(self) -> float:
+        """Give the lowest penalty of the groups."""
+        return min(group.penalty for group in self.groups)
 
     def membership(self, concepts: pandas.Series) -> list[numpy.ndarray]:
         """Say which concepts are in each group.
@@ -449,7 +438,7 @@ class Classes:
         """
         return numpy.any(self.membership(concepts), axis=0)
 
-    def values(self, concepts: pandas.Series) -> tuple[pandas.Series, pandas.Series]:
+    def values(self, concepts: pandas.Series) -> Penalty:
         """Give each concept the penalty of its group.
 
         Args:
@@ -459,13 +448,12 @@ class Classes:
             The penalty of each value and whether it sets the mark.
         """
         member = self.membership(concepts)
-        return settle(
+        return Penalty.settle(
+            self,
             concepts.index,
             numpy.select(member, [group.penalty for group in self.groups], 0.0),
             numpy.any(member, axis=0),
             concepts.isna().to_numpy(),
-            self.empty,
-            self.unmatched,
         )
 
     def score(self, inputs: Inputs) -> Penalty:
@@ -478,13 +466,13 @@ class Classes:
             The poorest penalty of each child.
         """
         concepts = pandas.concat([inputs.concepts(field) for field in self.fields])
-        penalty, marked = self.values(concepts)
+        penalty = self.values(concepts)
         if self.skip_empty:
             filled = concepts.notna()
             some_filled = filled.groupby(level=0, sort=False).transform("any")
             keep = (filled | ~some_filled).to_numpy()
-            penalty, marked = penalty[keep], marked[keep]
-        return Penalty.poorest(penalty, marked, inputs.index)
+            penalty = Penalty(penalty.value[keep], penalty.marked[keep])
+        return penalty.poorest(inputs.index)
 
 
 @dataclass(frozen=True)
@@ -516,6 +504,23 @@ class Case:
             for uri in concepts
         )
 
+    @staticmethod
+    def hold_all(rows: pandas.DataFrame, conditions: Conditions) -> numpy.ndarray:
+        """Say which rows satisfy every condition.
+
+        Args:
+            rows: The concepts of each field, one row for each combination of values.
+            conditions: The concepts each named field may hold.
+
+        Returns:
+            Whether every condition holds in each row. A row holds every condition of an
+            empty set.
+        """
+        holds = numpy.ones(len(rows), dtype=bool)
+        for field, concepts in conditions.items():
+            holds &= rows[field].isin(concepts).to_numpy(dtype=bool)
+        return holds
+
     def holds(self, rows: pandas.DataFrame, inputs: Inputs) -> numpy.ndarray:
         """Say which combinations of values the row holds for.
 
@@ -526,7 +531,7 @@ class Case:
         Returns:
             Whether the row holds in each combination.
         """
-        holds = hold_all(rows, self.conditions)
+        holds = self.hold_all(rows, self.conditions)
         for field, concepts in (self.every or {}).items():
             every = pandas.Series(
                 inputs.every_value(inputs.concepts(field).isin(concepts)),
@@ -542,17 +547,20 @@ class Cases:
 
     Every row whose conditions all hold counts, and the poorest penalty wins. A row
     holds whatever the fields it does not name contain. A combination that no row holds
-    takes ``empty`` when a field some row names is empty, and ``unmatched`` otherwise.
+    takes the largest penalty of the table, which sets the mark when a field some row
+    names is empty and ``unmatched_marked`` is set otherwise.
 
     Attributes:
         cases: The rows.
-        empty: The outcome of an empty field.
-        unmatched: The outcome of a combination no row holds.
+        empty_marked: Whether a combination no row holds, with an empty field some row
+            names, sets the mark.
+        unmatched_marked: Whether a combination no row holds, with no such field empty,
+            sets the mark.
     """
 
     cases: tuple[Case, ...]
-    empty: Outcome = LARGEST_MARKED
-    unmatched: Outcome = LARGEST
+    empty_marked: bool = True
+    unmatched_marked: bool = False
 
     def reads(self) -> tuple[str, ...]:
         """List the fields the rows name, in order of first mention."""
@@ -566,9 +574,9 @@ class Cases:
             dict.fromkeys(pair for case in self.cases for pair in case.concepts())
         )
 
-    def rows(self) -> tuple[Case, ...]:
-        """List the rows."""
-        return self.cases
+    def largest(self) -> float:
+        """Give the lowest penalty of the rows."""
+        return min(case.penalty for case in self.cases)
 
     def score(self, inputs: Inputs) -> Penalty:
         """Score every combination of the values of the fields of every child.
@@ -579,7 +587,7 @@ class Cases:
         Returns:
             The poorest penalty of each child.
         """
-        rows = combine({field: inputs.concepts(field) for field in self.reads()})
+        rows = Inputs.combine({field: inputs.concepts(field) for field in self.reads()})
         penalties = numpy.column_stack(
             [
                 numpy.where(case.holds(rows, inputs), case.penalty, numpy.inf)
@@ -587,15 +595,10 @@ class Cases:
             ]
         ).min(axis=1)
         matched = numpy.isfinite(penalties)
-        penalty, marked = settle(
-            rows.index,
-            penalties,
-            matched,
-            rows.isna().any(axis=1).to_numpy() & ~matched,
-            self.empty,
-            self.unmatched,
+        empty = rows.isna().any(axis=1).to_numpy() & ~matched
+        return Penalty.settle(self, rows.index, penalties, matched, empty).poorest(
+            inputs.index
         )
-        return Penalty.poorest(penalty, marked, inputs.index)
 
 
 @dataclass(frozen=True)

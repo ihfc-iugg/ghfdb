@@ -26,7 +26,6 @@ from ghfdb.qc.penalties import (
     Classes,
     Criterion,
     Group,
-    Outcome,
 )
 
 NOT_DETERMINED = "not determined"
@@ -293,7 +292,7 @@ def location(penalty: float) -> Criterion[Classes]:
                 Group(0.0, (ACTUAL_LOCATION,)),
                 Group(penalty, (OTHER_LOCATION, LITERATURE_OR_UNSPECIFIED)),
             ),
-            unmatched=Outcome(-0.3),
+            unmatched_marked=False,
         ),
         "Table 2, Localization",
     )
@@ -347,7 +346,7 @@ class TestCriterionTable:
             "`[Other location]`, `[Literature or unspecified]`",
             "−0.1",
         ]
-        assert [row[-1] for row in rows[2:]] == ["−0.2, with the mark", "−0.3"]
+        assert [row[-1] for row in rows[2:]] == ["−0.1, with the mark", "−0.1"]
 
     def test_a_table_of_cases_has_a_column_for_each_field_it_reads(
         self, schema: Schema, published_vocabularies: Vocabularies
@@ -387,7 +386,7 @@ class TestCriterionTable:
         assert rows[1][0] == "`[Recovered]`"
         assert "`[Lab - point source]`" in rows[1][1]
         assert "`[Lab - line source - full space]`" in rows[1][1]
-        assert [row[-1] for row in rows[2:]] == ["−0.2, with the mark", "−0.2"]
+        assert [row[-1] for row in rows[2:]] == ["0, with the mark", "0"]
 
     def test_a_criterion_left_out_by_another_field_says_so_below_its_table(
         self, schema: Schema, published_vocabularies: Vocabularies

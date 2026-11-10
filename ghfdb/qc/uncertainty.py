@@ -6,7 +6,7 @@ import pandas
 
 from ghfdb.fields import Field
 from ghfdb.qc.inputs import Inputs
-from ghfdb.qc.penalties import Band, combine
+from ghfdb.qc.penalties import Band
 
 # The coefficient of variation is rounded to this many places, before it is graded.
 COEFFICIENT_DECIMALS = 6
@@ -35,7 +35,7 @@ class UScore:
             One row for each pair of a value and an uncertainty of a child, under the
             child's index. It is NaN when either number is empty or zero.
         """
-        pairs = combine(
+        pairs = Inputs.combine(
             {
                 "value": self.inputs.numbers(Field.qc),
                 "uncertainty": self.inputs.numbers(Field.qc_uncertainty),

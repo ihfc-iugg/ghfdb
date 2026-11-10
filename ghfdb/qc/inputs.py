@@ -103,6 +103,24 @@ class Inputs:
         replaced[:-1] = pandas.Index(found).map(mapping).to_numpy(dtype=object)
         return pandas.Series(replaced[codes], index=values.index, dtype="string")
 
+    @staticmethod
+    def combine(columns: Mapping[str, pandas.Series]) -> pandas.DataFrame:
+        """Pair every value of each field with every value of the others, per child.
+
+        Args:
+            columns: The values of each field, one row for each value, by the name of
+                the field.
+
+        Returns:
+            One row for each combination, under the index of its child.
+        """
+        names = iter(columns)
+        first = next(names)
+        rows = columns[first].rename(first).to_frame()
+        for name in names:
+            rows = rows.join(columns[name].rename(name))
+        return rows
+
     def first(self, values: pandas.Series) -> pandas.Series:
         """Keep one value for each child: its first filled one.
 

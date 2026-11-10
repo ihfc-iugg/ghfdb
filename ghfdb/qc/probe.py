@@ -38,7 +38,6 @@ from ghfdb.qc.concepts import (
     WELL_LOG_EMPIRICAL,
 )
 from ghfdb.qc.penalties import (
-    LARGEST,
     Band,
     Bands,
     Case,
@@ -114,7 +113,7 @@ LOCATION = Criterion(
             Group(-0.1, (OTHER_LOCATION,)),
             Group(-0.2, (LITERATURE_OR_UNSPECIFIED,)),
         ),
-        unmatched=LARGEST,
+        unmatched_marked=False,
     ),
     "Table 2, Localization",
 )

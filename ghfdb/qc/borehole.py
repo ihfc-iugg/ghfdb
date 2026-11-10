@@ -73,7 +73,6 @@ from ghfdb.qc.penalties import (
     Classes,
     Criterion,
     Group,
-    Outcome,
     Penalty,
     Score,
 )
@@ -95,9 +94,6 @@ ESTIMATED_TEMPERATURE = (
 )
 TEMPERATURE_METHODS = (Field.T_method_top, Field.T_method_bottom)
 INTERVAL_DEPTHS = (Field.q_top, Field.q_bottom)
-LARGEST_CONTINUOUS_LOG = Outcome(-0.1, marked=True)
-LARGEST_SINGLE_POINTS = Outcome(-0.5, marked=True)
-LARGEST_SURFACE_PLUS_ONE_POINT = Outcome(-0.6, marked=True)
 
 CONTINUOUS_LOG = Criterion(
     "borehole-t.continuous-log",
@@ -108,8 +104,6 @@ CONTINUOUS_LOG = Criterion(
             Group(0.1, (LOG_EQ, C_LOG, DTS_EQ, C_DTS)),
             Group(-0.1, (LOG_PERT,)),
         ),
-        empty=LARGEST_CONTINUOUS_LOG,
-        unmatched=LARGEST_CONTINUOUS_LOG,
         skip_empty=True,
     ),
     "Table 3, Source type and number of T points",
@@ -139,8 +133,6 @@ SINGLE_POINTS = Criterion(
             Group(-0.3, (LOG_PERT, DTS_PERT, BHT, HT_FT_PERT, RTD_PERT, BLK)),
             Group(-0.5, ESTIMATED_TEMPERATURE),
         ),
-        empty=LARGEST_SINGLE_POINTS,
-        unmatched=LARGEST_SINGLE_POINTS,
         skip_empty=True,
     ),
     "Table 3, Source type and number of T points",
@@ -158,8 +150,6 @@ SURFACE_PLUS_ONE_POINT = Criterion(
             Group(-0.5, (BHT, HT_FT_PERT, RTD_PERT)),
             Group(-0.6, ESTIMATED_TEMPERATURE),
         ),
-        empty=LARGEST_SURFACE_PLUS_ONE_POINT,
-        unmatched=LARGEST_SURFACE_PLUS_ONE_POINT,
         skip_empty=True,
     ),
     "Table 3, Source type and number of T points",
@@ -207,7 +197,6 @@ NUMBER = Criterion(
     Bands(
         Field.tc_number,
         (Band(0.0, 15), Band(-0.1)),
-        empty=Outcome(-0.1, marked=True),
         left_out_when={Field.tc_location: (LITERATURE_OR_UNSPECIFIED,)},
     ),
     "Table 3, Number of conductivities",
@@ -343,25 +332,7 @@ class BoreholeRules(RuleSet):
         log, points, surface_points = (
             criterion.score(self.inputs) for criterion in T_CRITERIA
         )
-        conditions = [surface, continuous]
-        return Penalty(
-            pandas.Series(
-                numpy.select(
-                    conditions,
-                    [surface_points.value.to_numpy(), log.value.to_numpy()],
-                    points.value.to_numpy(),
-                ),
-                index=self.inputs.index,
-            ),
-            pandas.Series(
-                numpy.select(
-                    conditions,
-                    [surface_points.marked.to_numpy(), log.marked.to_numpy()],
-                    points.marked.to_numpy(),
-                ),
-                index=self.inputs.index,
-            ),
-        )
+        return Penalty.choose([surface, continuous], [surface_points, log], points)
 
     def depth_reported(self) -> numpy.ndarray:
         """Find the children that report the top or the bottom of the interval.

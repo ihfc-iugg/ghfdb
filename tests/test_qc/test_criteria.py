@@ -50,7 +50,7 @@ class TestCriteria:
             assert criterion.source, criterion.identifier
             assert criterion.title, criterion.identifier
             assert criterion.table.reads(), criterion.identifier
-            assert criterion.table.rows(), criterion.identifier
+            assert criterion.table.largest() < 0, criterion.identifier
 
 
 class TestTermUris:

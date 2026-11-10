@@ -187,10 +187,14 @@ There are three kinds of table in `ghfdb.qc.penalties`:
 * `Cases` score several fields together by rows of conditions, each a `Case`, the poorest row
   that holds counting.
 
-Every table scores all the children at once, keeps the poorest of a child's values, and lists
-its rows as data with `rows()`. A table gives an `Outcome`, such as `LARGEST`, to a value that
-has no penalty of its own. A criterion gives a `Penalty`, the penalty and the mark of each
-child, and a T-score or TC-score is a `Score`, rounded to `SCORE_DECIMALS` places.
+Every table scores all the children at once and keeps the poorest of a child's values. A value
+that is empty, or that fits no row, takes the largest penalty of its table, the lowest of its
+rows, so a table declares only whether that sets the missing-information mark, with
+`empty_marked` and `unmatched_marked`. A table of cases gives its empty outcome only to a
+combination that no row holds, in which a field some row names is empty: a row holds whatever
+the fields it does not name contain. The pages render each table from its attributes. A
+criterion gives a `Penalty`, the penalty and the mark of each child, and a T-score or TC-score
+is a `Score`, rounded to `SCORE_DECIMALS` places.
 
 Concept URIs come from `ghfdb.qc.concepts`. `Scores.concepts` collects the concepts the
 declarations name, and `ghfdb.qc.criteria.term_uris` resolves them to the term each field

@@ -7,7 +7,7 @@ These were settled before the specification was written.
 | # | Decision |
 |---|---|
 | G-1 | The machine-readable field description is one Frictionless Table Schema covering every upload template field. Per-column facts live in it: type, unit, obligation, range, allowed values and missing-value markers. Cross-field rules and scoring are not in it. |
-| G-2 | Every field carries both its field code (`P1`–`P13`, `C1`–`C49`, the header row of the template) and its published column name (row 6 of the template, such as `q` or `lat_NS`). |
+| G-2 | Every field carries both its field code (`P1`–`P13`, `C1`–`C53`, the header row of the template) and its published column name (row 6 of the template, such as `q` or `lat_NS`). |
 | G-3 | Allowed values of vocabulary fields are read from the IHFC Controlled Vocabularies as currently published at their permanent identifiers, and never typed by hand or copied into the field schema (`CONSTITUTION.md`, Article XI). Each such field links to the identifier of its concept scheme, and of its collection where there is one. The field schema states no release, version or DOI, because data assessors do not choose which version they use (maintainer, 2026-11-04). |
 | G-4 | The field list comes from the current published upload template, sheet `data list`. A newer template version is an ordinary change to the field reference. |
 | G-5 | Every rule names its source (`CONSTITUTION.md`, Article IX): Fuchs et al. (2023) Appendix A, the template, or a recorded decision. |
@@ -30,14 +30,17 @@ reproduce every column. `CONTEXT.md` gains the assessment fields.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 
-### D-2 — The misspelled published column names are recorded correctly
+### D-2 — The misspelled published column names are recorded correctly and rejected
 
 Row 6 of the template spells two names wrongly: `tc_pT_fuction` (C46) and `Ref_ISGN` (C49).
 
-**Chosen:** the field schema records `tc_pT_function` and `Ref_IGSN`, and keeps the misspelled
-form as the template's earlier spelling. The GHFDB portal uses the correct spellings and rejects
-the misspelled ones, and the vocabularies name `tc_pT_function`. Recording the
-earlier spelling lets a later check recognise an outdated template and say so.
+**Chosen:** the field schema records `tc_pT_function` and `Ref_IGSN` only. The GHFDB portal
+uses the correct spellings and rejects the misspelled ones, and the vocabularies name
+`tc_pT_function`. The misspelled forms are not earlier names, so the check does not accept them:
+a workbook whose header carries one has an unknown column, and that problem suggests the
+published column name it is closest to. The field then has no column, like any field a workbook
+leaves out. `earlierColumnNames` holds only names an earlier version of the template really
+published, such as `water_temperature` for C24.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 

@@ -104,7 +104,8 @@ with a copy taken before the run.
 16. **Given** a column the field schema does not know, a field the workbook has no column for, or
     two columns for the same field, **When** the workbook is checked, **Then** the report lists the
     column problem once for the workbook, not on every child. A missing column for a mandatory
-    field is also reported as missing on every child.
+    field is also reported as missing on every child. An unknown column whose header is close to
+    a published column name carries that name as its suggestion.
 17. **Given** a workbook with no problems, **When** it is checked, **Then** the report is still
     written and says that no problem was found.
 18. **Given** a run of the check, **When** it finishes, **Then** the command states how many

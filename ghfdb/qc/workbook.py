@@ -1,5 +1,6 @@
 """The upload template workbook, read into a table of text."""
 
+import difflib
 import re
 import zipfile
 from pathlib import Path
@@ -11,7 +12,7 @@ from frictionless import Schema
 from openpyxl.utils import column_index_from_string, get_column_letter
 
 from ghfdb.fields import load_schema
-from ghfdb.qc.check import PROBLEM_COLUMNS, Kind
+from ghfdb.qc.check import CLOSE_ENOUGH, PROBLEM_COLUMNS, Kind
 from ghfdb.template import ROW_LABELS
 
 SHEET = "data list"
@@ -366,11 +367,21 @@ class UploadWorkbook:
         Returns:
             One line for each unknown column and each column that repeats a field,
             with the columns ``row``, ``code``, ``column_name``, ``kind``,
-            ``value`` and ``suggestion``. The row is always empty. The first column
-            for a field is the one ``data`` uses.
+            ``value`` and ``suggestion``. The row is always empty. An unknown column
+            carries as its suggestion the published column name it is closest to,
+            when one is at least ``CLOSE_ENOUGH`` alike. The first column for a field
+            is the one ``data`` uses.
         """
+        published = [field.custom["columnName"] for field in self.schema.fields]
         unknown = [
-            {"column_name": header, "kind": Kind.UNKNOWN_COLUMN}
+            {
+                "column_name": header,
+                "kind": Kind.UNKNOWN_COLUMN,
+                "suggestion": next(
+                    iter(difflib.get_close_matches(header, published, 1, CLOSE_ENOUGH)),
+                    None,
+                ),
+            }
             for header in self.unknown_columns
         ]
         duplicate = [

@@ -364,6 +364,35 @@ class TestEndToEnd:
         assert len(found) == len(expected)
 
     @pytest.mark.usefixtures("vocabularies_cached")
+    @pytest.mark.parametrize(
+        ("code", "misspelled"), [("C46", "tc_pT_fuction"), ("C49", "Ref_ISGN")]
+    )
+    def test_a_misspelled_published_name_is_an_unknown_column_with_the_right_name(
+        self,
+        schema: Schema,
+        filled_workbook: Filler,
+        valid_child: dict[str, Any],
+        code: str,
+        misspelled: str,
+    ) -> None:
+        path = filled_workbook([valid_child])
+        workbook = load_workbook(path)
+        sheet = workbook["data list"]
+        sheet.cell(1, column_of(sheet, code)).value = misspelled
+        workbook.save(path)
+
+        main(["check", str(path)])
+
+        found = read_problems(report_of(path))
+        by_column = {line[3]: line for line in found if line[0] is None}
+        unknown, absent = by_column["unknown column"], by_column["no column"]
+        assert (unknown[2], unknown[5]) == (
+            misspelled,
+            schema.get_field(code).custom["columnName"],
+        )
+        assert absent[1] == code
+
+    @pytest.mark.usefixtures("vocabularies_cached")
     def test_the_same_valid_data_in_the_hand_maintained_template_has_no_problem(
         self, schema: Schema, tmp_path: Path, valid_child: dict[str, Any]
     ) -> None:

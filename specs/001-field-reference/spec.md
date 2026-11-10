@@ -74,7 +74,8 @@ allowed values are exactly those the vocabulary publishes.
    a cell, each linked to its concept's URI.
 5. **Given** a field whose name in the current upload template is misspelled (`tc_pT_fuction`,
    `Ref_ISGN`), **When** an assessor reads its entry, **Then** it gives the correct published
-   column name and names the misspelled form as the template's earlier spelling.
+   column name only. **Given** a field whose published column name has changed between template
+   versions (C24), **Then** its entry names the earlier column name.
 6. **Given** a field that accepts several values (lithology, stratigraphic age), **When** an
    assessor reads its entry, **Then** it says that several values may be given and how they are
    separated.
@@ -213,8 +214,9 @@ confirm every identifier the field schema holds is defined in them.
 - **FR-008**: The only missing value MUST be an empty cell. A vocabulary term such as
   `[Unspecified]` MUST be recorded as an allowed value, never as missing. *(US1, US2)*
 - **FR-009**: The two published column names misspelled in the current template MUST be recorded
-  with their correct spelling (`tc_pT_function`, `Ref_IGSN`), with the misspelled form kept as the
-  template's earlier spelling. *(US1, US2)*
+  with their correct spelling (`tc_pT_function`, `Ref_IGSN`) and not with the misspelled form,
+  which a check reports as an unknown column. An earlier column name that the template really
+  published MUST be recorded as such. *(US1, US2)*
 - **FR-010**: A developer MUST be able to load every field definition from the installed package
   and look a field up by field code or by published column name. A vocabulary file MUST be
   downloaded from its scheme's identifier with `.ttl` added on first use, through a caching HTTP
@@ -289,8 +291,8 @@ confirm every identifier the field schema holds is defined in them.
   A1–A8 included, grouped separately. The template is what assessors fill in, and the generated
   template (#5) needs every column. Integrated into FR-001 and US1 scenario 1.
 - Q: Which spelling is recorded for the two published column names misspelled in the template? →
-  A: The correct spelling, as the GHFDB portal and the vocabularies use, with the misspelled
-  form kept as the template's earlier spelling. Integrated into FR-009 and US1 scenario 5.
+  A: The correct spelling, as the GHFDB portal and the vocabularies use. The misspelled form is
+  not recorded, so a check rejects it. Integrated into FR-009 and US1 scenario 5.
 - Q: Where the template and Fuchs et al. (2023) Appendix A disagree on a fact, which wins? → A: The
   current template, named as the source, with each disagreement recorded as a decision. Integrated
   into Edge Cases and FR-004.

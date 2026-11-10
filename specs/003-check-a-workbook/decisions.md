@@ -135,7 +135,6 @@ maintainer at the merge gate.
 ## Design review notes carried into the build
 
 Recorded, not acted on in the plan: report sheets named `problems` and `summary` are written into
-a new workbook, so no name can clash with the assessor's sheets; the two earlier column names sit
-in a description row of the hand-maintained template, so scenario 1.15 is tested by editing the
-header; the error-cell scan uses a byte pattern rather than an XML parser, so no entity in an
+a new workbook, so no name can clash with the assessor's sheets; the template carries no earlier
+column name, so scenario 1.15 is tested by editing the header; the error-cell scan uses a byte pattern rather than an XML parser, so no entity in an
 untrusted file is expanded.

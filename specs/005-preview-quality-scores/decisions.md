@@ -215,3 +215,18 @@ cannot drift from its page. Keying the data by column name instead would break `
 Agreed with Sam at the plan gate on 2026-11-10.
 
 **ADR:** docs/adr/0010-each-scheme-criterion-is-declared-once.md
+
+## D-15: The 15-second figure is a target
+
+**Ruled**: Sam, 2026-11-10: "accuracy and quality are our two biggest drivers. The 15s target is
+aspirational. We should not be sacrificing code readability, maintainability, etc for the sake of a
+few extra seconds off the clock."
+
+**Chosen**: SC-004 is a target. The speed test keeps its assertions that every child is checked,
+scored and reported, and fails on time only at a ceiling well above the target, so that it catches a
+slowdown by a large factor but never a design chosen for clarity.
+
+**Why**: the ruling. A limit set at the target fails on a loaded machine with no change to the code,
+and would push every design towards speed.
+
+**ADR:** none.

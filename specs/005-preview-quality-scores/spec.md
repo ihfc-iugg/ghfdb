@@ -78,7 +78,8 @@ whole child, and compare the scores in the report with each example's expected s
 7. **Given** a report, **When** an assessor reads its scores, **Then** it names the package version
    that made them and shows where each part of the scheme is documented.
 8. **Given** a workbook of 90,000 children with every field filled, **When** it is checked, **Then**
-   the check, the scores and the report are finished within the time set in SC-004.
+   the check, the scores and the report are finished, and the time they take is measured against
+   the target of SC-004.
 
 ---
 
@@ -153,8 +154,9 @@ result with the example's expected scores.
   identifier and read from the IHFC Controlled Vocabularies as currently published, as the
   cross-field rules do. Loading the scoring MUST fail, naming the concept, when one is no longer
   published. (US1, US2)
-- **FR-011**: The time to check and score a workbook MUST meet SC-004, and MUST be measured by the
-  test suite. (US1)
+- **FR-011**: The time to check and score a workbook MUST be measured by the test suite against the
+  target of SC-004. Accuracy and readable, maintainable code come before speed: the target never
+  justifies a less clear design. (US1)
 - **FR-012**: The documentation MUST describe the scores in the report and the Python interface,
   and the scheme pages and glossary MUST no longer say that the package computes no score. (US1,
   US2)
@@ -181,7 +183,7 @@ result with the example's expected scores.
 - **SC-003**: For every child of a checked workbook, the scores in the report and the scores from
   the Python interface are the same.
 - **SC-004**: The 90,000-child workbook of FS-003's SC-006 is checked, scored and reported in under
-  15 seconds, on the machines the test suite runs on.
+  15 seconds, on the machines the test suite runs on. This is a target, not a limit (D-15).
 - **SC-005**: An assessor given a child's quality code in a report can find, from the report and
   the documentation alone, the page that explains each part of it.
 

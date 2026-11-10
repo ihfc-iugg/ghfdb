@@ -19,8 +19,8 @@ The scheme follows Fuchs et al. (2023) as corrected in 2026: the corrigendum (Te
 - Python 3.12 and 3.13, pandas and numpy, frictionless, Jinja2 and markupsafe for the report.
 - Tests: pytest, mirroring the source tree (`docs/contributing/standards/testing.md`). The
   vocabularies come from the cached release the existing tests use (`vocabularies_cached`).
-- Performance: SC-004, the 90,000-child workbook checked, scored and reported in under 15 s,
-  measured by `tests/test_cli.py::TestSpeed`.
+- Performance: SC-004's 15 s for the 90,000-child workbook is a target, measured by
+  `tests/test_cli.py::TestSpeed`. Accuracy and clear code come first (D-15).
 
 ## Constitution check
 
@@ -110,8 +110,8 @@ where they are needed, including by the report and the documentation extension.
 
 ## Risks
 
-- **Time.** The report's second table has 90,000 rows, and CI runs the suite under coverage. If
-  SC-004 fails, the remedy is to profile the scoring before touching the report.
+- **Time.** The report's second table has 90,000 rows, and CI runs the suite under coverage. A
+  run over the 15 s target is not a reason to make the code less clear (D-15).
 - **A page and an example that disagree.** If the code meets an example it cannot satisfy without
   contradicting the corrected paper, it stops there and the disagreement is recorded, not coded
   around (FR-013).

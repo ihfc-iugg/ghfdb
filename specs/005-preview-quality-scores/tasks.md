@@ -188,3 +188,6 @@ group leaves the tree green.
   the scoring's.
 - [ ] T041 [US2] `docs/contributing/python-api.md` describes the criteria and the scoring classes
   as they now are.
+- [ ] T042 [US1] D-15: `tests/test_cli.py::TestSpeed` keeps its checks that every child is
+  checked, scored and reported, and fails on time only at a ceiling of 60 s, with the 15 s target
+  named in the test's docstring.

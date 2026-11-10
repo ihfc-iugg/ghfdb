@@ -14,7 +14,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from sphinx.application import Sphinx
 
 from extensions.field_reference import FieldReference
-from ghfdb.fields import Vocabularies, load_schema
+from ghfdb.fields import Field, Vocabularies, load_schema
 from ghfdb.fields.cells import concept_terms
 from ghfdb.qc.criteria import CRITERIA
 from ghfdb.qc.penalties import (
@@ -228,7 +228,8 @@ class CriterionTable:
         if table.bands[-1].above is not None:
             rows.append([OTHER_VALUE, self.outcome(table.unmatched)])
         notes = [
-            f"Left out when {self.title(field)} is {self.terms_of(field, concepts)}: "
+            f"Left out when {self.title(field)} is "
+            f"{self.terms_of(field, tuple(concepts))}: "
             "the criterion then adds no penalty and no mark."
             for field, concepts in (table.left_out_when or {}).items()
         ]
@@ -267,7 +268,7 @@ class CriterionTable:
         Returns:
             The table, a column for each field its rows name.
         """
-        fields = table.reads()
+        fields = [Field(code) for code in table.reads()]
         rows = []
         for case in table.cases:
             cells = []

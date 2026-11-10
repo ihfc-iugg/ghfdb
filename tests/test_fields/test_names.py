@@ -1,22 +1,24 @@
 import json
 from importlib import resources
 from pathlib import Path
+from typing import Any
 
 import ghfdb.fields.names
 from ghfdb.fields import Field, load_schema
 from ghfdb.fields.generate import FieldNames
 
 
-def packaged_fields() -> list[dict]:
+def packaged_fields() -> list[dict[str, Any]]:
     text = resources.files("ghfdb.fields").joinpath("schema.json").read_text("utf-8")
-    return json.loads(text)["fields"]
+    fields: list[dict[str, Any]] = json.loads(text)["fields"]
+    return fields
 
 
 class TestField:
     def test_a_member_is_named_by_column_name_and_holds_the_field_code(self) -> None:
-        assert Field.tc_location == "C42"
-        assert Field.T_top_mean == "C50"
-        assert Field.name == "P3"
+        assert Field.tc_location.value == "C42"
+        assert Field.T_top_mean.value == "C50"
+        assert Field.name.value == "P3"
 
     def test_there_is_one_member_per_schema_field_in_schema_order(self) -> None:
         schema = load_schema()
@@ -29,7 +31,9 @@ class TestField:
         ]
 
     def test_a_member_is_a_string_that_indexes_the_data(self) -> None:
-        assert {Field.explo_method: 1}["P12"] == 1
+        counts: dict[str, int] = {Field.explo_method: 1}
+
+        assert counts["P12"] == 1
 
 
 class TestFieldNames:

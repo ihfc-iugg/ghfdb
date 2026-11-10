@@ -10,17 +10,6 @@ from ghfdb.fields import AllowedValue, Vocabularies, allowed_values
 from ghfdb.template import VOCABULARIES
 
 GITHUB_DECISIONS = "https://github.com/ihfc-iugg/ghfdb/blob/main/specs/001-field-reference/decisions.md"
-ALWAYS_SHOWN = (
-    "code",
-    "columnName",
-    "name",
-    "meaning",
-    "type",
-    "unit",
-    "obligation",
-    "domain",
-    "qualityRelevance",
-)
 
 
 @pytest.fixture(scope="module")
@@ -30,11 +19,6 @@ def reference(schema: Schema, published_vocabularies: Vocabularies) -> FieldRefe
 
 def column_name(field: Field) -> str:
     return str(field.custom["columnName"])
-
-
-def sources_of(field: Field) -> dict[str, str]:
-    sources: dict[str, str] = field.custom["sources"]
-    return sources
 
 
 def entries_of(reference: FieldReference, field: Field) -> str:
@@ -96,18 +80,13 @@ class TestFieldReferenceEntries:
             assert headings == ["##"], field.name
             assert field.name in section.split("\n## ", 1)[1].split("\n", 1)[0]
 
-    def test_every_entry_names_its_column_name_and_links_each_decision_it_cites(
+    def test_every_entry_names_its_column_name(
         self, schema: Schema, reference: FieldReference
     ) -> None:
         for field in schema.fields:
             section = section_of(entries_of(reference, field), field)
 
             assert f"`{column_name(field)}`" in section, field.name
-            for key in ALWAYS_SHOWN:
-                source = sources_of(field)[key]
-                if source.startswith("decision:"):
-                    label = source.removeprefix("decision:")
-                    assert f"[Decision {label}]({GITHUB_DECISIONS})" in section
 
     def test_a_missing_fact_shows_an_em_dash(
         self, schema: Schema, reference: FieldReference
@@ -119,26 +98,15 @@ class TestFieldReferenceEntries:
 
         assert "| Unit | — |" in section
 
-    def test_vocabulary_sources_link_the_published_vocabularies(
-        self, schema: Schema, reference: FieldReference
-    ) -> None:
-        field = schema.get_field("C43")
+    def test_the_vocabulary_source_links_the_published_vocabularies(self) -> None:
+        assert FieldReference.source("vocabularies") == (
+            f"[IHFC Controlled Vocabularies]({VOCABULARIES})"
+        )
 
-        section = section_of(entries_of(reference, field), field)
-
-        assert f"[IHFC Controlled Vocabularies]({VOCABULARIES})" in section
-
-    def test_the_decision_source_links_to_the_recorded_decisions(
-        self, schema: Schema, reference: FieldReference
-    ) -> None:
-        field = schema.get_field("P1")
-        decision = sources_of(field)["type"]
-        assert decision.startswith("decision:")
-
-        section = section_of(entries_of(reference, field), field)
-
-        label = decision.removeprefix("decision:")
-        assert f"[Decision {label}]({GITHUB_DECISIONS})" in section
+    def test_a_decision_source_links_to_the_recorded_decisions(self) -> None:
+        assert FieldReference.source("decision:D-18") == (
+            f"[Decision D-18]({GITHUB_DECISIONS})"
+        )
 
 
 class TestFactOrder:
@@ -151,7 +119,9 @@ class TestFactOrder:
             rows = [line for line in section.splitlines() if line.startswith("| ")]
             fact_names = [row.split(" | ")[0].removeprefix("| ") for row in rows]
             assert fact_names[1:4] == ["Field code", "Published column name", "Name"]
-            code, column, name = (row.split(" | ")[1] for row in rows[1:4])
+            code, column, name = (
+                row.split(" | ")[1].removesuffix(" |") for row in rows[1:4]
+            )
             assert code == f"`{field.name}`", field.name
             assert f"`{column_name(field)}`" in column, field.name
             assert reference.cell(str(field.title)) == name, field.name
@@ -195,7 +165,7 @@ class TestVocabularyEntries:
                     value.term,
                 )
 
-    def test_a_fixed_value_is_listed_with_its_source(
+    def test_a_fixed_value_is_listed_without_a_link(
         self,
         schema: Schema,
         reference: FieldReference,
@@ -209,7 +179,6 @@ class TestVocabularyEntries:
             for value in allowed_values(field, published_vocabularies):
                 assert f"`{value.term}`" in section, code
                 assert f"[`{value.term}`](" not in section, code
-            assert "Upload template" in section
 
 
 def hostile_reference(

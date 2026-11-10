@@ -6,6 +6,11 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The field reference pages no longer have a Source column in each field's table. The field
+  schema still records the source of every fact.
+
 ## [v0.1.0] - 2026-11-10
 
 ### Added

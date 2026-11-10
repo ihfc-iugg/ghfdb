@@ -23,8 +23,8 @@ Every field of the current upload template is described once, in the **field sch
 Frictionless Table Schema that ships with the package. The same description is published as a
 **field reference** in the documentation, one entry per field. For each field it gives the field
 code, the published column name, the name and meaning, the type, the unit, the obligation, the
-domain, the quality relevance, the allowed range or allowed values, and the source of every one of
-those facts. The allowed values of every vocabulary field come from the IHFC Controlled Vocabularies as
+domain, the quality relevance, and the allowed range or allowed values. The field schema records
+the source of every one of those facts. The allowed values of every vocabulary field come from the IHFC Controlled Vocabularies as
 currently published, and carry each concept's URI. The field schema holds no vocabulary term and
 states no release or version: it links each vocabulary field to the permanent identifier of its
 concept scheme and, where there is one, its collection, and the terms are read from the file
@@ -55,7 +55,7 @@ written in a cell, links each to its concept, and links the vocabulary they come
 the issue was raised. The scattered and disagreeing copies are the problem it removes.
 
 **Independent Test**: Build the documentation and look up any field by its code and by its
-published column name. The entry gives every fact listed above, each with its source, and its
+published column name. The entry gives every fact listed above, and its
 allowed values are exactly those the vocabulary publishes.
 
 **Acceptance Scenarios**:
@@ -67,8 +67,7 @@ allowed values are exactly those the vocabulary publishes.
    field reference, **Then** they reach the entry for that field.
 3. **Given** a field entry, **When** an assessor reads it, **Then** it gives the field code,
    published column name, name, meaning, type, unit, obligation, domain, quality relevance and
-   allowed range or values, always in the same order, and names the source of each fact: Fuchs et
-   al. (2023) Appendix A, the upload template, or a recorded decision.
+   allowed range or values, always in the same order.
 4. **Given** a vocabulary field, **When** an assessor reads its entry, **Then** it names the
    concept scheme and collection it links to, and lists every allowed term in the form it takes in
    a cell, each linked to its concept's URI.
@@ -126,7 +125,7 @@ access and confirm they load.
    **Then** it is a valid Table Schema with an `enum` on every field that has allowed values, and
    every field in it carries its field code and its published column name.
 7. **Given** a field definition, **When** a developer reads it, **Then** each fact names its
-   source, as in the documentation.
+   source: Fuchs et al. (2023) Appendix A, the upload template, or a recorded decision.
 
 ---
 
@@ -227,7 +226,7 @@ confirm every identifier the field schema holds is defined in them.
   and the cached copy MUST be used when the server cannot be reached. The package MUST NOT contain the vocabulary files. An unknown code or name MUST fail
   and name what was asked for. *(US2)*
 - **FR-011**: The documentation MUST contain a field reference with one entry per field, giving
-  the same facts in the same order for every field, each with its source, following the reference
+  the same facts in the same order for every field, following the reference
   rules of `docs/contributing/standards/documentation.md`. *(US1)*
 - **FR-012**: The field reference MUST be reachable by field code and by published column name.
   *(US1)*

@@ -62,7 +62,6 @@ class FieldReference:
                 "sources": self.sources,
                 "allowed_values": self.values,
                 "rules_of": self.rules_of,
-                "rule_sources": self.rule_sources,
             }
         )
         self.environment.globals.update(index=self.index, entries=self.entries)
@@ -167,7 +166,7 @@ class FieldReference:
         raise ValueError(f"Unknown source {key!r}")
 
     def sources(self, field: Field, keys: list[str]) -> str:
-        """Name the distinct sources behind the facts of one table row.
+        """Name the distinct sources behind the given facts of one field.
 
         Args:
             field: The field the facts belong to.
@@ -190,19 +189,6 @@ class FieldReference:
         """
         return tuple(
             rule for rule in self.rules if field.name in rule.fields(self.schema)
-        )
-
-    def rule_sources(self, rules: Sequence[Rule]) -> str:
-        """Name the distinct sources the given rules come from.
-
-        Args:
-            rules: The rules.
-
-        Returns:
-            The sources, each once, in the order the rules come.
-        """
-        return "; ".join(
-            self.source(key) for key in dict.fromkeys(r.source for r in rules)
         )
 
     def index(self) -> str:

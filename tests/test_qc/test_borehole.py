@@ -73,12 +73,12 @@ class TestBoreholeTScore:
     def test_worked_example(self, uris: Uris, example: Mapping[str, Any]) -> None:
         rules = rules_of(uris, one_child(example["inputs"]))
 
-        score = rules.t_score()
+        score = rules.scores().t
 
         assert score.value.iloc[0] == example["expected"]["T"]
         if "marked" in example["expected"]:
             assert score.marked.iloc[0] == example["expected"]["marked"]
-        own = rules.own_t_score()
+        own = rules.scores().own_t
         assert own.value.equals(score.value)
         assert own.marked.equals(score.marked)
 
@@ -88,7 +88,7 @@ class TestBoreholeTScore:
         child = {**GRADIENT, "C31": "[LOGeq]", "C32": "[LOGeq]"}
         del child["C37"]
 
-        score = rules_of(uris, one_child(child)).t_score()
+        score = rules_of(uris, one_child(child)).scores().t
 
         assert score.value.iloc[0] == 0.9
         assert not score.marked.iloc[0]
@@ -99,7 +99,15 @@ class TestBoreholeTScore:
         child = {**GRADIENT, "C32": "[BHT]"}
         del child["C31"]
 
-        score = rules_of(uris, one_child(child)).t_score()
+        score = rules_of(uris, one_child(child)).scores().t
+
+        assert score.value.iloc[0] == 0.7
+        assert not score.marked.iloc[0]
+
+    def test_a_block_temperature_is_a_perturbed_single_point(self, uris: Uris) -> None:
+        child = {**GRADIENT, "C31": "[BLK]", "C32": "[BLK]"}
+
+        score = rules_of(uris, one_child(child)).scores().t
 
         assert score.value.iloc[0] == 0.7
         assert not score.marked.iloc[0]
@@ -109,7 +117,7 @@ class TestBoreholeTScore:
     ) -> None:
         child = {**GRADIENT, "C31": ["[SUR]", "[CPD]"], "C32": "[cBHT]"}
 
-        score = rules_of(uris, one_child(child)).t_score()
+        score = rules_of(uris, one_child(child)).scores().t
 
         assert score.value.iloc[0] == 0.7
         assert not score.marked.iloc[0]
@@ -120,7 +128,7 @@ class TestBoreholeTScore:
         child = {**GRADIENT, "C31": "[SUR]"}
         del child["C32"]
 
-        score = rules_of(uris, one_child(child)).t_score()
+        score = rules_of(uris, one_child(child)).scores().t
 
         assert score.value.iloc[0] == 0.4
         assert score.marked.iloc[0]
@@ -130,7 +138,7 @@ class TestBoreholeTScore:
     ) -> None:
         child = {**GRADIENT, "C37": [6, 2], "C31": "[LOGeq]", "C32": "[LOGeq]"}
 
-        score = rules_of(uris, one_child(child)).t_score()
+        score = rules_of(uris, one_child(child)).scores().t
 
         assert score.value.iloc[0] == 0.9
 
@@ -147,7 +155,7 @@ class TestBoreholeTScore:
 
         rules = rules_of(uris, data)
 
-        for score in (rules.t_score(), rules.own_t_score()):
+        for score in (rules.scores().t, rules.scores().own_t):
             assert score.value.isna().tolist() == [True, True, False]
             assert score.marked.isna().tolist() == [True, True, False]
 
@@ -165,7 +173,7 @@ class TestBoreholeTScore:
             dtype=object,
         )
 
-        score = rules_of(uris, data).t_score()
+        score = rules_of(uris, data).scores().t
 
         assert score.value.index.tolist() == [12, 9, 10]
         assert score.value.tolist() == [1.1, 0.5, 0.5]
@@ -182,9 +190,9 @@ class TestBoreholeTCScore:
         rules = rules_of(uris, one_child(example["inputs"]))
 
         if example["scoring"] == "measurement":
-            score = rules.own_tc_score()
+            score = rules.scores().own_tc
         else:
-            score = rules.tc_score()
+            score = rules.scores().tc
 
         assert score.value.iloc[0] == example["expected"]["TC"]
         if "marked" in example["expected"]:
@@ -196,8 +204,8 @@ class TestBoreholeTCScore:
         child = {**CONDUCTIVITY, "C11": "[Not considered]"}
         rules = rules_of(uris, one_child(child))
 
-        child_score = rules.tc_score()
-        own_score = rules.own_tc_score()
+        child_score = rules.scores().tc
+        own_score = rules.scores().own_tc
 
         assert (child_score.value.iloc[0], child_score.marked.iloc[0]) == (0.8, False)
         assert (own_score.value.iloc[0], own_score.marked.iloc[0]) == (1.0, False)
@@ -208,7 +216,7 @@ class TestBoreholeTCScore:
         child = {**CONDUCTIVITY, "C42": "[Literature or unspecified]"}
         del child["C47"]
 
-        score = rules_of(uris, one_child(child)).own_tc_score()
+        score = rules_of(uris, one_child(child)).scores().own_tc
 
         assert score.value.iloc[0] == 0.8
         assert not score.marked.iloc[0]
@@ -222,7 +230,7 @@ class TestBoreholeTCScore:
         }
         del child["C47"]
 
-        score = rules_of(uris, one_child(child)).own_tc_score()
+        score = rules_of(uris, one_child(child)).scores().own_tc
 
         assert score.value.iloc[0] == 0.7
         assert score.marked.iloc[0]
@@ -232,7 +240,7 @@ class TestBoreholeTCScore:
     ) -> None:
         child = {"P12": DRILLING, "C41": "[Other]", "C45": "[Unspecified]"}
 
-        score = rules_of(uris, one_child(child)).tc_score()
+        score = rules_of(uris, one_child(child)).scores().tc
 
         assert score.value.iloc[0] == 0.1
         assert score.marked.iloc[0]
@@ -246,7 +254,7 @@ class TestBoreholeTCScore:
 
         rules = rules_of(uris, data)
 
-        for score in (rules.tc_score(), rules.own_tc_score()):
+        for score in (rules.scores().tc, rules.scores().own_tc):
             assert score.value.isna().tolist() == [True, True, False]
             assert score.marked.isna().tolist() == [True, True, False]
 
@@ -272,7 +280,7 @@ class TestBoreholeTCScore:
             dtype=object,
         )
 
-        score = rules_of(uris, data).tc_score()
+        score = rules_of(uris, data).scores().tc
 
         assert score.value.index.tolist() == [12, 9, 10]
         assert score.value.tolist() == [1.1, 0.1, 0.6]

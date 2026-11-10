@@ -4,6 +4,7 @@ from collections.abc import Mapping
 
 import numpy
 import pandas
+from pandas.api.types import infer_dtype
 
 from ghfdb.fields.cells import parse_numbers
 
@@ -12,7 +13,8 @@ class Inputs:
     """The fields the scheme scores, read from a dataset the first time one is asked.
 
     A cell that holds a Python list holds several values, in any scored field. Every
-    value is a row of its own under the child's index. Text is never split.
+    value is a row of its own under the child's index. Text is never split, where the
+    check splits a cell by the field's separator (docs/adr/0009).
 
     Args:
         data: One row per child and one column per field, named by field code.
@@ -46,7 +48,10 @@ class Inputs:
             return pandas.Series(
                 pandas.NA, index=self.index, dtype="string", name=field
             )
-        return self.data[field].explode().astype("string").str.strip()
+        column = self.data[field]
+        if infer_dtype(column, skipna=True) == "mixed":
+            column = column.explode()
+        return column.astype("string").str.strip()
 
     def numbers(self, field: str) -> pandas.Series:
         """Read a number field.
@@ -76,9 +81,27 @@ class Inputs:
             KeyError: The scheme declares no concept of the field.
         """
         if field not in self.read_concepts:
-            terms = self.uris[field]
-            self.read_concepts[field] = self.text(field).map(terms).astype("string")
+            text = self.text(field)
+            self.read_concepts[field] = self.translate(text, self.uris[field])
         return self.read_concepts[field]
+
+    @staticmethod
+    def translate(values: pandas.Series, mapping: Mapping[str, str]) -> pandas.Series:
+        """Replace each value by what the mapping gives it.
+
+        Args:
+            values: Text, with a row for each value.
+            mapping: The replacement of each text it knows.
+
+        Returns:
+            The replacement of every value under its index, empty for a value that is
+            empty or that the mapping does not know.
+        """
+        codes, found = pandas.factorize(values)
+        # The last entry stays None: it is what the code -1 of an empty value takes.
+        replaced = numpy.full(len(found) + 1, None, dtype=object)
+        replaced[:-1] = pandas.Index(found).map(mapping).to_numpy(dtype=object)
+        return pandas.Series(replaced[codes], index=values.index, dtype="string")
 
     def first(self, values: pandas.Series) -> pandas.Series:
         """Keep one value for each child: its first filled one.

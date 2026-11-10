@@ -77,8 +77,8 @@ from ghfdb.qc.penalties import (
     Group,
     Outcome,
     Penalty,
+    RuleScores,
     Score,
-    Table,
 )
 from ghfdb.qc.rules import Condition
 
@@ -382,25 +382,6 @@ class BoreholeRules:
             ),
         )
 
-    def t_score(self) -> Score:
-        """Score the gradient of each child.
-
-        It reads nothing from the child, so the child's own score is the same (see
-        ``own_t_score``).
-
-        Returns:
-            The T-score and its mark for each child.
-        """
-        return Score.total([self.temperature_methods()], self.routed)
-
-    def own_t_score(self) -> Score:
-        """Score the gradient on its own, which is its score for the child.
-
-        Returns:
-            The own T-score and its mark for each child.
-        """
-        return self.t_score()
-
     def depth_reported(self) -> numpy.ndarray:
         """Find the children that report the top or the bottom of the interval.
 
@@ -413,46 +394,44 @@ class BoreholeRules:
         )
         return top | bottom
 
-    def conductivity(self, conditions: Criterion[Table]) -> Score:
-        """Add the criteria of the TC-score, behind the interval depth gate.
+    def gated(self, penalties: list[Penalty]) -> Score:
+        """Add the penalties of the TC-score, behind the interval depth gate.
 
         See docs/reference/quality-scheme/borehole-and-mine.md, "Interval depth gate".
 
         Args:
-            conditions: The criterion that scores the pressure and temperature
-                conditions.
+            penalties: The penalty of each criterion of the TC-score.
 
         Returns:
             The score and its mark for each child: ``0.1`` with the mark where neither
             depth is reported, and nothing else scored.
         """
-        penalties = [
-            criterion.score(self.inputs)
-            for criterion in (*CONDUCTIVITY_CRITERIA, conditions)
-        ]
         scored = Score.total(penalties, self.routed)
         closed = self.routed & ~self.depth_reported()
         return Score(
             scored.value.mask(closed, GATE_SCORE), scored.marked.mask(closed, True)
         )
 
-    def tc_score(self) -> Score:
-        """Score the conductivity of each child, with its in-situ correction.
+    def scores(self) -> RuleScores:
+        """Score every child, each criterion once.
 
-        The pT conditions must agree with the child's in-situ correction.
-
-        Returns:
-            The TC-score and its mark for each child.
-        """
-        return self.conductivity(CONDITIONS_AGREEING)
-
-    def own_tc_score(self) -> Score:
-        """Score the conductivity on its own, before the child's correction applies.
-
-        See docs/reference/quality-scheme/index.md, "Scores of a child and of its
+        The gradient reads nothing from the child, so the own T-score is the T-score.
+        The TC-score requires the pT conditions to agree with the child's in-situ
+        correction, and the own TC-score scores the pT conditions alone. See
+        docs/reference/quality-scheme/borehole-and-mine.md and
+        docs/reference/quality-scheme/index.md, "Scores of a child and of its
         measurements".
 
         Returns:
-            The own TC-score and its mark for each child.
+            The four scores and their marks for each child.
         """
-        return self.conductivity(CONDITIONS)
+        t = Score.total([self.temperature_methods()], self.routed)
+        conductivity = [
+            criterion.score(self.inputs) for criterion in CONDUCTIVITY_CRITERIA
+        ]
+        return RuleScores(
+            t=t,
+            tc=self.gated([*conductivity, CONDITIONS_AGREEING.score(self.inputs)]),
+            own_t=t,
+            own_tc=self.gated([*conductivity, CONDITIONS.score(self.inputs)]),
+        )

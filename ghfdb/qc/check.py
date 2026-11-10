@@ -360,7 +360,8 @@ class DatasetCheck:
         """Split the cells of a field that holds several values in a cell.
 
         Only a field with allowed values or a pattern is split. Each value keeps the
-        row of its cell.
+        row of its cell. The scoring never splits text (``Inputs``): the schema gives
+        no scored field a separator (docs/adr/0009).
 
         Args:
             field: The field.

@@ -64,7 +64,7 @@ class TestProbeTScore:
     def test_worked_example(self, uris: Uris, example: Mapping[str, Any]) -> None:
         rules = rules_of(uris, one_child(example["inputs"]))
 
-        score = rules.t_score()
+        score = rules.scores().t
 
         assert score.value.iloc[0] == example["expected"]["T"]
         if "marked" in example["expected"]:
@@ -80,8 +80,8 @@ class TestProbeTScore:
         }
         rules = rules_of(uris, one_child(child))
 
-        child_score = rules.t_score()
-        own_score = rules.own_t_score()
+        child_score = rules.scores().t
+        own_score = rules.scores().own_t
 
         assert (child_score.value.iloc[0], child_score.marked.iloc[0]) == (1.1, False)
         assert (own_score.value.iloc[0], own_score.marked.iloc[0]) == (0.7, True)
@@ -91,7 +91,7 @@ class TestProbeTScore:
     ) -> None:
         child = {"P12": PROBE, "P6": -3000, "C6": 5, "C37": 6, "C23": -1}
 
-        score = rules_of(uris, one_child(child)).t_score()
+        score = rules_of(uris, one_child(child)).scores().t
 
         assert score.value.iloc[0] == 0.9
         assert not score.marked.iloc[0]
@@ -105,7 +105,7 @@ class TestProbeTScore:
 
         rules = rules_of(uris, data)
 
-        for score in (rules.t_score(), rules.own_t_score()):
+        for score in (rules.scores().t, rules.scores().own_t):
             assert score.value.isna().tolist() == [True, True, False]
             assert score.marked.isna().tolist() == [True, True, False]
 
@@ -124,7 +124,7 @@ class TestProbeTScore:
             dtype=object,
         )
 
-        score = rules_of(uris, data).t_score()
+        score = rules_of(uris, data).scores().t
 
         assert score.value.index.tolist() == [12, 9, 10]
         assert score.value.tolist() == [1.2, 0.9, 0.8]
@@ -132,7 +132,7 @@ class TestProbeTScore:
     def test_several_values_score_as_the_poorest(self, uris: Uris) -> None:
         child = {"P12": PROBE, "P6": -3000, "C6": [12, 0.5], "C23": 0, "C37": 6}
 
-        score = rules_of(uris, one_child(child)).t_score()
+        score = rules_of(uris, one_child(child)).scores().t
 
         assert score.value.iloc[0] == 0.9
 
@@ -146,12 +146,12 @@ class TestProbeTCScore:
     def test_worked_example(self, uris: Uris, example: Mapping[str, Any]) -> None:
         rules = rules_of(uris, one_child(example["inputs"]))
 
-        score = rules.tc_score()
+        score = rules.scores().tc
 
         assert score.value.iloc[0] == example["expected"]["TC"]
         if "marked" in example["expected"]:
             assert score.marked.iloc[0] == example["expected"]["marked"]
-        own = rules.own_tc_score()
+        own = rules.scores().own_tc
         assert own.value.equals(score.value)
         assert own.marked.equals(score.marked)
 
@@ -163,9 +163,23 @@ class TestProbeTCScore:
             "C43": "[Probe - continuous heating technique]",
         }
 
-        score = rules_of(uris, one_child(child)).tc_score()
+        score = rules_of(uris, one_child(child)).scores().tc
 
         assert score.value.iloc[0] == 0.6
+        assert not score.marked.iloc[0]
+
+    def test_a_method_estimated_from_other_properties_is_scored_without_the_mark(
+        self, uris: Uris
+    ) -> None:
+        child = {
+            **BEST_CONDUCTIVITY,
+            "C43": "[Estimation - from water content-porosity]",
+            "C45": "[Corrected in-situ (pT)]",
+        }
+
+        score = rules_of(uris, one_child(child)).scores().tc
+
+        assert score.value.iloc[0] == 0.8
         assert not score.marked.iloc[0]
 
     def test_a_literature_location_among_several_leaves_the_number_to_the_rest(
@@ -177,7 +191,7 @@ class TestProbeTCScore:
         }
         del child["C47"]
 
-        score = rules_of(uris, one_child(child)).tc_score()
+        score = rules_of(uris, one_child(child)).scores().tc
 
         assert score.value.iloc[0] == 0.8
         assert score.marked.iloc[0]
@@ -189,7 +203,7 @@ class TestProbeTCScore:
             dtype=object,
         )
 
-        score = rules_of(uris, data).tc_score()
+        score = rules_of(uris, data).scores().tc
 
         assert score.value.isna().tolist() == [True, False]
         assert score.marked.isna().tolist() == [True, False]
@@ -211,7 +225,7 @@ class TestProbeTCScore:
             dtype=object,
         )
 
-        score = rules_of(uris, data).tc_score()
+        score = rules_of(uris, data).scores().tc
 
         assert score.value.index.tolist() == [12, 9]
         assert score.value.tolist() == [1.2, 0.5]

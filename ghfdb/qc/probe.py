@@ -52,6 +52,7 @@ from ghfdb.qc.penalties import (
     Criterion,
     Group,
     Penalty,
+    RuleScores,
     Score,
 )
 from ghfdb.qc.rules import Condition
@@ -270,65 +271,37 @@ class ProbeRules:
         penalty, marked = WATER_DEPTH.table.values(depth)
         return Penalty.poorest(penalty, marked, self.inputs.index)
 
-    def gradient(self, *, waived: bool) -> Score:
-        """Score the gradient of each child.
+    def scores(self) -> RuleScores:
+        """Score every child, each criterion once.
 
-        See docs/reference/quality-scheme/probe-sensing.md, "T-score".
-
-        Args:
-            waived: Whether the child's corrections apply: a tilt correction waives the
-                tilt criterion and a bottom-water correction waives the water depth.
+        A tilt correction waives the tilt criterion and a bottom-water correction waives
+        the water depth, in the T-score but not in the own T-score. The conductivity
+        reads nothing from the child, so the own TC-score is the TC-score. See
+        docs/reference/quality-scheme/probe-sensing.md, "T-score" and "TC-score", and
+        docs/reference/quality-scheme/index.md, "Scores of a child and of its
+        measurements".
 
         Returns:
-            The score and its mark for each child.
+            The four scores and their marks for each child.
         """
         penetration, recordings, tilt = (
             criterion.score(self.inputs)
             for criterion in (PENETRATION, RECORDINGS, TILT)
         )
         water_depth = self.water_depth()
-        if waived:
-            water_depth = water_depth.waived(self.has(BOTTOM_WATER_CORRECTED))
-            tilt = tilt.waived(self.has(TILT_IS_CORRECTED))
-        return Score.total([penetration, recordings, water_depth, tilt], self.routed)
-
-    def t_score(self) -> Score:
-        """Score the gradient of each child, with both corrections applied.
-
-        Returns:
-            The T-score and its mark for each child.
-        """
-        return self.gradient(waived=True)
-
-    def own_t_score(self) -> Score:
-        """Score the gradient on its own, before the child's corrections apply.
-
-        See docs/reference/quality-scheme/index.md, "Scores of a child and of its
-        measurements".
-
-        Returns:
-            The own T-score and its mark for each child.
-        """
-        return self.gradient(waived=False)
-
-    def tc_score(self) -> Score:
-        """Score the conductivity of each child.
-
-        It reads nothing from the child, so the child's own score is the same (see
-        ``own_tc_score``). See docs/reference/quality-scheme/probe-sensing.md,
-        "TC-score".
-
-        Returns:
-            The TC-score and its mark for each child.
-        """
-        return Score.total(
+        gradient = [penetration, recordings, water_depth, tilt]
+        corrected = [
+            penetration,
+            recordings,
+            water_depth.waived(self.has(BOTTOM_WATER_CORRECTED)),
+            tilt.waived(self.has(TILT_IS_CORRECTED)),
+        ]
+        tc = Score.total(
             [criterion.score(self.inputs) for criterion in TC_CRITERIA], self.routed
         )
-
-    def own_tc_score(self) -> Score:
-        """Score the conductivity on its own, which is its score for the child.
-
-        Returns:
-            The own TC-score and its mark for each child.
-        """
-        return self.tc_score()
+        return RuleScores(
+            t=Score.total(corrected, self.routed),
+            tc=tc,
+            own_t=Score.total(gradient, self.routed),
+            own_tc=tc,
+        )

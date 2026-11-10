@@ -206,8 +206,8 @@ class Scores:
         flags = pandas.Series("", index=self.inputs.index, dtype="string")
         for field, letter in FLAGS.items():
             state = self.inputs.first(self.inputs.concepts(field))
-            characters = self.flag_characters(letter)
-            flags = flags + state.map(characters).fillna("-").astype("string")
+            characters = Inputs.translate(state, self.flag_characters(letter))
+            flags = flags + characters.fillna("-")
         return flags
 
     @staticmethod
@@ -269,10 +269,11 @@ class Scores:
             ``SCORE_COLUMNS``. The scores are floats and the marks booleans, both
             ``<NA>`` where not determined.
         """
-        t = self.either(self.probe.t_score(), self.borehole.t_score())
-        tc = self.either(self.probe.tc_score(), self.borehole.tc_score())
-        own_t = self.either(self.probe.own_t_score(), self.borehole.own_t_score())
-        own_tc = self.either(self.probe.own_tc_score(), self.borehole.own_tc_score())
+        probe, borehole = self.probe.scores(), self.borehole.scores()
+        t = self.either(probe.t, borehole.t)
+        tc = self.either(probe.tc, borehole.tc)
+        own_t = self.either(probe.own_t, borehole.own_t)
+        own_tc = self.either(probe.own_tc, borehole.own_tc)
         grade = self.grades(t, tc)
         flags = self.flags()
         uncertainty = UScore(self.inputs).grades()

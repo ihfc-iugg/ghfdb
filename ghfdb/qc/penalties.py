@@ -321,11 +321,11 @@ class Bands:
         Returns:
             The penalty of each number and whether it sets the mark.
         """
-        matched = numpy.any([band.holds(numbers) for band in self.bands], axis=0)
+        holds = [band.holds(numbers) for band in self.bands]
         return settle(
             numbers.index,
-            Band.select(self.bands, numbers, self.unmatched.penalty),
-            matched,
+            numpy.select(holds, [band.value for band in self.bands], 0.0),
+            numpy.any(holds, axis=0),
             numbers.isna().to_numpy(),
             self.empty,
             self.unmatched,
@@ -410,6 +410,19 @@ class Classes:
         """List the groups."""
         return self.groups
 
+    def membership(self, concepts: pandas.Series) -> list[numpy.ndarray]:
+        """Say which concepts are in each group.
+
+        Args:
+            concepts: The concept of every value.
+
+        Returns:
+            For each group, whether each concept is in it.
+        """
+        return [
+            concepts.isin(group.concepts).to_numpy(dtype=bool) for group in self.groups
+        ]
+
     def fits(self, concepts: pandas.Series) -> numpy.ndarray:
         """Say which concepts are in a group.
 
@@ -419,13 +432,7 @@ class Classes:
         Returns:
             Whether each concept is in a group.
         """
-        return numpy.any(
-            [
-                concepts.isin(group.concepts).to_numpy(dtype=bool)
-                for group in self.groups
-            ],
-            axis=0,
-        )
+        return numpy.any(self.membership(concepts), axis=0)
 
     def values(self, concepts: pandas.Series) -> tuple[pandas.Series, pandas.Series]:
         """Give each concept the penalty of its group.
@@ -436,18 +443,11 @@ class Classes:
         Returns:
             The penalty of each value and whether it sets the mark.
         """
-        penalty = numpy.select(
-            [
-                concepts.isin(group.concepts).to_numpy(dtype=bool)
-                for group in self.groups
-            ],
-            [group.penalty for group in self.groups],
-            self.unmatched.penalty,
-        )
+        member = self.membership(concepts)
         return settle(
             concepts.index,
-            penalty,
-            self.fits(concepts),
+            numpy.select(member, [group.penalty for group in self.groups], 0.0),
+            numpy.any(member, axis=0),
             concepts.isna().to_numpy(),
             self.empty,
             self.unmatched,

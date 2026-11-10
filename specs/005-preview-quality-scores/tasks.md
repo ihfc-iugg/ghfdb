@@ -191,3 +191,19 @@ group leaves the tree green.
 - [x] T042 [US1] D-15: `tests/test_cli.py::TestSpeed` keeps its checks that every child is
   checked, scored and reported, and fails on time only at a ceiling of 60 s, with the 15 s target
   named in the test's docstring.
+
+## Phase 5: Review fixes of the rewrite
+
+- [ ] T043 [US2] RW-001, D-16: the empty outcome of a table of cases applies only when no row holds
+  and a field some row names is empty. Worked examples changed accordingly, and a new one for each
+  of the two criteria it affects. Page and changelog updated.
+- [ ] T044 [US2] RW-002, RW-011: each rule set is scored from its declared lists, so adding a
+  criterion to a list is enough, and the fields and concepts a rule set reads are listed once.
+- [ ] T045 [US2] RW-003: the water-depth criterion scores the depth when scored like any other.
+- [ ] T046 [US2] RW-004, RW-010, RW-009, RW-007, RW-008: the largest penalty derived from each table,
+  one selection helper, the loose helpers on their classes, `rows()` used by the docs or removed, and
+  the score columns written once.
+- [ ] T047 [US2] RW-005, RW-006: the borehole TC range and D-13's `[Other]`.
+- [ ] T048 [US2] RW-012: every rule-level worked example states whether it is marked, worked out from
+  the scheme pages, with a test that each states it.
+- [ ] T049 [US2] Every new public name documented, as the documentation check requires.

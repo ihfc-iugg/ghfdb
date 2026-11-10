@@ -230,3 +230,20 @@ slowdown by a large factor but never a design chosen for clarity.
 and would push every design towards speed.
 
 **ADR:** none.
+
+## D-16: An empty field counts only when no row of the criterion holds without it
+
+**Found**: in review. A criterion of several fields gave its empty outcome, the largest penalty
+with the mark, whenever any field it reads was empty, even when the row that applies does not name
+that field. A laboratory conductivity with an empty source scored −0.2 for its saturation, where
+the corrected Table 2 gives 0, and the worked example `PC-10` expects 0.7 where the table gives 1.0.
+
+**Chosen**: a row holds when every field it names holds one of its concepts, whatever the fields it
+does not name hold. The empty outcome applies only when no row holds and a field some row names is
+empty. When no row holds and nothing is empty, the unmatched outcome applies as before.
+
+**Why**: D-10. The corrected tables condition each row on the fields it names, and nothing in them
+makes an unnamed field matter. The behaviour came from the toolbox and is listed in none of its
+decisions, so it was not a departure the scheme chose.
+
+**ADR:** none. Recorded under **Scheme changes**, with the worked examples it changes.

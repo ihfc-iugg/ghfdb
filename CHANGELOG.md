@@ -32,6 +32,19 @@ All notable changes to this project are recorded here. The format follows
   corrected Table 2 requires ("`{tc_method}` is all with `[Lab - ...]`"). A child that lists a
   laboratory method beside another method is scored by the rows of the other method, and a method
   that fits no row takes -0.2.
+- In the probe-sensing thermal conductivity, the saturation and the pT conditions, a row now
+  holds whatever the fields it does not name contain, and the empty outcome (the largest penalty,
+  with the missing-information mark) applies only when no row holds and a field some row names is
+  empty. Before, an empty field that any row names gave the empty outcome even when the row that
+  applies does not name it. A laboratory conductivity with no source now scores 0 for its
+  saturation, and replicated, corrected or partial in-situ pT conditions with no method score by
+  their own rows, as the corrected Table 2 gives them. Two worked examples change: `PC-10`
+  (location empty) goes from a TC-score of 0.7 to 1.0, because the saturation row that holds does
+  not name the location. `P5-no-saturation` goes from the M-score `M3x` to `M3`, because the row
+  for an unspecified method holds without the saturation, so nothing is missing. Two are new:
+  `PC-16` (a laboratory conductivity with the source empty, TC-score 1.0) and `PC-17` (replicated
+  in-situ pT with the method empty, TC-score 0.8 with the mark). The borehole pT agreement is not
+  affected: each of its rows names both fields.
 
 ### Changed
 

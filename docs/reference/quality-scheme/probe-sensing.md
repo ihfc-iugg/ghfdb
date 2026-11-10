@@ -132,8 +132,11 @@ adds the condition "`{tc_method}` is all with `[Lab - ...]`" to the onshore labo
 child that lists a laboratory method beside another method is scored by the rows of the other
 method, and the laboratory method fits no row.
 
-* **Empty.** When any of `C44`, `C43`, `C41` or `C42` is empty, the criterion takes the empty
-  outcome of the table, because every row names those four fields.
+* **Empty.** A row holds whatever the fields it does not name contain, so an empty field
+  matters only when no row holds without it. A laboratory conductivity with `C41` empty is
+  scored by the laboratory rows, which do not name `C41`. When no row holds and a field some row
+  names is empty, the criterion takes the empty outcome of the table. Every row names `C43`, so
+  an empty `C43` always takes it.
 * **Unspecified.** An unspecified saturation, source or location is a value. It takes part in
   the rows above and, where it satisfies none, takes the unmatched outcome, without the mark.
 * **No row holds.** A conductivity measured by `[Probe - continuous heating technique]` fits no
@@ -161,7 +164,11 @@ like the saturation.
 
 {{ criterion('probe-tc.pT') }}
 
-* **Empty.** When `C45` or `C43` is empty, the criterion takes the empty outcome of the table.
+* **Empty.** A row holds whatever the fields it does not name contain. Only the first row names
+  `C43`, so an empty `C43` matters only for actual in-situ conditions, and replicated, corrected
+  and ambient conditions score by their own rows. When no row holds and a field some row names
+  is empty, which is an empty `C45`, or an empty `C43` with actual in-situ conditions, the
+  criterion takes the empty outcome of the table.
 * **Unspecified.** `[Unspecified]` is a value, and takes the penalty of its row without the
   mark.
 * **No row holds.** Actual in-situ conditions with a method other than the pulse probe hold no

@@ -173,8 +173,8 @@ A measurement scored on its own, without a child, reads the pT conditions alone:
 
 {{ criterion('borehole-tc.pT') }}
 
-* **Empty.** When `C45` is empty, or the child records no in-situ correction `C11`, the
-  criterion takes the empty outcome of the table.
+* **Empty.** Every row names both fields, so when `C45` is empty, or the child records no in-situ
+  correction `C11`, no row holds and the criterion takes the empty outcome of the table.
 * **Unspecified.** `[Unspecified]` is a value and takes the penalty of its row without the
   mark.
 

@@ -109,6 +109,9 @@ Every criterion reads one or more fields of the child, and a field can hold a va
 * **An empty input** takes the criterion's largest penalty and sets the missing-information mark.
   The mark says that the score is a floor, and that the child could score better if the
   information were added.
+* **An empty field of a criterion that reads several fields** counts only when no row of the
+  criterion holds without it. A row holds whatever the fields it does not name contain, so a row
+  that does not name the empty field scores as usual and sets no mark.
 * **An input recorded as unspecified** takes the same largest penalty and does not set the mark.
   Nothing is missing: the contributor said the value is not known.
 * **A value that fits none of a criterion's classes** takes the largest penalty and does not set

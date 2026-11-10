@@ -282,10 +282,10 @@ class CriterionTable:
                     cells.append(ANY)
             rows.append([*cells, self.penalty(case.penalty)])
         blank = [MISSING] * (len(fields) - 1)
-        rows.append(
-            ["A field of the table is empty", *blank, self.outcome(table.empty)]
-        )
-        rows.append(["No row holds", *blank, self.outcome(table.unmatched)])
+        empty = "No row holds, and a field is empty"
+        unmatched = "No row holds, and no field is empty"
+        rows.append([empty, *blank, self.outcome(table.empty)])
+        rows.append([unmatched, *blank, self.outcome(table.unmatched)])
         headers = [self.title(field) for field in fields]
         return TableText([*headers, "Penalty"], rows, [])
 

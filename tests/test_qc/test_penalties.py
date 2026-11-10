@@ -345,10 +345,18 @@ class TestCases:
 
         assert penalties(penalty)[:3] == [0.0, -0.1, 0.0]
 
-    def test_an_empty_field_any_row_names_takes_the_empty_outcome_with_its_mark(
+    def test_a_row_holds_whatever_a_field_it_does_not_name_contains(self) -> None:
+        inputs = inputs_of(C42=["[green]", "[red]"], C43=[None, None])
+
+        penalty = self.TABLE.score(inputs)
+
+        assert penalties(penalty) == [0.0, 0.0]
+        assert marks(penalty) == [False, False]
+
+    def test_no_row_holding_with_an_empty_field_a_row_names_takes_the_empty_outcome(
         self,
     ) -> None:
-        inputs = inputs_of(C42=["[red]", None], C43=[None, "[small]"])
+        inputs = inputs_of(C42=[None, "[blue]"], C43=["[small]", None])
 
         penalty = self.TABLE.score(inputs)
 

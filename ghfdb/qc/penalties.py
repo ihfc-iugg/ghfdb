@@ -525,9 +525,9 @@ class Case:
 class Cases:
     """Rows of conditions on several fields.
 
-    Every row whose conditions all hold counts, and the poorest penalty wins. A
-    combination with an empty field that any row names takes ``empty``, and one that no
-    row holds takes ``unmatched``.
+    Every row whose conditions all hold counts, and the poorest penalty wins. A row
+    holds whatever the fields it does not name contain. A combination that no row holds
+    takes ``empty`` when a field some row names is empty, and ``unmatched`` otherwise.
 
     Attributes:
         cases: The rows.
@@ -571,11 +571,12 @@ class Cases:
                 for case in self.cases
             ]
         ).min(axis=1)
+        matched = numpy.isfinite(penalties)
         penalty, marked = settle(
             rows.index,
             penalties,
-            numpy.isfinite(penalties),
-            rows.isna().any(axis=1).to_numpy(),
+            matched,
+            rows.isna().any(axis=1).to_numpy() & ~matched,
             self.empty,
             self.unmatched,
         )

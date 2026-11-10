@@ -20,15 +20,15 @@ interval, read in one of three cases. Its lowest value is 0.4 and its highest 1.
 ```{mermaid}
 flowchart TD
     gradient["Borehole gradient"] --> surface{"Top method includes SUR?"}
-    surface -->|"Yes"| case_surface["Surface plus one point: the bottom methods decide, −0.3 to −0.6"]
-    surface -->|"No"| continuous{"More than 3 recordings and only logging or distributed-sensing methods?"}
-    continuous -->|"Yes"| case_continuous["Continuous log: +0.1, or −0.1 when perturbed"]
-    continuous -->|"No"| case_points["Multiple single points: −0.1, −0.3 or −0.5"]
+    surface -->|"Yes"| case_surface["Surface plus one point: the bottom methods decide"]
+    surface -->|"No"| continuous{"Enough recordings and only logging or distributed-sensing methods?"}
+    continuous -->|"Yes"| case_continuous["Continuous log"]
+    continuous -->|"No"| case_points["Multiple single points"]
     case_surface --> fits{"Do the methods fit a group of the case?"}
     case_points --> fits
     fits -->|"Yes"| poorest["The poorest matching group decides"]
     fits -->|"No"| marked["Largest penalty of the case, with the mark"]
-    case_continuous --> sum["T-score = 1.0 + the penalty"]
+    case_continuous --> sum["T-score = the start value plus the penalty"]
     poorest --> sum
     marked --> sum
 ```
@@ -57,26 +57,15 @@ group, and the poorest matching group decides.
 
 **Continuous log**
 
-| Penalty | Methods |
-|---|---|
-| +0.1 | `[LOGeq]`, `[cLOG]`, `[DTSeq]`, `[cDTS]` |
-| −0.1 | `[LOGpert]` |
+{{ criterion('borehole-t.continuous-log') }}
 
 **Multiple single points**
 
-| Penalty | Methods |
-|---|---|
-| −0.1 | `[LOGeq]`, `[cLOG]`, `[cBHT]`, `[HT-FTeq]`, `[cHT-FT]`, `[RTDeq]`, `[cRTD]`, `[ODTT-PC]`, `[ODTT-TP]`, `[EGRT]`, `[GRT]`, `[cDTS]` |
-| −0.3 | `[LOGpert]`, `[DTSpert]`, `[BHT]`, `[HT-FTpert]`, `[RTDpert]`, `[BLK]` |
-| −0.5 | `[CPD]`, `[XEN]`, `[GTM]`, `[BSR]`, `[Unspecified]`, `[Other]` |
+{{ criterion('borehole-t.single-points') }}
 
 **Surface plus one point**, decided by `C32` alone
 
-| Penalty | Methods |
-|---|---|
-| −0.3 | `[cBHT]`, `[RTDeq]`, `[cRTD]`, `[ODTT-PC]`, `[ODTT-TP]`, `[cHT-FT]`, `[EGRT]`, `[GRT]` |
-| −0.5 | `[BHT]`, `[HT-FTpert]`, `[RTDpert]` |
-| −0.6 | `[CPD]`, `[XEN]`, `[GTM]`, `[BSR]`, `[Unspecified]`, `[Other]` |
+{{ criterion('borehole-t.surface-plus-one-point') }}
 
 * **Empty.** When both methods are empty, or none of the methods fits a group of the case, the
   gradient takes the case's largest penalty with the mark: −0.5 for multiple single points and
@@ -106,15 +95,15 @@ measurements, the saturation and the pT conditions. Its lowest value is 0.1 and 
 ```{mermaid}
 flowchart TD
     conductivity["Borehole conductivity"] --> depth{"Interval top or bottom reported?"}
-    depth -->|"Neither"| gate["TC-score 0.1, with the mark, and nothing else is scored"]
-    depth -->|"Yes"| location["Location: actual 0, other −0.1, literature −0.2"]
-    depth -->|"Yes"| source["Source: +0.1 down to −0.2"]
+    depth -->|"Neither"| gate["Fixed TC-score, with the mark, and nothing else is scored"]
+    depth -->|"Yes"| location["Location"]
+    depth -->|"Yes"| source["Source"]
     depth -->|"Yes"| literature{"Location literature?"}
     literature -->|"Yes"| skip["Number is not scored"]
-    literature -->|"No"| number["Number: more than 15 0, otherwise −0.1"]
-    depth -->|"Yes"| saturation["Saturation: 0, −0.1 or −0.2"]
-    depth -->|"Yes"| pt["pT conditions that agree with the in-situ correction: 0, −0.1 or −0.2"]
-    location --> sum["TC-score = 1.0 + the penalties"]
+    literature -->|"No"| number["Number of measurements"]
+    depth -->|"Yes"| saturation["Saturation"]
+    depth -->|"Yes"| pt["pT conditions that agree with the in-situ correction"]
+    location --> sum["TC-score = the start value plus the penalties"]
     source --> sum
     skip --> sum
     number --> sum
@@ -135,12 +124,7 @@ TC-score of 0.1. The paper does not mention the mark. The scheme sets it: {{ dec
 
 Reads `C42` `tc_location`.
 
-| Location | Penalty |
-|---|---|
-| `[Actual heat-flow location]` | 0 |
-| `[Other location]` | −0.1 |
-| `[Literature or unspecified]` | −0.2 |
-| Empty, or any other value | −0.2, with the mark |
+{{ criterion('borehole-tc.location') }}
 
 Source: Fuchs et al. (2023), Table 3, "Localization". The mark for an unmatched value is the
 toolbox's: {{ decision(1) }}.
@@ -149,13 +133,7 @@ toolbox's: {{ decision(1) }}.
 
 Reads `C41` `tc_source`.
 
-| Source | Penalty |
-|---|---|
-| `[In-situ probe]`, `[Core-log integration]` | +0.1 |
-| `[Core samples]` | 0 |
-| `[Cutting samples]`, `[Outcrop samples]`, `[Well-log interpretation]` | −0.1 |
-| `[Mineral computation]`, `[Assumed from literature]`, `[Unspecified]`, `[Other]` | −0.2 |
-| Empty | −0.2, with the mark |
+{{ criterion('borehole-tc.source') }}
 
 `[Unspecified]` and `[Other]` take −0.2 without the mark. Source: Fuchs et al. (2023), Table 3,
 "Source type". The paper lists no unspecified and no other source, and the scheme gives them the
@@ -165,13 +143,7 @@ penalty of the poorest sources: {{ decision(1) }}. See {ref}`DEP-13 <dep-13>`.
 
 Reads `C47` `tc_number`, and `C42` for the exception.
 
-| Measurements | Penalty |
-|---|---|
-| More than 15 | 0 |
-| 15 or fewer | −0.1 |
-| Empty | −0.1, with the mark |
-
-**Not scored.** When `C42` is `[Literature or unspecified]` the criterion is left out.
+{{ criterion('borehole-tc.number') }}
 
 Source: Fuchs et al. (2023), Table 3, "Number of conductivities", with the condition that the
 location is not literature or unspecified. The paper gives −0.1 for 15 or fewer measurements
@@ -181,12 +153,7 @@ location is not literature or unspecified. The paper gives −0.1 for 15 or fewe
 
 Reads `C44` `tc_saturation`.
 
-| Saturation | Penalty |
-|---|---|
-| `[Saturated measured]`, `[Saturated measured in-situ]` | 0 |
-| `[Saturated calculated]`, `[Recovered]` | −0.1 |
-| `[Dry measured]`, `[Unspecified]`, `[Other]` | −0.2 |
-| Empty | −0.2, with the mark |
+{{ criterion('borehole-tc.saturation') }}
 
 `[Unspecified]` and `[Other]` take −0.2 without the mark. Source: Fuchs et al. (2023), Table 3,
 "Saturation". The paper's text and its table describe this criterion differently, and the scheme
@@ -197,12 +164,7 @@ follows the table (<https://github.com/ihfc-iugg/ghfdb/issues/39>). See {ref}`DE
 Reads `C45` `tc_pT_conditions`, and the child's in-situ correction `C11` `corr_IS_flag`. The
 conditions must agree with the correction.
 
-| `C45` is | `C11` is | Penalty |
-|---|---|---|
-| `[Actual in-situ (pT) conditions]`, `[Replicated in-situ (pT)]` or `[Corrected in-situ (pT)]` | `[Pressure and temperature considered]` | 0 |
-| `[Replicated in-situ (p)]`, `[Corrected in-situ (p)]`, `[Replicated in-situ (T)]` or `[Corrected in-situ (T)]` | `[Pressure considered]` or `[Temperature considered]` | −0.1 |
-| `[Recorded ambient pT conditions]`, `[Unrecorded ambient pT conditions]` or `[Unspecified]` | `[Not considered]` or `[Unspecified]` | −0.2 |
-| any other combination | | −0.2 |
+{{ criterion('borehole-tc.pT-agreement') }}
 
 * **Empty.** When `C45` is empty, or the child records no in-situ correction `C11`, the criterion
   takes −0.2 with the mark.

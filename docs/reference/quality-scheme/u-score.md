@@ -32,14 +32,12 @@ mW/m² is a coefficient of 30 % and scores `U4`.
 flowchart TD
     start["Heat-flow value and its uncertainty"] --> filled{"Both filled and not zero?"}
     filled -->|"No"| ux["Ux, not determined"]
-    filled -->|"Yes"| coefficient["Coefficient = uncertainty / value × 100"]
-    coefficient --> five{"Below 5 %?"}
-    five -->|"Yes"| u1["U1"]
-    five -->|"No"| fifteen{"15 % or less?"}
-    fifteen -->|"Yes"| u2["U2"]
-    fifteen -->|"No"| twentyfive{"25 % or less?"}
-    twentyfive -->|"Yes"| u3["U3"]
-    twentyfive -->|"No"| u4["U4"]
+    filled -->|"Yes"| coefficient["Coefficient of variation: the uncertainty as a percentage of the value"]
+    coefficient --> classes["The class of the coefficient"]
+    classes --> u1["U1"]
+    classes --> u2["U2"]
+    classes --> u3["U3"]
+    classes --> u4["U4"]
 ```
 
 Source: Fuchs et al. (2023), Section 3.1, Equation 2 and Table 1. The paper's table gives the

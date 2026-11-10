@@ -35,14 +35,12 @@ and 0.25. The rounding of the product is {{ decision(1) }}. See {ref}`DEP-4 <dep
 flowchart TD
     scores["T-score and TC-score of the child"] --> determined{"Both determined?"}
     determined -->|"No"| mx["Mx, not determined"]
-    determined -->|"Yes"| product["Product, rounded to three decimal places"]
-    product --> m1{"0.75 or more?"}
-    m1 -->|"Yes"| g1["M1"]
-    m1 -->|"No"| m2{"0.50 or more?"}
-    m2 -->|"Yes"| g2["M2"]
-    m2 -->|"No"| m3{"0.25 or more?"}
-    m3 -->|"Yes"| g3["M3"]
-    m3 -->|"No"| g4["M4"]
+    determined -->|"Yes"| product["Product, rounded"]
+    product --> classes["The class of the product"]
+    classes --> g1["M1"]
+    classes --> g2["M2"]
+    classes --> g3["M3"]
+    classes --> g4["M4"]
     g1 --> marked{"Either score carries the mark?"}
     g2 --> marked
     g3 --> marked

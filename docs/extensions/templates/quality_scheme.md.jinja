@@ -19,7 +19,7 @@
 
 {#- The table of one part's worked examples. -#}
 {% macro example_table(part) -%}
-| Example | What it shows | Inputs | Expected | Portal test |
+| Example | What it shows | Inputs | Expected | Tests |
 |---|---|---|---|---|
 {%- for example in examples_of(part) %}
 | {{ example.id | code }} | {{ example.title | cell }} | {{ inputs(example) }} | {{ expected(example) }} | {{ tests(example) }} |
@@ -33,5 +33,18 @@
 {%- for key, label in criteria.items() %}
 {%- set ids = covering(key) %}
 | {{ key | code }} | {{ label | cell }} | {{ ids | length }}: {{ ids[:3] | map("code") | join(", ") }}{{ ", …" if ids | length > 3 }} |
+{%- endfor -%}
+{% endmacro %}
+
+{#- The penalty table of one criterion, then the sentences that follow it. -#}
+{% macro penalty_table(table) -%}
+| {{ table.headers | join(" | ") }} |
+|{% for _ in table.headers %}---|{% endfor %}
+{%- for row in table.rows %}
+| {{ row | join(" | ") }} |
+{%- endfor %}
+{%- for note in table.notes %}
+
+{{ note }}
 {%- endfor -%}
 {% endmacro %}

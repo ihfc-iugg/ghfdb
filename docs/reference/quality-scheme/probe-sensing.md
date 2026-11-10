@@ -19,15 +19,15 @@ the water depth and the probe tilt. Its lowest value is 0.2 and its highest 1.2.
 
 ```{mermaid}
 flowchart TD
-    gradient["Probe gradient"] --> penetration["Penetration: more than 10 m +0.1, more than 3 m 0, more than 1 m −0.1, otherwise −0.2"]
-    gradient --> recordings["Recordings: more than 5 +0.1, 3 to 5 0, 2 −0.1, fewer −0.2"]
+    gradient["Probe gradient"] --> penetration["Penetration"]
+    gradient --> recordings["Number of recordings"]
     gradient --> corrected_water{"Bottom-water correction present and corrected?"}
-    corrected_water -->|"Yes"| water_waived["Water depth: 0"]
-    corrected_water -->|"No"| water["Water depth: more than 2500 m 0, more than 1500 m −0.1, otherwise −0.2"]
+    corrected_water -->|"Yes"| water_waived["Water depth: no penalty"]
+    corrected_water -->|"No"| water["Water depth"]
     gradient --> corrected_tilt{"Temperature correction tilt corrected?"}
-    corrected_tilt -->|"Yes"| tilt_waived["Tilt: 0"]
-    corrected_tilt -->|"No"| tilt["Tilt: 0 to 10° 0, up to 30° −0.1, more than 30° −0.2"]
-    penetration --> sum["T-score = 1.0 + the penalties"]
+    corrected_tilt -->|"Yes"| tilt_waived["Tilt: no penalty"]
+    corrected_tilt -->|"No"| tilt["Tilt"]
+    penetration --> sum["T-score = the start value plus the penalties"]
     recordings --> sum
     water --> sum
     water_waived --> sum
@@ -39,13 +39,7 @@ flowchart TD
 
 Reads `C6` `probe_penetration`, in metres.
 
-| Penetration | Penalty |
-|---|---|
-| More than 10 m | +0.1 |
-| More than 3 m, up to 10 m | 0 |
-| More than 1 m, up to 3 m | −0.1 |
-| 1 m or less | −0.2 |
-| Empty | −0.2, with the mark |
+{{ criterion('probe-t.penetration') }}
 
 The field takes a number only, so it has no unspecified value. Source: Fuchs et al. (2023),
 Table 2, "Probe penetration". The paper's ranges share their end points, and the scheme uses the
@@ -55,13 +49,7 @@ toolbox's edges: {{ decision(1) }}. See {ref}`DEP-7 <dep-7>`.
 
 Reads `C37` `T_number`.
 
-| Recordings | Penalty |
-|---|---|
-| More than 5 | +0.1 |
-| 3 to 5 | 0 |
-| 2 | −0.1 |
-| Fewer than 2 | −0.2 |
-| Empty | −0.2, with the mark |
+{{ criterion('probe-t.recordings') }}
 
 Source: Fuchs et al. (2023), Table 2, "Number of temperature points". Bin edges:
 {{ decision(1) }}.
@@ -70,12 +58,7 @@ Source: Fuchs et al. (2023), Table 2, "Number of temperature points". Bin edges:
 
 Reads `P6` `elevation`, in metres. The water depth is the elevation with its sign reversed.
 
-| Water depth | Penalty |
-|---|---|
-| More than 2500 m | 0 |
-| More than 1500 m, up to 2500 m | −0.1 |
-| 1500 m or less | −0.2 |
-| Elevation empty, zero or above sea level | −0.2, with the mark |
+{{ criterion('probe-t.water-depth') }}
 
 An elevation of zero or above has no water depth, so the criterion is treated as empty.
 
@@ -90,12 +73,7 @@ temperature flag. The treatment of an elevation at or above sea level is {{ deci
 
 Reads `C23` `probe_tilt`, in degrees.
 
-| Tilt | Penalty |
-|---|---|
-| 0° up to 10° | 0 |
-| More than 10°, up to 30° | −0.1 |
-| More than 30° | −0.2 |
-| Empty | −0.2, with the mark |
+{{ criterion('probe-t.tilt') }}
 
 A tilt below 0° fits none of the classes and takes −0.2 without the mark. The range of `C23`
 does not allow a negative tilt.
@@ -119,13 +97,13 @@ nothing from the child, so the child's own score and its TC-score are the same.
 
 ```{mermaid}
 flowchart TD
-    conductivity["Probe conductivity"] --> location["Location: actual 0, other −0.1, literature −0.2"]
-    conductivity --> saturation["Saturation, method, source and location together: +0.1 down to −0.2"]
+    conductivity["Probe conductivity"] --> location["Location"]
+    conductivity --> saturation["Saturation, method, source and location together"]
     conductivity --> literature{"Location literature?"}
     literature -->|"Yes"| skip["Number is not scored"]
-    literature -->|"No"| number["Number: more than 3 0, 2 or 3 −0.1, fewer −0.2"]
-    conductivity --> pt["pT conditions and method: +0.1 down to −0.2"]
-    location --> sum["TC-score = 1.0 + the penalties"]
+    literature -->|"No"| number["Number of measurements"]
+    conductivity --> pt["pT conditions and method"]
+    location --> sum["TC-score = the start value plus the penalties"]
     saturation --> sum
     skip --> sum
     number --> sum
@@ -136,13 +114,7 @@ flowchart TD
 
 Reads `C42` `tc_location`.
 
-| Location | Penalty |
-|---|---|
-| `[Actual heat-flow location]` | 0 |
-| `[Other location]` | −0.1 |
-| `[Literature or unspecified]` | −0.2 |
-| Empty | −0.2, with the mark |
-| Any other value | −0.2 |
+{{ criterion('probe-tc.location') }}
 
 Source: Fuchs et al. (2023), Table 2, "Localization".
 
@@ -152,19 +124,7 @@ Reads `C44` `tc_saturation`, with `C43` `tc_method`, `C41` `tc_source` and `C42`
 The criterion is a list of cases. Every case whose conditions all hold counts, and the poorest
 penalty wins.
 
-| Penalty | `C44` is | `C43` is | `C41` is | `C42` is |
-|---|---|---|---|---|
-| +0.1 | `[Saturated measured in-situ]` | `[Probe - pulse technique]` | `[In-situ probe]` | any |
-| 0 | `[Recovered]` or `[Saturated measured]` | `[Probe - pulse technique]` | `[In-situ probe]` | any |
-| 0 | `[Recovered]` or `[Saturated measured]` | a laboratory method | any | any |
-| −0.1 | `[Saturated calculated]` | a laboratory method | any | any |
-| −0.2 | `[Dry measured]`, `[Unspecified]` or `[Other]` | a laboratory method | any | any |
-| −0.1 | any | `[Estimation - from lithology and literature]`, `[Well-log - deterministic approach]` or `[Well-log - empirical equation]` | any | `[Literature or unspecified]` |
-| −0.2 | any | `[Estimation - from water content-porosity]`, `[Estimation - from mineral composition]`, `[Estimation - from chlorine content]` or `[Unspecified]` | any | any |
-
-A laboratory method is one of `[Lab - point source]`, `[Lab - line source - full space]`,
-`[Lab - line source - half space]`, `[Lab - plane source - full space]`,
-`[Lab - plane source - half space]` and `[Lab - other]`.
+{{ criterion('probe-tc.saturation') }}
 
 * **Empty.** When any of `C44`, `C43`, `C41` or `C42` is empty, the criterion takes −0.2 with the
   mark, because every case of the list names those four fields.
@@ -181,15 +141,7 @@ narrower than the cases above, and the scheme follows the toolbox: {{ decision(1
 
 Reads `C47` `tc_number`, and `C42` for the exception.
 
-| Measurements | Penalty |
-|---|---|
-| More than 3 | 0 |
-| 2 or 3 | −0.1 |
-| Fewer than 2 | −0.2 |
-| Empty | −0.2, with the mark |
-
-**Not scored.** When `C42` is `[Literature or unspecified]` the criterion is left out, so an
-empty `C47` carries no penalty and no mark.
+{{ criterion('probe-tc.number') }}
 
 Source: Fuchs et al. (2023), Table 2, "Number of conductivities", with the condition that the
 location is not literature or unspecified.
@@ -199,12 +151,7 @@ location is not literature or unspecified.
 Reads `C45` `tc_pT_conditions`, with `C43` `tc_method`. The criterion is a list of cases, scored
 like the saturation.
 
-| Penalty | `C45` is | `C43` is |
-|---|---|---|
-| +0.1 | `[Actual in-situ (pT) conditions]` | `[Probe - pulse technique]` |
-| 0 | `[Replicated in-situ (pT)]` or `[Corrected in-situ (pT)]` | any |
-| −0.1 | `[Replicated in-situ (p)]`, `[Corrected in-situ (p)]`, `[Replicated in-situ (T)]` or `[Corrected in-situ (T)]` | any |
-| −0.2 | `[Recorded ambient pT conditions]`, `[Unrecorded ambient pT conditions]` or `[Unspecified]` | any |
+{{ criterion('probe-tc.pT') }}
 
 * **Empty.** When `C45` or `C43` is empty, the criterion takes −0.2 with the mark.
 * **Unspecified.** `[Unspecified]` is a value and takes −0.2 without the mark.

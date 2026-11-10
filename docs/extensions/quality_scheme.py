@@ -3,6 +3,7 @@
 import json
 import re
 from collections.abc import Mapping
+from dataclasses import dataclass
 from functools import cache
 from importlib import resources
 from pathlib import Path
@@ -14,11 +15,24 @@ from sphinx.application import Sphinx
 
 from extensions.field_reference import FieldReference
 from ghfdb.fields import Vocabularies, load_schema
+from ghfdb.fields.cells import concept_terms
+from ghfdb.qc.criteria import CRITERIA
+from ghfdb.qc.penalties import (
+    Bands,
+    Cases,
+    Classes,
+    Criterion,
+    Outcome,
+    Table,
+)
 
 TEMPLATES = Path(__file__).parent / "templates"
 PAGES = "reference/quality-scheme/"
 EXAMPLES = resources.files("ghfdb.qc") / "worked_examples.json"
 PORTAL_TESTS = "https://github.com/ihfc-iugg/ghfdb-portal/blob/main/"
+# The tests of this package, which are the only ones under this directory.
+PACKAGE_TESTS = "https://github.com/ihfc-iugg/ghfdb/blob/main/"
+PACKAGE_TEST_DIRECTORY = "tests/test_qc/"
 DECISIONS_URL = f"{PORTAL_TESTS}specs/007-quality-scores/decisions.md"
 # The headings of the GHFDB portal's quality-score decisions that the pages cite, as
 # they read in the decisions file.
@@ -55,6 +69,245 @@ EXPECTED_LABELS = {
 OWN_SCORES = ("T", "TC")
 NOT_DETERMINED = "not determined"
 MISSING = "—"
+MINUS = "−"
+ANY = "any"
+EMPTY = "Empty"
+OTHER_VALUE = "Any other value"
+
+
+@dataclass(frozen=True)
+class TableText:
+    """What a page writes for the table of one criterion.
+
+    Attributes:
+        headers: The heading of each column, the penalty last.
+        rows: The cells of each row, written for Markdown.
+        notes: Sentences that follow the table.
+    """
+
+    headers: list[str]
+    rows: list[list[str]]
+    notes: list[str]
+
+
+class CriterionTable:
+    """Write the penalty table of a criterion from its declaration.
+
+    Args:
+        schema: The field schema, which gives each field's title and unit.
+        vocabularies: Where the allowed values come from, to write each concept as the
+            term its field accepts.
+    """
+
+    def __init__(self, schema: Schema, vocabularies: Vocabularies) -> None:
+        self.schema = schema
+        self.vocabularies = vocabularies
+        self.terms: dict[str, dict[str, str]] = {}
+
+    def term(self, field: str, uri: str) -> str:
+        """Write a concept as the term its field accepts.
+
+        Args:
+            field: The field's code.
+            uri: The concept's URI.
+
+        Returns:
+            The term, as an inline code span.
+        """
+        if field not in self.terms:
+            self.terms[field] = concept_terms(self.schema, field, self.vocabularies)
+        return FieldReference.code(self.terms[field][uri])
+
+    def title(self, field: str) -> str:
+        """Name a field by its title, escaped for a Markdown table.
+
+        Args:
+            field: The field's code.
+
+        Returns:
+            The field's title.
+        """
+        return FieldReference.cell(str(self.schema.get_field(field).title))
+
+    @staticmethod
+    def penalty(value: float) -> str:
+        """Write a penalty with its sign, as the pages write one.
+
+        Args:
+            value: The penalty.
+
+        Returns:
+            ``+0.1``, ``0`` or ``−0.1``.
+        """
+        if value == 0:
+            return "0"
+        return f"{value:+.1f}".replace("-", MINUS)
+
+    @classmethod
+    def outcome(cls, outcome: Outcome) -> str:
+        """Write what an empty or unmatched value scores.
+
+        Args:
+            outcome: The penalty and whether the value sets the mark.
+
+        Returns:
+            The penalty, with ``, with the mark`` when it sets it.
+        """
+        written = cls.penalty(outcome.penalty)
+        return f"{written}, with the mark" if outcome.marked else written
+
+    def terms_of(self, field: str, uris: tuple[str, ...]) -> str:
+        """Write concepts as the terms their field accepts.
+
+        Args:
+            field: The field's code.
+            uris: The concepts' URIs.
+
+        Returns:
+            The terms, separated by commas.
+        """
+        return ", ".join(self.term(field, uri) for uri in uris)
+
+    @staticmethod
+    def edge(number: float) -> str:
+        """Write the edge of a band without a needless decimal point."""
+        return f"{number:g}"
+
+    def band_label(self, bands: Bands, index: int) -> str:
+        """Say which numbers a band holds.
+
+        Args:
+            bands: The table.
+            index: The position of the band, the highest first.
+
+        Returns:
+            For example ``More than 3, up to 10``.
+        """
+        band = bands.bands[index]
+        higher = bands.bands[index - 1] if index else None
+        lower = None
+        if band.above is not None:
+            lower = (
+                f"{self.edge(band.above)} or more"
+                if band.inclusive
+                else f"More than {self.edge(band.above)}"
+            )
+        upper = None
+        if higher is not None and higher.above is not None:
+            upper = (
+                f"below {self.edge(higher.above)}"
+                if higher.inclusive
+                else f"up to {self.edge(higher.above)}"
+            )
+        if lower and upper:
+            return f"{lower}, {upper}"
+        if lower:
+            return lower
+        if upper and higher is not None and higher.above is not None:
+            edge = self.edge(higher.above)
+            return f"Below {edge}" if higher.inclusive else f"{edge} or less"
+        return "Any number"
+
+    def bands(self, title: str, table: Bands) -> TableText:
+        """Write a table of bands.
+
+        Args:
+            title: What the criterion scores, as the heading of the first column.
+            table: A number against edges.
+
+        Returns:
+            The table, with the field the criterion is left out for as a note.
+        """
+        unit = self.schema.get_field(table.field).custom.get("unit")
+        heading = FieldReference.cell(title) + (f" ({unit})" if unit else "")
+        rows = [
+            [self.band_label(table, index), self.penalty(band.value)]
+            for index, band in enumerate(table.bands)
+        ]
+        rows.append([EMPTY, self.outcome(table.empty)])
+        if table.bands[-1].above is not None:
+            rows.append([OTHER_VALUE, self.outcome(table.unmatched)])
+        notes = [
+            f"Left out when {self.title(field)} is {self.terms_of(field, concepts)}: "
+            "the criterion then adds no penalty and no mark."
+            for field, concepts in (table.left_out_when or {}).items()
+        ]
+        return TableText([heading, "Penalty"], rows, notes)
+
+    def classes(self, table: Classes) -> TableText:
+        """Write a table of groups of concepts.
+
+        Args:
+            table: A term against groups.
+
+        Returns:
+            The table.
+        """
+        field = table.fields[0]
+        heading = " or ".join(self.title(code) for code in table.fields)
+        rows = [
+            [self.terms_of(field, group.concepts), self.penalty(group.penalty)]
+            for group in table.groups
+        ]
+        rows.append([EMPTY, self.outcome(table.empty)])
+        rows.append([OTHER_VALUE, self.outcome(table.unmatched)])
+        notes = (
+            [f"An empty value is left out when another of {heading} is filled."]
+            if table.skip_empty
+            else []
+        )
+        return TableText([heading, "Penalty"], rows, notes)
+
+    def cases(self, table: Cases) -> TableText:
+        """Write a table of rows of conditions.
+
+        Args:
+            table: Rows of conditions on fields.
+
+        Returns:
+            The table, a column for each field its rows name.
+        """
+        fields = table.reads()
+        rows = []
+        for case in table.cases:
+            cells = []
+            for field in fields:
+                if field in case.conditions:
+                    cells.append(self.terms_of(field, tuple(case.conditions[field])))
+                elif field in (case.every or {}):
+                    every = self.terms_of(field, tuple((case.every or {})[field]))
+                    cells.append(f"every value is {every}")
+                else:
+                    cells.append(ANY)
+            rows.append([*cells, self.penalty(case.penalty)])
+        blank = [MISSING] * (len(fields) - 1)
+        rows.append(
+            ["A field of the table is empty", *blank, self.outcome(table.empty)]
+        )
+        rows.append(["No row holds", *blank, self.outcome(table.unmatched)])
+        headers = [self.title(field) for field in fields]
+        return TableText([*headers, "Penalty"], rows, [])
+
+    def render(self, criterion: Criterion[Table]) -> TableText:
+        """Write the table of a criterion by the kind of table it declares.
+
+        Args:
+            criterion: The criterion.
+
+        Returns:
+            The table.
+
+        Raises:
+            TypeError: The criterion declares a kind of table this class cannot write.
+        """
+        match criterion.table:
+            case Bands() as bands:
+                return self.bands(criterion.title, bands)
+            case Classes() as classes:
+                return self.classes(classes)
+            case Cases() as cases:
+                return self.cases(cases)
+        raise TypeError(f"{criterion.identifier}: no table to write")
 
 
 class SchemeReference:
@@ -66,12 +319,23 @@ class SchemeReference:
     Args:
         schema: The field schema the examples' field codes belong to.
         examples: The parsed worked examples file. Without it, the packaged file.
+        vocabularies: Where the allowed values come from, for the terms of the criteria
+            tables. Without it, the cache directory.
+        criteria: The declared criteria by identifier. Without it, those of the scheme.
     """
 
     def __init__(
-        self, schema: Schema, examples: Mapping[str, Any] | None = None
+        self,
+        schema: Schema,
+        examples: Mapping[str, Any] | None = None,
+        vocabularies: Vocabularies | None = None,
+        criteria: Mapping[str, Criterion[Any]] | None = None,
     ) -> None:
         self.schema = schema
+        self.declared = CRITERIA if criteria is None else criteria
+        self.tables = CriterionTable(
+            schema, Vocabularies() if vocabularies is None else vocabularies
+        )
         self.data: Mapping[str, Any] = (
             json.loads(EXAMPLES.read_text(encoding="utf-8"))
             if examples is None
@@ -101,6 +365,7 @@ class SchemeReference:
         )
         self.environment.globals.update(
             decision=self.decision,
+            criterion=self.criterion,
             fields=self.fields,
             examples=self.examples,
             field_legend=self.field_legend,
@@ -226,18 +491,22 @@ class SchemeReference:
 
     @staticmethod
     def tests(example: Mapping[str, Any]) -> str:
-        """Link the GHFDB portal tests that assert an example.
+        """Link the tests that assert an example.
 
         Args:
             example: One example of the file.
 
         Returns:
-            One link per test to the test's file, each reading as the test's name.
+            One link per test to the test's file, each reading as the test's name. A
+            test under ``tests/test_qc/`` is this package's, any other the GHFDB
+            portal's.
         """
         links = []
         for test in example["portal_tests"]:
             path, _, name = test.partition("::")
-            links.append(f"[{FieldReference.code(name)}]({PORTAL_TESTS}{path})")
+            own = path.startswith(PACKAGE_TEST_DIRECTORY)
+            base = PACKAGE_TESTS if own else PORTAL_TESTS
+            links.append(f"[{FieldReference.code(name)}]({base}{path})")
         return " ".join(links)
 
     def fields(self, *codes: str) -> str:
@@ -259,6 +528,23 @@ class SchemeReference:
             A Markdown table in field-code order.
         """
         return str(self.macros.field_table(self.codes_used()))
+
+    def criterion(self, identifier: str) -> str:
+        """Write the penalty table of one criterion, from its declaration.
+
+        Args:
+            identifier: The criterion's identifier, such as ``probe-t.penetration``.
+
+        Returns:
+            A Markdown table with a row for each row of the declaration, then a row
+            for an empty value and one for a value that fits no row.
+
+        Raises:
+            KeyError: No criterion is declared with the identifier.
+        """
+        return str(
+            self.macros.penalty_table(self.tables.render(self.declared[identifier]))
+        )
 
     def examples(self, part: str) -> str:
         """Write the table of one part's worked examples.

@@ -132,49 +132,35 @@ module documentation below says how to add a rule of a new kind.
 The report the `ghfdb check` command writes is built by `ghfdb.qc.report.Report`, which takes
 the workbook's path, the problems, the number of children, the `Vocabularies` the check read and
 the scores `Dataset.scores` returned for the children, indexed by Excel row, and whose `write`
-method returns the report's path. The command, its report and each kind of
-problem are described in [Check a workbook](../user-guide/check.md).
+method returns the report's path. `SCORE_TABLE` lists the columns of its table of preview scores:
+each is a `ScoreColumn` of a heading, the column of the scores it shows and the page of the scheme
+reference that explains it, so the order of that list orders headings, cells and links together.
+The command, its report and each kind of problem are described in
+[Check a workbook](../user-guide/check.md).
 
 ## Quality scores
 
-Each criterion of the [quality scheme](../reference/quality-scheme/index.md) is declared once,
-as a `Criterion` in `ghfdb.qc.probe` or `ghfdb.qc.borehole`, with the identifier the worked
-examples use, a title, the paper's table and row it comes from, and a table that gives the
-penalties. There are three kinds of table in `ghfdb.qc.penalties`: `Bands` score a number
-against ordered edges, `Classes` score a term against groups of concepts, and `Cases` score
-several fields together by rows of conditions, the poorest row that holds counting. Every table
-scores all the children at once, keeps the poorest of a child's values, and lists its rows as data
-with `rows()`. `ghfdb.qc.criteria.CRITERIA` lists every criterion by its identifier. A change to
-one penalty, one group of concepts or one edge is a change to one declaration.
+`Dataset.scores` scores the children under the [quality scheme](../reference/quality-scheme/index.md)
+and returns one row for each, indexed like `data`.
 
-Concept URIs come from `ghfdb.qc.concepts`. The concepts the scoring names are collected from
-the declarations (`Scores.concepts`), and `ghfdb.qc.criteria.term_uris` resolves them to the term
-each field accepts in the vocabularies as published, raising `MissingSchemeError` naming the
-field and the concept when one is no longer published. `ghfdb.qc.inputs.Inputs` reads a scored
-field of a table of children the first time it is asked: numbers as numbers, terms as concept
-URIs, and a value that is neither as empty. A cell holding a Python list holds several values.
-A criterion gives a `Penalty`, the penalty and the mark of each child, and a T-score or TC-score
-is a `Score`.
+### The table of scores
 
-What a table cannot say is code. `ghfdb.qc.probe.ProbeRules` reads the water depth from the
-elevation and applies the two corrections that waive a criterion. `ghfdb.qc.borehole.BoreholeRules`
-chooses which of the three cases a gradient is and applies the interval depth gate.
-`ghfdb.qc.uncertainty.UScore` grades the uncertainty. `ghfdb.qc.scores.Scores` routes each child
-to its rules once, hands each set of rules the children it scores, writes the perturbation flags,
-grades the M-score and assembles the table of scores, whose columns are `SCORE_COLUMNS`. The term
-lookup and the number parser that `ghfdb.qc.check` uses are in `ghfdb.fields.cells`, and the scoring
-uses the same ones.
+The columns of the table are those of `ghfdb.qc.scores.SCORE_COLUMNS`:
 
-`Dataset.scores` scores the children and returns one row for each, indexed like `data`. The columns
-are `rules`, `U`, `T`, `TC`, `marked`, `M`, `flags`, `code`, `own_T`, `own_TC`, `own_T_marked` and
-`own_TC_marked`. The `code` is the U-score, the M-score and the flags joined by points, as in
-`U2.M1.SeXxV--`. A T-score or TC-score that is not determined is `<NA>` and never 0, and the grades
-are then `Ux` and `Mx`. `marked` says whether the M-score carries the missing-information mark. The
-`own` columns are the scores of the child's gradient and conductivity before its corrections apply.
-Given the problems `Dataset.check` found, a cell a problem names is scored as empty, so the child is
-scored as the report scores it; without them, a value is scored as the scheme's pages say.
-Like `Dataset.check`, it takes the `schema` to read the fields against, the packaged one when
-none is given.
+* `rules` names the set of rules that scored the child, `probe sensing` or `borehole and mine`,
+  and is `<NA>` when none did.
+* `U`, `T`, `TC` and `M` are the U-score, the T-score, the TC-score and the M-score. A T-score
+  or TC-score that is not determined is `<NA>` and never 0, and the grades are then `Ux` and `Mx`.
+* `marked` says whether the M-score carries the missing-information mark.
+* `flags` writes the seven perturbation flags, and `code` joins the U-score, the M-score and the
+  flags by points, as in `U2.M1.SeXxV--`.
+* The `own` columns are the scores of the child's own gradient and conductivity, before the
+  corrections of the child apply, with their marks in `own_T_marked` and `own_TC_marked`.
+
+Given the problems `Dataset.check` found, a cell a problem names is scored as empty, so the
+child is scored as the report scores it. Without them, a value is scored as the scheme's pages
+say. Like `Dataset.check`, `Dataset.scores` takes the `schema` to read the fields against, the
+packaged one when none is given.
 
 ```python
 from pathlib import Path
@@ -185,6 +171,73 @@ dataset = Dataset.from_workbook(Path("my-heat-flow-data.xlsx"))
 scores = dataset.scores(dataset.check())
 scores[["M", "code"]]
 ```
+
+### Criteria and tables
+
+Each criterion of the scheme is declared once, as a `Criterion` in `ghfdb.qc.probe` or
+`ghfdb.qc.borehole`. A `Criterion` holds the identifier the worked examples use, such as
+`probe-t.penetration`, a title, the paper's table and row it comes from, and the table that
+gives its penalties. `ghfdb.qc.criteria.CRITERIA` lists every criterion by its identifier, and
+the pages of the scheme render each criterion's penalty table from its declaration.
+
+There are three kinds of table in `ghfdb.qc.penalties`:
+
+* `Bands` score a number against ordered edges, each a `Band`.
+* `Classes` score a term against groups of concepts, each a `Group`.
+* `Cases` score several fields together by rows of conditions, each a `Case`, the poorest row
+  that holds counting.
+
+Every table scores all the children at once, keeps the poorest of a child's values, and lists
+its rows as data with `rows()`. A table gives an `Outcome`, such as `LARGEST`, to a value that
+has no penalty of its own. A criterion gives a `Penalty`, the penalty and the mark of each
+child, and a T-score or TC-score is a `Score`, rounded to `SCORE_DECIMALS` places.
+
+Concept URIs come from `ghfdb.qc.concepts`. `Scores.concepts` collects the concepts the
+declarations name, and `ghfdb.qc.criteria.term_uris` resolves them to the term each field
+accepts in the vocabularies as published, raising `MissingSchemeError` naming the field and the
+concept when one is no longer published. `ghfdb.qc.inputs.Inputs` reads a scored field of a table
+of children the first time it is asked: numbers as numbers, terms as concept URIs, and a value
+that is neither as empty. A cell holding a Python list holds several values. The term lookup
+and the number parser that `ghfdb.qc.check` uses are in `ghfdb.fields.cells`, and the scoring
+uses the same ones.
+
+### The rule classes
+
+What a table cannot say is code. `ghfdb.qc.probe.ProbeRules` reads the water depth from the
+elevation and applies the two corrections that waive a criterion.
+`ghfdb.qc.borehole.BoreholeRules` chooses which of the three cases a gradient is and applies the
+interval depth gate. `ghfdb.qc.uncertainty.UScore` grades the uncertainty.
+`ghfdb.qc.scores.Scores` routes each child to its rules once, hands each set of rules the
+children it scores, writes the perturbation flags, grades the M-score and assembles the table of
+scores.
+
+### Change or add a criterion
+
+To change one penalty, one group of concepts or one edge, edit that one declaration. The
+scheme's page shows the new value, and the worked example that scores it says whether the paper
+agrees.
+
+To add a criterion:
+
+1. Write its `Criterion` in `ghfdb.qc.probe` or `ghfdb.qc.borehole`, with an identifier of the
+   form `<rules>-<t or tc>.<name>` that is never reused, a title, the paper's table and row as
+   `source`, and a `Bands`, `Classes` or `Cases` table over the `Field` members it reads. Name a
+   concept by its constant in `ghfdb.qc.concepts`, adding the constant when it is new.
+2. Add it to that module's `T_CRITERIA` or `TC_CRITERIA`. The fields the rules read and the
+   concepts the scheme names are collected from those lists, so nothing else lists them. A
+   criterion of the probe T-score is also named in `ProbeRules.scores`, which decides which
+   corrections waive it.
+3. Add the criterion's identifier and a statement of it to `criteria` in
+   `ghfdb/qc/worked_examples.json`, and a worked example that scores it, naming the criterion in
+   its own `criteria`. A test fails while a declared criterion has no example, or an example
+   names one that is not declared.
+4. Show it on the page of the scheme that explains it, with the `criterion` call that the other
+   criteria use on that page.
+5. If a table cannot say part of it, put that part in the rule class and describe it on the
+   page in words.
+
+A condition on a whole set of rules, such as the gate that stops the scoring of every other
+criterion, is code in the rule class and is not a `Criterion`.
 
 ```{eval-rst}
 .. automodule:: ghfdb.qc.inputs

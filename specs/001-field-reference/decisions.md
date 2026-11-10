@@ -202,8 +202,8 @@ C50–C53 take −99,999.99 to 99,999.99.
 The template states no type. **Chosen:** Appendix A's, each mapped once: a float to `number` with
 its decimal places, an integer to `integer`, `Char (255)` to `string` of at most 255 characters, a
 `POSIX date (YYYY-MM)` to a `string` in that format, and the bit and boolean fields (P9, C9) to a
-`string` from their fixed list (D-5). C38 also accepts `[Unspecified]`, as Appendix A's range
-says.
+`string` from their fixed list (D-5). C38 also accepts `[unspecified]`, as Appendix A's range
+says, written in lower case as the template's choice list writes it.
 
 **ADR:** none — a reading of the sources or a local choice for this feature, which nothing else inherits
 

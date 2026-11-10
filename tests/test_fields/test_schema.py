@@ -474,7 +474,7 @@ def date_pattern() -> str:
 
 class TestDateOfAcquisitionFormat:
     @pytest.mark.parametrize(
-        "value", ["2005-01", "1998-12", "2005-01; 2007-12", "[Unspecified]"]
+        "value", ["2005-01", "1998-12", "2005-01; 2007-12", "[unspecified]"]
     )
     def test_a_month_a_range_of_months_or_unspecified_is_accepted(
         self, value: str

@@ -2403,7 +2403,7 @@
       ],
       "qualityRelevance": null,
       "constraints": {
-        "pattern": "^([0-9]{4}-(0[1-9]|1[0-2])(; [0-9]{4}-(0[1-9]|1[0-2]))?|\\[Unspecified\\])$"
+        "pattern": "^([0-9]{4}-(0[1-9]|1[0-2])(; [0-9]{4}-(0[1-9]|1[0-2]))?|\\[unspecified\\])$"
       },
       "vocabulary": null,
       "separator": null,

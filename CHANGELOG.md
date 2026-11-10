@@ -8,6 +8,11 @@ All notable changes to this project are recorded here. The format follows
 
 ### Scheme changes
 
+- The quality scheme now follows Fuchs et al. (2023) with its 2026 corrigendum (Fuchs et al.,
+  2026, Tectonophysics 934, 231226), and its reference pages cite the corrected Tables 1 to 3.
+  Penalties and classes that the corrected tables state are no longer listed as departures from
+  the paper, and the departures page lists only where the scheme still differs from the
+  corrected paper. The rules the corrigendum changed are the entries that follow.
 - A child whose exploration method sends it to the probe-sensing or the borehole and mine
   rules, and whose every other field those rules read is empty, now has no T-score and no
   TC-score, and its M-score is `Mx`. The same holds for the scores of its own measurements. This

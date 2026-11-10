@@ -21,9 +21,9 @@ of the table.
 | 7 | `R` | Heat refraction | {ref}`C19 <field-c19>` | `corr_HR_flag` |
 
 Source: Fuchs et al. (2023), Section 3.3 and Fig. 4. The paper's Table 5 writes heat refraction
-as `h/H` and swaps the fifth and sixth characters. Its text, its Fig. 4 and the toolbox write
-heat refraction as `R`, with surface-temperature variation fifth and convection sixth, and the
-scheme follows them: {{ decision(6) }}. See {ref}`DEP-2 <dep-2>`.
+as `h/H` and swaps the fifth and sixth characters. Its text and its Fig. 4 write heat
+refraction as `R`, with surface-temperature variation fifth and convection sixth, and the
+scheme follows them: see {ref}`DEP-2 <dep-2>` and {{ decision(6) }}.
 
 The in-situ correction {ref}`C11 <field-c11>` and the temperature correction
 {ref}`C12 <field-c12>` write no flag. They enter the T-score and the TC-score instead.

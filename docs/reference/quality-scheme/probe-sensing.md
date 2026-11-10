@@ -6,7 +6,9 @@ The probe-sensing rules score a child whose exploration method is one of the pro
 the thermal conductivity. Both start at 1.0 and each criterion adds a penalty, as
 [the overview](index.md) describes, including what an empty and an unspecified input do.
 
-Source for the whole page: Fuchs et al. (2023), Section 3.2.1 and Table 2.
+Source for the whole page: Fuchs et al. (2023), with its corrigendum (Fuchs et al., 2026,
+Tectonophysics 934, 231226, <https://doi.org/10.1016/j.tecto.2026.231226>), Section 3.2.1 and
+Table 2. Later sources cite the corrigendum's table as "corrected Table 2".
 
 ## T-score
 
@@ -41,9 +43,8 @@ Reads `C6` `probe_penetration`, in metres.
 
 {{ criterion('probe-t.penetration') }}
 
-The field takes a number only, so it has no unspecified value. Source: Fuchs et al. (2023),
-Table 2, "Probe penetration". The paper's ranges share their end points, and the scheme uses the
-toolbox's edges: {{ decision(1) }}. See {ref}`DEP-7 <dep-7>`.
+The field takes a number only, so it has no unspecified value. Source: corrected Table 2,
+"Probe penetration". The table's ranges give each edge to one row.
 
 ### Number of temperature recordings
 
@@ -51,8 +52,7 @@ Reads `C37` `T_number`.
 
 {{ criterion('probe-t.recordings') }}
 
-Source: Fuchs et al. (2023), Table 2, "Number of temperature points". Bin edges:
-{{ decision(1) }}.
+Source: corrected Table 2, "Number of temperature points".
 
 ### Water depth
 
@@ -60,14 +60,15 @@ Reads `P6` `elevation`, in metres. The water depth is the elevation with its sig
 
 {{ criterion('probe-t.water-depth') }}
 
-An elevation of zero or above has no water depth, so the criterion is treated as empty.
+An elevation of zero or above has no water depth, so the criterion is treated as empty: see
+{ref}`DEP-7 <dep-7>`.
 
 **Waived.** When `C17` `corr_SUR_flag` is `[Present and corrected]`, the criterion takes no
 penalty and no mark, even when the elevation is empty.
 
-Source: Fuchs et al. (2023), Table 2, "Water depth", where the correction is the bottom-water
-temperature flag. The treatment of an elevation at or above sea level is {{ decision(1) }}. See
-{ref}`DEP-7 <dep-7>`.
+Source: corrected Table 2, "Water depth", where the waiver is the bottom-water temperature flag
+`{corr_BWT_flag}`. The template has no field of that name, and the scheme reads `C17`: see
+{ref}`DEP-8 <dep-8>`.
 
 ### Tilt
 
@@ -75,15 +76,14 @@ Reads `C23` `probe_tilt`, in degrees.
 
 {{ criterion('probe-t.tilt') }}
 
-A tilt below 0° fits none of the classes and takes −0.2 without the mark. The range of `C23`
-does not allow a negative tilt.
+The range of `C23` does not allow a negative tilt.
 
 **Waived.** When `C12` `corr_T_flag` is `[Tilt corrected]`, the criterion takes no penalty and
-no mark, even when the tilt is empty. The paper conditions the tilt rule on the in-situ
-correction `C11`, and the scheme reads the temperature correction `C12`, whose vocabulary holds
-`[Tilt corrected]`: {{ decision(11) }}. See {ref}`DEP-8 <dep-8>`.
+no mark, even when the tilt is empty. The corrected table conditions the waiver on the in-situ
+correction `{corr_IS_flag}`, and the scheme reads the temperature correction `C12`, whose
+vocabulary holds `[Tilt corrected]`: see {ref}`DEP-8 <dep-8>` and {{ decision(11) }}.
 
-Source: Fuchs et al. (2023), Table 2, "Tilt".
+Source: corrected Table 2, "Tilt".
 
 ## TC-score
 
@@ -116,26 +116,34 @@ Reads `C42` `tc_location`.
 
 {{ criterion('probe-tc.location') }}
 
-Source: Fuchs et al. (2023), Table 2, "Localization".
+Source: corrected Table 2, "Localization".
 
 ### Saturation
 
 Reads `C44` `tc_saturation`, with `C43` `tc_method`, `C41` `tc_source` and `C42` `tc_location`.
-The criterion is a list of cases. Every case whose conditions all hold counts, and the poorest
+The criterion is a list of rows. Every row whose conditions all hold counts, and the poorest
 penalty wins.
 
 {{ criterion('probe-tc.saturation') }}
 
-* **Empty.** When any of `C44`, `C43`, `C41` or `C42` is empty, the criterion takes −0.2 with the
-  mark, because every case of the list names those four fields.
-* **Unspecified.** An unspecified saturation, source or location is a value. It takes part in
-  the cases above and, where it satisfies none, takes −0.2 without the mark.
-* **No case holds.** The criterion takes −0.2 without the mark. A conductivity measured by
-  `[Probe - continuous heating technique]` fits no case. It is under discussion (<https://github.com/ihfc-iugg/ghfdb/issues/42>).
+A laboratory method is one of the six `[Lab …]` methods. A row that asks for every value to be
+one holds only when every value of `C43` is a laboratory method, because the corrected table
+adds the condition "`{tc_method}` is all with `[Lab - ...]`" to the onshore laboratory rows. A
+child that lists a laboratory method beside another method is scored by the rows of the other
+method, and the laboratory method fits no row.
 
-Source: Fuchs et al. (2023), Table 2, "Source type and saturation". The paper's table is
-narrower than the cases above, and the scheme follows the toolbox: {{ decision(1) }}. See
-{ref}`DEP-9 <dep-9>`.
+* **Empty.** When any of `C44`, `C43`, `C41` or `C42` is empty, the criterion takes the empty
+  outcome of the table, because every row names those four fields.
+* **Unspecified.** An unspecified saturation, source or location is a value. It takes part in
+  the rows above and, where it satisfies none, takes the unmatched outcome, without the mark.
+* **No row holds.** A conductivity measured by `[Probe - continuous heating technique]` fits no
+  row. It is under discussion (<https://github.com/ihfc-iugg/ghfdb/issues/42>). The vocabulary
+  of `C43` has no `[Other]`, so the corrected table's row for it among the estimates has no
+  term to score.
+* **The offshore on-board rows.** The corrected table writes the method and source conditions
+  once, against the first of its two offshore on-board rows. The scheme applies them to both.
+
+Source: corrected Table 2, "Source type and saturation".
 
 ### Number of conductivity measurements
 
@@ -143,29 +151,30 @@ Reads `C47` `tc_number`, and `C42` for the exception.
 
 {{ criterion('probe-tc.number') }}
 
-Source: Fuchs et al. (2023), Table 2, "Number of conductivities", with the condition that the
-location is not literature or unspecified.
+Source: corrected Table 2, "Number of conductivities", with the condition that the location is
+not literature or unspecified.
 
 ### Pressure and temperature conditions
 
-Reads `C45` `tc_pT_conditions`, with `C43` `tc_method`. The criterion is a list of cases, scored
+Reads `C45` `tc_pT_conditions`, with `C43` `tc_method`. The criterion is a list of rows, scored
 like the saturation.
 
 {{ criterion('probe-tc.pT') }}
 
-* **Empty.** When `C45` or `C43` is empty, the criterion takes −0.2 with the mark.
-* **Unspecified.** `[Unspecified]` is a value and takes −0.2 without the mark.
-* **No case holds.** The criterion takes −0.2 without the mark. Actual in-situ conditions with
-  a method other than the pulse probe hold no case.
+* **Empty.** When `C45` or `C43` is empty, the criterion takes the empty outcome of the table.
+* **Unspecified.** `[Unspecified]` is a value, and takes the penalty of its row without the
+  mark.
+* **No row holds.** Actual in-situ conditions with a method other than the pulse probe hold no
+  row, and take the unmatched outcome.
 
-Source: Fuchs et al. (2023), Table 2, "pT conditions".
+Source: corrected Table 2, "pT conditions".
 
 ## Worked examples
 
 The [worked examples](worked-examples.md) give a gradient for every criterion of the T-score,
 including both waivers, and a conductivity for every criterion of the TC-score, including the
-literature exception, the empty inputs and an unspecified saturation. Whole children scored by
-these rules are the examples named `P1` to `P5`.
+literature exception, the empty inputs, an unspecified saturation and several conductivity
+methods. Whole children scored by these rules are the examples named `P1` to `P5`.
 
 ## Under discussion
 

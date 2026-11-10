@@ -1,12 +1,12 @@
 {
-  "scheme": "The GHFDB quality scheme, as the GHFDB portal applies it",
+  "scheme": "The GHFDB quality scheme, following Fuchs et al. (2023) with its 2026 corrigendum",
   "format": 1,
   "notes": [
     "inputs are keyed by field code. A field that is absent is empty. A list holds several values of a field.",
-    "expected holds only what the GHFDB portal's test asserts. T and TC are null when not determined, never 0.",
+    "expected holds only what the example asserts. T and TC are null when not determined, never 0.",
     "scoring is 'child' by default. 'measurement' means a gradient or conductivity scored on its own, before the child's correction rules.",
     "expected.measurement holds the scores of the child's gradient and conductivity before the child's correction rules.",
-    "portal_tests names the GHFDB portal tests that assert the example, as path::node, relative to the portal repository.",
+    "portal_tests names the tests that assert the example, as path::node: the GHFDB portal's, relative to the portal repository, or this package's, under tests/test_qc/.",
     "criteria names the criteria of the scheme the example exercises."
   ],
   "criteria": {

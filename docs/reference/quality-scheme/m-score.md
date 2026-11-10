@@ -23,13 +23,16 @@ decimal places.
 | 0.25 or more, below 0.50 | `M3` | Acceptable |
 | Below 0.25 | `M4` | Poor |
 
-A product exactly on a boundary takes the better class. The paper's figure gives the classes
-as ranges that share their end points, and the paper's own example places an exact 0.25 or 0.50
-in the poorer class. That is consistent with floating-point sums such as 1 − 0.1 − 0.2 − 0.2 =
-0.4999…, and not with an intended strict inequality: {{ decision(7) }}.
+A product exactly on a boundary takes the better class. The corrigendum states the thresholds
+as lower thresholds, at 0.75 for `M1`, 0.5 for `M2` and 0.25 for `M3`, and its Fig. 3 places the
+product of a T-score of 0.5 and a TC-score of 0.5 in `M3`.
 
-Source: Fuchs et al. (2023), Section 3.2 and Fig. 3, whose legend gives the boundaries 0.75, 0.50
-and 0.25. The rounding of the product is {{ decision(1) }}. See {ref}`DEP-4 <dep-4>`.
+Source: Fuchs et al. (2023), with its corrigendum (Fuchs et al., 2026, Tectonophysics 934,
+231226, <https://doi.org/10.1016/j.tecto.2026.231226>), Section 3.2 and Fig. 3, whose legend
+gives the thresholds. The paper does not say that the product is rounded. The scheme rounds it
+to three decimal places before it is classed, so that a sum of penalties such as
+1 − 0.1 − 0.2 − 0.2 = 0.4999… is not placed below the boundary by floating-point error: see
+{ref}`DEP-4 <dep-4>` and {{ decision(7) }}.
 
 ```{mermaid}
 flowchart TD
@@ -58,17 +61,25 @@ information were added. [The overview](index.md) lists what sets the mark.
 
 Source: Fuchs et al. (2023), Section 3.2, where the `x` marks incomplete data, and the note
 under Fig. 3. The paper sets the mark for empty and unspecified inputs, and the scheme sets it
-for empty inputs only: {{ decision(1) }}. See {ref}`DEP-5 <dep-5>`.
+for empty inputs only: see {ref}`DEP-5 <dep-5>`.
 
 ## Not determined
 
 The M-score is `Mx` when the T-score or the TC-score is not determined, whether or not the other
-carries the mark. That happens when the exploration method is `[Other]`, `[Unspecified]` or empty,
-which selects no rules, and when the GHFDB portal holds no gradient or no conductivity for the
-child. It is never written as `M4`.
+carries the mark. That happens in three cases:
 
-Source: Fuchs et al. (2023), Fig. 3, which has no class for a child that cannot be scored, and
-{{ decision(1) }} for routing. See {ref}`DEP-6 <dep-6>`.
+* The exploration method is `[Other]`, `[Unspecified]` or empty, which selects no rules.
+* The GHFDB portal holds no gradient or no conductivity for the child.
+* The exploration method selects a set of rules, and every field those rules read, other than
+  the exploration method, is empty.
+
+It is never written as `M4`.
+
+Source: for the last case, the sentence that the corrigendum adds at the end of Section 3.2: "If
+all metadata fields required for the scoring are missing, the M-score will appear as Mx." The
+scheme reads it as above: a child with nothing the rules could score has no T-score and no
+TC-score, and so no M-score, which is what `Mx` already means. The other two cases are
+{ref}`DEP-6 <dep-6>`, and the paper's Fig. 3 has no class for a child that cannot be scored.
 
 ## Worked examples
 

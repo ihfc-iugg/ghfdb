@@ -6,7 +6,9 @@ give a T-score for the temperature gradient and a TC-score for the thermal condu
 start at 1.0 and each criterion adds a penalty, as [the overview](index.md) describes, including
 what an empty and an unspecified input do.
 
-Source for the whole page: Fuchs et al. (2023), Section 3.2.2 and Table 3.
+Source for the whole page: Fuchs et al. (2023), with its corrigendum (Fuchs et al., 2026,
+Tectonophysics 934, 231226, <https://doi.org/10.1016/j.tecto.2026.231226>), Section 3.2.2 and
+Table 3. Later sources cite the corrigendum's table as "corrected Table 3".
 
 ## T-score
 
@@ -45,10 +47,11 @@ flowchart TD
 An empty `C37` is not more than 3, so a gradient with an empty number of recordings is never a
 continuous log, and the empty number sets no mark (<https://github.com/ihfc-iugg/ghfdb/issues/43>).
 
-Source: Fuchs et al. (2023), Table 3, "Source type and number of T points". The paper conditions
-the continuous log on more than three recordings and does not state a condition for the other
-cases. The condition on the methods and the rule that every other gradient is multiple single
-points are {{ decision(1) }}. See {ref}`DEP-12 <dep-12>`.
+Source: corrected Table 3, "Source type and number of T points". The table conditions the
+continuous log on more than three recordings (`{T_number} >3`) and the surface case on a top
+method of `[SUR]`. It states no condition for the multiple single points. The condition on the
+methods of a continuous log and the rule that every other gradient is multiple single points are
+{ref}`DEP-12 <dep-12>`.
 
 ### Penalties of each case
 
@@ -68,20 +71,20 @@ group, and the poorest matching group decides.
 {{ criterion('borehole-t.surface-plus-one-point') }}
 
 * **Empty.** When both methods are empty, or none of the methods fits a group of the case, the
-  gradient takes the case's largest penalty with the mark: −0.5 for multiple single points and
-  −0.6 for surface plus one point.
+  gradient takes the empty outcome of the table of its case: the case's largest penalty, with
+  the mark.
 * **Unspecified.** `[Unspecified]` and `[Other]` are values. They are scored as estimates,
-  without the mark. See {ref}`DEP-12 <dep-12>`.
+  without the mark, as the corrected table lists `[unspecified]` and
+  `[other (specify in comments)]` among the estimated methods.
 * **A method that fits no group.** A method listed in none of the groups of its case takes the
-  case's largest penalty with the mark. `[DTSeq]` is listed only for the continuous log, so with
-  three recordings or fewer it fits no group of multiple single points. `[DST]` and `[cDST]` are
-  in the vocabulary and in none of the groups, which is under discussion (<https://github.com/ihfc-iugg/ghfdb/issues/38>). Source:
-  {{ decision(16) }}.
-* **Spellings.** The toolbox's lists spell three methods in ways the vocabulary does not. They
-  are read as the methods they name, `[HT-FTeq]` and `[HT-FTpert]`: {{ decision(15) }}.
+  case's largest penalty with the mark: see {ref}`DEP-14 <dep-14>`. `[DTSeq]` and `[cDTS]` are
+  listed only for the continuous log, so with three recordings or fewer they fit no group of
+  multiple single points. `[DST]` is in the vocabulary and in none of the groups, which is
+  under discussion (<https://github.com/ihfc-iugg/ghfdb/issues/38>). `[cDST]` is one of the
+  equilibrium or corrected methods of the surface plus one point case.
 
-Sources: Fuchs et al. (2023), Table 3. The groups of methods are the toolbox's, which name more
-methods than the paper: {{ decision(1) }}. See {ref}`DEP-13 <dep-13>`.
+Source: corrected Table 3. The groups of methods are the table's, written as the vocabulary
+writes each method.
 
 ## TC-score
 
@@ -113,12 +116,11 @@ flowchart TD
 
 ### Interval depth gate
 
-Reads `C4` `q_top` and `C5` `q_bottom`. When both are empty, the TC-score is 0.1 with the mark
-and no other criterion is scored. When either is filled, the scoring goes on.
+Reads `C4` `q_top` and `C5` `q_bottom`. When both are empty, the TC-score is the fixed value 0.1
+with the mark and no other criterion is scored. When either is filled, the scoring goes on.
 
-Source: Fuchs et al. (2023), Table 3, "Localization": no interval depth ends the scoring with a
-TC-score of 0.1. The paper does not mention the mark. The scheme sets it: {{ decision(1) }}. See
-{ref}`DEP-14 <dep-14>`.
+Source: corrected Table 3, "Localization": no interval depth ends the scoring with a TC-score of
+0.1. The table does not mention the mark. The scheme sets it: see {ref}`DEP-14 <dep-14>`.
 
 ### Location
 
@@ -126,8 +128,8 @@ Reads `C42` `tc_location`.
 
 {{ criterion('borehole-tc.location') }}
 
-Source: Fuchs et al. (2023), Table 3, "Localization". The mark for an unmatched value is the
-toolbox's: {{ decision(1) }}.
+Source: corrected Table 3, "Localization". A location that fits none of the three carries the
+mark: see {ref}`DEP-14 <dep-14>`.
 
 ### Source
 
@@ -135,9 +137,9 @@ Reads `C41` `tc_source`.
 
 {{ criterion('borehole-tc.source') }}
 
-`[Unspecified]` and `[Other]` take −0.2 without the mark. Source: Fuchs et al. (2023), Table 3,
-"Source type". The paper lists no unspecified and no other source, and the scheme gives them the
-penalty of the poorest sources: {{ decision(1) }}. See {ref}`DEP-13 <dep-13>`.
+`[Unspecified]` and `[Other]` take the penalty of the poorest sources without the mark. Source:
+corrected Table 3, "Source type", which lists `[Assumed from literature]`, `[unspecified]` and
+`[other (specify in comments)]` together.
 
 ### Number of conductivity measurements
 
@@ -145,9 +147,9 @@ Reads `C47` `tc_number`, and `C42` for the exception.
 
 {{ criterion('borehole-tc.number') }}
 
-Source: Fuchs et al. (2023), Table 3, "Number of conductivities", with the condition that the
-location is not literature or unspecified. The paper gives −0.1 for 15 or fewer measurements
-"or unspecified", and the scheme adds the mark for an empty number.
+Source: corrected Table 3, "Number of conductivities", with the condition that the location is
+not literature or unspecified. The table gives the penalty for 1 to 15 measurements "or
+unspecified", and the scheme adds the mark for an empty number: see {ref}`DEP-5 <dep-5>`.
 
 ### Saturation
 
@@ -155,9 +157,10 @@ Reads `C44` `tc_saturation`.
 
 {{ criterion('borehole-tc.saturation') }}
 
-`[Unspecified]` and `[Other]` take −0.2 without the mark. Source: Fuchs et al. (2023), Table 3,
-"Saturation". The paper's text and its table describe this criterion differently, and the scheme
-follows the table (<https://github.com/ihfc-iugg/ghfdb/issues/39>). See {ref}`DEP-13 <dep-13>`.
+`[Unspecified]` and `[Other]` take the penalty of the poorest saturation without the mark.
+Source: corrected Table 3, "Saturation". The text of Section 3.2.2.2 still describes one matrix
+of saturation and pT conditions. The corrected tables score them as two criteria, and the scheme
+follows the tables.
 
 ### Pressure and temperature conditions
 
@@ -166,19 +169,21 @@ conditions must agree with the correction.
 
 {{ criterion('borehole-tc.pT-agreement') }}
 
-* **Empty.** When `C45` is empty, or the child records no in-situ correction `C11`, the criterion
-  takes −0.2 with the mark.
-* **Unspecified.** `[Unspecified]` is a value and takes −0.2 without the mark.
+A measurement scored on its own, without a child, reads the pT conditions alone:
 
-The paper scores the pT conditions on their own, with 0 for in-situ conditions, −0.1 for p or T
-alone and −0.2 for ambient or unspecified conditions, and has no rule for the in-situ
-correction. The scheme requires the agreement, so a conductivity with corrected pT conditions
-scores 0 only when the child says pressure and temperature were considered: {{ decision(1) }},
-{{ decision(3) }} and {{ decision(13) }}. See {ref}`DEP-15 <dep-15>`. The in-situ correction is
-the one criterion of the borehole and mine rules that reads a field of the child other than the
-measurement.
+{{ criterion('borehole-tc.pT') }}
 
-Source: Fuchs et al. (2023), Table 3, "pT conditions".
+* **Empty.** When `C45` is empty, or the child records no in-situ correction `C11`, the
+  criterion takes the empty outcome of the table.
+* **Unspecified.** `[Unspecified]` is a value and takes the penalty of its row without the
+  mark.
+
+The in-situ correction is the one criterion of the borehole and mine rules that reads a field
+of the child other than the measurement. A conductivity with corrected pT conditions scores the
+best penalty only when the child says pressure and temperature were considered. The portal keeps
+a score for each measurement that reads the pT conditions alone: {{ decision(3) }}.
+
+Source: corrected Table 3, "pT conditions".
 
 ## Worked examples
 
@@ -189,8 +194,6 @@ examples named `X1` to `X5` and `B1` to `B9`.
 
 ## Under discussion
 
-* <https://github.com/ihfc-iugg/ghfdb/issues/38>: how the temperature methods `[DST]` and `[cDST]` score for a borehole gradient.
-* <https://github.com/ihfc-iugg/ghfdb/issues/39>: whether a borehole conductivity's saturation and pT conditions are scored
-  together or apart.
+* <https://github.com/ihfc-iugg/ghfdb/issues/38>: how the temperature method `[DST]` scores for a borehole gradient. `[cDST]` is settled by the corrected Table 3.
 * <https://github.com/ihfc-iugg/ghfdb/issues/43>: whether an empty number of temperature recordings sets the mark for a borehole
   gradient.

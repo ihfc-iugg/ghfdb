@@ -207,3 +207,5 @@ group leaves the tree green.
 - [x] T048 [US2] RW-012: every rule-level worked example states whether it is marked, worked out from
   the scheme pages, with a test that each states it.
 - [x] T049 [US2] Every new public name documented, as the documentation check requires.
+- [x] T050 [US2] Concepts named by their local name in their field's vocabulary, and `ghfdb/qc/concepts.py`
+  removed.

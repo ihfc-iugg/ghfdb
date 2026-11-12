@@ -49,16 +49,15 @@ from what the schema generates.
 | Module | Holds |
 |---|---|
 | `ghfdb/fields/names.py` | `Field`, generated |
-| `ghfdb/qc/concepts.py` | Every concept URI the cross-field rules and the scheme name, grouped by vocabulary, with the groups the scheme reads (laboratory methods, the borehole method groups, and so on) |
 | `ghfdb/qc/penalties.py` | `Penalty`, and the three kinds of table: `Bands` (a number against ordered edges), `Classes` (a term against groups of concepts) and `Cases` (rows of conditions on several fields, the poorest matching row winning). Each scores whole columns and lists its rows for the documentation |
 | `ghfdb/qc/criteria.py` | `Criterion`: an identifier (the worked examples' criterion identifier, such as `probe-t.penetration`), the fields it reads, its table, what an empty input scores, and its source. `CRITERIA` lists every one. The concepts the scheme reads are collected from the declarations, and resolved and checked against the vocabularies on load (FR-010) |
 | `ghfdb/qc/uncertainty.py` | The U-score |
-| `ghfdb/qc/probe.py` | The probe-sensing declarations, and the two waivers |
+| `ghfdb/qc/probe.py` | The probe-sensing declarations, the two waivers, and the groups of concepts that probe and borehole criteria share. A declaration names a concept by its local name in the vocabulary of the field it sits under, such as `"LOGeq"` under `T_method_top` |
 | `ghfdb/qc/borehole.py` | The borehole and mine declarations, the depth gate, the choice of case and the pT agreement with the in-situ correction |
 | `ghfdb/qc/scores.py` | `Scores`: routing once, the T-score and TC-score as totals of their criteria, the M-score, not determined, the perturbation flags, the quality code and the table of scores |
 
-The term lookup and the number parsing are shared with the check: `ghfdb.fields` resolves concept
-URIs to the terms a field accepts, and one function parses a number cell for both the check and
+The term lookup and the number parsing are shared with the check: `ghfdb.fields` resolves the local
+names of concepts to the terms a field accepts, and one function parses a number cell for both the check and
 the scoring. Constants such as the rounding and the output columns are defined once and imported
 where they are needed, including by the report and the documentation extension.
 

@@ -65,7 +65,7 @@ Avoid "determination", "entry" and "record" for a row. Say **child**.
 |---|---|
 | **Check** | Comparing a workbook with the field schema and the cross-field rules. It reports and never changes the workbook. |
 | **Dataset** | The children of a workbook held as one table (`ghfdb.Dataset`): one row per child, one column per field code, the index the Excel row. |
-| **Report** | The web page a check writes beside the workbook: its problems and what it was checked against, with no copy of the data. Written by the check command. |
+| **Report** | The web page a check writes beside the workbook: its problems, the preview scores of every child and what it was checked against, with no copy of the data. Written by the check command. |
 | **Problem** | One thing a check found wrong with one cell or row, with its Excel row number, field and kind. Not "error", "violation" or "flag". |
 | **Problem kinds** | **Missing** (a field mandatory in both domains is empty; a field mandatory in one domain only is reported as a rule problem), **wrong type** (text in a number field, a fraction in a whole-number field), **out of range**, **not in vocabulary**, **rule** (a cross-field rule is broken: the problem names the field to fill or change, the rule's identifier and the field that made it apply), and the column problem kinds **unknown column**, **no column** and **duplicate column**. |
 | **Column problem** | A problem with the workbook's layout rather than a cell, so it has no row: **unknown column**, **no column** (the workbook has no column for a field) or **duplicate column**. |
@@ -85,13 +85,13 @@ Avoid "determination", "entry" and "record" for a row. Say **child**.
 
 | Term | Meaning |
 |---|---|
-| **Quality scheme** | The rules that score a child: the U-score, the M-score and the perturbation flags, after Fuchs et al. (2023), with every departure from the paper documented. It is written down in the reference documentation. This package does not compute any score yet. |
+| **Quality scheme** | The rules that score a child: the U-score, the M-score and the perturbation flags, after Fuchs et al. (2023) and its 2026 corrigendum, with every departure from the corrected paper documented. It is written down in the reference documentation. This package computes the scores. |
 | **Scheme version** | A released, fixed version of the quality scheme, such as `2027.1`, with its worked examples. Separate from the package version (planned). |
-| **Worked example** | One child's, measurement's or parent's input values with its expected scores, kept in `ghfdb/qc/worked_examples.json` and shown in the documentation. The worked examples are part of the scheme and are the tests every implementation runs. No code runs them yet. |
+| **Worked example** | One child's, measurement's or parent's input values with its expected scores, kept in `ghfdb/qc/worked_examples.json` and shown in the documentation. The worked examples are part of the scheme and are the tests every implementation runs, and this package runs them. |
 | **U-score** | The grade of a child's uncertainty, `U1`–`U4`, from the coefficient of variation. `Ux` when it cannot be determined. |
 | **M-score** | The grade of a child's methodology, `M1`–`M4`, from the product of its T-score and TC-score. `Mx` when it cannot be determined. |
 | **T-score**, **TC-score** | The numbers the M-score is made from: how well the temperature gradient and the thermal conductivity were determined. Each starts at 1.0 and takes a penalty per criterion. |
-| **Rules** (probe sensing, borehole and mine) | The two sets of criteria for the T-score and TC-score. A child is scored by one of them, chosen by its site's exploration method. |
+| **Domain scoring** (probe sensing, borehole and mine) | The two sets of criteria for the T-score and TC-score. A child is scored by one of them, chosen by its site's exploration method, and the `rules` column of the scores names it. Not a cross-field rule. |
 | **Missing-information mark** | The `x` after an M-score. Set when an input the scheme needed was empty, in which case that criterion took its largest penalty, and in the few named cases the scheme lists. An input recorded as unspecified takes the same penalty without the mark. Not to be confused with `Mx`. |
 | **Not determined** | No score could be made: `Ux`, `Mx`, or a T-score or TC-score left empty. Never written as 0. |
 | **Perturbation flags** | Seven characters recording each disturbing effect's state, in the order `S E T P V C R`. Not "P-score". |

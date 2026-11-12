@@ -5,9 +5,13 @@ import pytest
 from extensions.field_reference import FieldReference
 from extensions.rule_reference import RuleReference
 from frictionless import Schema
+from rdflib import URIRef
 
-from ghfdb.fields import Vocabularies, allowed_values
-from ghfdb.qc.rules import BOREHOLE, PROBE_SENSING, RULES, Rule
+from ghfdb.fields.schema import FieldConcepts
+from ghfdb.qc.engine.rule_kinds import Rule
+from ghfdb.qc.rules import RULES
+from ghfdb.qc.scheme.domains import BOREHOLE, PROBE_SENSING
+from ghfdb.vocabularies import Vocabularies
 
 MISSING = "—"
 RELATED_FIELDS = {
@@ -50,10 +54,9 @@ def rows_of(section: str) -> list[list[str]]:
 
 def terms_of(
     schema: Schema, vocabularies: Vocabularies, code: str
-) -> dict[str | None, str]:
-    """Map the concept URI of each allowed value of a field to its term."""
-    field = schema.get_field(code)
-    return {value.uri: value.term for value in allowed_values(field, vocabularies)}
+) -> dict[URIRef, str]:
+    """Map each allowed value of a field that has a concept to its term."""
+    return FieldConcepts.terms_of(schema.get_field(code), vocabularies)
 
 
 class TestRuleEntries:
@@ -107,9 +110,7 @@ class TestRuleEntries:
             section = section_of(reference.entries(), rule)
 
             assert (
-                "```{mermaid}\n"
-                + rule.diagram(schema, reference.concept_terms)
-                + "\n```"
+                "```{mermaid}\n" + rule.diagram(schema, reference.concepts) + "\n```"
                 in section
             )
 
@@ -177,8 +178,9 @@ class TestDomainTable:
         grouped: dict[str, set[str]] = {}
         for method, domain in rows:
             grouped.setdefault(domain, set()).add(method)
-        borehole = {f"`{terms[uri]}`" for uri in BOREHOLE.concepts}
-        probing = {f"`{terms[uri]}`" for uri in PROBE_SENSING.concepts}
+        methods = reference.concepts[BOREHOLE.field]
+        borehole = {f"`{term}`" for term in methods.terms_for(BOREHOLE.concepts)}
+        probing = {f"`{term}`" for term in methods.terms_for(PROBE_SENSING.concepts)}
         assert len(borehole) == 5
         assert len(probing) == 3
         assert sorted(map(frozenset, grouped.values()), key=len) == sorted(

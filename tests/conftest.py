@@ -1,16 +1,27 @@
+import json
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from functools import cache
 from html.parser import HTMLParser
+from importlib import resources
 from pathlib import Path
 from typing import Any
 
+import pandas
 import pytest
 import responses
 import xlsxwriter
 from frictionless import Field, Schema
 from openpyxl import load_workbook
+from rdflib import URIRef
 
-from ghfdb.fields import Vocabularies, caching_session, load_schema
+from ghfdb.fields import load_schema
+from ghfdb.fields.schema import FieldConcepts
+from ghfdb.qc.scores import Scores
 from ghfdb.template import FIRST_DATA_ROW, ROW_LABELS, UploadTemplate
+from ghfdb.vocabularies import Vocabularies, caching_session
+
+Example = Mapping[str, Any]
+ScoredConcepts = dict[str, FieldConcepts]
 
 
 class TableReader(HTMLParser):
@@ -53,6 +64,55 @@ def read_table(path: Path, table_id: str) -> list[list[str]]:
     reader = TableReader(table_id)
     reader.feed(path.read_text(encoding="utf-8"))
     return reader.rows
+
+
+class HeadingReader(HTMLParser):
+    """Collect the column headings of a table, with the address each one links to."""
+
+    def __init__(self, table_id: str) -> None:
+        super().__init__()
+        self.table_id = table_id
+        self.headings: list[tuple[str, str | None]] = []
+        self.inside = False
+        self.in_head = False
+        self.in_heading = False
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "table" and dict(attrs).get("id") == self.table_id:
+            self.inside = True
+        elif self.inside and tag == "thead":
+            self.in_head = True
+        elif self.inside and self.in_head and tag == "th":
+            self.headings.append(("", None))
+            self.in_heading = True
+        elif self.in_heading and tag == "a":
+            self.headings[-1] = (self.headings[-1][0], dict(attrs).get("href"))
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "table":
+            self.inside = False
+        elif tag == "thead":
+            self.in_head = False
+        elif tag == "th":
+            self.in_heading = False
+
+    def handle_data(self, data: str) -> None:
+        if self.in_heading:
+            text, link = self.headings[-1]
+            self.headings[-1] = (text + data, link)
+
+
+def read_headings(path: Path, table_id: str) -> list[tuple[str, str | None]]:
+    """Read the column headings of a table, each with the link it carries or None."""
+    reader = HeadingReader(table_id)
+    reader.feed(path.read_text(encoding="utf-8"))
+    return reader.headings
+
+
+def read_scores(path: Path) -> list[dict[str, str]]:
+    """Read the Preview scores of a report: each row as its cells by heading."""
+    headings = [text for text, _ in read_headings(path, "scores")]
+    return [dict(zip(headings, row, strict=True)) for row in read_table(path, "scores")]
 
 
 def read_problems(path: Path) -> list[tuple[Any, ...]]:
@@ -112,6 +172,49 @@ def schema(published_vocabularies: Vocabularies) -> Schema:
     return load_schema(vocabularies=published_vocabularies)
 
 
+@pytest.fixture(scope="session")
+def scored_concepts(
+    schema: Schema, published_vocabularies: Vocabularies
+) -> ScoredConcepts:
+    """The concepts the scoring reads, resolved for their fields, by field code."""
+    return FieldConcepts.resolve(schema, Scores.concepts(), published_vocabularies)
+
+
+@cache
+def worked_document() -> Mapping[str, Any]:
+    """Read the file of worked examples the package ships."""
+    text = (resources.files("ghfdb.qc") / "worked_examples.json").read_text("utf-8")
+    document: Mapping[str, Any] = json.loads(text)
+    return document
+
+
+def examples_of(*parts: str) -> list[Example]:
+    """The worked examples of the given parts, or every example when none is given."""
+    examples: list[Example] = worked_document()["examples"]
+    return [e for e in examples if not parts or e["part"] in parts]
+
+
+def field_concepts(terms: Mapping[str, str]) -> FieldConcepts:
+    """Build the concepts of a made-up field from the concept of each of its terms."""
+    return FieldConcepts({URIRef(concept): term for term, concept in terms.items()}, {})
+
+
+def one_child(inputs: Mapping[str, Any]) -> pandas.DataFrame:
+    """Build a dataset of one child from an example: numbers as text, lists kept."""
+    cells = {
+        code: [value if isinstance(value, list) else str(value)]
+        for code, value in inputs.items()
+    }
+    return pandas.DataFrame(cells, index=pandas.Index([9], name="row"), dtype=object)
+
+
+def column_children(**columns: list[Any]) -> pandas.DataFrame:
+    """Build children from Excel row 9: one list of cells for each field code."""
+    rows = len(next(iter(columns.values())))
+    index = pandas.Index(range(9, 9 + rows), name="row")
+    return pandas.DataFrame(columns, index=index, dtype=object)
+
+
 @pytest.fixture
 def vocabularies_cached(
     monkeypatch: pytest.MonkeyPatch, cache_directory: Path, schema: Schema
@@ -122,7 +225,7 @@ def vocabularies_cached(
     afterwards.
     """
     monkeypatch.setattr(
-        "ghfdb.fields.vocabularies.user_cache_dir", lambda _: str(cache_directory)
+        "ghfdb.vocabularies.user_cache_dir", lambda _: str(cache_directory)
     )
     return cache_directory
 

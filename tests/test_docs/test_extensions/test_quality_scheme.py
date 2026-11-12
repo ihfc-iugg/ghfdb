@@ -4,10 +4,23 @@ from typing import Any
 
 import pytest
 from extensions.field_reference import FieldReference
-from extensions.quality_scheme import SchemeReference
+from extensions.quality_scheme import SchemeReference, ScoreRange
 from frictionless import Schema
 
+from ghfdb.fields import Field
+from ghfdb.qc.engine.tables import (
+    Band,
+    Bands,
+    Case,
+    Cases,
+    Classes,
+    Criterion,
+    Group,
+)
+from ghfdb.vocabularies import Vocabularies, concepts
+
 NOT_DETERMINED = "not determined"
+LITERATURE = concepts.tc_location.literature
 
 
 def rows_of(markdown: str) -> list[list[str]]:
@@ -165,6 +178,18 @@ class TestExampleTable:
             "(https://github.com/ihfc-iugg/ghfdb-portal/blob/main/tests/test_one.py)"
         )
 
+    def test_a_test_of_this_package_is_linked_to_its_file_in_this_repository(
+        self, schema: Schema
+    ) -> None:
+        own = "tests/test_qc/test_probe.py::TestProbeTCScore::test_worked_example[X]"
+        reference = reference_of(schema, example(portal_tests=[own]))
+
+        row = rows_of(reference.examples("probe-t"))[0]
+
+        assert row[4].endswith(
+            "(https://github.com/ihfc-iugg/ghfdb/blob/main/tests/test_qc/test_probe.py)"
+        )
+
 
 class TestCoverage:
     def test_each_criterion_lists_how_many_examples_exercise_it(
@@ -236,3 +261,232 @@ class TestWorkedExamplesPage:
 
         for part in parts:
             assert f'{{{{ examples("{part}") }}}}' in page, part
+
+
+def criterion_reference(
+    schema: Schema, vocabularies: Vocabularies, *criteria: Criterion[Any]
+) -> SchemeReference:
+    return SchemeReference(
+        schema,
+        {"criteria": {}, "examples": []},
+        vocabularies=vocabularies,
+        criteria={criterion.identifier: criterion for criterion in criteria},
+    )
+
+
+def location(penalty: float) -> Criterion[Classes]:
+    return Criterion(
+        "t.location",
+        "Location",
+        Classes(
+            (Field.tc_location,),
+            (
+                Group(0.0, (concepts.tc_location.actual,)),
+                Group(penalty, (concepts.tc_location.other, LITERATURE)),
+            ),
+            unmatched_marked=False,
+        ),
+        "Table 2, Localization",
+    )
+
+
+class TestScoreRange:
+    DEPTH = Criterion(
+        "t.depth",
+        "Depth",
+        Bands(Field.probe_penetration, (Band(0.1, 10), Band(0.0, 3), Band(-0.2))),
+        "Table 2, Probe penetration",
+    )
+    TILT = Criterion(
+        "t.tilt",
+        "Tilt",
+        Bands(Field.probe_tilt, (Band(-0.3, 30), Band(0.0, 0, inclusive=True))),
+        "Table 2, Tilt",
+    )
+
+    def test_criteria_that_add_up_add_their_best_and_their_largest_penalties(
+        self,
+    ) -> None:
+        added = ScoreRange((self.DEPTH, self.TILT), added_up=True)
+
+        assert (added.lowest(), added.highest()) == (0.5, 1.1)
+
+    def test_criteria_of_which_one_applies_take_the_best_and_the_largest_of_them(
+        self,
+    ) -> None:
+        chosen = ScoreRange((self.DEPTH, self.TILT), added_up=False)
+
+        assert (chosen.lowest(), chosen.highest()) == (0.7, 1.1)
+
+    def test_a_fixed_score_widens_the_range(self) -> None:
+        gated = ScoreRange((self.DEPTH,), added_up=True, fixed=(0.1,))
+
+        assert (gated.lowest(), gated.highest()) == (0.1, 1.1)
+
+    def test_the_range_of_each_part_follows_from_the_declared_tables(
+        self, schema: Schema
+    ) -> None:
+        reference = reference_of(schema)
+
+        ranges = {
+            part: (reference.lowest(part), reference.highest(part))
+            for part in ("probe-t", "probe-tc", "borehole-t", "borehole-tc")
+        }
+
+        assert ranges == {
+            "probe-t": ("0.2", "1.2"),
+            "probe-tc": ("0.2", "1.2"),
+            "borehole-t": ("0.4", "1.1"),
+            "borehole-tc": ("0.1", "1.1"),
+        }
+
+    def test_the_range_of_the_scheme_spans_every_part(self, schema: Schema) -> None:
+        reference = reference_of(schema)
+
+        assert (reference.lowest(), reference.highest()) == ("0.1", "1.2")
+
+
+class TestCriterionTable:
+    def test_a_table_of_bands_has_a_row_for_each_band_then_the_empty_outcome(
+        self, schema: Schema, published_vocabularies: Vocabularies
+    ) -> None:
+        depth = Criterion(
+            "t.depth",
+            "Depth",
+            Bands(Field.probe_penetration, (Band(0.1, 10), Band(0.0, 3), Band(-0.2))),
+            "Table 2, Probe penetration",
+        )
+        reference = criterion_reference(schema, published_vocabularies, depth)
+
+        rows = rows_of(reference.criterion("t.depth"))
+
+        assert [row[-1] for row in rows] == ["+0.1", "0", "−0.2", "−0.2, with the mark"]
+
+    def test_a_band_with_an_edge_that_belongs_to_it_is_not_a_catch_all(
+        self, schema: Schema, published_vocabularies: Vocabularies
+    ) -> None:
+        tilt = Criterion(
+            "t.tilt",
+            "Tilt",
+            Bands(Field.probe_tilt, (Band(-0.2, 30), Band(0.0, 0, inclusive=True))),
+            "Table 2, Tilt",
+        )
+        reference = criterion_reference(schema, published_vocabularies, tilt)
+
+        rows = rows_of(reference.criterion("t.tilt"))
+
+        assert [row[-1] for row in rows] == [
+            "−0.2",
+            "0",
+            "−0.2, with the mark",
+            "−0.2",
+        ]
+
+    def test_a_table_of_classes_lists_the_terms_of_each_group_as_the_field_accepts_them(
+        self, schema: Schema, published_vocabularies: Vocabularies
+    ) -> None:
+        reference = criterion_reference(schema, published_vocabularies, location(-0.1))
+
+        rows = rows_of(reference.criterion("t.location"))
+
+        assert rows[0] == ["`[Actual heat-flow location]`", "0"]
+        assert rows[1] == [
+            "`[Other location]`, `[Literature or unspecified]`",
+            "−0.1",
+        ]
+        assert [row[-1] for row in rows[2:]] == ["−0.1, with the mark", "−0.1"]
+
+    def test_a_table_of_cases_has_a_column_for_each_field_it_reads(
+        self, schema: Schema, published_vocabularies: Vocabularies
+    ) -> None:
+        saturation = Criterion(
+            "t.saturation",
+            "Saturation",
+            Cases(
+                (
+                    Case(
+                        0.1,
+                        {
+                            Field.tc_saturation: (
+                                concepts.tc_saturation.saturatedInSitu,
+                            ),
+                            Field.tc_method: (concepts.tc_method.probePulse,),
+                        },
+                    ),
+                    Case(
+                        0.0,
+                        {Field.tc_saturation: (concepts.tc_saturation.recovered,)},
+                        every={
+                            Field.tc_method: (
+                                concepts.tc_method.pointSource,
+                                concepts.tc_method.lineSourceFull,
+                            )
+                        },
+                    ),
+                )
+            ),
+            "Table 2, Source type and saturation",
+        )
+        reference = criterion_reference(schema, published_vocabularies, saturation)
+
+        table = reference.criterion("t.saturation")
+        rows = rows_of(table)
+
+        assert len(table.splitlines()[0].split(" | ")) == 3
+        assert rows[0] == [
+            "`[Saturated measured in-situ]`",
+            "`[Probe - pulse technique]`",
+            "+0.1",
+        ]
+        assert rows[1][0] == "`[Recovered]`"
+        assert "`[Lab - point source]`" in rows[1][1]
+        assert "`[Lab - line source - full space]`" in rows[1][1]
+        assert [row[-1] for row in rows[2:]] == ["0, with the mark", "0"]
+
+    def test_a_criterion_left_out_by_another_field_says_so_below_its_table(
+        self, schema: Schema, published_vocabularies: Vocabularies
+    ) -> None:
+        number = Criterion(
+            "t.number",
+            "Number",
+            Bands(
+                Field.tc_number,
+                (Band(0.0, 3), Band(-0.2)),
+                left_out_when={Field.tc_location: (LITERATURE,)},
+            ),
+            "Table 2, Number of conductivities",
+        )
+        reference = criterion_reference(schema, published_vocabularies, number)
+
+        table = reference.criterion("t.number")
+
+        assert (
+            FieldReference.code("[Literature or unspecified]")
+            in (table.splitlines()[-1])
+        )
+
+    def test_changing_a_penalty_of_the_declaration_changes_the_table(
+        self, schema: Schema, published_vocabularies: Vocabularies
+    ) -> None:
+        before = criterion_reference(schema, published_vocabularies, location(-0.1))
+        after = criterion_reference(schema, published_vocabularies, location(-0.4))
+
+        assert rows_of(before.criterion("t.location"))[1][-1] == "−0.1"
+        assert rows_of(after.criterion("t.location"))[1][-1] == "−0.4"
+
+    def test_a_page_calls_the_table_of_a_criterion_by_its_identifier(
+        self, schema: Schema, published_vocabularies: Vocabularies
+    ) -> None:
+        reference = criterion_reference(schema, published_vocabularies, location(-0.1))
+
+        page = reference.render("Location:\n\n{{ criterion('t.location') }}\n")
+
+        assert page == f"Location:\n\n{reference.criterion('t.location')}\n"
+
+    def test_a_criterion_that_is_not_declared_is_refused(
+        self, schema: Schema, published_vocabularies: Vocabularies
+    ) -> None:
+        reference = criterion_reference(schema, published_vocabularies)
+
+        with pytest.raises(KeyError):
+            reference.criterion("t.location")

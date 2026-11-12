@@ -1,15 +1,16 @@
 """The check of a table of children against the field schema."""
 
 import difflib
-import math
 from collections.abc import Iterable, Sequence
 from enum import StrEnum
 
 import pandas
 from frictionless import Field, Schema
 
-from ghfdb.fields import MissingSchemeError, Vocabularies, allowed_values
-from ghfdb.qc.rules import Condition, Rule
+from ghfdb.fields.schema import FieldConcepts
+from ghfdb.qc.engine.inputs import parse_numbers
+from ghfdb.qc.engine.rule_kinds import Condition, Rule
+from ghfdb.vocabularies import MissingSchemeError, Vocabularies
 
 PROBLEM_COLUMNS = [
     "row",
@@ -49,7 +50,8 @@ class DatasetCheck:
         data: The children.
         schema: The fields.
         rules: The cross-field rules applied after the field check.
-        terms: The term of every concept the rules name, by field code and concept URI.
+        concepts: The concepts the rules name, resolved for their fields, by field
+            code.
     """
 
     def __init__(
@@ -59,7 +61,7 @@ class DatasetCheck:
         rules: Sequence[Rule] = (),
         vocabularies: Vocabularies | None = None,
     ) -> None:
-        """Remember what to check and turn the rules' concepts into terms.
+        """Remember what to check and resolve the rules' concepts to terms.
 
         Args:
             data: One row per child and one text column per field, named by field code.
@@ -69,61 +71,39 @@ class DatasetCheck:
                 it, the vocabularies in the user's cache, downloaded when missing.
 
         Raises:
-            MissingSchemeError: A concept a rule or its example names is not an allowed
-                value of its field. The message names the rule and the concept.
+            MissingSchemeError: A concept a rule or its example names is neither an
+                allowed value of its field nor a collection of the field's scheme. The
+                message names the rule, the field and the concept.
         """
         self.data = data
         self.schema = schema
         self.rules = tuple(rules)
-        self.terms = self.resolve(vocabularies)
+        self.concepts = self.resolve(vocabularies)
 
-    def resolve(self, vocabularies: Vocabularies | None) -> dict[tuple[str, str], str]:
-        """Turn the concepts of the rules into the terms their fields accept.
+    def resolve(self, vocabularies: Vocabularies | None) -> dict[str, FieldConcepts]:
+        """Resolve the concepts of the rules for their fields.
 
         Args:
             vocabularies: Where the allowed values come from.
 
         Returns:
-            The term of each concept, by field code and concept URI.
+            The concepts of every field the rules name, by field code.
 
         Raises:
             MissingSchemeError: A concept is not an allowed value of its field, or the
                 field is not in the schema.
         """
+        resolved: dict[str, FieldConcepts] = {}
         if not self.rules:
-            return {}
+            return resolved
         files = Vocabularies() if vocabularies is None else vocabularies
-        allowed: dict[str, dict[str, str]] = {}
-        terms = {}
         for rule in self.rules:
-            for code, uri in rule.concepts():
-                if code not in allowed:
-                    allowed[code] = self.uris(code, files)
-                if uri not in allowed[code]:
-                    raise MissingSchemeError(
-                        f"{rule.identifier}: {uri} is not an allowed value of {code}"
-                    )
-                terms[code, uri] = allowed[code][uri]
-        return terms
-
-    def uris(self, code: str, vocabularies: Vocabularies) -> dict[str, str]:
-        """Map the concept URI of each allowed value of a field to its term.
-
-        Args:
-            code: The field's code.
-            vocabularies: Where the allowed values come from.
-
-        Returns:
-            The term of each allowed value that belongs to a vocabulary.
-        """
-        if not any(field.name == code for field in self.schema.fields):
-            return {}
-        field = self.schema.get_field(code)
-        return {
-            value.uri: value.term
-            for value in allowed_values(field, vocabularies)
-            if value.uri
-        }
+            try:
+                found = FieldConcepts.resolve(self.schema, rule.concepts(), files)
+            except MissingSchemeError as error:
+                raise MissingSchemeError(f"{rule.identifier}: {error}") from error
+            resolved = FieldConcepts.merge(resolved, found)
+        return resolved
 
     def problems(self) -> pandas.DataFrame:
         """Find what is wrong with the children.
@@ -252,7 +232,7 @@ class DatasetCheck:
         field = self.schema.get_field(condition.field)
         column = self.data[condition.field].astype("string")
         values = self.each_value(field, column[~self.blank(column)])
-        wanted = [self.terms[condition.field, uri] for uri in condition.concepts]
+        wanted = self.concepts[condition.field].terms_for(condition.concepts)
         allowed = values.isin(field.constraints.get("enum", []))
         held = (
             allowed.groupby(level=0).all() & values.isin(wanted).groupby(level=0).any()
@@ -272,7 +252,7 @@ class DatasetCheck:
         field = self.schema.get_field(condition.field)
         column = self.data[condition.field].astype("string")
         values = self.each_value(field, column[~self.blank(column)])
-        wanted = [self.terms[condition.field, uri] for uri in condition.concepts]
+        wanted = self.concepts[condition.field].terms_for(condition.concepts)
         first = values[values.isin(wanted)]
         first = first[~first.index.duplicated()]
         label = f"{field.name} {field.custom['columnName']} "
@@ -367,7 +347,8 @@ class DatasetCheck:
         """Split the cells of a field that holds several values in a cell.
 
         Only a field with allowed values or a pattern is split. Each value keeps the
-        row of its cell.
+        row of its cell. The scoring never splits text (``Inputs``): the schema gives
+        no scored field a separator (docs/adr/0009).
 
         Args:
             field: The field.
@@ -437,10 +418,8 @@ class DatasetCheck:
         Returns:
             Lines for the cells that are not numbers and for the numbers out of range.
         """
-        numbers = pandas.to_numeric(filled.str.strip(), errors="coerce").astype(
-            "float64"
-        )
-        wrong = numbers.isna() | numbers.abs().eq(math.inf)
+        numbers = parse_numbers(filled)
+        wrong = numbers.isna()
         if field.type == "integer":
             wrong |= numbers != numbers.round()
         constraints = field.constraints

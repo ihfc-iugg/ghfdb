@@ -6,21 +6,22 @@ from typing import Any
 
 import pytest
 import responses
-from example_site import publish
+from example_site import EXAMPLE_FILES, publish
 from frictionless import Schema
 from openpyxl import load_workbook
+from rdflib import Namespace, URIRef
 
-from ghfdb.fields import (
+from ghfdb.fields import allowed_values, field_for_column, load_schema
+from ghfdb.fields.schema import FieldConcepts
+from ghfdb.vocabularies import (
     AllowedValue,
     MissingSchemeError,
     Vocabularies,
-    allowed_values,
     caching_session,
-    field_for_column,
-    load_schema,
 )
 
 COLOURS = "https://example.test/vocabularies/colours"
+COLOUR = Namespace(f"{COLOURS}/")
 HERE = Path(__file__).parent
 THREE_FIELDS = HERE / "schemas" / "three_fields.json"
 
@@ -190,6 +191,152 @@ class TestAllowedValues:
         )
 
         assert values == ()
+
+
+class TestFieldConcepts:
+    @pytest.fixture
+    def vocabularies(self, web: responses.RequestsMock, tmp_path: Path) -> Vocabularies:
+        publish(web, "colours")
+        return Vocabularies(caching_session(tmp_path / "cache"))
+
+    def test_gives_the_term_of_every_concept_the_field_accepts(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        resolved = FieldConcepts.resolve(
+            three_fields, [("X1", COLOUR.red)], vocabularies
+        )
+
+        assert resolved["X1"].terms == {COLOUR.red: "[red]", COLOUR.orange: "[Orange]"}
+
+    def test_gives_the_concept_of_each_term_the_field_accepts(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        resolved = FieldConcepts.resolve(
+            three_fields, [("X1", COLOUR.red)], vocabularies
+        )
+
+        assert resolved["X1"].concepts == {
+            "[red]": COLOUR.red,
+            "[Orange]": COLOUR.orange,
+        }
+
+    def test_resolves_only_the_fields_the_references_name(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        assert FieldConcepts.resolve(three_fields, [], vocabularies) == {}
+
+    def test_a_concept_stands_for_itself(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        resolved = FieldConcepts.resolve(
+            three_fields, [("X1", COLOUR.red)], vocabularies
+        )
+
+        assert resolved["X1"].expand([COLOUR.red]) == (COLOUR.red,)
+
+    def test_a_collection_stands_for_its_members(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        resolved = FieldConcepts.resolve(
+            three_fields, [("X1", COLOUR.warm)], vocabularies
+        )
+
+        assert resolved["X1"].expand([COLOUR.warm]) == (COLOUR.orange, COLOUR.red)
+
+    def test_an_ordered_collection_stands_for_its_members_in_its_order(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        resolved = FieldConcepts.resolve(
+            three_fields, [("X1", COLOUR.spectrum)], vocabularies
+        )
+
+        assert resolved["X1"].expand([COLOUR.spectrum]) == (
+            COLOUR.red,
+            COLOUR.orange,
+            COLOUR.green,
+        )
+
+    def test_a_collection_in_a_collection_stands_for_the_members_of_both(
+        self, three_fields: Schema, web: responses.RequestsMock, tmp_path: Path
+    ) -> None:
+        nested = (EXAMPLE_FILES / "colours.ttl").read_bytes() + (
+            b"\n:everything a skos:Collection ; skos:member :warm , :green .\n"
+        )
+        publish(web, "colours", body=nested)
+        vocabularies = Vocabularies(caching_session(tmp_path / "nested"))
+
+        resolved = FieldConcepts.resolve(
+            three_fields, [("X1", COLOUR.everything)], vocabularies
+        )
+
+        assert resolved["X1"].expand([COLOUR.everything]) == (
+            COLOUR.orange,
+            COLOUR.red,
+            COLOUR.green,
+        )
+
+    def test_expands_a_mixture_of_concepts_and_collections_in_order(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        resolved = FieldConcepts.resolve(
+            three_fields, [("X1", COLOUR.warm)], vocabularies
+        )
+
+        assert resolved["X1"].expand([COLOUR.green, COLOUR.warm]) == (
+            COLOUR.green,
+            COLOUR.orange,
+            COLOUR.red,
+        )
+
+    def test_gives_the_terms_of_concepts_and_of_the_members_of_collections(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        resolved = FieldConcepts.resolve(
+            three_fields, [("X1", COLOUR.warm)], vocabularies
+        )
+
+        assert resolved["X1"].terms_for([COLOUR.warm]) == ["[Orange]", "[red]"]
+        assert resolved["X1"].terms_for([COLOUR.red, COLOUR.green]) == ["[red]"]
+
+    def test_merges_the_collections_of_two_resolutions_of_one_field(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        warm = FieldConcepts.resolve(three_fields, [("X1", COLOUR.warm)], vocabularies)
+        spectrum = FieldConcepts.resolve(
+            three_fields, [("X1", COLOUR.spectrum)], vocabularies
+        )
+
+        merged = FieldConcepts.merge(warm, spectrum)
+
+        assert set(merged["X1"].collections) == {COLOUR.warm, COLOUR.spectrum}
+        assert merged["X1"].terms == warm["X1"].terms
+
+    @pytest.mark.parametrize("name", ["blue", "purple"])
+    def test_refuses_a_concept_the_field_does_not_accept_naming_field_and_concept(
+        self, three_fields: Schema, vocabularies: Vocabularies, name: str
+    ) -> None:
+        with pytest.raises(MissingSchemeError, match=f"X1.*colours/{name}"):
+            FieldConcepts.resolve(three_fields, [("X1", COLOUR[name])], vocabularies)
+
+    def test_refuses_a_collection_of_another_scheme(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        elsewhere = URIRef("https://example.test/vocabularies/shapes/round")
+
+        with pytest.raises(MissingSchemeError, match="X1.*shapes/round"):
+            FieldConcepts.resolve(three_fields, [("X1", elsewhere)], vocabularies)
+
+    def test_refuses_a_field_without_a_vocabulary(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        with pytest.raises(MissingSchemeError, match="X3.*colours/red"):
+            FieldConcepts.resolve(three_fields, [("X3", COLOUR.red)], vocabularies)
+
+    def test_refuses_a_field_the_schema_lacks(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        with pytest.raises(MissingSchemeError, match="Z99.*colours/red"):
+            FieldConcepts.resolve(three_fields, [("Z99", COLOUR.red)], vocabularies)
 
 
 class TestFieldForColumn:

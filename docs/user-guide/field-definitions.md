@@ -41,12 +41,13 @@ After that the server's `ETag` and `Cache-Control` decide whether the cached fil
 current, so a change in the vocabularies reaches you without a fixed delay, and a cached file is
 used when you are offline. Delete the directory to refresh everything now.
 
-The downloads use the session `ghfdb.fields.caching_session()` builds. To keep the files in
+The downloads use the session `ghfdb.vocabularies.caching_session()` builds. To keep the files in
 another directory, pass it in. To use your own session, for example one behind a proxy, pass it
 to `Vocabularies`:
 
 ```python
-from ghfdb.fields import Vocabularies, caching_session, load_schema
+from ghfdb.fields import load_schema
+from ghfdb.vocabularies import Vocabularies, caching_session
 
 schema = load_schema(vocabularies=Vocabularies(caching_session(my_directory)))
 schema = load_schema(vocabularies=Vocabularies(my_session))
@@ -88,12 +89,13 @@ hold raises `KeyError`.
 
 The `enum` constraint holds the terms of a field as written in a workbook cell. To get
 more than the term, call {py:func}`~ghfdb.fields.allowed_values` with the field and the
-vocabularies. It gives each value as an {py:class}`~ghfdb.fields.AllowedValue` with the term,
+vocabularies. It gives each value as an {py:class}`~ghfdb.vocabularies.AllowedValue` with the term,
 the concept's English label, its URI and its notation. A field with no list, such as a
 free-text field, gives an empty tuple.
 
 ```python
-from ghfdb.fields import Vocabularies, allowed_values
+from ghfdb.fields import allowed_values
+from ghfdb.vocabularies import Vocabularies
 
 for value in allowed_values(schema.get_field("C44"), Vocabularies()):
     print(value.term, value.uri)

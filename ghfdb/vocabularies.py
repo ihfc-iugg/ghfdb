@@ -1,5 +1,8 @@
 """The controlled vocabularies, read from where they are published.
 
+``concepts`` names a concept of a field's vocabulary in code, from the field schema
+alone. The rest of the module reads the vocabularies themselves.
+
 The IHFC Controlled Vocabularies publish a concept scheme at its identifier with
 ``.ttl`` added. A field whose scheme is not published there names the file to download
 and its RDF format. Each file is downloaded through a caching HTTP session, which keeps
@@ -7,13 +10,16 @@ the file in a cache directory outside the repository and asks the server whether
 changed before using it again.
 """
 
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
+from importlib import resources
 from pathlib import Path
+from typing import Self
 
 from platformdirs import user_cache_dir
-from rdflib import RDF, Graph, URIRef
+from rdflib import RDF, Graph, Namespace, URIRef
 from rdflib import Literal as RdfLiteral
 from rdflib.collection import Collection
 from rdflib.namespace import DCTERMS, SKOS
@@ -48,6 +54,18 @@ class AllowedValue:
 
 class MissingSchemeError(LookupError):
     """Raised when a scheme or collection is not defined where it is published."""
+
+
+def local_name(uri: str) -> str:
+    """Name a concept within its vocabulary.
+
+    Args:
+        uri: The concept URI.
+
+    Returns:
+        The last path segment of the URI.
+    """
+    return uri.rsplit("/", 1)[-1]
 
 
 def caching_session(directory: Path | None = None) -> Session:
@@ -240,8 +258,72 @@ class Vocabularies:
         found = graph.value(concept, SKOS.notation)
         notation = None if found is None else str(found)
         if term_form == "localName":
-            term = str(concept).rsplit("/", 1)[-1]
+            term = local_name(str(concept))
         else:
             shown = notation if term_form == "notation" and notation else labels[0]
             term = f"[{shown}]"
         return AllowedValue(term, labels[0], str(concept), notation)
+
+
+class Concepts:
+    """The concepts of the vocabularies, named in code.
+
+    A field that draws on a vocabulary is a namespace of its concept scheme, so a
+    concept is ``concepts.tc_method.pointSource``, or, when its local name is not a
+    Python name, ``concepts.tc_source["insitu-probe"]``. Each is the concept's
+    ``URIRef``. The namespaces are built from the packaged field schema, never from
+    the web.
+
+    Args:
+        namespaces: The namespace of the scheme of each field that has a vocabulary, by
+            the field's published column name.
+    """
+
+    def __init__(self, namespaces: Mapping[str, Namespace]) -> None:
+        self.namespaces = namespaces
+
+    @classmethod
+    def packaged(cls) -> Self:
+        """Read the schemes of the fields from the packaged field schema.
+
+        Returns:
+            The concepts of every field of the schema that has a vocabulary.
+        """
+        schema = resources.files("ghfdb").joinpath("fields", "schema.json")
+        fields = json.loads(schema.read_text("utf-8"))["fields"]
+        return cls(
+            {
+                field["columnName"]: Namespace(f"{field['vocabulary']['scheme']}/")
+                for field in fields
+                if field["vocabulary"]
+            }
+        )
+
+    def __getitem__(self, column_name: str) -> Namespace:
+        """Find the namespace of a field's concept scheme.
+
+        Args:
+            column_name: The field's published column name.
+
+        Returns:
+            The scheme's identifier with a slash added.
+
+        Raises:
+            AttributeError: No field has the column name, or the field has no
+                vocabulary.
+        """
+        try:
+            return self.namespaces[column_name]
+        except KeyError:
+            raise AttributeError(
+                f"{column_name} is not the column name of a field with a vocabulary"
+            ) from None
+
+    def __getattr__(self, column_name: str) -> Namespace:
+        """Find the namespace of a field's concept scheme, as item access does."""
+        if column_name == "namespaces" or column_name.startswith("__"):
+            raise AttributeError(column_name)
+        return self[column_name]
+
+
+concepts = Concepts.packaged()

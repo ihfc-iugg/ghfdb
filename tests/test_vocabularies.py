@@ -1,18 +1,25 @@
+import json
+import subprocess
+import sys
+from importlib import resources
 from pathlib import Path
+from typing import Any
 
 import pytest
 import responses
 from example_site import EXAMPLE_FILES, publish
 from frictionless import Schema
-from rdflib import RDF, Graph, URIRef
+from rdflib import RDF, Graph, Namespace, URIRef
 from rdflib.namespace import SKOS
 from requests_cache import CachedSession
 
-from ghfdb.fields import (
+from ghfdb.fields import Field
+from ghfdb.vocabularies import (
     AllowedValue,
     MissingSchemeError,
     Vocabularies,
     caching_session,
+    concepts,
 )
 
 COLOURS = "https://example.test/vocabularies/colours"
@@ -63,7 +70,7 @@ class TestCachingSession:
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         monkeypatch.setattr(
-            "ghfdb.fields.vocabularies.user_cache_dir", lambda _: str(tmp_path)
+            "ghfdb.vocabularies.user_cache_dir", lambda _: str(tmp_path)
         )
 
         session = caching_session()
@@ -430,3 +437,81 @@ class TestExternalVocabularies:
 
         assert "LowerCretaceous" in enum
         assert not any(term.startswith("Base") for term in enum)
+
+
+CONDUCTIVITY_METHODS = "https://w3id.org/ihfc-iugg/vocabularies/conductivity-methods"
+CONDUCTIVITY_SOURCES = "https://w3id.org/ihfc-iugg/vocabularies/conductivity-sources"
+
+
+def packaged_vocabulary_fields() -> list[dict[str, Any]]:
+    text = resources.files("ghfdb.fields").joinpath("schema.json").read_text("utf-8")
+    fields: list[dict[str, Any]] = json.loads(text)["fields"]
+    return [field for field in fields if field["vocabulary"]]
+
+
+class TestConcepts:
+    def test_names_a_concept_by_attribute_of_its_fields_namespace(self) -> None:
+        assert concepts.tc_method.pointSource == URIRef(
+            f"{CONDUCTIVITY_METHODS}/pointSource"
+        )
+
+    def test_names_a_hyphenated_concept_by_item_of_its_fields_namespace(self) -> None:
+        assert concepts.tc_source["insitu-probe"] == URIRef(
+            f"{CONDUCTIVITY_SOURCES}/insitu-probe"
+        )
+
+    def test_a_concept_is_an_rdflib_uri_reference(self) -> None:
+        assert isinstance(concepts.tc_method.pointSource, URIRef)
+
+    def test_a_field_is_named_by_item_as_well_as_by_attribute(self) -> None:
+        assert concepts["tc_method"] == concepts.tc_method
+
+    def test_a_field_is_a_namespace_of_its_scheme_with_a_slash(self) -> None:
+        assert isinstance(concepts.tc_method, Namespace)
+        assert concepts.tc_method == Namespace(f"{CONDUCTIVITY_METHODS}/")
+
+    def test_every_field_with_a_vocabulary_has_a_namespace_of_its_scheme(self) -> None:
+        for field in packaged_vocabulary_fields():
+            scheme = field["vocabulary"]["scheme"]
+
+            assert concepts[field["columnName"]] == Namespace(f"{scheme}/")
+
+    def test_fields_that_share_a_scheme_get_namespaces_of_that_scheme(self) -> None:
+        assert concepts.corr_S_flag == concepts.corr_E_flag
+        assert concepts.T_method_top == concepts.T_method_bottom
+
+    def test_refuses_a_column_name_the_schema_lacks_naming_it(self) -> None:
+        missing = "tc_methood"
+
+        with pytest.raises(AttributeError, match=missing):
+            getattr(concepts, missing)
+
+    def test_refuses_a_column_name_by_item_the_same_way(self) -> None:
+        missing = "tc_methood"
+
+        with pytest.raises(AttributeError, match=missing):
+            assert concepts[missing]
+
+    def test_refuses_a_field_without_a_vocabulary_naming_it(self) -> None:
+        with pytest.raises(AttributeError, match=Field.q_bottom.name):
+            getattr(concepts, Field.q_bottom.name)
+
+    def test_is_built_without_the_network(self) -> None:
+        script = (
+            "import socket\n"
+            "def refuse(*args, **kwargs):\n"
+            "    raise OSError('the network is not to be used')\n"
+            "socket.socket.connect = refuse\n"
+            "socket.getaddrinfo = refuse\n"
+            "from ghfdb.vocabularies import concepts\n"
+            "print(concepts.tc_method.pointSource)\n"
+        )
+
+        run = subprocess.run(
+            [sys.executable, "-I", "-c", script],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+
+        assert run.stdout.strip() == f"{CONDUCTIVITY_METHODS}/pointSource"

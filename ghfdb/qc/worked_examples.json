@@ -1,12 +1,12 @@
 {
-  "scheme": "The GHFDB quality scheme, as the GHFDB portal applies it",
+  "scheme": "The GHFDB quality scheme, following Fuchs et al. (2023) with its 2026 corrigendum",
   "format": 1,
   "notes": [
     "inputs are keyed by field code. A field that is absent is empty. A list holds several values of a field.",
-    "expected holds only what the GHFDB portal's test asserts. T and TC are null when not determined, never 0.",
+    "expected holds only what the example asserts. T and TC are null when not determined, never 0.",
     "scoring is 'child' by default. 'measurement' means a gradient or conductivity scored on its own, before the child's correction rules.",
     "expected.measurement holds the scores of the child's gradient and conductivity before the child's correction rules.",
-    "portal_tests names the GHFDB portal tests that assert the example, as path::node, relative to the portal repository.",
+    "portal_tests names the tests that assert the example, as path::node: the GHFDB portal's, relative to the portal repository, or this package's, under tests/test_qc/.",
     "criteria names the criteria of the scheme the example exercises."
   ],
   "criteria": {
@@ -66,6 +66,7 @@
     "inherited.full-tie": "A tie on both scores",
     "inherited.selection": "Which children a parent rests on",
     "missing-information.empty": "An empty input takes the largest penalty and the mark",
+    "missing-information.unnamed-field": "A field that the row which holds does not name may be empty: the row scores and nothing is missing",
     "missing-information.unspecified-gives-no-mark": "An input recorded as unspecified takes the largest penalty and no mark",
     "missing-information.gate": "No interval depth sets the mark",
     "missing-information.unresolvable-method": "Temperature methods that fit no group set the mark",
@@ -74,7 +75,8 @@
     "not-determined.tc": "TC-score not determined",
     "not-determined.m": "M-score not determined",
     "multi-valued.poorest": "A field holding several values takes the poorest",
-    "child.whole": "A child scored from its fields to its quality code"
+    "child.whole": "A child scored from its fields to its quality code",
+    "not-determined.all-empty": "Every field the rules read is empty, so the scores are not determined"
   },
   "examples": [
     {
@@ -718,7 +720,8 @@
         "C37": 6
       },
       "expected": {
-        "T": 1.1
+        "T": 1.1,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_recording_bins_distinguish_two_from_fewer_and_more[6-0.1]"
@@ -739,7 +742,8 @@
         "C37": 5
       },
       "expected": {
-        "T": 1.0
+        "T": 1.0,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_recording_bins_distinguish_two_from_fewer_and_more[5-0.0]"
@@ -760,7 +764,8 @@
         "C37": 3
       },
       "expected": {
-        "T": 1.0
+        "T": 1.0,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_recording_bins_distinguish_two_from_fewer_and_more[3-0.0]"
@@ -781,7 +786,8 @@
         "C37": 2
       },
       "expected": {
-        "T": 0.9
+        "T": 0.9,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_recording_bins_distinguish_two_from_fewer_and_more[2--0.1]"
@@ -802,7 +808,8 @@
         "C37": 1
       },
       "expected": {
-        "T": 0.8
+        "T": 0.8,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_recording_bins_distinguish_two_from_fewer_and_more[1--0.2]"
@@ -980,7 +987,8 @@
         "C37": 6
       },
       "expected": {
-        "T": 0.9
+        "T": 0.9,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_tilt_bins[30.01--0.2]"
@@ -1001,7 +1009,8 @@
         "C37": 6
       },
       "expected": {
-        "T": 1.0
+        "T": 1.0,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_tilt_bins[30--0.1]"
@@ -1022,7 +1031,8 @@
         "C37": 6
       },
       "expected": {
-        "T": 1.0
+        "T": 1.0,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_tilt_bins[10.01--0.1]"
@@ -1043,7 +1053,8 @@
         "C37": 6
       },
       "expected": {
-        "T": 1.1
+        "T": 1.1,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeGradient::test_tilt_bins[10-0.0]"
@@ -1181,7 +1192,8 @@
         "C47": 4
       },
       "expected": {
-        "TC": 1.2
+        "TC": 1.2,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_number_bins[4-0.0]"
@@ -1204,7 +1216,8 @@
         "C47": 3
       },
       "expected": {
-        "TC": 1.1
+        "TC": 1.1,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_number_bins[3--0.1]"
@@ -1227,7 +1240,8 @@
         "C47": 2
       },
       "expected": {
-        "TC": 1.1
+        "TC": 1.1,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_number_bins[2--0.1]"
@@ -1250,7 +1264,8 @@
         "C47": 1
       },
       "expected": {
-        "TC": 1.0
+        "TC": 1.0,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_number_bins[1--0.2]"
@@ -1357,7 +1372,7 @@
     {
       "id": "PC-10",
       "part": "probe-tc",
-      "title": "Location empty",
+      "title": "Location empty: the saturation row that holds does not name it, so the saturation is +0.1, and the location itself takes -0.2 with the mark, so TC is 1.0",
       "inputs": {
         "P12": "[Probing (offshore, ocean)]",
         "C41": "[In-situ probe]",
@@ -1367,15 +1382,17 @@
         "C47": 4
       },
       "expected": {
-        "TC": 0.7,
+        "TC": 1.0,
         "marked": true
       },
       "portal_tests": [
-        "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_any_empty_saturation_input_takes_the_largest_penalty_and_the_mark[location-0.7]"
+        "tests/test_qc/test_scores.py::TestWorkedExamples::test_every_example_scores_as_expected[PC-10]"
       ],
       "criteria": [
+        "probe-tc.location",
         "probe-tc.saturation",
-        "missing-information.empty"
+        "missing-information.empty",
+        "missing-information.unnamed-field"
       ]
     },
     {
@@ -1420,7 +1437,8 @@
         "C47": 4
       },
       "expected": {
-        "TC": 1.1
+        "TC": 1.1,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_the_poorest_of_several_locations_counts"
@@ -1444,7 +1462,8 @@
         "C47": 4
       },
       "expected": {
-        "TC": 0.6
+        "TC": 0.6,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestProbeConductivity::test_an_actual_in_situ_pT_needs_the_pulse_probe_to_score_well"
@@ -1479,6 +1498,83 @@
       ]
     },
     {
+      "id": "PC-15",
+      "part": "probe-tc",
+      "title": "Two conductivity methods, one laboratory and one an estimate: the laboratory rows do not hold, so the saturation takes -0.2 and TC is 0.6",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[Assumed from literature]",
+        "C42": "[Literature or unspecified]",
+        "C43": [
+          "[Lab - line source - full space]",
+          "[Estimation - from lithology and literature]"
+        ],
+        "C44": "[Saturated measured]",
+        "C45": "[Replicated in-situ (pT)]"
+      },
+      "expected": {
+        "TC": 0.6,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_qc/test_probe.py::TestProbeTCScore::test_worked_example[PC-15]"
+      ],
+      "criteria": [
+        "probe-tc.saturation",
+        "multi-valued.poorest"
+      ]
+    },
+    {
+      "id": "PC-16",
+      "part": "probe-tc",
+      "title": "A laboratory conductivity with the source empty: the laboratory row holds without the source, so the saturation is 0 and TC is 1.0, with no mark",
+      "inputs": {
+        "P12": "[Probing (onshore, lake, river, etc.)]",
+        "C42": "[Actual heat-flow location]",
+        "C43": "[Lab - line source - full space]",
+        "C44": "[Saturated measured]",
+        "C45": "[Replicated in-situ (pT)]",
+        "C47": 4
+      },
+      "expected": {
+        "TC": 1.0,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_qc/test_scores.py::TestWorkedExamples::test_every_example_scores_as_expected[PC-16]"
+      ],
+      "criteria": [
+        "probe-tc.saturation",
+        "missing-information.unnamed-field"
+      ]
+    },
+    {
+      "id": "PC-17",
+      "part": "probe-tc",
+      "title": "Replicated in-situ pT with the method empty: the pT row holds without the method, so the pT is 0, but the saturation row needs the method, so it is -0.2 with the mark and TC is 0.8",
+      "inputs": {
+        "P12": "[Probing (offshore, ocean)]",
+        "C41": "[In-situ probe]",
+        "C42": "[Actual heat-flow location]",
+        "C44": "[Saturated measured in-situ]",
+        "C45": "[Replicated in-situ (pT)]",
+        "C47": 4
+      },
+      "expected": {
+        "TC": 0.8,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_qc/test_scores.py::TestWorkedExamples::test_every_example_scores_as_expected[PC-17]"
+      ],
+      "criteria": [
+        "probe-tc.pT",
+        "probe-tc.saturation",
+        "missing-information.empty",
+        "missing-information.unnamed-field"
+      ]
+    },
+    {
       "id": "BT-01",
       "part": "borehole-t",
       "title": "Four recordings of an equilibrium log: a continuous log",
@@ -1491,7 +1587,8 @@
         "C32": "[LOGeq]"
       },
       "expected": {
-        "T": 1.1
+        "T": 1.1,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_a_continuous_log_needs_more_than_three_recordings"
@@ -1513,7 +1610,8 @@
         "C32": "[LOGeq]"
       },
       "expected": {
-        "T": 0.9
+        "T": 0.9,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_a_continuous_log_needs_more_than_three_recordings"
@@ -1536,7 +1634,8 @@
         "C32": "[LOGeq]"
       },
       "expected": {
-        "T": 0.9
+        "T": 0.9,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_a_continuous_log_with_a_perturbed_method_is_penalised"
@@ -1558,7 +1657,8 @@
         "C32": "[BHT]"
       },
       "expected": {
-        "T": 0.7
+        "T": 0.7,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_a_non_log_method_makes_the_case_single_points"
@@ -1672,7 +1772,8 @@
         "C32": "[HT-FTeq]"
       },
       "expected": {
-        "T": 0.9
+        "T": 0.9,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_the_misspelt_toolbox_tokens_read_as_the_vocabulary_methods[HT_FT--0.1]"
@@ -1694,7 +1795,8 @@
         "C32": "[HT-FTpert]"
       },
       "expected": {
-        "T": 0.7
+        "T": 0.7,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_the_misspelt_toolbox_tokens_read_as_the_vocabulary_methods[HT_FTpert--0.3]"
@@ -1790,7 +1892,8 @@
         "C32": "[cBHT]"
       },
       "expected": {
-        "T": 0.5
+        "T": 0.5,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestBoreholeGradient::test_the_poorest_of_several_methods_counts"
@@ -1798,6 +1901,54 @@
       "criteria": [
         "borehole-t.single-points",
         "multi-valued.poorest"
+      ]
+    },
+    {
+      "id": "BT-15",
+      "part": "borehole-t",
+      "title": "[cDTS] at top and bottom with three recordings: it fits no group",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 3,
+        "C31": "[cDTS]",
+        "C32": "[cDTS]"
+      },
+      "expected": {
+        "T": 0.5,
+        "marked": true
+      },
+      "portal_tests": [
+        "tests/test_qc/test_borehole.py::TestBoreholeTScore::test_worked_example[BT-15]"
+      ],
+      "criteria": [
+        "borehole-t.single-points",
+        "borehole-t.unresolvable-method",
+        "missing-information.unresolvable-method"
+      ]
+    },
+    {
+      "id": "BT-16",
+      "part": "borehole-t",
+      "title": "Surface at the top, [cDST] at the bottom",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C4": 0,
+        "C5": 1000,
+        "C37": 2,
+        "C31": "[SUR]",
+        "C32": "[cDST]"
+      },
+      "expected": {
+        "T": 0.7,
+        "marked": false
+      },
+      "portal_tests": [
+        "tests/test_qc/test_borehole.py::TestBoreholeTScore::test_worked_example[BT-16]"
+      ],
+      "criteria": [
+        "borehole-t.surface-plus-one-point"
       ]
     },
     {
@@ -1844,7 +1995,8 @@
         "C47": 30
       },
       "expected": {
-        "TC": 1.0
+        "TC": 1.0,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_one_reported_depth_passes_the_gate[depths0]"
@@ -1868,7 +2020,8 @@
         "C47": 30
       },
       "expected": {
-        "TC": 1.0
+        "TC": 1.0,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_one_reported_depth_passes_the_gate[depths1]"
@@ -2230,7 +2383,8 @@
         "C47": 16
       },
       "expected": {
-        "TC": 1.0
+        "TC": 1.0,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_number_bins[16-0.0]"
@@ -2255,7 +2409,8 @@
         "C47": 15
       },
       "expected": {
-        "TC": 0.9
+        "TC": 0.9,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_number_bins[15--0.1]"
@@ -2778,7 +2933,8 @@
         "C47": 30
       },
       "expected": {
-        "TC": 0.8
+        "TC": 0.8,
+        "marked": false
       },
       "portal_tests": [
         "tests/test_heat_flow/test_quality.py::TestBoreholeConductivity::test_the_poorest_of_several_pT_conditions_counts"
@@ -4546,7 +4702,7 @@
     {
       "id": "P5-no-saturation",
       "part": "child",
-      "title": "Saturation empty, method unspecified",
+      "title": "Saturation empty, method unspecified: the estimate row for an unspecified method holds without the saturation, so the saturation is -0.2 with no mark and the grade has no mark",
       "inputs": {
         "P12": "[Probing (offshore, ocean)]",
         "P6": -2000,
@@ -4565,24 +4721,21 @@
         "U": "U4",
         "T": 0.9,
         "TC": 0.5,
-        "M": "M3x",
+        "M": "M3",
         "flags": "-------",
-        "code": "U4.M3x.-------",
-        "marked": true,
+        "code": "U4.M3.-------",
+        "marked": false,
         "measurement": {
           "T": 0.9,
           "TC": 0.5
         }
       },
       "portal_tests": [
-        "tests/test_heat_flow/test_quality.py::TestConformance::test_corrected_scores_equal_the_toolbox_output[P5-no-saturation]",
-        "tests/test_heat_flow/test_quality.py::TestConformance::test_uncorrected_scores_differ_only_where_a_child_rule_changed_them[P5-no-saturation]",
-        "tests/test_heat_flow/test_quality.py::TestSchemeConformance::test_u_m_and_flags_equal_the_toolbox_output[P5-no-saturation]",
-        "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_the_stored_scores_equal_the_toolbox_output[P5-no-saturation]"
+        "tests/test_qc/test_scores.py::TestWorkedExamples::test_every_example_scores_as_expected[P5-no-saturation]"
       ],
       "criteria": [
         "probe-tc.saturation",
-        "missing-information.empty",
+        "missing-information.unnamed-field",
         "m.mark"
       ]
     },
@@ -5083,6 +5236,60 @@
         "tests/test_heat_flow/test_models/test_child.py::TestChildScores::test_a_child_without_a_gradient_or_a_conductivity_is_not_determined"
       ],
       "criteria": [
+        "not-determined.t",
+        "not-determined.tc",
+        "not-determined.m"
+      ]
+    },
+    {
+      "id": "N4-probe-nothing-scored",
+      "part": "child",
+      "title": "A probe-sensing child with only its exploration method: nothing to score",
+      "inputs": {
+        "P12": "[Probing (onshore, lake, river, etc.)]",
+        "C1": 70,
+        "C2": 7
+      },
+      "expected": {
+        "U": "U2",
+        "T": null,
+        "TC": null,
+        "M": "Mx",
+        "flags": "-------",
+        "code": "U2.Mx.-------"
+      },
+      "portal_tests": [
+        "tests/test_qc/test_scores.py::TestChildScores::test_worked_example[N4-probe-nothing-scored]"
+      ],
+      "criteria": [
+        "not-determined.all-empty",
+        "not-determined.t",
+        "not-determined.tc",
+        "not-determined.m"
+      ]
+    },
+    {
+      "id": "N5-borehole-nothing-scored",
+      "part": "child",
+      "title": "A borehole child with only its exploration method: nothing to score",
+      "inputs": {
+        "P12": "[Drilling]",
+        "C1": 70,
+        "C2": 7
+      },
+      "expected": {
+        "U": "U2",
+        "T": null,
+        "TC": null,
+        "M": "Mx",
+        "flags": "-------",
+        "code": "U2.Mx.-------"
+      },
+      "portal_tests": [
+        "tests/test_qc/test_scores.py::TestChildScores::test_worked_example[N5-borehole-nothing-scored]"
+      ],
+      "criteria": [
+        "not-determined.all-empty",
         "not-determined.t",
         "not-determined.tc",
         "not-determined.m"

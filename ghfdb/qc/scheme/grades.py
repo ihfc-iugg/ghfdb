@@ -1,0 +1,114 @@
+"""The grades of the quality scheme: the U-score, the M-score classes and the flags."""
+
+from dataclasses import dataclass
+
+import pandas
+from rdflib import URIRef
+
+from ghfdb.fields import Field
+from ghfdb.qc.engine.inputs import Inputs
+from ghfdb.qc.engine.tables import Band
+from ghfdb.vocabularies import concepts
+
+CORRECTION = concepts.corr_S_flag
+
+# The class of the product of the T-score and the TC-score: M1 from 0.75, M2 from 0.50,
+# M3 from 0.25 and M4 below. A product on an edge takes the better class.
+PRODUCT_CLASSES = (
+    Band(1, 0.75, inclusive=True),
+    Band(2, 0.50, inclusive=True),
+    Band(3, 0.25, inclusive=True),
+    Band(4),
+)
+# The correction field of each perturbation flag, in the order the flags are written.
+FLAGS = {
+    Field.corr_S_flag: "S",
+    Field.corr_E_flag: "E",
+    Field.corr_TOPO_flag: "T",
+    Field.corr_PAL_flag: "P",
+    Field.corr_SUR_flag: "V",
+    Field.corr_CONV_flag: "C",
+    Field.corr_HR_flag: "R",
+}
+# The coefficient of variation is rounded to this many places, before it is graded.
+COEFFICIENT_DECIMALS = 6
+# The class of a coefficient, in percent: U4 above 25, U3 above 15, U2 from 5, else U1.
+COEFFICIENT_CLASSES = (Band(4, 25), Band(3, 15), Band(2, 5, inclusive=True), Band(1))
+
+
+def flag_characters(letter: str) -> dict[URIRef, str]:
+    """Say how each state of a correction is written in a flag.
+
+    Args:
+        letter: The flag's letter.
+
+    Returns:
+        The character of each correction concept: the upper-case letter for present
+        and corrected, the lower-case letter for present and not corrected, ``X``
+        for present and not significant, ``x`` for not recognised and ``-`` for
+        unspecified (docs/reference/quality-scheme/perturbation-flags.md, "How
+        each flag is written").
+    """
+    return {
+        CORRECTION["present-corrected"]: letter,
+        CORRECTION["present-not-corrected"]: letter.lower(),
+        CORRECTION["present-not-significant"]: "X",
+        CORRECTION["not-recognized"]: "x",
+        CORRECTION.unspecified: "-",
+    }
+
+
+@dataclass(frozen=True)
+class UScore:
+    """Grade the uncertainty of each child's heat-flow value from ``U1`` to ``U4``.
+
+    Attributes:
+        inputs: The scored fields of the children.
+    """
+
+    inputs: Inputs
+
+    def coefficients(self) -> pandas.Series:
+        """Find the coefficient of variation of every pair of value and uncertainty.
+
+        The coefficient is ``|C2| / |C1| * 100`` rounded to six places, so the sign of
+        either number is ignored (docs/reference/quality-scheme/u-score.md, "The
+        coefficient of variation").
+
+        Returns:
+            One row for each pair of a value and an uncertainty of a child, under the
+            child's index. It is NaN when either number is empty or zero.
+        """
+        pairs = Inputs.combine(
+            {
+                "value": self.inputs.numbers(Field.qc),
+                "uncertainty": self.inputs.numbers(Field.qc_uncertainty),
+            }
+        )
+        pairs = pairs.abs().where(pairs.ne(0))
+        return (pairs["uncertainty"] / pairs["value"] * 100).round(COEFFICIENT_DECIMALS)
+
+    def grades(self) -> pandas.Series:
+        """Grade each child.
+
+        A coefficient below 5 % is ``U1``, up to and including 15 % ``U2``, up to and
+        including 25 % ``U3`` and above that ``U4``. The grade is ``Ux`` when either
+        number is empty or zero, and has no missing-information mark
+        (docs/reference/quality-scheme/u-score.md, "The coefficient of variation"
+        and "Empty, zero and unspecified"). A child with several values takes its
+        poorest pair.
+
+        Returns:
+            ``U1`` to ``U4`` or ``Ux`` for each child, in the order of the children.
+        """
+        coefficient = self.coefficients()
+        classes = Band.select(COEFFICIENT_CLASSES, coefficient, 0)
+        grade = pandas.Series(classes, index=coefficient.index).where(
+            coefficient.notna(), 0
+        )
+        poorest = (
+            grade.groupby(level=0, sort=False)
+            .max()
+            .reindex(self.inputs.index, fill_value=0)
+        )
+        return ("U" + poorest.astype(str)).where(poorest > 0, "Ux").astype("string")

@@ -6,10 +6,76 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Scheme changes
+
+- The quality scheme now follows Fuchs et al. (2023) with its 2026 corrigendum (Fuchs et al.,
+  2026, Tectonophysics 934, 231226), and its reference pages cite the corrected Tables 1 to 3.
+  Penalties and classes that the corrected tables state are no longer listed as departures from
+  the paper, and the departures page lists only where the scheme still differs from the
+  corrected paper. The rules the corrigendum changed are the entries that follow.
+- A child whose exploration method sends it to the probe-sensing or the borehole and mine
+  rules, and whose every other field those rules read is empty, now has no T-score and no
+  TC-score, and its M-score is `Mx`. The same holds for the scores of its own measurements. This
+  is the sentence the corrigendum of Fuchs et al. (2023) adds to Section 3.2 (Fuchs et al.,
+  2026, Tectonophysics 934, 231226): "If all metadata fields required for the scoring are
+  missing, the M-score will appear as Mx."
+- In the borehole and mine temperature gradient, `[cDTS]` is no longer one of the methods of
+  equilibrium or corrected multiple single points: the corrected Table 3 lists it only with the
+  continuous log. With three recordings or fewer, a gradient measured by `[cDTS]` therefore fits
+  no group and takes the largest penalty of the multiple single points, -0.5, with the
+  missing-information mark.
+- For a surface temperature plus one point, `[cDST]` at the bottom is now scored as an
+  equilibrium or corrected method, -0.3, as the corrected Table 3 lists it. `[DST]` is still in
+  no group.
+- In the probe-sensing thermal conductivity, the laboratory rows of the saturation criterion
+  hold only when every value of the thermal conductivity method is a laboratory method, as the
+  corrected Table 2 requires ("`{tc_method}` is all with `[Lab - ...]`"). A child that lists a
+  laboratory method beside another method is scored by the rows of the other method, and a method
+  that fits no row takes -0.2.
+- In the probe-sensing thermal conductivity, the saturation and the pT conditions, a row now
+  holds whatever the fields it does not name contain, and the empty outcome (the largest penalty,
+  with the missing-information mark) applies only when no row holds and a field some row names is
+  empty. Before, an empty field that any row names gave the empty outcome even when the row that
+  applies does not name it. A laboratory conductivity with no source now scores 0 for its
+  saturation, and replicated, corrected or partial in-situ pT conditions with no method score by
+  their own rows, as the corrected Table 2 gives them. Two worked examples change: `PC-10`
+  (location empty) goes from a TC-score of 0.7 to 1.0, because the saturation row that holds does
+  not name the location. `P5-no-saturation` goes from the M-score `M3x` to `M3`, because the row
+  for an unspecified method holds without the saturation, so nothing is missing. Two are new:
+  `PC-16` (a laboratory conductivity with the source empty, TC-score 1.0) and `PC-17` (replicated
+  in-situ pT with the method empty, TC-score 0.8 with the mark). The borehole pT agreement is not
+  affected: each of its rows names both fields.
+
 ### Changed
 
 - The field reference pages no longer have a Source column in each field's table. The field
   schema still records the source of every fact.
+- A cross-field rule names a vocabulary concept as a reference from
+  `ghfdb.vocabularies.concepts`, such as `concepts.tc_source["core-samples"]`, an
+  `rdflib.URIRef` that is the concept's URI. `concepts.<column name>` is the namespace of the
+  concept scheme of the field with that published column name, built from the packaged field
+  schema without the network, and it raises `AttributeError` naming a column name that has no
+  vocabulary. The references fill `Condition`, `Domain` and `Example`, and the
+  `(field code, concept)` pairs `Rule.concepts()` returns. `DatasetCheck.terms` is replaced by
+  `DatasetCheck.concepts`, the concepts the rules name resolved for their fields with
+  `ghfdb.fields.schema.FieldConcepts.resolve`. A reference that is neither an allowed value of its
+  field nor a collection of the field's scheme is refused when the check is built, naming the
+  rule, the field and the reference. The same references name the concepts of the quality scheme,
+  and the two domains and the laboratory conductivity methods are the collections the
+  vocabularies publish.
+- The modules of the Python API moved. `Vocabularies`, `AllowedValue`, `MissingSchemeError`,
+  `caching_session` and `local_name` are now in `ghfdb.vocabularies` and are no longer exported
+  by `ghfdb.fields`. The generator of `ghfdb/fields/names.py` is the script
+  `scripts/generate_field_names.py`, run with `uv run python scripts/generate_field_names.py`,
+  and is no longer installed with the package. `ghfdb.qc.rules` declares the cross-field rules
+  `CF_1` to `CF_4` and nothing else. The declarations of the quality scheme are in
+  `ghfdb.qc.scheme` (the domains, the criteria of the probe-sensing and the borehole and mine
+  scoring, and the grades), and how they are evaluated is in `ghfdb.qc.engine`, which is
+  internal. The scoring classes are renamed so that "rule" means a cross-field rule only:
+  `RuleSet` is `DomainScoring`, `RuleScores` is `DomainScores`, `ProbeRules` is `ProbeSensing`
+  and `BoreholeRules` is `BoreholeAndMine`, and `Domain.rules` is `Domain.scoring`.
+- The terms of the laboratory conductivity methods in the table of the probe-sensing saturation
+  criterion are listed alphabetically, as the vocabulary's collection of them lists its members.
 
 ## [v0.1.0] - 2026-11-10
 
@@ -118,6 +184,9 @@ All notable changes to this project are recorded here. The format follows
 
 ### Scheme changes
 
+- Wrote down how several values in one field are read: number fields value by value with
+  `C1` and `C2` paired, routing, flags and the two probe waivers reading the first filled value,
+  and a borehole gradient's case chosen once for the child. The code already read them this way.
 - Added rule CF-1: a child explored by drilling, clustered drilling, mining, tunneling or
   indirect estimation has every field mandatory for borehole and mine data only filled
   (`C4`, `C5`, `C31`, `C32`).
@@ -156,5 +225,11 @@ All notable changes to this project are recorded here. The format follows
   assessment team as questions.
 - The worked examples are published with the scheme in `ghfdb/qc/worked_examples.json`, 205
   examples giving each one's inputs by field code and its expected scores, every one asserted by
-  the GHFDB portal's own tests. The documentation renders them as tables from that file. No score
-  is computed in this package yet.
+  the GHFDB portal's own tests. The documentation renders them as tables from that file.
+- Preview quality scores. `ghfdb check` now scores every child under the quality scheme and the
+  report gains a Preview scores table after the problems: the rules that scored the child,
+  its U-score, T-score, TC-score and M-score, its perturbation flags and quality code, and
+  whether the child has problems. Each score heading links to its page of the scheme
+  reference, and the summary links to the scheme. A cell that has a problem is scored as
+  empty. `Dataset.scores` gives the same table in Python. A workbook of 90,000 children is
+  still checked, scored and reported in under 15 seconds.

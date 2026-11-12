@@ -7,12 +7,17 @@ from typing import Any
 
 from frictionless import Schema
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
+from rdflib import URIRef
 from sphinx.application import Sphinx
 
 from extensions.field_reference import FieldReference
-from ghfdb.fields import Vocabularies, allowed_values, load_schema
+from ghfdb.fields import load_schema
+from ghfdb.fields.schema import FieldConcepts
 from ghfdb.qc.check import Kind
-from ghfdb.qc.rules import BOREHOLE, PROBE_SENSING, RULES, Domain, Rule
+from ghfdb.qc.engine.rule_kinds import Domain, Rule
+from ghfdb.qc.rules import RULES
+from ghfdb.qc.scheme.domains import BOREHOLE, PROBE_SENSING
+from ghfdb.vocabularies import Vocabularies
 
 TEMPLATES = Path(__file__).parent / "templates"
 PAGE = "reference/rules"
@@ -40,11 +45,11 @@ class RuleReference:
         self.schema = schema
         self.vocabularies = Vocabularies() if vocabularies is None else vocabularies
         self.rules = tuple(rules)
-        self.concept_terms = {
-            (code, uri): self.terms(code)[uri]
-            for rule in self.rules
-            for code, uri in rule.concepts()
-        }
+        self.concepts = FieldConcepts.resolve(
+            schema,
+            [pair for rule in self.rules for pair in rule.concepts()],
+            self.vocabularies,
+        )
         self.environment = Environment(
             loader=FileSystemLoader(TEMPLATES),
             undefined=StrictUndefined,
@@ -61,39 +66,41 @@ class RuleReference:
                 "rules": self.rules,
                 "domain_of": self.domain_of,
                 "terms": self.terms,
-                "concept_terms": self.concept_terms,
+                "concepts": self.concepts,
                 "source": FieldReference.source,
                 "problem": str(Kind.RULE),
             }
         )
         self.environment.globals.update(domains=self.domains, entries=self.entries)
 
-    def terms(self, code: str) -> dict[str | None, str]:
-        """Map the concept URI of each allowed value of a field to its term.
+    def terms(self, code: str) -> dict[URIRef, str]:
+        """Map each allowed value of a field that has a concept to its term.
 
         Args:
             code: The field's code.
 
         Returns:
-            The term of each allowed value, by the URI of its concept.
+            The term of each allowed value that belongs to a vocabulary, by concept.
         """
-        field = self.schema.get_field(code)
-        return {
-            value.uri: value.term for value in allowed_values(field, self.vocabularies)
-        }
+        return FieldConcepts.terms_of(self.schema.get_field(code), self.vocabularies)
 
-    @staticmethod
-    def domain_of(concept: str) -> Domain | None:
+    def domain_of(self, concept: URIRef) -> Domain | None:
         """Find the domain an exploration method belongs to.
 
         Args:
-            concept: The URI of the exploration method's concept.
+            concept: The exploration method's concept.
 
         Returns:
             The domain, or None when no rule's domain holds the method.
         """
+        methods = self.concepts[BOREHOLE.field]
         return next(
-            (d for d in (BOREHOLE, PROBE_SENSING) if concept in d.concepts), None
+            (
+                d
+                for d in (BOREHOLE, PROBE_SENSING)
+                if concept in methods.expand(d.concepts)
+            ),
+            None,
         )
 
     def domains(self) -> str:

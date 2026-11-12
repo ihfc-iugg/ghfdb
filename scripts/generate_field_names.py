@@ -1,6 +1,6 @@
 """Write ``ghfdb/fields/names.py`` from the packaged field schema.
 
-Run ``python -m ghfdb.fields.generate`` after the schema changes.
+Run ``uv run python scripts/generate_field_names.py`` after the schema changes.
 """
 
 import json
@@ -14,7 +14,7 @@ class FieldNames:
 
     HEADER = '''"""The column name of every field of the upload template.
 
-This file is generated from ``schema.json`` by ``python -m ghfdb.fields.generate``.
+This file is generated from ``schema.json`` by ``scripts/generate_field_names.py``.
 Do not edit it by hand: change the schema and generate it again.
 """
 
@@ -53,7 +53,7 @@ class Field(StrEnum):
         """
         schema = resources.files("ghfdb.fields").joinpath("schema.json")
         fields = json.loads(schema.read_text("utf-8"))["fields"]
-        path = Path(__file__).with_name("names.py")
+        path = Path(__file__).parent.parent / "ghfdb" / "fields" / "names.py"
         path.write_text(cls.render(fields), encoding="utf-8")
         return path
 

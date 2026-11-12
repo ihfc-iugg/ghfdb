@@ -4,7 +4,7 @@ import numpy
 import pandas
 from frictionless import Schema
 
-from ghfdb.fields import Field, Vocabularies
+from ghfdb.fields import Field
 from ghfdb.qc.borehole import BoreholeRules
 from ghfdb.qc.check import Kind
 from ghfdb.qc.criteria import term_names
@@ -13,6 +13,7 @@ from ghfdb.qc.penalties import SCORE_DECIMALS, Band, Score
 from ghfdb.qc.probe import ProbeRules
 from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD, PROBE_SENSING, Domain
 from ghfdb.qc.uncertainty import UScore
+from ghfdb.vocabularies import Vocabularies
 
 # The class of the product of the T-score and the TC-score: M1 from 0.75, M2 from 0.50,
 # M3 from 0.25 and M4 below. A product on an edge takes the better class.

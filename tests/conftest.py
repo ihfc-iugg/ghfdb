@@ -13,10 +13,11 @@ import xlsxwriter
 from frictionless import Field, Schema
 from openpyxl import load_workbook
 
-from ghfdb.fields import Vocabularies, caching_session, load_schema
+from ghfdb.fields import load_schema
 from ghfdb.qc.criteria import term_names
 from ghfdb.qc.scores import Scores
 from ghfdb.template import FIRST_DATA_ROW, ROW_LABELS, UploadTemplate
+from ghfdb.vocabularies import Vocabularies, caching_session
 
 Example = Mapping[str, Any]
 ConceptNames = dict[str, dict[str, str]]
@@ -216,7 +217,7 @@ def vocabularies_cached(
     afterwards.
     """
     monkeypatch.setattr(
-        "ghfdb.fields.vocabularies.user_cache_dir", lambda _: str(cache_directory)
+        "ghfdb.vocabularies.user_cache_dir", lambda _: str(cache_directory)
     )
     return cache_directory
 

@@ -6,7 +6,7 @@ import pandas
 from frictionless import Schema
 
 from ghfdb.fields.schema import allowed_values
-from ghfdb.fields.vocabularies import MissingSchemeError, Vocabularies, local_name
+from ghfdb.vocabularies import MissingSchemeError, Vocabularies, local_name
 
 
 def parse_numbers(text: pandas.Series) -> pandas.Series:

@@ -11,7 +11,7 @@ from pathlib import Path
 
 from frictionless import Field, Schema
 
-from ghfdb.fields.vocabularies import AllowedValue, MissingSchemeError, Vocabularies
+from ghfdb.vocabularies import AllowedValue, MissingSchemeError, Vocabularies
 
 
 def allowed_values(

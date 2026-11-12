@@ -7,10 +7,11 @@ from pathlib import Path
 import pandas
 
 from ghfdb.dataset import Dataset
-from ghfdb.fields import MissingSchemeError, Vocabularies, load_schema
+from ghfdb.fields import load_schema
 from ghfdb.qc.report import Report
 from ghfdb.qc.rules import RULES
 from ghfdb.qc.workbook import CheckError, UploadWorkbook
+from ghfdb.vocabularies import MissingSchemeError, Vocabularies
 
 DOWNLOAD_ADVICE = (
     "The vocabularies must be downloaded once, with a network connection, "

@@ -21,12 +21,12 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from ghfdb.cli import main
 from ghfdb.dataset import Dataset
-from ghfdb.fields import Vocabularies
 from ghfdb.qc.check import Kind
 from ghfdb.qc.report import NO, YES
 from ghfdb.qc.rules import CF_3, RULES, Condition
 from ghfdb.qc.workbook import UploadWorkbook
 from ghfdb.template import FIRST_DATA_ROW
+from ghfdb.vocabularies import Vocabularies
 
 SOURCE = Path(__file__).parent / "sources" / "upload-template.xlsx"
 Filler = Callable[[Sequence[Mapping[str, Any]]], Path]
@@ -221,9 +221,7 @@ class TestOffline:
     ) -> None:
         cache = tmp_path / "cache"
         shutil.copytree(cache_directory, cache)
-        monkeypatch.setattr(
-            "ghfdb.fields.vocabularies.user_cache_dir", lambda _: str(cache)
-        )
+        monkeypatch.setattr("ghfdb.vocabularies.user_cache_dir", lambda _: str(cache))
         path = filled_workbook([valid_child | {mandatory_code: None}])
 
         status = main(["check", str(path)])
@@ -241,7 +239,7 @@ class TestOffline:
         capsys: pytest.CaptureFixture[str],
     ) -> None:
         monkeypatch.setattr(
-            "ghfdb.fields.vocabularies.user_cache_dir", lambda _: str(tmp_path / "none")
+            "ghfdb.vocabularies.user_cache_dir", lambda _: str(tmp_path / "none")
         )
         path = tmp_path / "workbook.xlsx"
 

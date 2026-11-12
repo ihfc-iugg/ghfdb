@@ -6,13 +6,13 @@ import pytest
 from conftest import worked_document
 from frictionless import Schema
 
-from ghfdb.fields import MissingSchemeError, Vocabularies, allowed_values
-from ghfdb.fields.vocabularies import local_name
+from ghfdb.fields import allowed_values
 from ghfdb.qc.borehole import BoreholeRules
 from ghfdb.qc.criteria import CRITERIA, term_names
 from ghfdb.qc.probe import ProbeRules
 from ghfdb.qc.rules import EXPLORATION_METHOD
 from ghfdb.qc.scores import Scores
+from ghfdb.vocabularies import MissingSchemeError, Vocabularies, local_name
 
 
 @pytest.fixture(scope="module")

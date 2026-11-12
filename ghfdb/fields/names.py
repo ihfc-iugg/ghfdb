@@ -1,6 +1,6 @@
 """The column name of every field of the upload template.
 
-This file is generated from ``schema.json`` by ``python -m ghfdb.fields.generate``.
+This file is generated from ``schema.json`` by ``scripts/generate_field_names.py``.
 Do not edit it by hand: change the schema and generate it again.
 """
 

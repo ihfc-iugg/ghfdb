@@ -3,9 +3,10 @@ from importlib import resources
 from pathlib import Path
 from typing import Any
 
+from generate_field_names import FieldNames
+
 import ghfdb.fields.names
 from ghfdb.fields import Field, load_schema
-from ghfdb.fields.generate import FieldNames
 
 
 def packaged_fields() -> list[dict[str, Any]]:

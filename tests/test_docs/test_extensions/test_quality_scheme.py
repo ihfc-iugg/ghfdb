@@ -7,7 +7,7 @@ from extensions.field_reference import FieldReference
 from extensions.quality_scheme import SchemeReference, ScoreRange
 from frictionless import Schema
 
-from ghfdb.fields import Field, Vocabularies
+from ghfdb.fields import Field
 from ghfdb.qc.penalties import (
     Band,
     Bands,
@@ -17,6 +17,7 @@ from ghfdb.qc.penalties import (
     Criterion,
     Group,
 )
+from ghfdb.vocabularies import Vocabularies
 
 NOT_DETERMINED = "not determined"
 

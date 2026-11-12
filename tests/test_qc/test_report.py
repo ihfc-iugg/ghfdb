@@ -12,12 +12,12 @@ from conftest import read_headings, read_problems, read_scores, read_table
 from frictionless import Schema
 
 import ghfdb
-from ghfdb.fields import Vocabularies
 from ghfdb.qc import report
 from ghfdb.qc.check import PROBLEM_COLUMNS, Kind
 from ghfdb.qc.report import NO, SCORE_TABLE, YES, Report
 from ghfdb.qc.rules import CF_1, CF_3
 from ghfdb.qc.workbook import CheckError
+from ghfdb.vocabularies import Vocabularies
 
 SCORE_HEADINGS = [column.heading for column in SCORE_TABLE]
 

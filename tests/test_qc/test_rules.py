@@ -5,9 +5,9 @@ import pandas
 import pytest
 from frictionless import Schema
 
-from ghfdb.fields import MissingSchemeError, Vocabularies
 from ghfdb.qc.check import DatasetCheck
 from ghfdb.qc.rules import CF_1, CF_2, CF_3, RULES, Condition, Rule
+from ghfdb.vocabularies import MissingSchemeError, Vocabularies
 
 Children = Callable[..., pandas.DataFrame]
 

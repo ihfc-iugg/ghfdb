@@ -11,9 +11,10 @@ from frictionless import Field, Schema
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from sphinx.application import Sphinx
 
-from ghfdb.fields import AllowedValue, Vocabularies, allowed_values, load_schema
+from ghfdb.fields import allowed_values, load_schema
 from ghfdb.qc.rules import RULES, Rule
 from ghfdb.template import VOCABULARIES
+from ghfdb.vocabularies import AllowedValue, Vocabularies
 
 TEMPLATE_DOI = "https://doi.org/10.5880/fidgeo.2025.042"
 DECISIONS_URL = "https://github.com/ihfc-iugg/ghfdb/blob/main/specs/001-field-reference/decisions.md"

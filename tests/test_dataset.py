@@ -9,10 +9,10 @@ from frictionless import Schema
 import ghfdb
 import ghfdb.qc
 from ghfdb.dataset import Dataset
-from ghfdb.fields import MissingSchemeError, Vocabularies
 from ghfdb.qc.check import PROBLEM_COLUMNS, Kind
 from ghfdb.qc.workbook import UploadWorkbook
 from ghfdb.template import FIRST_DATA_ROW
+from ghfdb.vocabularies import MissingSchemeError, Vocabularies
 
 Filler = Callable[[Sequence[Mapping[str, Any]]], Path]
 

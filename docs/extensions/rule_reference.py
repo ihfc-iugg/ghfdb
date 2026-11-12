@@ -10,10 +10,11 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from sphinx.application import Sphinx
 
 from extensions.field_reference import FieldReference
-from ghfdb.fields import Vocabularies, load_schema
+from ghfdb.fields import load_schema
 from ghfdb.fields.cells import terms_by_name
 from ghfdb.qc.check import Kind
 from ghfdb.qc.rules import BOREHOLE, PROBE_SENSING, RULES, Domain, Rule
+from ghfdb.vocabularies import Vocabularies
 
 TEMPLATES = Path(__file__).parent / "templates"
 PAGE = "reference/rules"

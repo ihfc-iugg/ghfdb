@@ -10,14 +10,12 @@ from example_site import publish
 from frictionless import Schema
 from openpyxl import load_workbook
 
-from ghfdb.fields import (
+from ghfdb.fields import allowed_values, field_for_column, load_schema
+from ghfdb.vocabularies import (
     AllowedValue,
     MissingSchemeError,
     Vocabularies,
-    allowed_values,
     caching_session,
-    field_for_column,
-    load_schema,
 )
 
 COLOURS = "https://example.test/vocabularies/colours"

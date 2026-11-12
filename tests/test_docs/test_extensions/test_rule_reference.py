@@ -6,9 +6,9 @@ from extensions.field_reference import FieldReference
 from extensions.rule_reference import RuleReference
 from frictionless import Schema
 
-from ghfdb.fields import Vocabularies
 from ghfdb.fields.cells import terms_by_name
 from ghfdb.qc.rules import BOREHOLE, PROBE_SENSING, RULES, Rule
+from ghfdb.vocabularies import Vocabularies
 
 MISSING = "—"
 RELATED_FIELDS = {

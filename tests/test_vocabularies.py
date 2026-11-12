@@ -8,7 +8,7 @@ from rdflib import RDF, Graph, URIRef
 from rdflib.namespace import SKOS
 from requests_cache import CachedSession
 
-from ghfdb.fields import (
+from ghfdb.vocabularies import (
     AllowedValue,
     MissingSchemeError,
     Vocabularies,
@@ -63,7 +63,7 @@ class TestCachingSession:
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         monkeypatch.setattr(
-            "ghfdb.fields.vocabularies.user_cache_dir", lambda _: str(tmp_path)
+            "ghfdb.vocabularies.user_cache_dir", lambda _: str(tmp_path)
         )
 
         session = caching_session()

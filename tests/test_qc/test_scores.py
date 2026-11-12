@@ -6,11 +6,11 @@ import pytest
 from conftest import ConceptNames, Example, examples_of, one_child
 
 from ghfdb.dataset import Dataset
-from ghfdb.fields import Vocabularies
 from ghfdb.qc.inputs import Inputs
 from ghfdb.qc.penalties import Score
 from ghfdb.qc.scores import Scores
 from ghfdb.qc.uncertainty import UScore
+from ghfdb.vocabularies import Vocabularies
 
 NOT_DETERMINED = "not determined"
 

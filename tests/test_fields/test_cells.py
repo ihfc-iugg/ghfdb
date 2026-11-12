@@ -9,14 +9,14 @@ from example_site import publish
 from frictionless import Schema
 from pandas.testing import assert_series_equal
 
-from ghfdb.fields import (
+from ghfdb.fields import load_schema
+from ghfdb.fields.cells import parse_numbers, terms_by_name
+from ghfdb.vocabularies import (
+    AllowedValue,
     MissingSchemeError,
     Vocabularies,
     caching_session,
-    load_schema,
 )
-from ghfdb.fields.cells import parse_numbers, terms_by_name
-from ghfdb.fields.vocabularies import AllowedValue
 
 COLOURS = "https://example.test/vocabularies/colours"
 THREE_FIELDS = Path(__file__).parent / "schemas" / "three_fields.json"

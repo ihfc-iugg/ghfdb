@@ -9,11 +9,11 @@ from collections.abc import Iterable
 
 from frictionless import Schema
 
-from ghfdb.fields import MissingSchemeError, Vocabularies
 from ghfdb.fields.cells import terms_by_name
 from ghfdb.qc.borehole import BoreholeRules
 from ghfdb.qc.penalties import Criterion, Table
 from ghfdb.qc.probe import ProbeRules
+from ghfdb.vocabularies import MissingSchemeError, Vocabularies
 
 CRITERIA: dict[str, Criterion[Table]] = {
     criterion.identifier: criterion

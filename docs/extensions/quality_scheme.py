@@ -14,7 +14,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from sphinx.application import Sphinx
 
 from extensions.field_reference import FieldReference
-from ghfdb.fields import Field, Vocabularies, load_schema
+from ghfdb.fields import Field, load_schema
 from ghfdb.fields.cells import terms_by_name
 from ghfdb.qc import borehole, probe
 from ghfdb.qc.criteria import CRITERIA
@@ -26,6 +26,7 @@ from ghfdb.qc.penalties import (
     Criterion,
     Table,
 )
+from ghfdb.vocabularies import Vocabularies
 
 TEMPLATES = Path(__file__).parent / "templates"
 PAGES = "reference/quality-scheme/"

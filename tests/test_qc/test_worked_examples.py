@@ -7,7 +7,8 @@ from typing import Any
 import pytest
 from frictionless import Schema
 
-from ghfdb.fields import Vocabularies, allowed_values
+from ghfdb.fields import allowed_values
+from ghfdb.vocabularies import Vocabularies
 
 # The parts whose inputs are not the fields of one child: the M-score takes two
 # scores and a parent takes the codes of its children.

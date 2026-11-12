@@ -13,10 +13,10 @@ from jinja2 import Environment, PackageLoader
 from markupsafe import Markup
 
 from ghfdb import __version__
-from ghfdb.fields import Vocabularies
 from ghfdb.qc.penalties import SCORE_DECIMALS
 from ghfdb.qc.rules import RULES
 from ghfdb.qc.workbook import CheckError
+from ghfdb.vocabularies import Vocabularies
 
 TEMPLATES = Environment(loader=PackageLoader("ghfdb.qc", "templates"), autoescape=True)
 

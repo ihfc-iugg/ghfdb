@@ -19,7 +19,9 @@ request.
 
 ### Article III — Anti-Abstraction
 No wrapper layers, base classes or indirection without a present, concrete second use. Prefer
-duplication over the wrong abstraction.
+duplication over the wrong abstraction. A second use also counts as present when it is in
+another approved specification built in the same batch, such as several features specified
+together from one prototype.
 
 ### Article IV — Integration-First
 The package is used through its command line and through the workbooks it reads and writes.
@@ -114,4 +116,4 @@ Read at plan and review; applies to every change.
 
 ---
 
-**Version**: 1.2.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-10
+**Version**: 1.2.1 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-11

@@ -1,7 +1,10 @@
 # ADR 0010 — Each scheme criterion is declared once
 
 **Status:** accepted. It extends [ADR 0006](0006-cross-field-rules-are-declared-in-python.md) from
-the cross-field rules to the scoring.
+the cross-field rules to the scoring. [ADR 0011](0011-concepts-are-referenced-through-the-vocabularies.md)
+replaces how a concept is named, which the paragraph beginning "A concept is named by its local
+name" records as it was decided, and moves the declarations to `ghfdb.qc.scheme` and the code that
+evaluates them to `ghfdb.qc.engine`; the rest stands.
 
 ## Context
 
@@ -20,7 +23,7 @@ change. An audit of it found three problems that this decision answers:
 
 ## Decision
 
-Each criterion of the scheme is one declaration, a `Criterion` in `ghfdb.qc.penalties`. It carries
+Each criterion of the scheme is one declaration, a `Criterion` in `ghfdb.qc.engine.tables`. It carries
 the identifier the worked examples use, a title, the paper's table and row it comes from, and one
 table that gives the penalties. There are three kinds of table, and the scoring uses nothing else
 to turn a value into a penalty:
@@ -32,10 +35,11 @@ to turn a value into a penalty:
 Each table scores every child at once, keeps the poorest of a child's values, takes its largest
 penalty from its own rows, and lists the concepts it names. A table may read its number through a
 declared conversion, as the water depth reads the elevation with its sign reversed. The criteria
-are declared as module-level constants in `ghfdb.qc.probe` and `ghfdb.qc.borehole`. Each set of
-rules is a `RuleSet` in `ghfdb.qc.ruleset` that lists the criteria its scores add up, the
-corrections that waive one, and the criterion that stands in for another in a measurement's own
-score, and `ghfdb.qc.criteria` lists every declared criterion from them. What a table cannot say
+are declared as module-level constants in `ghfdb.qc.scheme.probe` and
+`ghfdb.qc.scheme.borehole`. The scoring of each domain is a `DomainScoring` in
+`ghfdb.qc.engine.domain` that lists the criteria its scores add up, the corrections that waive one,
+and the criterion that stands in for another in a measurement's own score, and
+`ghfdb.qc.scheme.CRITERIA` lists every declared criterion from them. What a table cannot say
 stays code: which of the three cases a borehole gradient is, and the interval depth gate.
 
 The scheme pages render each criterion's penalty table from its declaration, through the
@@ -61,7 +65,7 @@ changes one line of the generated names and no worked example.
 ## Consequences
 
 * A change of a penalty, an edge or a group is one edit to a declaration, and a new criterion is
-  scored once it is listed in its set of rules. The page that states it
+  scored once it is listed in the scoring of its domain. The page that states it
   and the tests that run it follow, and a criterion that a worked example does not reach is
   found, because every declared criterion has an example.
 * A scheme change that adds a kind of condition adds it to the table that needs it. The probe

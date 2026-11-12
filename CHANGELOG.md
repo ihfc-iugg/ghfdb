@@ -50,12 +50,32 @@ All notable changes to this project are recorded here. The format follows
 
 - The field reference pages no longer have a Source column in each field's table. The field
   schema still records the source of every fact.
-- A cross-field rule names a vocabulary concept by its local name, the last segment of its URI,
-  within the vocabulary of the field it sits under, such as `drilling` for the exploration method
-  field. This replaces the full URI in `Condition`, `Domain` and `Example`, in the
-  `(field code, concept)` pairs `Rule.concepts()` returns, and in `DatasetCheck.terms`. A rule
-  written with URIs is refused when the check is built, naming the rule, the field and the
-  name. A field in which two allowed values share a local name is refused too.
+- A cross-field rule names a vocabulary concept as a reference from
+  `ghfdb.vocabularies.concepts`, such as `concepts.tc_source["core-samples"]`, an
+  `rdflib.URIRef` that is the concept's URI. `concepts.<column name>` is the namespace of the
+  concept scheme of the field with that published column name, built from the packaged field
+  schema without the network, and it raises `AttributeError` naming a column name that has no
+  vocabulary. The references fill `Condition`, `Domain` and `Example`, and the
+  `(field code, concept)` pairs `Rule.concepts()` returns. `DatasetCheck.terms` is replaced by
+  `DatasetCheck.concepts`, the concepts the rules name resolved for their fields with
+  `ghfdb.fields.schema.FieldConcepts.resolve`. A reference that is neither an allowed value of its
+  field nor a collection of the field's scheme is refused when the check is built, naming the
+  rule, the field and the reference. The same references name the concepts of the quality scheme,
+  and the two domains and the laboratory conductivity methods are the collections the
+  vocabularies publish.
+- The modules of the Python API moved. `Vocabularies`, `AllowedValue`, `MissingSchemeError`,
+  `caching_session` and `local_name` are now in `ghfdb.vocabularies` and are no longer exported
+  by `ghfdb.fields`. The generator of `ghfdb/fields/names.py` is the script
+  `scripts/generate_field_names.py`, run with `uv run python scripts/generate_field_names.py`,
+  and is no longer installed with the package. `ghfdb.qc.rules` declares the cross-field rules
+  `CF_1` to `CF_4` and nothing else. The declarations of the quality scheme are in
+  `ghfdb.qc.scheme` (the domains, the criteria of the probe-sensing and the borehole and mine
+  scoring, and the grades), and how they are evaluated is in `ghfdb.qc.engine`, which is
+  internal. The scoring classes are renamed so that "rule" means a cross-field rule only:
+  `RuleSet` is `DomainScoring`, `RuleScores` is `DomainScores`, `ProbeRules` is `ProbeSensing`
+  and `BoreholeRules` is `BoreholeAndMine`, and `Domain.rules` is `Domain.scoring`.
+- The terms of the laboratory conductivity methods in the table of the probe-sensing saturation
+  criterion are listed alphabetically, as the vocabulary's collection of them lists its members.
 
 ## [v0.1.0] - 2026-11-10
 

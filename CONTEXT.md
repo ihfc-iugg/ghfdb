@@ -91,7 +91,7 @@ Avoid "determination", "entry" and "record" for a row. Say **child**.
 | **U-score** | The grade of a child's uncertainty, `U1`–`U4`, from the coefficient of variation. `Ux` when it cannot be determined. |
 | **M-score** | The grade of a child's methodology, `M1`–`M4`, from the product of its T-score and TC-score. `Mx` when it cannot be determined. |
 | **T-score**, **TC-score** | The numbers the M-score is made from: how well the temperature gradient and the thermal conductivity were determined. Each starts at 1.0 and takes a penalty per criterion. |
-| **Rules** (probe sensing, borehole and mine) | The two sets of criteria for the T-score and TC-score. A child is scored by one of them, chosen by its site's exploration method. |
+| **Domain scoring** (probe sensing, borehole and mine) | The two sets of criteria for the T-score and TC-score. A child is scored by one of them, chosen by its site's exploration method, and the `rules` column of the scores names it. Not a cross-field rule. |
 | **Missing-information mark** | The `x` after an M-score. Set when an input the scheme needed was empty, in which case that criterion took its largest penalty, and in the few named cases the scheme lists. An input recorded as unspecified takes the same penalty without the mark. Not to be confused with `Mx`. |
 | **Not determined** | No score could be made: `Ux`, `Mx`, or a T-score or TC-score left empty. Never written as 0. |
 | **Perturbation flags** | Seven characters recording each disturbing effect's state, in the order `S E T P V C R`. Not "P-score". |

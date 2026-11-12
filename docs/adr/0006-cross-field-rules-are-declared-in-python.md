@@ -1,12 +1,14 @@
 # ADR 0006 — Cross-field rules are declared in Python, each kind checking itself
 
-**Status:** accepted. [ADR 0010](0010-each-scheme-criterion-is-declared-once.md) changes how a rule
-names a concept; the rest stands.
+**Status:** accepted. [ADR 0011](0011-concepts-are-referenced-through-the-vocabularies.md) replaces
+how a rule names a concept, which the second paragraph of the decision records as it was decided;
+the rest stands.
 
 ## Decision
 
 The rules that relate several fields of a child are declared in Python, in `ghfdb.qc.rules`. Every
-rule is an instance of a frozen dataclass derived from `Rule`, which carries its identifier,
+rule is an instance of a frozen dataclass derived from `Rule`, defined in
+`ghfdb.qc.engine.rule_kinds`, which carries its identifier,
 statement, source, reasoning and worked example. Each kind of rule is a subclass that implements
 `problems()`, which finds the children breaking the rule a column at a time, and `diagram()`,
 which draws the rule for the documentation. `RULES` is a tuple of every rule the check applies.

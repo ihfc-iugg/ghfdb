@@ -1,7 +1,7 @@
 """The controlled vocabularies, read from where they are published.
 
-``concepts`` names a concept of a field's vocabulary in code, from the field schema alone.
-The rest of the module reads the vocabularies themselves.
+``concepts`` names a concept of a field's vocabulary in code, from the field schema
+alone. The rest of the module reads the vocabularies themselves.
 
 The IHFC Controlled Vocabularies publish a concept scheme at its identifier with
 ``.ttl`` added. A field whose scheme is not published there names the file to download
@@ -270,8 +270,9 @@ class Concepts:
 
     A field that draws on a vocabulary is a namespace of its concept scheme, so a
     concept is ``concepts.tc_method.pointSource``, or, when its local name is not a
-    Python name, ``concepts.tc_source["insitu-probe"]``. Each is the concept's ``URIRef``.
-    The namespaces are built from the packaged field schema, never from the web.
+    Python name, ``concepts.tc_source["insitu-probe"]``. Each is the concept's
+    ``URIRef``. The namespaces are built from the packaged field schema, never from
+    the web.
 
     Args:
         namespaces: The namespace of the scheme of each field that has a vocabulary, by
@@ -319,7 +320,7 @@ class Concepts:
             ) from None
 
     def __getattr__(self, column_name: str) -> Namespace:
-        """Find the namespace of a field's concept scheme, as ``concepts[name]`` does."""
+        """Find the namespace of a field's concept scheme, as item access does."""
         if column_name == "namespaces" or column_name.startswith("__"):
             raise AttributeError(column_name)
         return self[column_name]

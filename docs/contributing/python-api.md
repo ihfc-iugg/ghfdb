@@ -1,12 +1,41 @@
 # Python API
 
+## What is public
+
+These are public. Their names and behaviour change only with a release and a line in the
+changelog:
+
+* `ghfdb.Dataset`, and `ghfdb.template`, which writes the upload template.
+* `ghfdb.fields`, which describes the fields.
+* `ghfdb.vocabularies`, which reads the controlled vocabularies and names their concepts.
+* `ghfdb.qc`, with the names it exports: `UploadWorkbook`, `CheckError`, `DatasetCheck` and
+  `Kind`.
+* `ghfdb.qc.rules`, which declares the cross-field rules.
+* `ghfdb.qc.scheme`, which declares the quality scheme.
+
+`ghfdb.qc.check`, `ghfdb.qc.workbook`, `ghfdb.qc.report` and `ghfdb.qc.scores` are the entry
+points that `Dataset` and the command line use. `ghfdb.qc.engine` is internal: it holds how
+the declarations are evaluated, nothing outside `ghfdb.qc` imports it, and it changes without
+notice. It is documented below for those who add a kind of rule or of table.
+
+```text
+ghfdb/
+  dataset.py        Dataset
+  vocabularies.py   Vocabularies, and concepts, which names a concept
+  template.py       UploadTemplate
+  fields/           the field schema and Field
+  qc/
+    check.py  workbook.py  report.py  scores.py
+    rules.py        the cross-field rules CF-1 to CF-4
+    scheme/         what the quality scheme says: domains, criteria, grades
+    engine/         how the declarations are evaluated (internal)
+```
+
 ## Field definitions
 
-The names `ghfdb.fields` provides: `Field`, `load_schema`, `field_for_column`, `allowed_values`,
-`AllowedValue`, `Vocabularies`, `caching_session` and `MissingSchemeError`. They read the
-packaged field schema, which is a `frictionless.Schema`, and the vocabularies it links to.
-`Vocabularies.releases` lists the releases of the vocabularies read so far, as the
-identifiers the concept schemes say they are part of.
+The names `ghfdb.fields` provides: `Field`, `load_schema`, `field_for_column` and
+`allowed_values`. They read the packaged field schema, which is a `frictionless.Schema`, and
+the vocabularies it links to.
 
 ```{eval-rst}
 .. automodule:: ghfdb.fields
@@ -22,25 +51,51 @@ worked examples and the workbooks do not change, and a member is a string, so `d
 reads the column `C42`.
 
 `ghfdb/fields/names.py` is generated from `schema.json`. After the schema changes, write it again
-with `python -m ghfdb.fields.generate`, which calls `FieldNames.write`. `FieldNames.render` makes
-the source of the file from the schema's fields. A test fails while the file differs from what
-the schema generates.
+with `uv run python scripts/generate_field_names.py`, which calls `FieldNames.write`.
+`FieldNames.render` makes the source of the file from the schema's fields. A test fails while the
+file differs from what the schema generates. The script is a developer tool and is not part of the
+installed package.
+
+## Vocabularies
+
+`ghfdb.vocabularies` provides `Vocabularies`, which downloads and reads the vocabulary files,
+`AllowedValue`, `MissingSchemeError`, `caching_session`, `local_name` and `concepts`.
+`Vocabularies.releases` lists the releases of the vocabularies read so far, as the identifiers
+the concept schemes say they are part of.
 
 ```{eval-rst}
-.. automodule:: ghfdb.fields.generate
+.. automodule:: ghfdb.vocabularies
    :members:
 ```
 
-### Reading the cells of a field
+### Naming a concept in code
 
-`ghfdb.fields.cells` holds the two readings that the check and the scoring share, so that both
-read a cell the same way. `parse_numbers` reads text cells as numbers, empty where a cell is
-empty, is not a number or is infinite. `terms_by_name` maps the local name of each allowed value
-of a field to its term, and refuses a field in which two allowed values share a local name. `local_name` in
-`ghfdb.fields.vocabularies` gives the local name of a concept URI, the last segment of its path.
+`concepts` has one namespace for each field that draws on a vocabulary, named by the field's
+published column name: the namespace of the field's concept scheme. A concept is an attribute
+of it, or an item when its local name is not a Python name, and is an `rdflib.URIRef`:
+
+```python
+from ghfdb.vocabularies import concepts
+
+concepts.tc_method.pointSource  # .../conductivity-methods/pointSource
+concepts.tc_source["insitu-probe"]  # .../conductivity-sources/insitu-probe
+concepts.tc_method.laboratory  # a collection of the same scheme
+```
+
+A collection that the vocabulary publishes is named the same way and stands for its members.
+`concepts` is built from the packaged field schema alone, so naming a concept never touches the
+network. A column name the schema lacks, or a field without a vocabulary, raises
+`AttributeError` naming it.
+
+Declarations name concepts and never terms. `ghfdb.fields.schema.FieldConcepts.resolve` is the
+one place that turns what declarations name into what a field accepts: for each field, the term
+of each concept it accepts, and the members of each collection named. It refuses a reference that
+is neither an allowed value of its field nor a collection of the field's scheme, with a
+`MissingSchemeError` naming the field and the reference. The check, the scoring and the
+documentation all resolve through it.
 
 ```{eval-rst}
-.. automodule:: ghfdb.fields.cells
+.. autoclass:: ghfdb.fields.schema.FieldConcepts
    :members:
 ```
 
@@ -134,17 +189,25 @@ is checked on its own and the problem names that value.
 
 ## Cross-field rules
 
-`ghfdb.qc.rules` declares the rules that relate several fields of a child. Every rule is a
-`Rule`. A `RequiredWhen` rule requires the fields mandatory in one `Domain` for the children of
-that domain, and an `AllowedWhen` rule limits one field once another holds the concepts of a
-`Condition`. `RULES` holds
-them, and `DatasetCheck(data, schema, rules, vocabularies)` applies the rules it is given
+`ghfdb.qc.rules` declares the rules that relate several fields of a child: `CF_1` to `CF_4`,
+listed in `RULES`. `DatasetCheck(data, schema, rules, vocabularies)` applies the rules it is given
 after the field check. A broken rule is a `rule` line, with the rule's identifier in the
-`rule` column and the field that decided the rule applies in the `related` column. The
-module documentation below says how to add a rule of a new kind.
+`rule` column and the field that decided the rule applies in the `related` column. A rule names
+the vocabulary values it needs as concepts, and `DatasetCheck` resolves them to the terms the
+field accepts.
 
 ```{eval-rst}
 .. automodule:: ghfdb.qc.rules
+   :members:
+```
+
+Every rule is a `Rule`. A `RequiredWhen` rule requires the fields mandatory in one `Domain` for
+the children of that domain, and an `AllowedWhen` rule limits one field once another holds the
+concepts of a `Condition`. They are in `ghfdb.qc.engine.rule_kinds`, whose documentation says how
+to add a rule of a new kind.
+
+```{eval-rst}
+.. automodule:: ghfdb.qc.engine.rule_kinds
    :members:
 ```
 
@@ -166,7 +229,7 @@ and returns one row for each, indexed like `data`.
 
 The columns of the table are those of `ghfdb.qc.scores.SCORE_COLUMNS`:
 
-* `rules` names the set of rules that scored the child, `probe sensing` or `borehole and mine`,
+* `rules` names the scoring that scored the child, `probe sensing` or `borehole and mine`,
   and is `<NA>` when none did.
 * `U`, `T`, `TC` and `M` are the U-score, the T-score, the TC-score and the M-score. A T-score
   or TC-score that is not determined is `<NA>` and never 0, and the grades are then `Ux` and `Mx`.
@@ -191,17 +254,63 @@ scores = dataset.scores(dataset.check())
 scores[["M", "code"]]
 ```
 
-### Criteria and tables
+`ghfdb.qc.scores.Scores` routes each child to the scoring of its domain once, hands each scoring
+the children it scores, writes the perturbation flags, grades the M-score and assembles the table
+of scores.
 
-Each criterion of the scheme is declared once, as a `Criterion` in `ghfdb.qc.probe` or
-`ghfdb.qc.borehole`. A `Criterion` holds the identifier the worked examples use, such as
-`probe-t.penetration`, a title, the paper's table and row it comes from, and the table that
-gives its penalties. `ghfdb.qc.criteria.CRITERIA` lists every criterion by its identifier, and
-the pages of the scheme render each criterion's penalty table from its declaration.
+```{eval-rst}
+.. automodule:: ghfdb.qc.scores
+   :members:
+```
 
-There are three kinds of table in `ghfdb.qc.penalties`, and each is a `Table`, which is what the
-scoring and the pages ask of one: the fields it reads, the concepts it names, its largest penalty
-and its `score` of every child.
+### What the scheme declares
+
+`ghfdb.qc.scheme` declares the quality scheme, and the declarations come first in each of its
+modules:
+
+* `ghfdb.qc.scheme.domains` holds the two domains, `BOREHOLE` and `PROBE_SENSING`. Each is the
+  collection of exploration methods that the vocabulary publishes.
+* `ghfdb.qc.scheme.probe` and `ghfdb.qc.scheme.borehole` hold the criteria of the two domains.
+  Each criterion is a `Criterion`: the identifier the worked examples use, such as
+  `probe-t.penetration`, a title, the paper's table and row it comes from, and the table that gives
+  its penalties. The class that follows the criteria, `ProbeSensing` or `BoreholeAndMine`, is the
+  scoring of its domain.
+* `ghfdb.qc.scheme.groups` holds the groups of concepts that both domains name.
+* `ghfdb.qc.scheme.grades` holds the U-score, the classes of the M-score and the perturbation
+  flags.
+* `ghfdb.qc.scheme.CRITERIA` lists every criterion by its identifier, and the pages of the scheme
+  render each criterion's penalty table from its declaration.
+
+A declaration names a concept as a reference, `concepts.tc_method.probePulse`, under the field
+whose vocabulary holds it: `Field.tc_method`. A group that two criteria share is a tuple of
+references in `ghfdb.qc.scheme.groups`, and one used once is written where it is used. A group
+that the vocabulary publishes as a collection is the collection. `Scores.concepts` collects the
+concepts the declarations name, and `FieldConcepts.resolve` resolves them to the term each field
+accepts in the vocabularies as published, raising `MissingSchemeError` naming the field and the
+reference when the field has no such value, for instance when the vocabulary renames the concept.
+
+```{eval-rst}
+.. automodule:: ghfdb.qc.scheme
+   :members:
+
+.. automodule:: ghfdb.qc.scheme.domains
+   :members:
+
+.. automodule:: ghfdb.qc.scheme.probe
+   :members:
+
+.. automodule:: ghfdb.qc.scheme.borehole
+   :members:
+
+.. automodule:: ghfdb.qc.scheme.grades
+   :members:
+```
+
+### How the declarations are evaluated
+
+`ghfdb.qc.engine` is internal. There are three kinds of table in `ghfdb.qc.engine.tables`, and
+each is a `Table`, which is what the scoring and the pages ask of one: the fields it reads, the
+concepts it names, its largest penalty and its `score` of every child.
 
 * `Bands` score a number against ordered edges, each a `Band`. `Depths` are bands of a depth
   below sea level, read from the elevation of the site.
@@ -221,34 +330,22 @@ the fields it does not name contain. The pages render each table from its attrib
 criterion gives a `Penalty`, the penalty and the mark of each child, and a T-score or TC-score
 is a `Score`, rounded to `SCORE_DECIMALS` places.
 
-A declaration names a concept by its local name, the last segment of its URI, written as a
-string under the field whose vocabulary holds it: `"probePulse"` under `Field.tc_method`. The
-field already says which vocabulary the name belongs to, so a name is never qualified. A group
-that two criteria share is a tuple of names in the module that owns it, and one used once is
-written where it is used. `Scores.concepts` collects the concepts the declarations name, and
-`ghfdb.qc.criteria.term_names` resolves them to the term each field accepts in the vocabularies
-as published, raising `MissingSchemeError` naming the field and the name when the field has no
-such value, for instance when a name is misspelt or the vocabulary renames the concept.
-`ghfdb.qc.inputs.Inputs` reads a scored field of a table of children the first time it is
-asked: numbers as numbers, terms as concept names, and a value that is neither as empty. A cell holding a Python list holds several values. The term lookup
-and the number parser that `ghfdb.qc.check` uses are in `ghfdb.fields.cells`, and the scoring
-uses the same ones.
+`ghfdb.qc.engine.inputs.Inputs` reads a scored field of a table of children the first time it is
+asked: numbers as numbers, vocabulary fields as concept URIs, and a value that is neither as
+empty. A cell holding a Python list holds several values. `parse_numbers`, the number parser that
+`ghfdb.qc.check` uses too, is in the same module, so that the check and the scoring read a
+number the same way.
 
-### The rule classes
-
-A set of rules is a `ghfdb.qc.ruleset.RuleSet`, which declares its `criteria`, and where it has
-them its `waivers`, `stand_ins`, `conditions` and `extra_fields`, as class attributes. The fields
-it reads and the concepts it names follow from those declarations, and so do the penalties of its
-criteria for a child and for a measurement on its own, as the `RuleScores` of its T-score,
-TC-score and their own scores. `ghfdb.qc.probe.ProbeRules` scores the
-T-score and the TC-score from its two lists, and its waivers are the two corrections that leave
-the water depth or the tilt out of a child's T-score. `ghfdb.qc.borehole.BoreholeRules` scores
-the TC-score from its list, with the plain pT conditions standing in for their agreement with the
-in-situ correction in a measurement's own score, chooses which of the three cases a gradient is
-and applies the interval depth gate. `ghfdb.qc.uncertainty.UScore` grades the uncertainty.
-`ghfdb.qc.scores.Scores` routes each child to its rules once, hands each set of rules the
-children it scores, writes the perturbation flags, grades the M-score and assembles the table of
-scores.
+The scoring of a domain is a `ghfdb.qc.engine.domain.DomainScoring`, which declares its `criteria`,
+and where it has them its `waivers`, `stand_ins`, `conditions` and `extra_fields`, as class
+attributes. The fields it reads and the concepts it names follow from those declarations, and so
+do the penalties of its criteria for a child and for a measurement on its own, as the
+`DomainScores` of its T-score, TC-score and their own scores. `ProbeSensing` scores the T-score
+and the TC-score from its two lists, and its waivers are the two corrections that leave the water
+depth or the tilt out of a child's T-score. `BoreholeAndMine` scores the TC-score from its list,
+with the plain pT conditions standing in for their agreement with the in-situ correction in a
+measurement's own score, chooses which of the three cases a gradient is and applies the interval
+depth gate. `ghfdb.qc.scheme.grades.UScore` grades the uncertainty.
 
 ### Change or add a criterion
 
@@ -258,52 +355,40 @@ agrees.
 
 To add a criterion:
 
-1. Write its `Criterion` in `ghfdb.qc.probe` or `ghfdb.qc.borehole`, with an identifier of the
-   form `<rules>-<t or tc>.<name>` that is never reused, a title, the paper's table and row as
-   `source`, and a `Bands`, `Classes` or `Cases` table over the `Field` members it reads. Name a
-   concept by its local name, as a string under the field it belongs to.
-2. Add it to that module's `T_CRITERIA` or `TC_CRITERIA`. The rules score every criterion of the
-   list they score from, and the fields the rules read and the concepts the scheme names are
+1. Write its `Criterion` in `ghfdb.qc.scheme.probe` or `ghfdb.qc.scheme.borehole`, with an
+   identifier of the form `<domain>-<t or tc>.<name>` that is never reused, a title, the paper's
+   table and row as `source`, and a `Bands`, `Classes` or `Cases` table over the `Field` members
+   it reads. Name a concept by its reference, under the field it belongs to.
+2. Add it to that module's `T_CRITERIA` or `TC_CRITERIA`. The scoring scores every criterion of
+   the list it scores from, and the fields it reads and the concepts the scheme names are
    collected from the lists, so nothing else lists them. Two things are declared beside the
-   lists, in the class of the rules: a correction that waives a criterion for a child that has
+   lists, in the class of the scoring: a correction that waives a criterion for a child that has
    it goes in `waivers`, by the criterion's identifier, and a criterion that replaces another in
    a measurement's own score goes in `stand_ins`. The three criteria of the borehole T-score are
    the three cases of a gradient and not a sum, so a new one is also chosen between in
-   `BoreholeRules.temperature_methods`.
+   `BoreholeAndMine.temperature_methods`.
 3. Add the criterion's identifier and a statement of it to `criteria` in
    `ghfdb/qc/worked_examples.json`, and a worked example that scores it, naming the criterion in
    its own `criteria`. A test fails while a declared criterion has no example, or an example
    names one that is not declared.
 4. Show it on the page of the scheme that explains it, with the `criterion` call that the other
    criteria use on that page.
-5. If a table cannot say part of it, put that part in the rule class and describe it on the
-   page in words.
+5. If a table cannot say part of it, put that part in the class of the scoring and describe it on
+   the page in words.
 
-A condition on a whole set of rules, such as the gate that stops the scoring of every other
-criterion, is code in the rule class and is not a `Criterion`.
+A condition on a whole domain, such as the gate that stops the scoring of every other criterion,
+is code in the class of the scoring and is not a `Criterion`.
 
 ```{eval-rst}
-.. automodule:: ghfdb.qc.inputs
+.. automodule:: ghfdb.qc.engine
    :members:
 
-.. automodule:: ghfdb.qc.penalties
+.. automodule:: ghfdb.qc.engine.inputs
    :members:
 
-.. automodule:: ghfdb.qc.criteria
+.. automodule:: ghfdb.qc.engine.tables
    :members:
 
-.. automodule:: ghfdb.qc.ruleset
-   :members:
-
-.. automodule:: ghfdb.qc.uncertainty
-   :members:
-
-.. automodule:: ghfdb.qc.probe
-   :members:
-
-.. automodule:: ghfdb.qc.borehole
-   :members:
-
-.. automodule:: ghfdb.qc.scores
+.. automodule:: ghfdb.qc.engine.domain
    :members:
 ```

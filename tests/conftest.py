@@ -14,12 +14,12 @@ from frictionless import Field, Schema
 from openpyxl import load_workbook
 
 from ghfdb.fields import Vocabularies, caching_session, load_schema
-from ghfdb.qc.criteria import term_uris
+from ghfdb.qc.criteria import term_names
 from ghfdb.qc.scores import Scores
 from ghfdb.template import FIRST_DATA_ROW, ROW_LABELS, UploadTemplate
 
 Example = Mapping[str, Any]
-Uris = dict[str, dict[str, str]]
+ConceptNames = dict[str, dict[str, str]]
 
 
 class TableReader(HTMLParser):
@@ -171,9 +171,9 @@ def schema(published_vocabularies: Vocabularies) -> Schema:
 
 
 @pytest.fixture(scope="session")
-def uris(schema: Schema, published_vocabularies: Vocabularies) -> Uris:
-    """The URI of every concept the scoring reads, by field code and term."""
-    return term_uris(schema, Scores.concepts(), published_vocabularies)
+def concept_names(schema: Schema, published_vocabularies: Vocabularies) -> ConceptNames:
+    """The local name of every concept the scoring reads, by field code and term."""
+    return term_names(schema, Scores.concepts(), published_vocabularies)
 
 
 @cache

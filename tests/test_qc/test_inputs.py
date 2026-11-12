@@ -4,14 +4,13 @@ from conftest import column_children
 from pandas.testing import assert_series_equal
 
 from ghfdb.fields import Field
-from ghfdb.qc.concepts import DRILLING, MINING, PROBING_ONSHORE
 from ghfdb.qc.inputs import Inputs
 
-URIS: dict[str, dict[str, str]] = {
+NAMES: dict[str, dict[str, str]] = {
     Field.explo_method: {
-        "[Drilling]": DRILLING,
-        "[Mining]": MINING,
-        "[Probing]": PROBING_ONSHORE,
+        "[Drilling]": "drilling",
+        "[Mining]": "mining",
+        "[Probing]": "probing-onshore",
     }
 }
 
@@ -20,7 +19,7 @@ class TestNumbers:
     def test_a_number_parses_as_the_check_parses_it(self) -> None:
         data = column_children(C1=["1.5", " 2 ", "abc", "inf", "-inf", "", None, "1e2"])
 
-        numbers = Inputs(data, URIS).numbers(Field.qc)
+        numbers = Inputs(data, NAMES).numbers(Field.qc)
 
         expected = pandas.Series(
             [1.5, 2.0, None, None, None, None, None, 100.0],
@@ -34,7 +33,7 @@ class TestNumbers:
     ) -> None:
         data = column_children(C1=["10", [1, "2"]])
 
-        numbers = Inputs(data, URIS).numbers(Field.qc)
+        numbers = Inputs(data, NAMES).numbers(Field.qc)
 
         assert numbers.index.tolist() == [9, 10, 10]
         assert numbers.tolist() == [10.0, 1.0, 2.0]
@@ -42,7 +41,7 @@ class TestNumbers:
     def test_text_is_never_split_into_several_values(self) -> None:
         data = column_children(C1=["1,2"])
 
-        numbers = Inputs(data, URIS).numbers(Field.qc)
+        numbers = Inputs(data, NAMES).numbers(Field.qc)
 
         assert numbers.index.tolist() == [9]
         assert numbers.isna().all()
@@ -50,24 +49,24 @@ class TestNumbers:
     def test_a_field_the_dataset_lacks_is_empty_for_every_child(self) -> None:
         data = column_children(P12=["[Drilling]", "[Mining]"])
 
-        numbers = Inputs(data, URIS).numbers(Field.qc)
+        numbers = Inputs(data, NAMES).numbers(Field.qc)
 
         assert numbers.index.tolist() == [9, 10]
         assert numbers.isna().all()
 
 
 class TestConcepts:
-    def test_a_term_becomes_the_uri_of_its_concept(self) -> None:
+    def test_a_term_becomes_the_local_name_of_its_concept(self) -> None:
         data = column_children(P12=["[Drilling]", "[Probing]", "[Mining]"])
 
-        concepts = Inputs(data, URIS).concepts(Field.explo_method)
+        concepts = Inputs(data, NAMES).concepts(Field.explo_method)
 
-        assert concepts.tolist() == [DRILLING, PROBING_ONSHORE, MINING]
+        assert concepts.tolist() == ["drilling", "probing-onshore", "mining"]
 
     def test_a_term_the_field_does_not_allow_is_empty(self) -> None:
         data = column_children(P12=["[Present and corrected]", "nonsense", "", None])
 
-        concepts = Inputs(data, URIS).concepts(Field.explo_method)
+        concepts = Inputs(data, NAMES).concepts(Field.explo_method)
 
         assert concepts.isna().all()
         assert concepts.index.tolist() == data.index.tolist()
@@ -77,15 +76,15 @@ class TestConcepts:
     ) -> None:
         data = column_children(P12=["[Drilling]", ["[Mining]", "[Drilling]"]])
 
-        concepts = Inputs(data, URIS).concepts(Field.explo_method)
+        concepts = Inputs(data, NAMES).concepts(Field.explo_method)
 
         assert concepts.index.tolist() == [9, 10, 10]
-        assert concepts.tolist() == [DRILLING, MINING, DRILLING]
+        assert concepts.tolist() == ["drilling", "mining", "drilling"]
 
     def test_an_empty_list_is_one_empty_value(self) -> None:
         data = column_children(P12=[[], "[Drilling]"])
 
-        concepts = Inputs(data, URIS).concepts(Field.explo_method)
+        concepts = Inputs(data, NAMES).concepts(Field.explo_method)
 
         assert concepts.index.tolist() == [9, 10]
         assert pandas.isna(concepts.iloc[0])
@@ -93,7 +92,7 @@ class TestConcepts:
     def test_text_is_never_split_into_several_values(self) -> None:
         data = column_children(P12=["[Drilling], [Mining]"])
 
-        concepts = Inputs(data, URIS).concepts(Field.explo_method)
+        concepts = Inputs(data, NAMES).concepts(Field.explo_method)
 
         assert concepts.index.tolist() == [9]
         assert concepts.isna().all()
@@ -101,7 +100,7 @@ class TestConcepts:
     def test_a_field_the_dataset_lacks_is_empty_for_every_child(self) -> None:
         data = column_children(C1=["1", "2"])
 
-        concepts = Inputs(data, URIS).concepts(Field.explo_method)
+        concepts = Inputs(data, NAMES).concepts(Field.explo_method)
 
         assert concepts.index.tolist() == [9, 10]
         assert concepts.isna().all()
@@ -110,24 +109,24 @@ class TestConcepts:
         data = column_children(P12=["[Drilling]"])
 
         with pytest.raises(KeyError, match="C42"):
-            Inputs(data, URIS).concepts(Field.tc_location)
+            Inputs(data, NAMES).concepts(Field.tc_location)
 
 
 class TestPerChild:
     def test_the_first_value_of_each_child_is_the_one_kept(self) -> None:
         data = column_children(P12=[["[Mining]", "[Drilling]"], None, "[Drilling]"])
-        inputs = Inputs(data, URIS)
+        inputs = Inputs(data, NAMES)
 
         first = inputs.first(inputs.concepts(Field.explo_method))
 
         assert first.index.tolist() == data.index.tolist()
-        assert first.iloc[0] == MINING
+        assert first.iloc[0] == "mining"
         assert pandas.isna(first.iloc[1])
-        assert first.iloc[2] == DRILLING
+        assert first.iloc[2] == "drilling"
 
     def test_any_and_all_summarise_the_values_of_each_child(self) -> None:
         data = column_children(C1=[["1", "5"], ["5", "6"], None])
-        inputs = Inputs(data, URIS)
+        inputs = Inputs(data, NAMES)
         above = inputs.numbers(Field.qc) > 3
 
         assert inputs.any_value(above).tolist() == [True, True, False]
@@ -140,13 +139,13 @@ class TestPerChild:
             C1=["1", None, " ", [None, "2"], None],
             C2=[None, None, "", None, "abc"],
         )
-        inputs = Inputs(data, URIS)
+        inputs = Inputs(data, NAMES)
 
         filled = inputs.any_filled([Field.qc, Field.qc_uncertainty])
 
         assert filled.tolist() == [True, False, False, True, True]
 
     def test_a_field_the_dataset_lacks_leaves_a_child_unfilled(self) -> None:
-        inputs = Inputs(column_children(C1=["1", None]), URIS)
+        inputs = Inputs(column_children(C1=["1", None]), NAMES)
 
         assert inputs.any_filled([Field.qc_uncertainty]).tolist() == [False, False]

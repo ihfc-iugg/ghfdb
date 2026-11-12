@@ -1,4 +1,6 @@
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 import pandas
 import pytest
@@ -7,8 +9,14 @@ from example_site import publish
 from frictionless import Schema
 from pandas.testing import assert_series_equal
 
-from ghfdb.fields import Vocabularies, caching_session, load_schema
-from ghfdb.fields.cells import concept_terms, parse_numbers
+from ghfdb.fields import (
+    MissingSchemeError,
+    Vocabularies,
+    caching_session,
+    load_schema,
+)
+from ghfdb.fields.cells import parse_numbers, terms_by_name
+from ghfdb.fields.vocabularies import AllowedValue
 
 COLOURS = "https://example.test/vocabularies/colours"
 THREE_FIELDS = Path(__file__).parent / "schemas" / "three_fields.json"
@@ -52,20 +60,40 @@ class TestParseNumbers:
         )
 
 
-class TestConceptTerms:
-    def test_maps_each_concept_of_a_field_to_the_term_the_field_accepts(
+class Doubling(Vocabularies):
+    """Vocabularies in which a second concept has the local name of the first."""
+
+    def __init__(self, vocabularies: Vocabularies) -> None:
+        self.vocabularies = vocabularies
+
+    def allowed_values(self, vocabulary: Mapping[str, str | None]) -> Any:
+        values = self.vocabularies.allowed_values(vocabulary)
+        twin = AllowedValue(
+            "[Twin]", "Twin", "https://example.test/elsewhere/red", None
+        )
+        return (*values, twin)
+
+
+class TestTermsByName:
+    def test_maps_the_local_name_of_each_concept_to_the_term_the_field_accepts(
         self, three_fields: Schema, vocabularies: Vocabularies
     ) -> None:
-        terms = concept_terms(three_fields, "X1", vocabularies)
+        terms = terms_by_name(three_fields, "X1", vocabularies)
 
-        assert terms == {f"{COLOURS}/red": "[red]", f"{COLOURS}/orange": "[Orange]"}
+        assert terms == {"red": "[red]", "orange": "[Orange]"}
 
     def test_gives_nothing_for_a_field_without_a_vocabulary(
         self, three_fields: Schema, vocabularies: Vocabularies
     ) -> None:
-        assert concept_terms(three_fields, "X3", vocabularies) == {}
+        assert terms_by_name(three_fields, "X3", vocabularies) == {}
 
     def test_gives_nothing_for_a_field_the_schema_lacks(
         self, three_fields: Schema, vocabularies: Vocabularies
     ) -> None:
-        assert concept_terms(three_fields, "Z99", vocabularies) == {}
+        assert terms_by_name(three_fields, "Z99", vocabularies) == {}
+
+    def test_refuses_two_allowed_values_with_one_local_name_naming_field_and_name(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        with pytest.raises(MissingSchemeError, match="X1.*red"):
+            terms_by_name(three_fields, "X1", Doubling(vocabularies))

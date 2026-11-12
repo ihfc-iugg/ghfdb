@@ -8,16 +8,6 @@ from extensions.quality_scheme import SchemeReference, ScoreRange
 from frictionless import Schema
 
 from ghfdb.fields import Field, Vocabularies
-from ghfdb.qc.concepts import (
-    ACTUAL_LOCATION,
-    LINE_SOURCE_FULL,
-    LITERATURE_OR_UNSPECIFIED,
-    OTHER_LOCATION,
-    POINT_SOURCE,
-    PROBE_PULSE,
-    RECOVERED,
-    SATURATED_IN_SITU,
-)
 from ghfdb.qc.penalties import (
     Band,
     Bands,
@@ -289,8 +279,8 @@ def location(penalty: float) -> Criterion[Classes]:
         Classes(
             (Field.tc_location,),
             (
-                Group(0.0, (ACTUAL_LOCATION,)),
-                Group(penalty, (OTHER_LOCATION, LITERATURE_OR_UNSPECIFIED)),
+                Group(0.0, ("actual",)),
+                Group(penalty, ("other", "literature")),
             ),
             unmatched_marked=False,
         ),
@@ -415,14 +405,14 @@ class TestCriterionTable:
                     Case(
                         0.1,
                         {
-                            Field.tc_saturation: (SATURATED_IN_SITU,),
-                            Field.tc_method: (PROBE_PULSE,),
+                            Field.tc_saturation: ("saturatedInSitu",),
+                            Field.tc_method: ("probePulse",),
                         },
                     ),
                     Case(
                         0.0,
-                        {Field.tc_saturation: (RECOVERED,)},
-                        every={Field.tc_method: (POINT_SOURCE, LINE_SOURCE_FULL)},
+                        {Field.tc_saturation: ("recovered",)},
+                        every={Field.tc_method: ("pointSource", "lineSourceFull")},
                     ),
                 )
             ),
@@ -453,7 +443,7 @@ class TestCriterionTable:
             Bands(
                 Field.tc_number,
                 (Band(0.0, 3), Band(-0.2)),
-                left_out_when={Field.tc_location: (LITERATURE_OR_UNSPECIFIED,)},
+                left_out_when={Field.tc_location: ("literature",)},
             ),
             "Table 2, Number of conductivities",
         )

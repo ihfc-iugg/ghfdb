@@ -7,14 +7,7 @@ from frictionless import Schema
 from ghfdb.fields import Field, Vocabularies
 from ghfdb.qc.borehole import BoreholeRules
 from ghfdb.qc.check import Kind
-from ghfdb.qc.concepts import (
-    NOT_RECOGNIZED,
-    PRESENT_CORRECTED,
-    PRESENT_NOT_CORRECTED,
-    PRESENT_NOT_SIGNIFICANT,
-    UNSPECIFIED_CORRECTION,
-)
-from ghfdb.qc.criteria import term_uris
+from ghfdb.qc.criteria import term_names
 from ghfdb.qc.inputs import Inputs
 from ghfdb.qc.penalties import SCORE_DECIMALS, Band, Score
 from ghfdb.qc.probe import ProbeRules
@@ -138,8 +131,8 @@ class Scores:
                 its field.
             OSError: The vocabularies are not cached and cannot be downloaded.
         """
-        uris = term_uris(schema, cls.concepts(), vocabularies)
-        return cls(Inputs(cls.blank(data, problems), uris))
+        names = term_names(schema, cls.concepts(), vocabularies)
+        return cls(Inputs(cls.blank(data, problems), names))
 
     @staticmethod
     def concepts() -> tuple[tuple[str, str], ...]:
@@ -150,12 +143,12 @@ class Scores:
             both sets of rules, each once.
         """
         methods = tuple(
-            (EXPLORATION_METHOD, uri)
+            (EXPLORATION_METHOD, name)
             for domain in (PROBE_SENSING, BOREHOLE)
-            for uri in domain.concepts
+            for name in domain.concepts
         )
         flags = tuple(
-            (field, uri) for field in FLAGS for uri in Scores.flag_characters("S")
+            (field, name) for field in FLAGS for name in Scores.flag_characters("S")
         )
         return tuple(
             dict.fromkeys(
@@ -205,11 +198,11 @@ class Scores:
             each flag is written").
         """
         return {
-            PRESENT_CORRECTED: letter,
-            PRESENT_NOT_CORRECTED: letter.lower(),
-            PRESENT_NOT_SIGNIFICANT: "X",
-            NOT_RECOGNIZED: "x",
-            UNSPECIFIED_CORRECTION: "-",
+            "present-corrected": letter,
+            "present-not-corrected": letter.lower(),
+            "present-not-significant": "X",
+            "not-recognized": "x",
+            "unspecified": "-",
         }
 
     def flags(self) -> pandas.Series:

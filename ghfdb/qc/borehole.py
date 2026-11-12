@@ -9,62 +9,6 @@ import numpy
 import pandas
 
 from ghfdb.fields import Field
-from ghfdb.qc.concepts import (
-    ACTUAL_IN_SITU,
-    ACTUAL_LOCATION,
-    AMBIENT_OR_UNSPECIFIED,
-    ASSUMED_FROM_LITERATURE,
-    BHT,
-    BLK,
-    BSR,
-    C_BHT,
-    C_DST,
-    C_DTS,
-    C_HT_FT,
-    C_LOG,
-    C_RTD,
-    CONSIDERED_P,
-    CONSIDERED_PT,
-    CONSIDERED_T,
-    CORE_LOG,
-    CORE_SAMPLES,
-    CPD,
-    CUTTING_SAMPLES,
-    DRY_UNSPECIFIED_OR_OTHER,
-    DTS_EQ,
-    DTS_PERT,
-    EGRT,
-    FULL_IN_SITU,
-    GRT,
-    GTM,
-    HT_FT,
-    HT_FT_PERT,
-    IN_SITU_PROBE,
-    LITERATURE_OR_UNSPECIFIED,
-    LOG_EQ,
-    LOG_PERT,
-    MINERAL_COMPUTATION,
-    NOT_CONSIDERED,
-    ODTT_PC,
-    ODTT_TP,
-    OTHER_LOCATION,
-    OTHER_SOURCE,
-    OTHER_TEMPERATURE,
-    OUTCROP_SAMPLES,
-    PARTIAL_IN_SITU,
-    RECOVERED,
-    RTD_EQ,
-    RTD_PERT,
-    SATURATED_CALCULATED,
-    SATURATED_IN_SITU,
-    SATURATED_MEASURED,
-    SURFACE,
-    UNSPECIFIED_CORRECTION,
-    UNSPECIFIED_SOURCE,
-    UNSPECIFIED_TEMPERATURE,
-    WELL_LOG,
-    XEN,
-)
 from ghfdb.qc.penalties import (
     Band,
     Bands,
@@ -76,6 +20,12 @@ from ghfdb.qc.penalties import (
     Penalty,
     Score,
 )
+from ghfdb.qc.probe import (
+    AMBIENT_OR_UNSPECIFIED,
+    DRY_UNSPECIFIED_OR_OTHER,
+    FULL_IN_SITU,
+    PARTIAL_IN_SITU,
+)
 from ghfdb.qc.rules import Condition
 from ghfdb.qc.ruleset import RuleScores, RuleSet
 
@@ -85,12 +35,12 @@ CONTINUOUS_LOG_RECORDINGS = 3
 GATE_SCORE = 0.1
 
 ESTIMATED_TEMPERATURE = (
-    CPD,
-    XEN,
-    GTM,
-    BSR,
-    UNSPECIFIED_TEMPERATURE,
-    OTHER_TEMPERATURE,
+    "CPD",
+    "XEN",
+    "GTM",
+    "BSR",
+    "unspecified",
+    "other",
 )
 TEMPERATURE_METHODS = (Field.T_method_top, Field.T_method_bottom)
 INTERVAL_DEPTHS = (Field.q_top, Field.q_bottom)
@@ -101,8 +51,8 @@ CONTINUOUS_LOG = Criterion(
     Classes(
         TEMPERATURE_METHODS,
         (
-            Group(0.1, (LOG_EQ, C_LOG, DTS_EQ, C_DTS)),
-            Group(-0.1, (LOG_PERT,)),
+            Group(0.1, ("LOGeq", "cLOG", "DTSeq", "cDTS")),
+            Group(-0.1, ("LOGpert",)),
         ),
         skip_empty=True,
     ),
@@ -117,20 +67,20 @@ SINGLE_POINTS = Criterion(
             Group(
                 -0.1,
                 (
-                    LOG_EQ,
-                    C_LOG,
-                    C_BHT,
-                    HT_FT,
-                    C_HT_FT,
-                    RTD_EQ,
-                    C_RTD,
-                    ODTT_PC,
-                    ODTT_TP,
-                    EGRT,
-                    GRT,
+                    "LOGeq",
+                    "cLOG",
+                    "cBHT",
+                    "HT-FT",
+                    "cHT-FT",
+                    "RTDeq",
+                    "cRTD",
+                    "ODTT-PC",
+                    "ODTT-TP",
+                    "EGRT",
+                    "GRT",
                 ),
             ),
-            Group(-0.3, (LOG_PERT, DTS_PERT, BHT, HT_FT_PERT, RTD_PERT, BLK)),
+            Group(-0.3, ("LOGpert", "DTSpert", "BHT", "HT-FTpert", "RTDpert", "BLK")),
             Group(-0.5, ESTIMATED_TEMPERATURE),
         ),
         skip_empty=True,
@@ -145,16 +95,26 @@ SURFACE_PLUS_ONE_POINT = Criterion(
         (
             Group(
                 -0.3,
-                (C_BHT, C_DST, RTD_EQ, C_RTD, ODTT_PC, ODTT_TP, C_HT_FT, EGRT, GRT),
+                (
+                    "cBHT",
+                    "cDST",
+                    "RTDeq",
+                    "cRTD",
+                    "ODTT-PC",
+                    "ODTT-TP",
+                    "cHT-FT",
+                    "EGRT",
+                    "GRT",
+                ),
             ),
-            Group(-0.5, (BHT, HT_FT_PERT, RTD_PERT)),
+            Group(-0.5, ("BHT", "HT-FTpert", "RTDpert")),
             Group(-0.6, ESTIMATED_TEMPERATURE),
         ),
         skip_empty=True,
     ),
     "Table 3, Source type and number of T points",
 )
-TOP_METHOD_IS_SURFACE = Condition(Field.T_method_top, (SURFACE,))
+TOP_METHOD_IS_SURFACE = Condition(Field.T_method_top, ("SUR",))
 
 LOCATION = Criterion(
     "borehole-tc.location",
@@ -162,9 +122,9 @@ LOCATION = Criterion(
     Classes(
         (Field.tc_location,),
         (
-            Group(0.0, (ACTUAL_LOCATION,)),
-            Group(-0.1, (OTHER_LOCATION,)),
-            Group(-0.2, (LITERATURE_OR_UNSPECIFIED,)),
+            Group(0.0, ("actual",)),
+            Group(-0.1, ("other",)),
+            Group(-0.2, ("literature",)),
         ),
     ),
     "Table 3, Localization",
@@ -175,16 +135,16 @@ SOURCE = Criterion(
     Classes(
         (Field.tc_source,),
         (
-            Group(0.1, (IN_SITU_PROBE, CORE_LOG)),
-            Group(0.0, (CORE_SAMPLES,)),
-            Group(-0.1, (CUTTING_SAMPLES, OUTCROP_SAMPLES, WELL_LOG)),
+            Group(0.1, ("insitu-probe", "core-log")),
+            Group(0.0, ("core-samples",)),
+            Group(-0.1, ("cutting-samples", "outcrop-samples", "well-log")),
             Group(
                 -0.2,
                 (
-                    MINERAL_COMPUTATION,
-                    UNSPECIFIED_SOURCE,
-                    OTHER_SOURCE,
-                    ASSUMED_FROM_LITERATURE,
+                    "mineral-computation",
+                    "unspecified",
+                    "other",
+                    "assumed-from-literature",
                 ),
             ),
         ),
@@ -197,7 +157,7 @@ NUMBER = Criterion(
     Bands(
         Field.tc_number,
         (Band(0.0, 15), Band(-0.1)),
-        left_out_when={Field.tc_location: (LITERATURE_OR_UNSPECIFIED,)},
+        left_out_when={Field.tc_location: ("literature",)},
     ),
     "Table 3, Number of conductivities",
 )
@@ -207,8 +167,8 @@ SATURATION = Criterion(
     Classes(
         (Field.tc_saturation,),
         (
-            Group(0.0, (SATURATED_IN_SITU, SATURATED_MEASURED)),
-            Group(-0.1, (SATURATED_CALCULATED, RECOVERED)),
+            Group(0.0, ("saturatedInSitu", "saturatedMeasured")),
+            Group(-0.1, ("saturatedCalculated", "recovered")),
             Group(-0.2, DRY_UNSPECIFIED_OR_OTHER),
         ),
     ),
@@ -220,7 +180,7 @@ CONDITIONS = Criterion(
     Classes(
         (Field.tc_pT_conditions,),
         (
-            Group(0.0, (ACTUAL_IN_SITU, *FULL_IN_SITU)),
+            Group(0.0, ("actualInSitu", *FULL_IN_SITU)),
             Group(-0.1, PARTIAL_IN_SITU),
             Group(-0.2, AMBIENT_OR_UNSPECIFIED),
         ),
@@ -235,22 +195,22 @@ CONDITIONS_AGREEING = Criterion(
             Case(
                 0.0,
                 {
-                    Field.tc_pT_conditions: (ACTUAL_IN_SITU, *FULL_IN_SITU),
-                    Field.corr_IS_flag: (CONSIDERED_PT,),
+                    Field.tc_pT_conditions: ("actualInSitu", *FULL_IN_SITU),
+                    Field.corr_IS_flag: ("consideredPT",),
                 },
             ),
             Case(
                 -0.1,
                 {
                     Field.tc_pT_conditions: PARTIAL_IN_SITU,
-                    Field.corr_IS_flag: (CONSIDERED_P, CONSIDERED_T),
+                    Field.corr_IS_flag: ("consideredP", "consideredT"),
                 },
             ),
             Case(
                 -0.2,
                 {
                     Field.tc_pT_conditions: AMBIENT_OR_UNSPECIFIED,
-                    Field.corr_IS_flag: (NOT_CONSIDERED, UNSPECIFIED_CORRECTION),
+                    Field.corr_IS_flag: ("notConsidered", "unspecified"),
                 },
             ),
         )

@@ -14,8 +14,8 @@
 {% macro domains(code) -%}
 | Exploration method | Domain |
 |---|---|
-{%- for uri, term in terms(code).items() if uri %}
-{%- set domain = domain_of(uri) %}
+{%- for name, term in terms(code).items() %}
+{%- set domain = domain_of(name) %}
 | {{ term | code }} | {{ DOMAIN_NAMES[domain.code] if domain else NO_DOMAIN }} |
 {%- endfor -%}
 {% endmacro %}

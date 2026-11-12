@@ -15,7 +15,7 @@ from sphinx.application import Sphinx
 
 from extensions.field_reference import FieldReference
 from ghfdb.fields import Field, Vocabularies, load_schema
-from ghfdb.fields.cells import concept_terms
+from ghfdb.fields.cells import terms_by_name
 from ghfdb.qc import borehole, probe
 from ghfdb.qc.criteria import CRITERIA
 from ghfdb.qc.penalties import (
@@ -171,19 +171,19 @@ class CriterionTable:
         self.vocabularies = vocabularies
         self.terms: dict[str, dict[str, str]] = {}
 
-    def term(self, field: str, uri: str) -> str:
+    def term(self, field: str, name: str) -> str:
         """Write a concept as the term its field accepts.
 
         Args:
             field: The field's code.
-            uri: The concept's URI.
+            name: The concept's local name.
 
         Returns:
             The term, as an inline code span.
         """
         if field not in self.terms:
-            self.terms[field] = concept_terms(self.schema, field, self.vocabularies)
-        return FieldReference.code(self.terms[field][uri])
+            self.terms[field] = terms_by_name(self.schema, field, self.vocabularies)
+        return FieldReference.code(self.terms[field][name])
 
     def title(self, field: str) -> str:
         """Name a field by its title, escaped for a Markdown table.
@@ -224,17 +224,17 @@ class CriterionTable:
         written = cls.penalty(table.largest())
         return f"{written}, with the mark" if marked else written
 
-    def terms_of(self, field: str, uris: tuple[str, ...]) -> str:
+    def terms_of(self, field: str, names: tuple[str, ...]) -> str:
         """Write concepts as the terms their field accepts.
 
         Args:
             field: The field's code.
-            uris: The concepts' URIs.
+            names: The concepts' local names.
 
         Returns:
             The terms, separated by commas.
         """
-        return ", ".join(self.term(field, uri) for uri in uris)
+        return ", ".join(self.term(field, name) for name in names)
 
     @staticmethod
     def edge(number: float) -> str:

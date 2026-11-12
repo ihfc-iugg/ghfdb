@@ -50,6 +50,18 @@ class MissingSchemeError(LookupError):
     """Raised when a scheme or collection is not defined where it is published."""
 
 
+def local_name(uri: str) -> str:
+    """Name a concept within its vocabulary.
+
+    Args:
+        uri: The concept URI.
+
+    Returns:
+        The last path segment of the URI.
+    """
+    return uri.rsplit("/", 1)[-1]
+
+
 def caching_session(directory: Path | None = None) -> Session:
     """Build the session vocabulary files are downloaded with.
 
@@ -240,7 +252,7 @@ class Vocabularies:
         found = graph.value(concept, SKOS.notation)
         notation = None if found is None else str(found)
         if term_form == "localName":
-            term = str(concept).rsplit("/", 1)[-1]
+            term = local_name(str(concept))
         else:
             shown = notation if term_form == "notation" and notation else labels[0]
             term = f"[{shown}]"

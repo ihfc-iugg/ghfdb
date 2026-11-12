@@ -6,37 +6,6 @@ criterion are declared beside them in ``ProbeRules``.
 """
 
 from ghfdb.fields import Field
-from ghfdb.qc.concepts import (
-    ACTUAL_IN_SITU,
-    ACTUAL_LOCATION,
-    AMBIENT_OR_UNSPECIFIED,
-    CHLORINE_CONTENT,
-    DRY_UNSPECIFIED_OR_OTHER,
-    FULL_IN_SITU,
-    IN_SITU_PROBE,
-    LABORATORY_OTHER,
-    LINE_SOURCE_FULL,
-    LINE_SOURCE_HALF,
-    LITERATURE_OR_UNSPECIFIED,
-    LITHOLOGY,
-    MINERAL_COMPOSITION,
-    OTHER_LOCATION,
-    PARTIAL_IN_SITU,
-    PLANE_SOURCE_FULL,
-    PLANE_SOURCE_HALF,
-    POINT_SOURCE,
-    PRESENT_CORRECTED,
-    PROBE_PULSE,
-    RECOVERED,
-    SATURATED_CALCULATED,
-    SATURATED_IN_SITU,
-    SATURATED_MEASURED,
-    TILT_CORRECTED,
-    UNSPECIFIED_METHOD,
-    WATER_CONTENT,
-    WELL_LOG_DETERMINISTIC,
-    WELL_LOG_EMPIRICAL,
-)
 from ghfdb.qc.penalties import (
     Band,
     Bands,
@@ -51,20 +20,26 @@ from ghfdb.qc.penalties import (
 from ghfdb.qc.rules import Condition
 from ghfdb.qc.ruleset import RuleScores, RuleSet
 
+# Saturation and pT conditions that the borehole conductivity criteria name too.
+DRY_UNSPECIFIED_OR_OTHER = ("dryMeasured", "unspecified", "other")
+FULL_IN_SITU = ("replicatedPT", "correctedPT")
+PARTIAL_IN_SITU = ("replicatedP", "correctedP", "replicatedT", "correctedT")
+AMBIENT_OR_UNSPECIFIED = ("recordedAmbient", "unrecordedAmbient", "unspecified")
+
 LABORATORY_METHODS = (
-    POINT_SOURCE,
-    LINE_SOURCE_FULL,
-    LINE_SOURCE_HALF,
-    PLANE_SOURCE_FULL,
-    PLANE_SOURCE_HALF,
-    LABORATORY_OTHER,
+    "pointSource",
+    "lineSourceFull",
+    "lineSourceHalf",
+    "planeSourceFull",
+    "planeSourceHalf",
+    "laboratoryOther",
 )
-ESTIMATED_FROM_LITERATURE = (LITHOLOGY, WELL_LOG_DETERMINISTIC, WELL_LOG_EMPIRICAL)
+ESTIMATED_FROM_LITERATURE = ("lithology", "wellLogDeterministic", "wellLogEmpirical")
 ESTIMATED_FROM_OTHER = (
-    WATER_CONTENT,
-    MINERAL_COMPOSITION,
-    CHLORINE_CONTENT,
-    UNSPECIFIED_METHOD,
+    "waterContent",
+    "mineralComposition",
+    "chlorineContent",
+    "unspecified",
 )
 
 PENETRATION = Criterion(
@@ -100,8 +75,8 @@ TILT = Criterion(
     ),
     "Table 2, Tilt",
 )
-BOTTOM_WATER_CORRECTED = Condition(Field.corr_SUR_flag, (PRESENT_CORRECTED,))
-TILT_IS_CORRECTED = Condition(Field.corr_T_flag, (TILT_CORRECTED,))
+BOTTOM_WATER_CORRECTED = Condition(Field.corr_SUR_flag, ("present-corrected",))
+TILT_IS_CORRECTED = Condition(Field.corr_T_flag, ("tiltCorrected",))
 
 LOCATION = Criterion(
     "probe-tc.location",
@@ -109,9 +84,9 @@ LOCATION = Criterion(
     Classes(
         (Field.tc_location,),
         (
-            Group(0.0, (ACTUAL_LOCATION,)),
-            Group(-0.1, (OTHER_LOCATION,)),
-            Group(-0.2, (LITERATURE_OR_UNSPECIFIED,)),
+            Group(0.0, ("actual",)),
+            Group(-0.1, ("other",)),
+            Group(-0.2, ("literature",)),
         ),
         unmatched_marked=False,
     ),
@@ -125,27 +100,27 @@ SATURATION = Criterion(
             Case(
                 0.1,
                 {
-                    Field.tc_saturation: (SATURATED_IN_SITU,),
-                    Field.tc_method: (PROBE_PULSE,),
-                    Field.tc_source: (IN_SITU_PROBE,),
+                    Field.tc_saturation: ("saturatedInSitu",),
+                    Field.tc_method: ("probePulse",),
+                    Field.tc_source: ("insitu-probe",),
                 },
             ),
             Case(
                 0.0,
                 {
-                    Field.tc_saturation: (RECOVERED, SATURATED_MEASURED),
-                    Field.tc_method: (PROBE_PULSE,),
-                    Field.tc_source: (IN_SITU_PROBE,),
+                    Field.tc_saturation: ("recovered", "saturatedMeasured"),
+                    Field.tc_method: ("probePulse",),
+                    Field.tc_source: ("insitu-probe",),
                 },
             ),
             Case(
                 0.0,
-                {Field.tc_saturation: (RECOVERED, SATURATED_MEASURED)},
+                {Field.tc_saturation: ("recovered", "saturatedMeasured")},
                 every={Field.tc_method: LABORATORY_METHODS},
             ),
             Case(
                 -0.1,
-                {Field.tc_saturation: (SATURATED_CALCULATED,)},
+                {Field.tc_saturation: ("saturatedCalculated",)},
                 every={Field.tc_method: LABORATORY_METHODS},
             ),
             Case(
@@ -157,7 +132,7 @@ SATURATION = Criterion(
                 -0.1,
                 {
                     Field.tc_method: ESTIMATED_FROM_LITERATURE,
-                    Field.tc_location: (LITERATURE_OR_UNSPECIFIED,),
+                    Field.tc_location: ("literature",),
                 },
             ),
             Case(-0.2, {Field.tc_method: ESTIMATED_FROM_OTHER}),
@@ -171,7 +146,7 @@ NUMBER = Criterion(
     Bands(
         Field.tc_number,
         (Band(0.0, 3), Band(-0.1, 1), Band(-0.2)),
-        left_out_when={Field.tc_location: (LITERATURE_OR_UNSPECIFIED,)},
+        left_out_when={Field.tc_location: ("literature",)},
     ),
     "Table 2, Number of conductivities",
 )
@@ -183,8 +158,8 @@ CONDITIONS = Criterion(
             Case(
                 0.1,
                 {
-                    Field.tc_pT_conditions: (ACTUAL_IN_SITU,),
-                    Field.tc_method: (PROBE_PULSE,),
+                    Field.tc_pT_conditions: ("actualInSitu",),
+                    Field.tc_method: ("probePulse",),
                 },
             ),
             Case(0.0, {Field.tc_pT_conditions: FULL_IN_SITU}),

@@ -3,7 +3,7 @@ from typing import Any
 
 import pandas
 import pytest
-from conftest import Example, Uris, examples_of, one_child
+from conftest import ConceptNames, Example, examples_of, one_child
 
 from ghfdb.dataset import Dataset
 from ghfdb.fields import Vocabularies
@@ -35,17 +35,17 @@ class ExampleRunner:
     """Score one worked example as the scoring does and assert what it expects.
 
     Args:
-        uris: The URI of every concept the scoring reads.
+        concept_names: The local name of every concept the scoring reads.
         vocabularies: The published vocabularies the whole dataset scoring reads.
     """
 
-    def __init__(self, uris: Uris, vocabularies: Vocabularies) -> None:
-        self.uris = uris
+    def __init__(self, concept_names: ConceptNames, vocabularies: Vocabularies) -> None:
+        self.concept_names = concept_names
         self.vocabularies = vocabularies
 
     def scores(self, example: Example) -> Scores:
         """Build the scoring of the one child an example describes."""
-        return Scores(Inputs(one_child(example["inputs"]), self.uris))
+        return Scores(Inputs(one_child(example["inputs"]), self.concept_names))
 
     def u_score(self, example: Example) -> None:
         grades = UScore(Inputs(one_child(example["inputs"]), {})).grades()
@@ -72,7 +72,7 @@ class ExampleRunner:
         t = sub_score(inputs["T"], inputs.get("T_marked", False))
         tc = sub_score(inputs["TC"], inputs.get("TC_marked", False))
 
-        grade = Scores(Inputs(one_child({}), self.uris)).grades(t, tc)
+        grade = Scores(Inputs(one_child({}), self.concept_names)).grades(t, tc)
 
         assert grade.iloc[0] == example["expected"]["M"]
 
@@ -146,9 +146,12 @@ class TestWorkedExamples:
 
     @pytest.mark.parametrize("example", RUN, ids=lambda example: example["id"])
     def test_every_example_scores_as_expected(
-        self, uris: Uris, published_vocabularies: Vocabularies, example: Example
+        self,
+        concept_names: ConceptNames,
+        published_vocabularies: Vocabularies,
+        example: Example,
     ) -> None:
-        runner = ExampleRunner(uris, published_vocabularies)
+        runner = ExampleRunner(concept_names, published_vocabularies)
 
         RUNNERS[example["part"]](runner, example)
 
@@ -185,7 +188,7 @@ class TestScoreTable:
 
 class TestRouting:
     def test_every_child_of_a_dataset_is_routed_under_its_own_index(
-        self, uris: Uris
+        self, concept_names: ConceptNames
     ) -> None:
         data = pandas.DataFrame(
             {"P12": ["[Drilling]", None, "[Probing (clustered)]", "[Other]"]},
@@ -193,7 +196,7 @@ class TestRouting:
             dtype=object,
         )
 
-        rules = Scores(Inputs(data, uris)).routing
+        rules = Scores(Inputs(data, concept_names)).routing
 
         assert rules.index.tolist() == [12, 9, 10, 11]
         assert rules.iloc[0] == "borehole and mine"
@@ -203,7 +206,7 @@ class TestRouting:
 
 class TestPerturbationFlags:
     def test_every_child_of_a_dataset_gets_its_own_flags_under_its_own_index(
-        self, uris: Uris
+        self, concept_names: ConceptNames
     ) -> None:
         data = pandas.DataFrame(
             {
@@ -214,14 +217,16 @@ class TestPerturbationFlags:
             dtype=object,
         )
 
-        flags = Scores(Inputs(data, uris)).flags()
+        flags = Scores(Inputs(data, concept_names)).flags()
 
         assert flags.index.tolist() == [12, 9, 10]
         assert flags.tolist() == ["S-----x", "------X", "-------"]
 
 
 class TestMScore:
-    def test_every_child_is_graded_under_its_own_index(self, uris: Uris) -> None:
+    def test_every_child_is_graded_under_its_own_index(
+        self, concept_names: ConceptNames
+    ) -> None:
         index = pandas.Index([12, 9, 10, 11], name="row")
         t = Score(
             pandas.Series([1.0, 0.5, pandas.NA, 0.3], index=index, dtype="Float64"),
@@ -234,7 +239,9 @@ class TestMScore:
             pandas.Series([False, False, False, False], index=index, dtype="boolean"),
         )
 
-        grade = Scores(Inputs(pandas.DataFrame(index=index), uris)).grades(t, tc)
+        grade = Scores(Inputs(pandas.DataFrame(index=index), concept_names)).grades(
+            t, tc
+        )
 
         assert grade.index.tolist() == [12, 9, 10, 11]
         assert grade.tolist() == ["M1", "M3x", "Mx", "M4"]

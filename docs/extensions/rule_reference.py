@@ -10,7 +10,8 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from sphinx.application import Sphinx
 
 from extensions.field_reference import FieldReference
-from ghfdb.fields import Vocabularies, allowed_values, load_schema
+from ghfdb.fields import Vocabularies, load_schema
+from ghfdb.fields.cells import terms_by_name
 from ghfdb.qc.check import Kind
 from ghfdb.qc.rules import BOREHOLE, PROBE_SENSING, RULES, Domain, Rule
 
@@ -41,9 +42,9 @@ class RuleReference:
         self.vocabularies = Vocabularies() if vocabularies is None else vocabularies
         self.rules = tuple(rules)
         self.concept_terms = {
-            (code, uri): self.terms(code)[uri]
+            (code, name): self.terms(code)[name]
             for rule in self.rules
-            for code, uri in rule.concepts()
+            for code, name in rule.concepts()
         }
         self.environment = Environment(
             loader=FileSystemLoader(TEMPLATES),
@@ -68,26 +69,24 @@ class RuleReference:
         )
         self.environment.globals.update(domains=self.domains, entries=self.entries)
 
-    def terms(self, code: str) -> dict[str | None, str]:
-        """Map the concept URI of each allowed value of a field to its term.
+    def terms(self, code: str) -> dict[str, str]:
+        """Map the local name of each allowed value of a field to its term.
 
         Args:
             code: The field's code.
 
         Returns:
-            The term of each allowed value, by the URI of its concept.
+            The term of each allowed value that belongs to a vocabulary, by the local
+            name of its concept.
         """
-        field = self.schema.get_field(code)
-        return {
-            value.uri: value.term for value in allowed_values(field, self.vocabularies)
-        }
+        return terms_by_name(self.schema, code, self.vocabularies)
 
     @staticmethod
     def domain_of(concept: str) -> Domain | None:
         """Find the domain an exploration method belongs to.
 
         Args:
-            concept: The URI of the exploration method's concept.
+            concept: The local name of the exploration method's concept.
 
         Returns:
             The domain, or None when no rule's domain holds the method.

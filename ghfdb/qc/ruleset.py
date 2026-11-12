@@ -117,9 +117,9 @@ class RuleSet:
                 (
                     *(pair for criterion in criteria for pair in criterion.concepts()),
                     *(
-                        (condition.field, uri)
+                        (condition.field, name)
                         for condition in corrections
-                        for uri in condition.concepts
+                        for name in condition.concepts
                     ),
                 )
             )

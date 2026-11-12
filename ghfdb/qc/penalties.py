@@ -238,7 +238,7 @@ class Table(Protocol):
         ...
 
     def concepts(self) -> tuple[tuple[str, str], ...]:
-        """List the field and concept URI of every concept the table names."""
+        """List the field and local name of every concept the table names."""
         ...
 
     def largest(self) -> float:
@@ -279,9 +279,9 @@ class Bands:
     def concepts(self) -> tuple[tuple[str, str], ...]:
         """List the concepts of ``left_out_when``."""
         return tuple(
-            (field, uri)
+            (field, name)
             for field, concepts in (self.left_out_when or {}).items()
-            for uri in concepts
+            for name in concepts
         )
 
     def largest(self) -> float:
@@ -366,7 +366,7 @@ class Group:
 
     Attributes:
         penalty: The penalty.
-        concepts: The URIs of the concepts.
+        concepts: The local names of the concepts.
     """
 
     penalty: float
@@ -404,10 +404,10 @@ class Classes:
     def concepts(self) -> tuple[tuple[str, str], ...]:
         """List every concept of every group, for each field."""
         return tuple(
-            (field, uri)
+            (field, name)
             for field in self.fields
             for group in self.groups
-            for uri in group.concepts
+            for name in group.concepts
         )
 
     def largest(self) -> float:
@@ -498,10 +498,10 @@ class Case:
     def concepts(self) -> tuple[tuple[Field, str], ...]:
         """List the concepts the row names, with their fields."""
         return tuple(
-            (field, uri)
+            (field, name)
             for conditions in (self.conditions, self.every or {})
             for field, concepts in conditions.items()
-            for uri in concepts
+            for name in concepts
         )
 
     @staticmethod

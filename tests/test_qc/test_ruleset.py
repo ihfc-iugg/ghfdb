@@ -10,7 +10,7 @@ from ghfdb.qc.rules import Condition
 from ghfdb.qc.ruleset import RuleSet
 
 RED, GREEN, SMALL, LARGE, TILTED = "c:red", "c:green", "c:small", "c:large", "c:tilted"
-URIS: dict[str, dict[str, str]] = {
+NAMES: dict[str, dict[str, str]] = {
     Field.tc_location: {"[red]": RED, "[green]": GREEN},
     Field.tc_method: {"[small]": SMALL, "[large]": LARGE},
     Field.corr_T_flag: {"[tilted]": TILTED, "[other]": "c:other"},
@@ -77,7 +77,7 @@ class TestRuleSet:
         self,
     ) -> None:
         data = children(C42=["[green]", "[green]"], C12=["[tilted]", None])
-        rules = Rules(Inputs(data, URIS), numpy_true(2))
+        rules = Rules(Inputs(data, NAMES), numpy_true(2))
 
         child, alone = rules.penalties(Rules.criteria)
 
@@ -88,7 +88,7 @@ class TestRuleSet:
         self,
     ) -> None:
         data = children(C43=["[small]", "[large]"])
-        rules = Rules(Inputs(data, URIS), numpy_true(2))
+        rules = Rules(Inputs(data, NAMES), numpy_true(2))
 
         child, alone = rules.penalties(Rules.criteria)
 
@@ -97,7 +97,7 @@ class TestRuleSet:
 
     def test_a_correction_is_read_at_the_first_value_of_its_field(self) -> None:
         data = children(C12=[["[tilted]", "[other]"], ["[other]", "[tilted]"], None])
-        rules = Rules(Inputs(data, URIS), numpy_true(3))
+        rules = Rules(Inputs(data, NAMES), numpy_true(3))
 
         assert rules.has(CORRECTED).tolist() == [True, False, False]
 

@@ -7,24 +7,9 @@ from frictionless import Schema
 
 from ghfdb.fields import MissingSchemeError, Vocabularies
 from ghfdb.qc.check import DatasetCheck
-from ghfdb.qc.concepts import (
-    ASSUMED_FROM_LITERATURE,
-    CORE_SAMPLES,
-    DRILLING,
-    EGRT,
-    LITERATURE_OR_UNSPECIFIED,
-    PROBE_PULSE,
-    PROBING_ONSHORE,
-)
 from ghfdb.qc.rules import CF_1, CF_2, CF_3, RULES, Condition, Rule
 
 Children = Callable[..., pandas.DataFrame]
-VOCABULARIES = "https://w3id.org/ihfc-iugg/vocabularies"
-EXPLORATION_METHODS = f"{VOCABULARIES}/exploration-methods"
-CONDUCTIVITY_LOCATION = f"{VOCABULARIES}/conductivity-location"
-CONDUCTIVITY_SOURCES = f"{VOCABULARIES}/conductivity-sources"
-CONDUCTIVITY_METHODS = f"{VOCABULARIES}/conductivity-methods"
-TEMPERATURE_METHOD = f"{VOCABULARIES}/temperature-method"
 
 
 class TestResolution:
@@ -35,8 +20,8 @@ class TestResolution:
 
         concepts = [concept for rule in RULES for concept in rule.concepts()]
         assert concepts
-        for code, uri in concepts:
-            assert check.terms[code, uri] in schema.get_field(code).constraints["enum"]
+        for code, name in concepts:
+            assert check.terms[code, name] in schema.get_field(code).constraints["enum"]
 
     def test_the_rules_resolve_to_the_terms_the_vocabularies_publish_now(
         self, schema: Schema, children: Children, published_vocabularies: Vocabularies
@@ -67,25 +52,27 @@ class TestResolution:
     def test_a_concept_that_is_not_an_allowed_value_of_its_field_names_the_rule(
         self, schema: Schema, children: Children, published_vocabularies: Vocabularies
     ) -> None:
-        elsewhere = f"{CONDUCTIVITY_SOURCES}/core-samples"
+        elsewhere = "core-samples"
         broken = replace(CF_3, when=Condition("C42", (elsewhere,)))
 
         with pytest.raises(MissingSchemeError) as error:
             DatasetCheck(children({}), schema, (broken,), published_vocabularies)
 
         assert "CF-3" in str(error.value)
+        assert "C42" in str(error.value)
         assert elsewhere in str(error.value)
 
     def test_a_concept_the_vocabulary_does_not_publish_names_the_rule(
         self, schema: Schema, children: Children, published_vocabularies: Vocabularies
     ) -> None:
-        withdrawn = f"{CONDUCTIVITY_SOURCES}/withdrawn_concept"
+        withdrawn = "withdrawn_concept"
         broken = replace(CF_3, then=Condition("C41", (withdrawn,)))
 
         with pytest.raises(MissingSchemeError) as error:
             DatasetCheck(children({}), schema, (broken,), published_vocabularies)
 
         assert "CF-3" in str(error.value)
+        assert "C41" in str(error.value)
         assert withdrawn in str(error.value)
 
     @pytest.mark.parametrize("rule", RULES, ids=lambda rule: rule.identifier)
@@ -112,14 +99,14 @@ class TestResolution:
         diagram = CF_3.diagram(schema, terms)
 
         for condition in (CF_3.when, CF_3.then):
-            for uri in condition.concepts:
-                assert terms[condition.field, uri] in diagram
+            for name in condition.concepts:
+                assert terms[condition.field, name] in diagram
 
     def test_a_rule_that_allows_several_values_joins_their_terms_with_or(
         self, schema: Schema, children: Children, published_vocabularies: Vocabularies
     ) -> None:
         several = replace(
-            CF_3, then=Condition("C41", (ASSUMED_FROM_LITERATURE, CORE_SAMPLES))
+            CF_3, then=Condition("C41", ("assumed-from-literature", "core-samples"))
         )
         terms = DatasetCheck(
             children({}), schema, (several,), published_vocabularies
@@ -127,10 +114,8 @@ class TestResolution:
 
         diagram = several.diagram(schema, terms)
 
-        assert (
-            f"{terms['C41', ASSUMED_FROM_LITERATURE]} or {terms['C41', CORE_SAMPLES]}"
-            in diagram
-        )
+        literature = terms["C41", "assumed-from-literature"]
+        assert f"{literature} or {terms['C41', 'core-samples']}" in diagram
 
     def test_the_rules_of_two_domains_draw_different_conditions(
         self, schema: Schema, children: Children, published_vocabularies: Vocabularies
@@ -148,20 +133,15 @@ class TestResolution:
     def test_a_concept_of_a_field_the_schema_lacks_names_the_rule(
         self, schema: Schema, children: Children, published_vocabularies: Vocabularies
     ) -> None:
-        broken = replace(CF_3, when=Condition("C9999", (CONDUCTIVITY_SOURCES,)))
+        broken = replace(CF_3, when=Condition("C9999", ("core-samples",)))
 
         with pytest.raises(MissingSchemeError, match="CF-3"):
             DatasetCheck(children({}), schema, (broken,), published_vocabularies)
 
 
-OTHER_METHOD = f"{EXPLORATION_METHODS}/other"
-ACTUAL_LOCATION = f"{CONDUCTIVITY_LOCATION}/actual"
-CUTTING_SAMPLES = f"{CONDUCTIVITY_SOURCES}/cutting-samples"
-DRILLING_TERM = ("P12", DRILLING)
-LITERATURE_TERM = ("C42", LITERATURE_OR_UNSPECIFIED)
-ASSUMED_TERM = ("C41", ASSUMED_FROM_LITERATURE)
-POINT_SOURCE = f"{CONDUCTIVITY_METHODS}/pointSource"
-OTHER_TEMPERATURE = f"{TEMPERATURE_METHOD}/other"
+DRILLING_TERM = ("P12", "drilling")
+LITERATURE_TERM = ("C42", "literature")
+ASSUMED_TERM = ("C41", "assumed-from-literature")
 
 
 def with_separator(schema: Schema, *codes: str) -> Schema:
@@ -180,8 +160,8 @@ class Terms:
         self.check = DatasetCheck(pandas.DataFrame(), schema)
         self.vocabularies = vocabularies
 
-    def __call__(self, code: str, uri: str) -> str:
-        return self.check.uris(code, self.vocabularies)[uri]
+    def __call__(self, code: str, name: str) -> str:
+        return self.check.names(code, self.vocabularies)[name]
 
 
 @pytest.fixture
@@ -250,7 +230,7 @@ class TestRuleProblems:
     def test_the_probe_sensing_rule_requires_its_own_fields(
         self, children: Children, term: Terms
     ) -> None:
-        probing = term("P12", PROBING_ONSHORE)
+        probing = term("P12", "probing-onshore")
         frame = children({"P12": probing, "C6": None, "C23": None, "C5": None})
 
         assert self.lines(frame) == [
@@ -269,14 +249,14 @@ class TestRuleProblems:
     def test_an_exploration_method_in_neither_domain_requires_nothing(
         self, children: Children, term: Terms
     ) -> None:
-        frame = children({"P12": term("P12", OTHER_METHOD), "C5": None, "C6": None})
+        frame = children({"P12": term("P12", "other"), "C5": None, "C6": None})
 
         assert self.lines(frame) == []
 
     def test_several_exploration_methods_in_a_cell_are_all_read(
         self, children: Children, term: Terms
     ) -> None:
-        both = f"{term(*DRILLING_TERM)}; {term('P12', PROBING_ONSHORE)}"
+        both = f"{term(*DRILLING_TERM)}; {term('P12', 'probing-onshore')}"
         frame = children(
             {"P12": both, "C5": None, "C6": None},
             {"P12": f"{both}; no such method", "C5": None, "C6": None},
@@ -290,23 +270,23 @@ class TestRuleProblems:
         self, children: Children, term: Terms
     ) -> None:
         frame = children(
-            {"C42": term(*LITERATURE_TERM), "C41": term("C41", CORE_SAMPLES)}
+            {"C42": term(*LITERATURE_TERM), "C41": term("C41", "core-samples")}
         )
 
         assert self.lines(frame) == [
             (9, "C41", "CF-3", f"C42 tc_location {term(*LITERATURE_TERM)}")
         ]
         problems = DatasetCheck(frame, self.schema, RULES, self.vocabularies).problems()
-        assert list(problems["value"]) == [term("C41", CORE_SAMPLES)]
+        assert list(problems["value"]) == [term("C41", "core-samples")]
 
     def test_the_allowed_value_is_no_line(
         self, children: Children, term: Terms
     ) -> None:
         frame = children(
             {"C42": term(*LITERATURE_TERM), "C41": term(*ASSUMED_TERM)},
-            {"C42": term("C42", ACTUAL_LOCATION), "C41": term("C41", CORE_SAMPLES)},
-            {"C42": None, "C41": term("C41", CORE_SAMPLES)},
-            {"C42": "no such location", "C41": term("C41", CORE_SAMPLES)},
+            {"C42": term("C42", "actual"), "C41": term("C41", "core-samples")},
+            {"C42": None, "C41": term("C41", "core-samples")},
+            {"C42": "no such location", "C41": term("C41", "core-samples")},
         )
 
         assert self.lines(frame) == []
@@ -321,7 +301,7 @@ class TestRuleProblems:
     def test_each_disallowed_value_in_a_cell_is_a_line(
         self, children: Children, term: Terms
     ) -> None:
-        core, cutting = term("C41", CORE_SAMPLES), term("C41", CUTTING_SAMPLES)
+        core, cutting = term("C41", "core-samples"), term("C41", "cutting-samples")
         frame = children(
             {
                 "C42": term(*LITERATURE_TERM),
@@ -339,7 +319,7 @@ class TestRuleProblems:
     def test_a_value_not_in_the_vocabulary_in_the_limited_cell_gives_no_rule_line(
         self, children: Children, term: Terms
     ) -> None:
-        core = term("C41", CORE_SAMPLES)
+        core = term("C41", "core-samples")
         frame = children({"C42": term(*LITERATURE_TERM), "C41": f"{core}; nonsense"})
 
         problems = DatasetCheck(
@@ -352,10 +332,10 @@ class TestRuleProblems:
     def test_several_values_in_the_condition_cell_hold_when_all_are_published(
         self, children: Children, term: Terms
     ) -> None:
-        both = f"{term(*LITERATURE_TERM)}; {term('C42', ACTUAL_LOCATION)}"
+        both = f"{term(*LITERATURE_TERM)}; {term('C42', 'actual')}"
         frame = children(
-            {"C42": both, "C41": term("C41", CORE_SAMPLES)},
-            {"C42": f"{both}; nonsense", "C41": term("C41", CORE_SAMPLES)},
+            {"C42": both, "C41": term("C41", "core-samples")},
+            {"C42": f"{both}; nonsense", "C41": term("C41", "core-samples")},
         )
 
         found = self.lines(frame, with_separator(self.schema, "C42"))
@@ -366,8 +346,8 @@ class TestRuleProblems:
     def test_an_egrt_temperature_method_requires_the_probe_pulse_conductivity_method(
         self, children: Children, term: Terms, method: str
     ) -> None:
-        egrt = term(method, EGRT)
-        other = term("C43", POINT_SOURCE)
+        egrt = term(method, "EGRT")
+        other = term("C43", "pointSource")
         frame = children({method: egrt, "C43": other})
 
         problems = DatasetCheck(frame, self.schema, RULES, self.vocabularies).problems()
@@ -382,11 +362,11 @@ class TestRuleProblems:
     @pytest.mark.parametrize(
         ("top", "bottom", "conductivity"),
         [
-            (EGRT, EGRT, PROBE_PULSE),
-            (EGRT, None, PROBE_PULSE),
-            (None, EGRT, PROBE_PULSE),
-            (OTHER_TEMPERATURE, OTHER_TEMPERATURE, POINT_SOURCE),
-            (None, None, POINT_SOURCE),
+            ("EGRT", "EGRT", "probePulse"),
+            ("EGRT", None, "probePulse"),
+            (None, "EGRT", "probePulse"),
+            ("other", "other", "pointSource"),
+            (None, None, "pointSource"),
         ],
         ids=["both", "top", "bottom", "neither", "empty"],
     )
@@ -411,10 +391,10 @@ class TestRuleProblems:
     def test_an_egrt_at_the_bottom_names_the_bottom_when_the_top_has_another_method(
         self, children: Children, term: Terms
     ) -> None:
-        other_top = term("C31", OTHER_TEMPERATURE)
-        egrt = term("C32", EGRT)
+        other_top = term("C31", "other")
+        egrt = term("C32", "EGRT")
         frame = children(
-            {"C31": other_top, "C32": egrt, "C43": term("C43", POINT_SOURCE)}
+            {"C31": other_top, "C32": egrt, "C43": term("C43", "pointSource")}
         )
 
         found = [line for line in self.lines(frame) if line[2] == "CF-4"]
@@ -427,8 +407,8 @@ class TestRuleProblems:
     ) -> None:
         frame = children(
             {"P12": term(*DRILLING_TERM), "C5": None},
-            {"P12": term("P12", PROBING_ONSHORE), "C6": None},
-            {"C42": term(*LITERATURE_TERM), "C41": term("C41", CORE_SAMPLES)},
+            {"P12": term("P12", "probing-onshore"), "C6": None},
+            {"C42": term(*LITERATURE_TERM), "C41": term("C41", "core-samples")},
         ).drop(columns=missing)
 
         codes = {code for _, code, *_ in self.lines(frame)}
@@ -445,7 +425,7 @@ class TestRuleProblems:
                 "C5": None,
                 "C31": None,
                 "C42": term(*LITERATURE_TERM),
-                "C41": term("C41", CORE_SAMPLES),
+                "C41": term("C41", "core-samples"),
                 "C1": "abc",
             },
             {"C1": "abc"},

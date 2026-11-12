@@ -6,7 +6,8 @@ from extensions.field_reference import FieldReference
 from extensions.rule_reference import RuleReference
 from frictionless import Schema
 
-from ghfdb.fields import Vocabularies, allowed_values
+from ghfdb.fields import Vocabularies
+from ghfdb.fields.cells import terms_by_name
 from ghfdb.qc.rules import BOREHOLE, PROBE_SENSING, RULES, Rule
 
 MISSING = "—"
@@ -48,12 +49,9 @@ def rows_of(section: str) -> list[list[str]]:
     return [row for row in rows if not set("".join(row)) <= set("-|: ")][1:]
 
 
-def terms_of(
-    schema: Schema, vocabularies: Vocabularies, code: str
-) -> dict[str | None, str]:
-    """Map the concept URI of each allowed value of a field to its term."""
-    field = schema.get_field(code)
-    return {value.uri: value.term for value in allowed_values(field, vocabularies)}
+def terms_of(schema: Schema, vocabularies: Vocabularies, code: str) -> dict[str, str]:
+    """Map the local name of each allowed value of a field to its term."""
+    return terms_by_name(schema, code, vocabularies)
 
 
 class TestRuleEntries:
@@ -177,8 +175,8 @@ class TestDomainTable:
         grouped: dict[str, set[str]] = {}
         for method, domain in rows:
             grouped.setdefault(domain, set()).add(method)
-        borehole = {f"`{terms[uri]}`" for uri in BOREHOLE.concepts}
-        probing = {f"`{terms[uri]}`" for uri in PROBE_SENSING.concepts}
+        borehole = {f"`{terms[name]}`" for name in BOREHOLE.concepts}
+        probing = {f"`{terms[name]}`" for name in PROBE_SENSING.concepts}
         assert len(borehole) == 5
         assert len(probing) == 3
         assert sorted(map(frozenset, grouped.values()), key=len) == sorted(

@@ -8,7 +8,7 @@ import pandas
 from frictionless import Field, Schema
 
 from ghfdb.fields import MissingSchemeError, Vocabularies
-from ghfdb.fields.cells import concept_terms, parse_numbers
+from ghfdb.fields.cells import parse_numbers, terms_by_name
 from ghfdb.qc.rules import Condition, Rule
 
 PROBLEM_COLUMNS = [
@@ -49,7 +49,8 @@ class DatasetCheck:
         data: The children.
         schema: The fields.
         rules: The cross-field rules applied after the field check.
-        terms: The term of every concept the rules name, by field code and concept URI.
+        terms: The term of every concept the rules name, by field code and concept
+            name.
     """
 
     def __init__(
@@ -84,7 +85,7 @@ class DatasetCheck:
             vocabularies: Where the allowed values come from.
 
         Returns:
-            The term of each concept, by field code and concept URI.
+            The term of each concept, by field code and concept name.
 
         Raises:
             MissingSchemeError: A concept is not an allowed value of its field, or the
@@ -96,18 +97,18 @@ class DatasetCheck:
         allowed: dict[str, dict[str, str]] = {}
         terms = {}
         for rule in self.rules:
-            for code, uri in rule.concepts():
+            for code, name in rule.concepts():
                 if code not in allowed:
-                    allowed[code] = self.uris(code, files)
-                if uri not in allowed[code]:
+                    allowed[code] = self.names(code, files)
+                if name not in allowed[code]:
                     raise MissingSchemeError(
-                        f"{rule.identifier}: {uri} is not an allowed value of {code}"
+                        f"{rule.identifier}: {name} is not an allowed value of {code}"
                     )
-                terms[code, uri] = allowed[code][uri]
+                terms[code, name] = allowed[code][name]
         return terms
 
-    def uris(self, code: str, vocabularies: Vocabularies) -> dict[str, str]:
-        """Map the concept URI of each allowed value of a field to its term.
+    def names(self, code: str, vocabularies: Vocabularies) -> dict[str, str]:
+        """Map the local name of each allowed value of a field to its term.
 
         Args:
             code: The field's code.
@@ -116,7 +117,7 @@ class DatasetCheck:
         Returns:
             The term of each allowed value that belongs to a vocabulary.
         """
-        return concept_terms(self.schema, code, vocabularies)
+        return terms_by_name(self.schema, code, vocabularies)
 
     def problems(self) -> pandas.DataFrame:
         """Find what is wrong with the children.
@@ -245,7 +246,7 @@ class DatasetCheck:
         field = self.schema.get_field(condition.field)
         column = self.data[condition.field].astype("string")
         values = self.each_value(field, column[~self.blank(column)])
-        wanted = [self.terms[condition.field, uri] for uri in condition.concepts]
+        wanted = [self.terms[condition.field, name] for name in condition.concepts]
         allowed = values.isin(field.constraints.get("enum", []))
         held = (
             allowed.groupby(level=0).all() & values.isin(wanted).groupby(level=0).any()
@@ -265,7 +266,7 @@ class DatasetCheck:
         field = self.schema.get_field(condition.field)
         column = self.data[condition.field].astype("string")
         values = self.each_value(field, column[~self.blank(column)])
-        wanted = [self.terms[condition.field, uri] for uri in condition.concepts]
+        wanted = [self.terms[condition.field, name] for name in condition.concepts]
         first = values[values.isin(wanted)]
         first = first[~first.index.duplicated()]
         label = f"{field.name} {field.custom['columnName']} "

@@ -7,9 +7,10 @@ bottom filled". Every rule is declared here, in Python, and listed in ``RULES``,
 ``rule`` in the problem table, with the rule's identifier in ``rule`` and the field
 that decided the rule applies in ``related``.
 
-A rule names the vocabulary values it needs by the URI of their concept, never by
-their term. ``DatasetCheck`` turns each URI into the term the field accepts, using the
-vocabularies the field schema was built from, and refuses a URI the field does not
+A rule names the vocabulary values it needs by the local name of their concept (the
+last segment of its URI) within the field's own vocabulary, never by their term.
+``DatasetCheck`` turns each name into the term the field accepts, using the
+vocabularies the field schema was built from, and refuses a name the field does not
 accept.
 
 There are two kinds of rule:
@@ -25,7 +26,7 @@ new identifier that is never reused. To add a rule of a new kind:
 
 1. Subclass ``Rule`` and add the fields the kind needs.
 2. Implement ``fields(schema)``, listing the condition field first.
-3. Implement ``concepts()``, listing each ``(field code, concept URI)`` the rule names,
+3. Implement ``concepts()``, listing each ``(field code, concept name)`` the rule names,
    so the check can resolve them to terms on construction.
 4. Implement ``problems(check)``, working on whole columns, and build its lines with
    ``check.rule_lines``. Use ``check.holds`` to find the children a condition holds for.
@@ -46,22 +47,6 @@ import pandas
 from frictionless import Schema
 
 from ghfdb.fields import Field
-from ghfdb.qc.concepts import (
-    ASSUMED_FROM_LITERATURE,
-    CORE_SAMPLES,
-    DRILLING,
-    DRILLING_CLUSTERED,
-    EGRT,
-    INDIRECT,
-    LITERATURE_OR_UNSPECIFIED,
-    MINING,
-    POINT_SOURCE,
-    PROBE_PULSE,
-    PROBING_CLUSTERED,
-    PROBING_OFFSHORE,
-    PROBING_ONSHORE,
-    TUNNELING,
-)
 
 if TYPE_CHECKING:
     from ghfdb.qc.check import DatasetCheck
@@ -75,7 +60,7 @@ class Condition:
 
     Attributes:
         field: The code of the field.
-        concepts: The URIs of the concepts.
+        concepts: The local names of the concepts.
     """
 
     field: str
@@ -90,7 +75,7 @@ class Domain:
         code: The domain in the field schema's ``domain`` lists: ``B`` for borehole and
             mine data, ``S`` for probe sensing.
         field: The code of the field the exploration method is read from.
-        concepts: The URIs of the exploration methods in the domain.
+        concepts: The local names of the exploration methods in the domain.
         description: What a child of the domain is, as the end of "the exploration
             method is ...".
         rules: The name of the set of quality-scheme rules that score a child of the
@@ -112,14 +97,14 @@ class Domain:
 BOREHOLE = Domain(
     "B",
     EXPLORATION_METHOD,
-    (DRILLING, DRILLING_CLUSTERED, MINING, TUNNELING, INDIRECT),
+    ("drilling", "drilling-clustering", "mining", "tunneling", "indirect"),
     "a borehole and mine method",
     "borehole and mine",
 )
 PROBE_SENSING = Domain(
     "S",
     EXPLORATION_METHOD,
-    (PROBING_ONSHORE, PROBING_OFFSHORE, PROBING_CLUSTERED),
+    ("probing-onshore", "probing-offshore", "probing-clustering"),
     "a probe-sensing method",
     "probe sensing",
 )
@@ -131,7 +116,7 @@ class Example:
 
     Attributes:
         values: The values of the fields the rule reads, by field code. A vocabulary
-            value is the URI of its concept, an empty cell is None.
+            value is the local name of its concept, an empty cell is None.
         expected: The codes of the fields the rule reports, in the order of the
             field schema.
     """
@@ -143,12 +128,12 @@ class Example:
         """List the concepts the example's values name.
 
         Returns:
-            Each ``(field code, concept URI)``.
+            Each ``(field code, concept name)``.
         """
         return tuple(
             (code, value)
             for code, value in self.values.items()
-            if isinstance(value, str) and value.startswith("https://")
+            if isinstance(value, str)
         )
 
 
@@ -185,7 +170,7 @@ class Rule:
         """List the concepts the rule and its example name.
 
         Returns:
-            Each ``(field code, concept URI)``.
+            Each ``(field code, concept name)``.
         """
         raise NotImplementedError
 
@@ -206,7 +191,7 @@ class Rule:
         Args:
             schema: The field schema.
             terms: The term of each concept the rule names, by field code and concept
-                URI.
+                name.
 
         Returns:
             Mermaid flowchart text.
@@ -275,7 +260,7 @@ class RequiredWhen(Rule):
 
     def concepts(self) -> tuple[tuple[str, str], ...]:
         """List the exploration-method concepts of the domain, then the example's."""
-        named = [(self.domain.field, uri) for uri in self.domain.concepts]
+        named = [(self.domain.field, name) for name in self.domain.concepts]
         return (*named, *self.example.concepts())
 
     def diagram(self, schema: Schema, terms: Mapping[tuple[str, str], str]) -> str:
@@ -339,7 +324,7 @@ class AllowedWhen(Rule):
         if applies.any() and field.name in check.data.columns:
             column = check.data[field.name].astype("string")
             values = check.each_value(field, column[applies & ~check.blank(column)])
-            allowed = [check.terms[field.name, uri] for uri in self.then.concepts]
+            allowed = [check.terms[field.name, name] for name in self.then.concepts]
             published = values.isin(field.constraints.get("enum", []))
             whole = published.groupby(level=0).transform("all")
             wrong = values[whole & ~values.isin(allowed)]
@@ -360,18 +345,18 @@ class AllowedWhen(Rule):
 
         Args:
             condition: A field and its concepts.
-            terms: The term of each concept, by field code and concept URI.
+            terms: The term of each concept, by field code and concept name.
 
         Returns:
             The terms, joined with " or ".
         """
-        return " or ".join(terms[condition.field, uri] for uri in condition.concepts)
+        return " or ".join(terms[condition.field, name] for name in condition.concepts)
 
     def concepts(self) -> tuple[tuple[str, str], ...]:
         """List the conditions' concepts, the allowed ones, then the example's."""
         named = [
-            *((c.field, uri) for c in self.conditions() for uri in c.concepts),
-            *((self.then.field, uri) for uri in self.then.concepts),
+            *((c.field, name) for c in self.conditions() for name in c.concepts),
+            *((self.then.field, name) for name in self.then.concepts),
         ]
         return (*named, *self.example.concepts())
 
@@ -406,7 +391,7 @@ CF_1 = RequiredWhen(
         "confirmation by the data assessment team."
     ),
     example=Example(
-        {Field.explo_method: DRILLING, Field.q_bottom: None}, (Field.q_bottom,)
+        {Field.explo_method: "drilling", Field.q_bottom: None}, (Field.q_bottom,)
     ),
     domain=BOREHOLE,
 )
@@ -424,7 +409,7 @@ CF_2 = RequiredWhen(
         "by the data assessment team."
     ),
     example=Example(
-        {Field.explo_method: PROBING_ONSHORE, Field.probe_penetration: None},
+        {Field.explo_method: "probing-onshore", Field.probe_penetration: None},
         (Field.probe_penetration,),
     ),
     domain=PROBE_SENSING,
@@ -443,11 +428,11 @@ CF_3 = AllowedWhen(
         "known."
     ),
     example=Example(
-        {Field.tc_location: LITERATURE_OR_UNSPECIFIED, Field.tc_source: CORE_SAMPLES},
+        {Field.tc_location: "literature", Field.tc_source: "core-samples"},
         (Field.tc_source,),
     ),
-    when=Condition(Field.tc_location, (LITERATURE_OR_UNSPECIFIED,)),
-    then=Condition(Field.tc_source, (ASSUMED_FROM_LITERATURE,)),
+    when=Condition(Field.tc_location, ("literature",)),
+    then=Condition(Field.tc_source, ("assumed-from-literature",)),
 )
 
 CF_4 = AllowedWhen(
@@ -465,11 +450,11 @@ CF_4 = AllowedWhen(
         "technique, so that thermal conductivity is reported consistently."
     ),
     example=Example(
-        {Field.T_method_top: EGRT, Field.tc_method: POINT_SOURCE}, (Field.tc_method,)
+        {Field.T_method_top: "EGRT", Field.tc_method: "pointSource"}, (Field.tc_method,)
     ),
-    when=Condition(Field.T_method_top, (EGRT,)),
-    then=Condition(Field.tc_method, (PROBE_PULSE,)),
-    alternatives=(Condition(Field.T_method_bottom, (EGRT,)),),
+    when=Condition(Field.T_method_top, ("EGRT",)),
+    then=Condition(Field.tc_method, ("probePulse",)),
+    alternatives=(Condition(Field.T_method_bottom, ("EGRT",)),),
 )
 
 RULES: tuple[Rule, ...] = (CF_1, CF_2, CF_3, CF_4)

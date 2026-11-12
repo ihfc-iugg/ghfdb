@@ -21,14 +21,14 @@ from ghfdb.qc.penalties import (
 
 RED, GREEN, BLUE = "c:red", "c:green", "c:blue"
 SMALL, LARGE = "c:small", "c:large"
-URIS: dict[str, dict[str, str]] = {
+NAMES: dict[str, dict[str, str]] = {
     Field.tc_location: {"[red]": RED, "[green]": GREEN, "[blue]": BLUE},
     Field.tc_method: {"[small]": SMALL, "[large]": LARGE},
 }
 
 
 def inputs_of(**columns: list[Any]) -> Inputs:
-    return Inputs(column_children(**columns), URIS)
+    return Inputs(column_children(**columns), NAMES)
 
 
 def penalties(penalty: Penalty) -> list[float]:
@@ -281,10 +281,10 @@ class TestClasses:
         assert marks(penalty) == [True, True, True]
 
     def test_the_empty_and_unmatched_penalty_is_the_largest_of_the_table(self) -> None:
-        uris: dict[str, dict[str, str]] = {
+        names: dict[str, dict[str, str]] = {
             Field.tc_location: {"[red]": RED, "[other]": "c:other"}
         }
-        inputs = Inputs(column_children(C42=["[red]", "[other]", None]), uris)
+        inputs = Inputs(column_children(C42=["[red]", "[other]", None]), names)
         table = Classes(
             (Field.tc_location,),
             (Group(0.0, (RED,)), Group(-0.3, (BLUE,))),
@@ -299,10 +299,10 @@ class TestClasses:
     def test_a_concept_in_no_group_sets_the_mark_unless_the_table_says_not_to(
         self,
     ) -> None:
-        uris: dict[str, dict[str, str]] = {
+        names: dict[str, dict[str, str]] = {
             Field.tc_location: {"[red]": RED, "[other]": "c:other"}
         }
-        inputs = Inputs(column_children(C42=["[other]"]), uris)
+        inputs = Inputs(column_children(C42=["[other]"]), names)
         groups = (Group(0.0, (RED,)), Group(-0.3, (BLUE,)))
 
         marked = Classes((Field.tc_location,), groups).score(inputs)
@@ -322,7 +322,7 @@ class TestClasses:
         assert marks(penalty) == [False, True, False]
 
     def test_the_values_of_several_fields_are_scored_together(self) -> None:
-        uris: dict[str, dict[str, str]] = {
+        names: dict[str, dict[str, str]] = {
             Field.T_method_top: {"[red]": RED, "[blue]": BLUE},
             Field.T_method_bottom: {"[red]": RED, "[blue]": BLUE},
         }
@@ -332,14 +332,14 @@ class TestClasses:
             (Group(0.0, (RED,)), Group(-0.1, (BLUE,))),
         )
 
-        penalty = table.score(Inputs(data, uris))
+        penalty = table.score(Inputs(data, names))
 
         assert penalties(penalty) == [-0.1, -0.1]
 
     def test_an_empty_value_is_left_out_when_the_table_says_so_and_another_is_filled(
         self,
     ) -> None:
-        uris: dict[str, dict[str, str]] = {
+        names: dict[str, dict[str, str]] = {
             Field.T_method_top: {"[red]": RED, "[blue]": BLUE},
             Field.T_method_bottom: {"[red]": RED, "[blue]": BLUE},
         }
@@ -350,7 +350,7 @@ class TestClasses:
             skip_empty=True,
         )
 
-        penalty = table.score(Inputs(data, uris))
+        penalty = table.score(Inputs(data, names))
 
         assert penalties(penalty) == [0.0, -0.5, -0.5]
         assert marks(penalty) == [False, True, False]

@@ -18,20 +18,21 @@ class Inputs:
 
     Args:
         data: One row per child and one column per field, named by field code.
-        uris: The URI of the concept of each term a vocabulary field accepts, by field.
+        names: The local name of the concept of each term a vocabulary field accepts,
+            by field.
 
     Attributes:
         index: The index of the children.
         data: The children.
-        uris: The concept URI of each term, by field.
+        names: The concept's local name of each term, by field.
     """
 
     def __init__(
-        self, data: pandas.DataFrame, uris: Mapping[str, Mapping[str, str]]
+        self, data: pandas.DataFrame, names: Mapping[str, Mapping[str, str]]
     ) -> None:
         self.index = data.index
         self.data = data
-        self.uris = uris
+        self.names = names
         self.read_numbers: dict[str, pandas.Series] = {}
         self.read_concepts: dict[str, pandas.Series] = {}
 
@@ -74,15 +75,15 @@ class Inputs:
             field: The field, one whose concepts the scheme declares.
 
         Returns:
-            The concept URI of every value under its child's index, empty where the
-            cell is empty or holds a term the field does not allow.
+            The concept's local name of every value under its child's index, empty
+            where the cell is empty or holds a term the field does not allow.
 
         Raises:
             KeyError: The scheme declares no concept of the field.
         """
         if field not in self.read_concepts:
             text = self.text(field)
-            self.read_concepts[field] = self.translate(text, self.uris[field])
+            self.read_concepts[field] = self.translate(text, self.names[field])
         return self.read_concepts[field]
 
     @staticmethod

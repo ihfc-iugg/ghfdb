@@ -1,6 +1,7 @@
 {#- The Markdown of the rule reference. rule_reference.py supplies what is used here:
-    the schema, the rules, the term of each concept the rules name (concept_terms), the
-    filters cell and code, and the functions domains, terms and source, plus domain_of. -#}
+    the schema, the rules, the concepts the rules name resolved for their fields (concepts),
+    the filters cell and code, and the functions domains, terms and source, plus
+    domain_of. -#}
 {%- set MISSING = "—" -%}
 {%- set DOMAIN_NAMES = {"B": "Borehole and mine (B)", "S": "Probe sensing (S)"} -%}
 {%- set NO_DOMAIN = "None" -%}
@@ -14,8 +15,8 @@
 {% macro domains(code) -%}
 | Exploration method | Domain |
 |---|---|
-{%- for name, term in terms(code).items() %}
-{%- set domain = domain_of(name) %}
+{%- for concept, term in terms(code).items() %}
+{%- set domain = domain_of(concept) %}
 | {{ term | code }} | {{ DOMAIN_NAMES[domain.code] if domain else NO_DOMAIN }} |
 {%- endfor -%}
 {% endmacro %}
@@ -43,7 +44,7 @@ Source: {{ source(rule.source) }}
 {{ rule.reasoning | cell }}
 
 ```{mermaid}
-{{ rule.diagram(schema, concept_terms) }}
+{{ rule.diagram(schema, concepts) }}
 ```
 
 A child with these values breaks the rule:

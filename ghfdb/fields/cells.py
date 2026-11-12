@@ -1,12 +1,8 @@
-"""How the cells of a field are read: a number, and the term of a concept."""
+"""How the cells of a field are read: a number."""
 
 import math
 
 import pandas
-from frictionless import Schema
-
-from ghfdb.fields.schema import allowed_values
-from ghfdb.vocabularies import MissingSchemeError, Vocabularies, local_name
 
 
 def parse_numbers(text: pandas.Series) -> pandas.Series:
@@ -21,37 +17,3 @@ def parse_numbers(text: pandas.Series) -> pandas.Series:
     """
     numbers = pandas.to_numeric(text.str.strip(), errors="coerce").astype("float64")
     return numbers.where(numbers.abs() != math.inf)
-
-
-def terms_by_name(
-    schema: Schema, code: str, vocabularies: Vocabularies
-) -> dict[str, str]:
-    """Map the local name of each allowed value of a field to its term.
-
-    A concept is named within a field by the last segment of its URI, the name the
-    field's own vocabulary gives it.
-
-    Args:
-        schema: The fields.
-        code: The field's code.
-        vocabularies: Where the allowed values come from.
-
-    Returns:
-        The term of each allowed value that belongs to a vocabulary, empty for a field
-        that is not in the schema.
-
-    Raises:
-        MissingSchemeError: Two allowed values of the field share a local name. The
-            message names the field and the name.
-    """
-    if not any(field.name == code for field in schema.fields):
-        return {}
-    terms: dict[str, str] = {}
-    for value in allowed_values(schema.get_field(code), vocabularies):
-        if not value.uri:
-            continue
-        name = local_name(value.uri)
-        if name in terms:
-            raise MissingSchemeError(f"{code}: {name} names two allowed values")
-        terms[name] = value.term
-    return terms

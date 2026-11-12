@@ -5,14 +5,16 @@ from typing import Any
 import pytest
 from conftest import worked_document
 from frictionless import Schema
+from rdflib import Graph, URIRef
 
 from ghfdb.fields import allowed_values
+from ghfdb.fields.schema import FieldConcepts
 from ghfdb.qc.borehole import BoreholeRules
-from ghfdb.qc.criteria import CRITERIA, term_names
+from ghfdb.qc.criteria import CRITERIA
 from ghfdb.qc.probe import ProbeRules
 from ghfdb.qc.rules import EXPLORATION_METHOD
 from ghfdb.qc.scores import Scores
-from ghfdb.vocabularies import MissingSchemeError, Vocabularies, local_name
+from ghfdb.vocabularies import MissingSchemeError, Vocabularies, concepts, local_name
 
 
 @pytest.fixture(scope="module")
@@ -36,6 +38,14 @@ class Withdrawing(Vocabularies):
             if value.uri and local_name(value.uri) != self.name
         )
 
+    def graph(
+        self,
+        scheme: str,
+        download: str | None = None,
+        media_type: str | None = None,
+    ) -> Graph:
+        return self.vocabularies.graph(scheme, download, media_type)
+
 
 class TestCriteria:
     def test_every_criterion_has_the_identifier_the_worked_examples_use(
@@ -57,44 +67,49 @@ class TestCriteria:
             assert criterion.table.largest() < 0, criterion.identifier
 
 
-class TestTermNames:
+class TestSchemeConcepts:
     def test_every_concept_the_scheme_names_resolves_to_the_term_its_field_accepts(
         self, schema: Schema, published_vocabularies: Vocabularies
     ) -> None:
-        concepts = Scores.concepts()
+        named = Scores.concepts()
 
-        names = term_names(schema, concepts, published_vocabularies)
+        resolved = FieldConcepts.resolve(schema, named, published_vocabularies)
 
-        for code, name in concepts:
-            field = schema.get_field(code)
+        for code, concept in named:
             accepted = {
-                local_name(v.uri): v.term
-                for v in allowed_values(field, published_vocabularies)
+                URIRef(v.uri): v.term
+                for v in allowed_values(schema.get_field(code), published_vocabularies)
                 if v.uri
             }
-            assert names[code][accepted[name]] == name, (code, name)
+            assert resolved[code].terms == accepted, (code, concept)
+            assert concept in accepted or concept in resolved[code].collections
 
     def test_a_term_the_scheme_does_not_name_still_has_its_concept(
         self, schema: Schema, published_vocabularies: Vocabularies
     ) -> None:
         field = schema.get_field("C31")
+        named = {concept for code, concept in Scores.concepts() if code == field.name}
         unnamed = next(
             v
             for v in allowed_values(field, published_vocabularies)
-            if v.uri and (field.name, local_name(v.uri)) not in Scores.concepts()
+            if v.uri and URIRef(v.uri) not in named
         )
 
-        names = term_names(schema, Scores.concepts(), published_vocabularies)
+        resolved = FieldConcepts.resolve(
+            schema, Scores.concepts(), published_vocabularies
+        )
 
         assert unnamed.uri
-        assert names["C31"][unnamed.term] == local_name(unnamed.uri)
+        assert resolved["C31"].concepts[unnamed.term] == URIRef(unnamed.uri)
 
     def test_the_fields_resolved_are_those_the_scheme_names(
         self, schema: Schema, published_vocabularies: Vocabularies
     ) -> None:
-        names = term_names(schema, Scores.concepts(), published_vocabularies)
+        resolved = FieldConcepts.resolve(
+            schema, Scores.concepts(), published_vocabularies
+        )
 
-        assert set(names) == {code for code, _ in Scores.concepts()}
+        assert set(resolved) == {code for code, _ in Scores.concepts()}
 
     def test_a_concept_the_vocabulary_no_longer_has_fails_naming_field_and_concept(
         self, schema: Schema, published_vocabularies: Vocabularies
@@ -102,34 +117,40 @@ class TestTermNames:
         withdrawn = Withdrawing(published_vocabularies, "drilling")
 
         with pytest.raises(MissingSchemeError) as raised:
-            term_names(schema, Scores.concepts(), withdrawn)
+            FieldConcepts.resolve(schema, Scores.concepts(), withdrawn)
 
         assert re.search(rf"{EXPLORATION_METHOD}.*drilling", str(raised.value))
 
     def test_a_concept_the_field_does_not_allow_fails_naming_it(
         self, schema: Schema, published_vocabularies: Vocabularies
     ) -> None:
-        wrong = (*Scores.concepts(), (EXPLORATION_METHOD, "present-corrected"))
+        wrong = (
+            *Scores.concepts(),
+            (EXPLORATION_METHOD, concepts.corr_S_flag["present-corrected"]),
+        )
 
         with pytest.raises(
             MissingSchemeError, match=f"{EXPLORATION_METHOD}.*present-corrected"
         ):
-            term_names(schema, wrong, published_vocabularies)
+            FieldConcepts.resolve(schema, wrong, published_vocabularies)
 
-    def test_a_misspelt_name_fails_naming_field_and_name(
+    def test_a_misspelt_concept_fails_naming_field_and_concept(
         self, schema: Schema, published_vocabularies: Vocabularies
     ) -> None:
-        misspelt = (*Scores.concepts(), (EXPLORATION_METHOD, "drillling"))
+        misspelt = (
+            *Scores.concepts(),
+            (EXPLORATION_METHOD, concepts.explo_method.drillling),
+        )
 
         with pytest.raises(
             MissingSchemeError, match=f"{EXPLORATION_METHOD}.*drillling"
         ):
-            term_names(schema, misspelt, published_vocabularies)
+            FieldConcepts.resolve(schema, misspelt, published_vocabularies)
 
     def test_a_concept_of_a_field_outside_the_schema_fails_naming_it(
         self, schema: Schema, published_vocabularies: Vocabularies
     ) -> None:
-        unknown = (*Scores.concepts(), ("Z99", "drilling"))
+        unknown = (*Scores.concepts(), ("Z99", concepts.explo_method.drilling))
 
         with pytest.raises(MissingSchemeError, match="Z99"):
-            term_names(schema, unknown, published_vocabularies)
+            FieldConcepts.resolve(schema, unknown, published_vocabularies)

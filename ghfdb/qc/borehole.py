@@ -28,6 +28,14 @@ from ghfdb.qc.probe import (
 )
 from ghfdb.qc.rules import Condition
 from ghfdb.qc.ruleset import RuleScores, RuleSet
+from ghfdb.vocabularies import concepts
+
+CORR_IS_FLAG = concepts.corr_IS_flag
+T_METHOD = concepts.T_method_top
+TC_LOCATION = concepts.tc_location
+TC_SATURATION = concepts.tc_saturation
+TC_SOURCE = concepts.tc_source
+TC_PT_CONDITIONS = concepts.tc_pT_conditions
 
 # A gradient is a continuous log only with more than this many recordings.
 CONTINUOUS_LOG_RECORDINGS = 3
@@ -35,12 +43,12 @@ CONTINUOUS_LOG_RECORDINGS = 3
 GATE_SCORE = 0.1
 
 ESTIMATED_TEMPERATURE = (
-    "CPD",
-    "XEN",
-    "GTM",
-    "BSR",
-    "unspecified",
-    "other",
+    T_METHOD.CPD,
+    T_METHOD.XEN,
+    T_METHOD.GTM,
+    T_METHOD.BSR,
+    T_METHOD.unspecified,
+    T_METHOD.other,
 )
 TEMPERATURE_METHODS = (Field.T_method_top, Field.T_method_bottom)
 INTERVAL_DEPTHS = (Field.q_top, Field.q_bottom)
@@ -51,8 +59,8 @@ CONTINUOUS_LOG = Criterion(
     Classes(
         TEMPERATURE_METHODS,
         (
-            Group(0.1, ("LOGeq", "cLOG", "DTSeq", "cDTS")),
-            Group(-0.1, ("LOGpert",)),
+            Group(0.1, (T_METHOD.LOGeq, T_METHOD.cLOG, T_METHOD.DTSeq, T_METHOD.cDTS)),
+            Group(-0.1, (T_METHOD.LOGpert,)),
         ),
         skip_empty=True,
     ),
@@ -67,20 +75,30 @@ SINGLE_POINTS = Criterion(
             Group(
                 -0.1,
                 (
-                    "LOGeq",
-                    "cLOG",
-                    "cBHT",
-                    "HT-FT",
-                    "cHT-FT",
-                    "RTDeq",
-                    "cRTD",
-                    "ODTT-PC",
-                    "ODTT-TP",
-                    "EGRT",
-                    "GRT",
+                    T_METHOD.LOGeq,
+                    T_METHOD.cLOG,
+                    T_METHOD.cBHT,
+                    T_METHOD["HT-FT"],
+                    T_METHOD["cHT-FT"],
+                    T_METHOD.RTDeq,
+                    T_METHOD.cRTD,
+                    T_METHOD["ODTT-PC"],
+                    T_METHOD["ODTT-TP"],
+                    T_METHOD.EGRT,
+                    T_METHOD.GRT,
                 ),
             ),
-            Group(-0.3, ("LOGpert", "DTSpert", "BHT", "HT-FTpert", "RTDpert", "BLK")),
+            Group(
+                -0.3,
+                (
+                    T_METHOD.LOGpert,
+                    T_METHOD.DTSpert,
+                    T_METHOD.BHT,
+                    T_METHOD["HT-FTpert"],
+                    T_METHOD.RTDpert,
+                    T_METHOD.BLK,
+                ),
+            ),
             Group(-0.5, ESTIMATED_TEMPERATURE),
         ),
         skip_empty=True,
@@ -96,25 +114,25 @@ SURFACE_PLUS_ONE_POINT = Criterion(
             Group(
                 -0.3,
                 (
-                    "cBHT",
-                    "cDST",
-                    "RTDeq",
-                    "cRTD",
-                    "ODTT-PC",
-                    "ODTT-TP",
-                    "cHT-FT",
-                    "EGRT",
-                    "GRT",
+                    T_METHOD.cBHT,
+                    T_METHOD.cDST,
+                    T_METHOD.RTDeq,
+                    T_METHOD.cRTD,
+                    T_METHOD["ODTT-PC"],
+                    T_METHOD["ODTT-TP"],
+                    T_METHOD["cHT-FT"],
+                    T_METHOD.EGRT,
+                    T_METHOD.GRT,
                 ),
             ),
-            Group(-0.5, ("BHT", "HT-FTpert", "RTDpert")),
+            Group(-0.5, (T_METHOD.BHT, T_METHOD["HT-FTpert"], T_METHOD.RTDpert)),
             Group(-0.6, ESTIMATED_TEMPERATURE),
         ),
         skip_empty=True,
     ),
     "Table 3, Source type and number of T points",
 )
-TOP_METHOD_IS_SURFACE = Condition(Field.T_method_top, ("SUR",))
+TOP_METHOD_IS_SURFACE = Condition(Field.T_method_top, (T_METHOD.SUR,))
 
 LOCATION = Criterion(
     "borehole-tc.location",
@@ -122,9 +140,9 @@ LOCATION = Criterion(
     Classes(
         (Field.tc_location,),
         (
-            Group(0.0, ("actual",)),
-            Group(-0.1, ("other",)),
-            Group(-0.2, ("literature",)),
+            Group(0.0, (TC_LOCATION.actual,)),
+            Group(-0.1, (TC_LOCATION.other,)),
+            Group(-0.2, (TC_LOCATION.literature,)),
         ),
     ),
     "Table 3, Localization",
@@ -135,16 +153,23 @@ SOURCE = Criterion(
     Classes(
         (Field.tc_source,),
         (
-            Group(0.1, ("insitu-probe", "core-log")),
-            Group(0.0, ("core-samples",)),
-            Group(-0.1, ("cutting-samples", "outcrop-samples", "well-log")),
+            Group(0.1, (TC_SOURCE["insitu-probe"], TC_SOURCE["core-log"])),
+            Group(0.0, (TC_SOURCE["core-samples"],)),
+            Group(
+                -0.1,
+                (
+                    TC_SOURCE["cutting-samples"],
+                    TC_SOURCE["outcrop-samples"],
+                    TC_SOURCE["well-log"],
+                ),
+            ),
             Group(
                 -0.2,
                 (
-                    "mineral-computation",
-                    "unspecified",
-                    "other",
-                    "assumed-from-literature",
+                    TC_SOURCE["mineral-computation"],
+                    TC_SOURCE.unspecified,
+                    TC_SOURCE.other,
+                    TC_SOURCE["assumed-from-literature"],
                 ),
             ),
         ),
@@ -157,7 +182,7 @@ NUMBER = Criterion(
     Bands(
         Field.tc_number,
         (Band(0.0, 15), Band(-0.1)),
-        left_out_when={Field.tc_location: ("literature",)},
+        left_out_when={Field.tc_location: (TC_LOCATION.literature,)},
     ),
     "Table 3, Number of conductivities",
 )
@@ -167,8 +192,10 @@ SATURATION = Criterion(
     Classes(
         (Field.tc_saturation,),
         (
-            Group(0.0, ("saturatedInSitu", "saturatedMeasured")),
-            Group(-0.1, ("saturatedCalculated", "recovered")),
+            Group(
+                0.0, (TC_SATURATION.saturatedInSitu, TC_SATURATION.saturatedMeasured)
+            ),
+            Group(-0.1, (TC_SATURATION.saturatedCalculated, TC_SATURATION.recovered)),
             Group(-0.2, DRY_UNSPECIFIED_OR_OTHER),
         ),
     ),
@@ -180,7 +207,7 @@ CONDITIONS = Criterion(
     Classes(
         (Field.tc_pT_conditions,),
         (
-            Group(0.0, ("actualInSitu", *FULL_IN_SITU)),
+            Group(0.0, (TC_PT_CONDITIONS.actualInSitu, *FULL_IN_SITU)),
             Group(-0.1, PARTIAL_IN_SITU),
             Group(-0.2, AMBIENT_OR_UNSPECIFIED),
         ),
@@ -195,22 +222,31 @@ CONDITIONS_AGREEING = Criterion(
             Case(
                 0.0,
                 {
-                    Field.tc_pT_conditions: ("actualInSitu", *FULL_IN_SITU),
-                    Field.corr_IS_flag: ("consideredPT",),
+                    Field.tc_pT_conditions: (
+                        TC_PT_CONDITIONS.actualInSitu,
+                        *FULL_IN_SITU,
+                    ),
+                    Field.corr_IS_flag: (CORR_IS_FLAG.consideredPT,),
                 },
             ),
             Case(
                 -0.1,
                 {
                     Field.tc_pT_conditions: PARTIAL_IN_SITU,
-                    Field.corr_IS_flag: ("consideredP", "consideredT"),
+                    Field.corr_IS_flag: (
+                        CORR_IS_FLAG.consideredP,
+                        CORR_IS_FLAG.consideredT,
+                    ),
                 },
             ),
             Case(
                 -0.2,
                 {
                     Field.tc_pT_conditions: AMBIENT_OR_UNSPECIFIED,
-                    Field.corr_IS_flag: ("notConsidered", "unspecified"),
+                    Field.corr_IS_flag: (
+                        CORR_IS_FLAG.notConsidered,
+                        CORR_IS_FLAG.unspecified,
+                    ),
                 },
             ),
         )
@@ -245,8 +281,9 @@ class BoreholeRules(RuleSet):
         Returns:
             Whether any top method of each child is the surface temperature.
         """
-        top = self.inputs.concepts(TOP_METHOD_IS_SURFACE.field)
-        return self.inputs.any_value(top.isin(TOP_METHOD_IS_SURFACE.concepts))
+        field, surface = TOP_METHOD_IS_SURFACE.field, TOP_METHOD_IS_SURFACE.concepts
+        top = self.inputs.concepts(field)
+        return self.inputs.any_value(top.isin(self.inputs.expand(field, surface)))
 
     def continuous_log_case(self, surface: numpy.ndarray) -> numpy.ndarray:
         """Find the gradients that are a continuous log.
@@ -266,7 +303,8 @@ class BoreholeRules(RuleSet):
         )
         filled = methods.notna().to_numpy()
         outside = pandas.Series(
-            filled & ~CONTINUOUS_LOG.table.fits(methods), index=methods.index
+            filled & ~CONTINUOUS_LOG.table.fits(methods, self.inputs),
+            index=methods.index,
         )
         recordings = self.inputs.every_value(
             self.inputs.numbers(Field.T_number) > CONTINUOUS_LOG_RECORDINGS

@@ -3,9 +3,11 @@ from typing import Any
 import numpy
 import pandas
 import pytest
-from conftest import column_children
+from conftest import column_children, field_concepts
+from rdflib import URIRef
 
 from ghfdb.fields import Field
+from ghfdb.fields.schema import FieldConcepts
 from ghfdb.qc.inputs import Inputs
 from ghfdb.qc.penalties import (
     Band,
@@ -19,11 +21,12 @@ from ghfdb.qc.penalties import (
     Score,
 )
 
-RED, GREEN, BLUE = "c:red", "c:green", "c:blue"
-SMALL, LARGE = "c:small", "c:large"
-NAMES: dict[str, dict[str, str]] = {
-    Field.tc_location: {"[red]": RED, "[green]": GREEN, "[blue]": BLUE},
-    Field.tc_method: {"[small]": SMALL, "[large]": LARGE},
+RED, GREEN, BLUE = URIRef("c:red"), URIRef("c:green"), URIRef("c:blue")
+SMALL, LARGE = URIRef("c:small"), URIRef("c:large")
+OTHER = URIRef("c:other")
+NAMES: dict[str, FieldConcepts] = {
+    Field.tc_location: field_concepts({"[red]": RED, "[green]": GREEN, "[blue]": BLUE}),
+    Field.tc_method: field_concepts({"[small]": SMALL, "[large]": LARGE}),
 }
 
 
@@ -281,8 +284,8 @@ class TestClasses:
         assert marks(penalty) == [True, True, True]
 
     def test_the_empty_and_unmatched_penalty_is_the_largest_of_the_table(self) -> None:
-        names: dict[str, dict[str, str]] = {
-            Field.tc_location: {"[red]": RED, "[other]": "c:other"}
+        names: dict[str, FieldConcepts] = {
+            Field.tc_location: field_concepts({"[red]": RED, "[other]": OTHER})
         }
         inputs = Inputs(column_children(C42=["[red]", "[other]", None]), names)
         table = Classes(
@@ -299,8 +302,8 @@ class TestClasses:
     def test_a_concept_in_no_group_sets_the_mark_unless_the_table_says_not_to(
         self,
     ) -> None:
-        names: dict[str, dict[str, str]] = {
-            Field.tc_location: {"[red]": RED, "[other]": "c:other"}
+        names: dict[str, FieldConcepts] = {
+            Field.tc_location: field_concepts({"[red]": RED, "[other]": OTHER})
         }
         inputs = Inputs(column_children(C42=["[other]"]), names)
         groups = (Group(0.0, (RED,)), Group(-0.3, (BLUE,)))
@@ -322,9 +325,9 @@ class TestClasses:
         assert marks(penalty) == [False, True, False]
 
     def test_the_values_of_several_fields_are_scored_together(self) -> None:
-        names: dict[str, dict[str, str]] = {
-            Field.T_method_top: {"[red]": RED, "[blue]": BLUE},
-            Field.T_method_bottom: {"[red]": RED, "[blue]": BLUE},
+        names: dict[str, FieldConcepts] = {
+            Field.T_method_top: field_concepts({"[red]": RED, "[blue]": BLUE}),
+            Field.T_method_bottom: field_concepts({"[red]": RED, "[blue]": BLUE}),
         }
         data = column_children(C31=["[red]", "[blue]"], C32=["[blue]", "[red]"])
         table = Classes(
@@ -339,9 +342,9 @@ class TestClasses:
     def test_an_empty_value_is_left_out_when_the_table_says_so_and_another_is_filled(
         self,
     ) -> None:
-        names: dict[str, dict[str, str]] = {
-            Field.T_method_top: {"[red]": RED, "[blue]": BLUE},
-            Field.T_method_bottom: {"[red]": RED, "[blue]": BLUE},
+        names: dict[str, FieldConcepts] = {
+            Field.T_method_top: field_concepts({"[red]": RED, "[blue]": BLUE}),
+            Field.T_method_bottom: field_concepts({"[red]": RED, "[blue]": BLUE}),
         }
         data = column_children(C31=[None, None, "[blue]"], C32=["[red]", None, "[red]"])
         table = Classes(
@@ -356,9 +359,11 @@ class TestClasses:
         assert marks(penalty) == [False, True, False]
 
     def test_tells_which_values_fit_a_group(self) -> None:
-        concepts = pandas.Series([RED, BLUE, "c:other", None], dtype="string")
+        concepts = pandas.Series([RED, BLUE, OTHER, None], dtype="string")
 
-        assert self.COLOURS.fits(concepts).tolist() == [True, True, False, False]
+        fits = self.COLOURS.fits(concepts, inputs_of(C42=["[red]"]))
+
+        assert fits.tolist() == [True, True, False, False]
 
     def test_lists_what_it_reads_and_its_largest_penalty_for_the_documentation(
         self,

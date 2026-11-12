@@ -269,11 +269,11 @@ class TestFieldConcepts:
             three_fields, [("X1", COLOUR.everything)], vocabularies
         )
 
-        assert set(resolved["X1"].expand([COLOUR.everything])) == {
-            COLOUR.red,
+        assert resolved["X1"].expand([COLOUR.everything]) == (
             COLOUR.orange,
+            COLOUR.red,
             COLOUR.green,
-        }
+        )
 
     def test_expands_a_mixture_of_concepts_and_collections_in_order(
         self, three_fields: Schema, vocabularies: Vocabularies
@@ -287,6 +287,29 @@ class TestFieldConcepts:
             COLOUR.orange,
             COLOUR.red,
         )
+
+    def test_gives_the_terms_of_concepts_and_of_the_members_of_collections(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        resolved = FieldConcepts.resolve(
+            three_fields, [("X1", COLOUR.warm)], vocabularies
+        )
+
+        assert resolved["X1"].terms_for([COLOUR.warm]) == ["[Orange]", "[red]"]
+        assert resolved["X1"].terms_for([COLOUR.red, COLOUR.green]) == ["[red]"]
+
+    def test_merges_the_collections_of_two_resolutions_of_one_field(
+        self, three_fields: Schema, vocabularies: Vocabularies
+    ) -> None:
+        warm = FieldConcepts.resolve(three_fields, [("X1", COLOUR.warm)], vocabularies)
+        spectrum = FieldConcepts.resolve(
+            three_fields, [("X1", COLOUR.spectrum)], vocabularies
+        )
+
+        merged = FieldConcepts.merge(warm, spectrum)
+
+        assert set(merged["X1"].collections) == {COLOUR.warm, COLOUR.spectrum}
+        assert merged["X1"].terms == warm["X1"].terms
 
     @pytest.mark.parametrize("name", ["blue", "purple"])
     def test_refuses_a_concept_the_field_does_not_accept_naming_field_and_concept(

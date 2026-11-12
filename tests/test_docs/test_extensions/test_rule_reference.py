@@ -5,8 +5,9 @@ import pytest
 from extensions.field_reference import FieldReference
 from extensions.rule_reference import RuleReference
 from frictionless import Schema
+from rdflib import URIRef
 
-from ghfdb.fields.cells import terms_by_name
+from ghfdb.fields.schema import FieldConcepts
 from ghfdb.qc.rules import BOREHOLE, PROBE_SENSING, RULES, Rule
 from ghfdb.vocabularies import Vocabularies
 
@@ -49,9 +50,11 @@ def rows_of(section: str) -> list[list[str]]:
     return [row for row in rows if not set("".join(row)) <= set("-|: ")][1:]
 
 
-def terms_of(schema: Schema, vocabularies: Vocabularies, code: str) -> dict[str, str]:
-    """Map the local name of each allowed value of a field to its term."""
-    return terms_by_name(schema, code, vocabularies)
+def terms_of(
+    schema: Schema, vocabularies: Vocabularies, code: str
+) -> dict[URIRef, str]:
+    """Map each allowed value of a field that has a concept to its term."""
+    return FieldConcepts.terms_of(schema.get_field(code), vocabularies)
 
 
 class TestRuleEntries:
@@ -105,9 +108,7 @@ class TestRuleEntries:
             section = section_of(reference.entries(), rule)
 
             assert (
-                "```{mermaid}\n"
-                + rule.diagram(schema, reference.concept_terms)
-                + "\n```"
+                "```{mermaid}\n" + rule.diagram(schema, reference.concepts) + "\n```"
                 in section
             )
 

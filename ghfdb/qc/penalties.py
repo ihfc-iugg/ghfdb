@@ -19,12 +19,13 @@ from typing import Protocol, Self
 
 import numpy
 import pandas
+from rdflib import URIRef
 
 from ghfdb.fields import Field
 from ghfdb.qc.inputs import Inputs
 
 SCORE_DECIMALS = 3
-Conditions = Mapping[Field, Sequence[str]]
+Conditions = Mapping[Field, Sequence[URIRef]]
 
 
 @dataclass(frozen=True)
@@ -237,8 +238,8 @@ class Table(Protocol):
         """List the fields the table reads."""
         ...
 
-    def concepts(self) -> tuple[tuple[str, str], ...]:
-        """List the field and local name of every concept the table names."""
+    def concepts(self) -> tuple[tuple[str, URIRef], ...]:
+        """List the field and the URI of every concept the table names."""
         ...
 
     def largest(self) -> float:
@@ -276,12 +277,12 @@ class Bands:
         """List the number field, then the fields of ``left_out_when``."""
         return (self.field, *(self.left_out_when or ()))
 
-    def concepts(self) -> tuple[tuple[str, str], ...]:
+    def concepts(self) -> tuple[tuple[str, URIRef], ...]:
         """List the concepts of ``left_out_when``."""
         return tuple(
-            (field, name)
+            (field, concept)
             for field, concepts in (self.left_out_when or {}).items()
-            for name in concepts
+            for concept in concepts
         )
 
     def largest(self) -> float:
@@ -335,7 +336,7 @@ class Bands:
                 **{field: inputs.concepts(field) for field in self.left_out_when},
             }
         )
-        left_out = Case.hold_all(rows, self.left_out_when)
+        left_out = Case.hold_all(rows, self.left_out_when, inputs)
         return self.values(rows[self.field]).waived(left_out).poorest(inputs.index)
 
 
@@ -366,11 +367,11 @@ class Group:
 
     Attributes:
         penalty: The penalty.
-        concepts: The local names of the concepts.
+        concepts: The concepts, or collections of the field's scheme.
     """
 
     penalty: float
-    concepts: tuple[str, ...]
+    concepts: tuple[URIRef, ...]
 
 
 @dataclass(frozen=True)
@@ -401,53 +402,62 @@ class Classes:
         """List the fields."""
         return self.fields
 
-    def concepts(self) -> tuple[tuple[str, str], ...]:
+    def concepts(self) -> tuple[tuple[str, URIRef], ...]:
         """List every concept of every group, for each field."""
         return tuple(
-            (field, name)
+            (field, concept)
             for field in self.fields
             for group in self.groups
-            for name in group.concepts
+            for concept in group.concepts
         )
 
     def largest(self) -> float:
         """Give the lowest penalty of the groups."""
         return min(group.penalty for group in self.groups)
 
-    def membership(self, concepts: pandas.Series) -> list[numpy.ndarray]:
+    def membership(
+        self, concepts: pandas.Series, inputs: Inputs
+    ) -> list[numpy.ndarray]:
         """Say which concepts are in each group.
 
         Args:
             concepts: The concept of every value.
+            inputs: The scored fields, which expand a collection a group names. The
+                fields of a table share one vocabulary.
 
         Returns:
             For each group, whether each concept is in it.
         """
         return [
-            concepts.isin(group.concepts).to_numpy(dtype=bool) for group in self.groups
+            concepts.isin(inputs.expand(self.fields[0], group.concepts)).to_numpy(
+                dtype=bool
+            )
+            for group in self.groups
         ]
 
-    def fits(self, concepts: pandas.Series) -> numpy.ndarray:
+    def fits(self, concepts: pandas.Series, inputs: Inputs) -> numpy.ndarray:
         """Say which concepts are in a group.
 
         Args:
             concepts: The concept of every value.
+            inputs: The scored fields.
 
         Returns:
             Whether each concept is in a group.
         """
-        return numpy.any(self.membership(concepts), axis=0)
+        return numpy.any(self.membership(concepts, inputs), axis=0)
 
-    def values(self, concepts: pandas.Series) -> Penalty:
+    def values(self, concepts: pandas.Series, inputs: Inputs) -> Penalty:
         """Give each concept the penalty of its group.
 
         Args:
             concepts: The concept of every value.
+            inputs: The scored fields.
 
         Returns:
             The penalty of each value and whether it sets the mark.
         """
-        member = self.membership(concepts)
+        member = self.membership(concepts, inputs)
         return Penalty.settle(
             self,
             concepts.index,
@@ -466,7 +476,7 @@ class Classes:
             The poorest penalty of each child.
         """
         concepts = pandas.concat([inputs.concepts(field) for field in self.fields])
-        penalty = self.values(concepts)
+        penalty = self.values(concepts, inputs)
         if self.skip_empty:
             filled = concepts.notna()
             some_filled = filled.groupby(level=0, sort=False).transform("any")
@@ -495,22 +505,25 @@ class Case:
         """List the fields the row names, in order of first mention."""
         return tuple(dict.fromkeys((*self.conditions, *(self.every or ()))))
 
-    def concepts(self) -> tuple[tuple[Field, str], ...]:
+    def concepts(self) -> tuple[tuple[Field, URIRef], ...]:
         """List the concepts the row names, with their fields."""
         return tuple(
-            (field, name)
+            (field, concept)
             for conditions in (self.conditions, self.every or {})
             for field, concepts in conditions.items()
-            for name in concepts
+            for concept in concepts
         )
 
     @staticmethod
-    def hold_all(rows: pandas.DataFrame, conditions: Conditions) -> numpy.ndarray:
+    def hold_all(
+        rows: pandas.DataFrame, conditions: Conditions, inputs: Inputs
+    ) -> numpy.ndarray:
         """Say which rows satisfy every condition.
 
         Args:
             rows: The concepts of each field, one row for each combination of values.
             conditions: The concepts each named field may hold.
+            inputs: The scored fields, which expand a collection a condition names.
 
         Returns:
             Whether every condition holds in each row. A row holds every condition of an
@@ -518,7 +531,9 @@ class Case:
         """
         holds = numpy.ones(len(rows), dtype=bool)
         for field, concepts in conditions.items():
-            holds &= rows[field].isin(concepts).to_numpy(dtype=bool)
+            holds &= (
+                rows[field].isin(inputs.expand(field, concepts)).to_numpy(dtype=bool)
+            )
         return holds
 
     def holds(self, rows: pandas.DataFrame, inputs: Inputs) -> numpy.ndarray:
@@ -531,10 +546,12 @@ class Case:
         Returns:
             Whether the row holds in each combination.
         """
-        holds = self.hold_all(rows, self.conditions)
+        holds = self.hold_all(rows, self.conditions, inputs)
         for field, concepts in (self.every or {}).items():
             every = pandas.Series(
-                inputs.every_value(inputs.concepts(field).isin(concepts)),
+                inputs.every_value(
+                    inputs.concepts(field).isin(inputs.expand(field, concepts))
+                ),
                 index=inputs.index,
             )
             holds &= every.reindex(rows.index).to_numpy(dtype=bool)
@@ -568,7 +585,7 @@ class Cases:
             dict.fromkeys(field for case in self.cases for field in case.fields())
         )
 
-    def concepts(self) -> tuple[tuple[str, str], ...]:
+    def concepts(self) -> tuple[tuple[str, URIRef], ...]:
         """List the concepts of every row, with their fields, each once."""
         return tuple(
             dict.fromkeys(pair for case in self.cases for pair in case.concepts())
@@ -622,7 +639,7 @@ class Criterion[T: Table]:
         """List the fields the criterion reads."""
         return self.table.reads()
 
-    def concepts(self) -> tuple[tuple[str, str], ...]:
+    def concepts(self) -> tuple[tuple[str, URIRef], ...]:
         """List the concepts the criterion names, with their fields."""
         return self.table.concepts()
 

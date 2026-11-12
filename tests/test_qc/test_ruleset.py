@@ -1,19 +1,23 @@
 from typing import Any
 
 import pandas
-from conftest import column_children
+from conftest import column_children, field_concepts
+from rdflib import URIRef
 
 from ghfdb.fields import Field
+from ghfdb.fields.schema import FieldConcepts
 from ghfdb.qc.inputs import Inputs
 from ghfdb.qc.penalties import Classes, Criterion, Group
 from ghfdb.qc.rules import Condition
 from ghfdb.qc.ruleset import RuleSet
 
-RED, GREEN, SMALL, LARGE, TILTED = "c:red", "c:green", "c:small", "c:large", "c:tilted"
-NAMES: dict[str, dict[str, str]] = {
-    Field.tc_location: {"[red]": RED, "[green]": GREEN},
-    Field.tc_method: {"[small]": SMALL, "[large]": LARGE},
-    Field.corr_T_flag: {"[tilted]": TILTED, "[other]": "c:other"},
+RED, GREEN = URIRef("c:red"), URIRef("c:green")
+SMALL, LARGE = URIRef("c:small"), URIRef("c:large")
+TILTED, SURFACE_METHOD = URIRef("c:tilted"), URIRef("c:surface")
+NAMES: dict[str, FieldConcepts] = {
+    Field.tc_location: field_concepts({"[red]": RED, "[green]": GREEN}),
+    Field.tc_method: field_concepts({"[small]": SMALL, "[large]": LARGE}),
+    Field.corr_T_flag: field_concepts({"[tilted]": TILTED, "[other]": "c:other"}),
 }
 LOCATION = Criterion(
     "x.location",
@@ -34,7 +38,7 @@ ALONE = Criterion(
     "Table 1",
 )
 CORRECTED = Condition(Field.corr_T_flag, (TILTED,))
-SURFACE = Condition(Field.explo_method, ("c:surface",))
+SURFACE = Condition(Field.explo_method, (SURFACE_METHOD,))
 
 
 class Rules(RuleSet):
@@ -70,7 +74,7 @@ class TestRuleSet:
             (Field.tc_method, SMALL),
             (Field.tc_method, LARGE),
             (Field.corr_T_flag, TILTED),
-            (Field.explo_method, "c:surface"),
+            (Field.explo_method, SURFACE_METHOD),
         )
 
     def test_a_waiver_applies_to_the_child_and_not_to_the_measurement_on_its_own(

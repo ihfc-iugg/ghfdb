@@ -6,7 +6,7 @@ the obligation, stay in each field's ``custom`` dictionary.
 """
 
 import json
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
@@ -79,6 +79,47 @@ class FieldConcepts:
             for reference in references
             for concept in self.collections.get(reference, (reference,))
         )
+
+    def terms_for(self, references: Iterable[URIRef]) -> list[str]:
+        """Give the terms the field accepts for concepts and collections.
+
+        Args:
+            references: Concepts and collections of the field's scheme.
+
+        Returns:
+            The term of each concept, a collection giving the terms of its members in
+            place. A member the field does not accept has none.
+        """
+        return [
+            self.terms[concept]
+            for concept in self.expand(references)
+            if concept in self.terms
+        ]
+
+    @staticmethod
+    def merge(
+        first: Mapping[str, "FieldConcepts"], second: Mapping[str, "FieldConcepts"]
+    ) -> dict[str, "FieldConcepts"]:
+        """Combine two resolutions.
+
+        Args:
+            first: The concepts of some fields.
+            second: The concepts of some fields, resolved from the same schema.
+
+        Returns:
+            The concepts of every field of either, with the collections of both.
+        """
+        merged = dict(first)
+        for code, found in second.items():
+            known = merged.get(code)
+            merged[code] = (
+                found
+                if known is None
+                else FieldConcepts(
+                    found.terms, {**known.collections, **found.collections}
+                )
+            )
+        return merged
 
     @classmethod
     def resolve(
@@ -157,8 +198,24 @@ class FieldConcepts:
                     "collection of the field's scheme"
                 ) from None
             found = [URIRef(str(member)) for member in members]
-            collections[reference] = tuple(found if ordered else sorted(found))
+            collections[reference] = tuple(
+                found if ordered else sorted(found, key=cls.sort_key(terms))
+            )
         return cls(terms, collections)
+
+    @staticmethod
+    def sort_key(terms: Mapping[URIRef, str]) -> Callable[[URIRef], str]:
+        """Order concepts as the field lists them: by term, ignoring case.
+
+        Args:
+            terms: The term of each concept the field accepts.
+
+        Returns:
+            A sort key. A concept the field does not accept sorts by its URI.
+        """
+        return lambda concept: (
+            terms[concept] if concept in terms else concept
+        ).casefold()
 
     @staticmethod
     def terms_of(field: Field, vocabularies: Vocabularies) -> dict[URIRef, str]:

@@ -5,8 +5,10 @@ from collections.abc import Iterable, Mapping
 import numpy
 import pandas
 from pandas.api.types import infer_dtype
+from rdflib import URIRef
 
 from ghfdb.fields.cells import parse_numbers
+from ghfdb.fields.schema import FieldConcepts
 
 
 class Inputs:
@@ -18,21 +20,20 @@ class Inputs:
 
     Args:
         data: One row per child and one column per field, named by field code.
-        names: The local name of the concept of each term a vocabulary field accepts,
-            by field.
+        resolved: The concepts of each vocabulary field the scheme reads, by field.
 
     Attributes:
         index: The index of the children.
         data: The children.
-        names: The concept's local name of each term, by field.
+        resolved: The concepts of each vocabulary field, by field.
     """
 
     def __init__(
-        self, data: pandas.DataFrame, names: Mapping[str, Mapping[str, str]]
+        self, data: pandas.DataFrame, resolved: Mapping[str, FieldConcepts]
     ) -> None:
         self.index = data.index
         self.data = data
-        self.names = names
+        self.resolved = resolved
         self.read_numbers: dict[str, pandas.Series] = {}
         self.read_concepts: dict[str, pandas.Series] = {}
 
@@ -75,24 +76,46 @@ class Inputs:
             field: The field, one whose concepts the scheme declares.
 
         Returns:
-            The concept's local name of every value under its child's index, empty
-            where the cell is empty or holds a term the field does not allow.
+            The concept URI of every value under its child's index, empty where the
+            cell is empty or holds a term the field does not allow.
 
         Raises:
             KeyError: The scheme declares no concept of the field.
         """
         if field not in self.read_concepts:
             text = self.text(field)
-            self.read_concepts[field] = self.translate(text, self.names[field])
+            self.read_concepts[field] = self.translate(
+                text, self.resolved[field].concepts
+            )
         return self.read_concepts[field]
 
+    def expand(self, field: str, references: Iterable[URIRef]) -> tuple[str, ...]:
+        """Replace each collection a declaration names by its members.
+
+        Args:
+            field: The field, one whose concepts the scheme declares.
+            references: Concepts and collections of the field's scheme.
+
+        Returns:
+            The URI of each concept, as the values of ``concepts`` hold it.
+
+        Raises:
+            KeyError: The scheme declares no concept of the field.
+        """
+        return tuple(
+            str(concept) for concept in self.resolved[field].expand(references)
+        )
+
     @staticmethod
-    def translate(values: pandas.Series, mapping: Mapping[str, str]) -> pandas.Series:
+    def translate(
+        values: pandas.Series, mapping: Mapping[str, str] | Mapping[URIRef, str]
+    ) -> pandas.Series:
         """Replace each value by what the mapping gives it.
 
         Args:
             values: Text, with a row for each value.
-            mapping: The replacement of each text it knows.
+            mapping: The replacement of each text it knows. A key that is a URI
+                reference stands for the text of the URI.
 
         Returns:
             The replacement of every value under its index, empty for a value that is
@@ -101,7 +124,8 @@ class Inputs:
         codes, found = pandas.factorize(values)
         # The last entry stays None: it is what the code -1 of an empty value takes.
         replaced = numpy.full(len(found) + 1, None, dtype=object)
-        replaced[:-1] = pandas.Index(found).map(mapping).to_numpy(dtype=object)
+        known = {str(key): value for key, value in mapping.items()}
+        replaced[:-1] = pandas.Index(found).map(known).to_numpy(dtype=object)
         return pandas.Series(replaced[codes], index=values.index, dtype="string")
 
     @staticmethod

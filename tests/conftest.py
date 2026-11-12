@@ -12,15 +12,16 @@ import responses
 import xlsxwriter
 from frictionless import Field, Schema
 from openpyxl import load_workbook
+from rdflib import URIRef
 
 from ghfdb.fields import load_schema
-from ghfdb.qc.criteria import term_names
+from ghfdb.fields.schema import FieldConcepts
 from ghfdb.qc.scores import Scores
 from ghfdb.template import FIRST_DATA_ROW, ROW_LABELS, UploadTemplate
 from ghfdb.vocabularies import Vocabularies, caching_session
 
 Example = Mapping[str, Any]
-ConceptNames = dict[str, dict[str, str]]
+ScoredConcepts = dict[str, FieldConcepts]
 
 
 class TableReader(HTMLParser):
@@ -172,9 +173,11 @@ def schema(published_vocabularies: Vocabularies) -> Schema:
 
 
 @pytest.fixture(scope="session")
-def concept_names(schema: Schema, published_vocabularies: Vocabularies) -> ConceptNames:
-    """The local name of every concept the scoring reads, by field code and term."""
-    return term_names(schema, Scores.concepts(), published_vocabularies)
+def scored_concepts(
+    schema: Schema, published_vocabularies: Vocabularies
+) -> ScoredConcepts:
+    """The concepts the scoring reads, resolved for their fields, by field code."""
+    return FieldConcepts.resolve(schema, Scores.concepts(), published_vocabularies)
 
 
 @cache
@@ -189,6 +192,11 @@ def examples_of(*parts: str) -> list[Example]:
     """The worked examples of the given parts, or every example when none is given."""
     examples: list[Example] = worked_document()["examples"]
     return [e for e in examples if not parts or e["part"] in parts]
+
+
+def field_concepts(terms: Mapping[str, str]) -> FieldConcepts:
+    """Build the concepts of a made-up field from the concept of each of its terms."""
+    return FieldConcepts({URIRef(concept): term for term, concept in terms.items()}, {})
 
 
 def one_child(inputs: Mapping[str, Any]) -> pandas.DataFrame:

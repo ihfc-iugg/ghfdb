@@ -7,7 +7,8 @@ from enum import StrEnum
 import pandas
 from frictionless import Field, Schema
 
-from ghfdb.fields.cells import parse_numbers, terms_by_name
+from ghfdb.fields.cells import parse_numbers
+from ghfdb.fields.schema import FieldConcepts
 from ghfdb.qc.rules import Condition, Rule
 from ghfdb.vocabularies import MissingSchemeError, Vocabularies
 
@@ -49,8 +50,8 @@ class DatasetCheck:
         data: The children.
         schema: The fields.
         rules: The cross-field rules applied after the field check.
-        terms: The term of every concept the rules name, by field code and concept
-            name.
+        concepts: The concepts the rules name, resolved for their fields, by field
+            code.
     """
 
     def __init__(
@@ -60,7 +61,7 @@ class DatasetCheck:
         rules: Sequence[Rule] = (),
         vocabularies: Vocabularies | None = None,
     ) -> None:
-        """Remember what to check and turn the rules' concepts into terms.
+        """Remember what to check and resolve the rules' concepts to terms.
 
         Args:
             data: One row per child and one text column per field, named by field code.
@@ -70,54 +71,39 @@ class DatasetCheck:
                 it, the vocabularies in the user's cache, downloaded when missing.
 
         Raises:
-            MissingSchemeError: A concept a rule or its example names is not an allowed
-                value of its field. The message names the rule and the concept.
+            MissingSchemeError: A concept a rule or its example names is neither an
+                allowed value of its field nor a collection of the field's scheme. The
+                message names the rule, the field and the concept.
         """
         self.data = data
         self.schema = schema
         self.rules = tuple(rules)
-        self.terms = self.resolve(vocabularies)
+        self.concepts = self.resolve(vocabularies)
 
-    def resolve(self, vocabularies: Vocabularies | None) -> dict[tuple[str, str], str]:
-        """Turn the concepts of the rules into the terms their fields accept.
+    def resolve(self, vocabularies: Vocabularies | None) -> dict[str, FieldConcepts]:
+        """Resolve the concepts of the rules for their fields.
 
         Args:
             vocabularies: Where the allowed values come from.
 
         Returns:
-            The term of each concept, by field code and concept name.
+            The concepts of every field the rules name, by field code.
 
         Raises:
             MissingSchemeError: A concept is not an allowed value of its field, or the
                 field is not in the schema.
         """
+        resolved: dict[str, FieldConcepts] = {}
         if not self.rules:
-            return {}
+            return resolved
         files = Vocabularies() if vocabularies is None else vocabularies
-        allowed: dict[str, dict[str, str]] = {}
-        terms = {}
         for rule in self.rules:
-            for code, name in rule.concepts():
-                if code not in allowed:
-                    allowed[code] = self.names(code, files)
-                if name not in allowed[code]:
-                    raise MissingSchemeError(
-                        f"{rule.identifier}: {name} is not an allowed value of {code}"
-                    )
-                terms[code, name] = allowed[code][name]
-        return terms
-
-    def names(self, code: str, vocabularies: Vocabularies) -> dict[str, str]:
-        """Map the local name of each allowed value of a field to its term.
-
-        Args:
-            code: The field's code.
-            vocabularies: Where the allowed values come from.
-
-        Returns:
-            The term of each allowed value that belongs to a vocabulary.
-        """
-        return terms_by_name(self.schema, code, vocabularies)
+            try:
+                found = FieldConcepts.resolve(self.schema, rule.concepts(), files)
+            except MissingSchemeError as error:
+                raise MissingSchemeError(f"{rule.identifier}: {error}") from error
+            resolved = FieldConcepts.merge(resolved, found)
+        return resolved
 
     def problems(self) -> pandas.DataFrame:
         """Find what is wrong with the children.
@@ -246,7 +232,7 @@ class DatasetCheck:
         field = self.schema.get_field(condition.field)
         column = self.data[condition.field].astype("string")
         values = self.each_value(field, column[~self.blank(column)])
-        wanted = [self.terms[condition.field, name] for name in condition.concepts]
+        wanted = self.concepts[condition.field].terms_for(condition.concepts)
         allowed = values.isin(field.constraints.get("enum", []))
         held = (
             allowed.groupby(level=0).all() & values.isin(wanted).groupby(level=0).any()
@@ -266,7 +252,7 @@ class DatasetCheck:
         field = self.schema.get_field(condition.field)
         column = self.data[condition.field].astype("string")
         values = self.each_value(field, column[~self.blank(column)])
-        wanted = [self.terms[condition.field, name] for name in condition.concepts]
+        wanted = self.concepts[condition.field].terms_for(condition.concepts)
         first = values[values.isin(wanted)]
         first = first[~first.index.duplicated()]
         label = f"{field.name} {field.custom['columnName']} "

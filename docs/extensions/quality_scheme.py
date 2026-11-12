@@ -11,11 +11,12 @@ from typing import Any
 
 from frictionless import Schema
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
+from rdflib import URIRef
 from sphinx.application import Sphinx
 
 from extensions.field_reference import FieldReference
 from ghfdb.fields import Field, load_schema
-from ghfdb.fields.cells import terms_by_name
+from ghfdb.fields.schema import FieldConcepts
 from ghfdb.qc import borehole, probe
 from ghfdb.qc.criteria import CRITERIA
 from ghfdb.qc.penalties import (
@@ -170,21 +171,7 @@ class CriterionTable:
     def __init__(self, schema: Schema, vocabularies: Vocabularies) -> None:
         self.schema = schema
         self.vocabularies = vocabularies
-        self.terms: dict[str, dict[str, str]] = {}
-
-    def term(self, field: str, name: str) -> str:
-        """Write a concept as the term its field accepts.
-
-        Args:
-            field: The field's code.
-            name: The concept's local name.
-
-        Returns:
-            The term, as an inline code span.
-        """
-        if field not in self.terms:
-            self.terms[field] = terms_by_name(self.schema, field, self.vocabularies)
-        return FieldReference.code(self.terms[field][name])
+        self.resolved: dict[str, FieldConcepts] = {}
 
     def title(self, field: str) -> str:
         """Name a field by its title, escaped for a Markdown table.
@@ -225,17 +212,19 @@ class CriterionTable:
         written = cls.penalty(table.largest())
         return f"{written}, with the mark" if marked else written
 
-    def terms_of(self, field: str, names: tuple[str, ...]) -> str:
+    def terms_of(self, field: str, concepts: tuple[URIRef, ...]) -> str:
         """Write concepts as the terms their field accepts.
 
         Args:
             field: The field's code.
-            names: The concepts' local names.
+            concepts: The concepts, or collections of the field's scheme.
 
         Returns:
-            The terms, separated by commas.
+            The terms, each as an inline code span, separated by commas. A collection
+            gives the terms of its members.
         """
-        return ", ".join(self.term(field, name) for name in names)
+        terms = self.resolved[field].terms_for(concepts)
+        return ", ".join(FieldReference.code(term) for term in terms)
 
     @staticmethod
     def edge(number: float) -> str:
@@ -369,7 +358,12 @@ class CriterionTable:
 
         Raises:
             TypeError: The criterion declares a kind of table this class cannot write.
+            MissingSchemeError: A concept the criterion names is not an allowed value of
+                its field.
         """
+        self.resolved = FieldConcepts.resolve(
+            self.schema, criterion.concepts(), self.vocabularies
+        )
         match criterion.table:
             case Bands() as bands:
                 return self.bands(criterion.title, bands)

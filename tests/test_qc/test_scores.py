@@ -3,7 +3,7 @@ from typing import Any
 
 import pandas
 import pytest
-from conftest import ConceptNames, Example, examples_of, one_child
+from conftest import Example, ScoredConcepts, examples_of, one_child
 
 from ghfdb.dataset import Dataset
 from ghfdb.qc.inputs import Inputs
@@ -35,17 +35,19 @@ class ExampleRunner:
     """Score one worked example as the scoring does and assert what it expects.
 
     Args:
-        concept_names: The local name of every concept the scoring reads.
+        scored_concepts: The local name of every concept the scoring reads.
         vocabularies: The published vocabularies the whole dataset scoring reads.
     """
 
-    def __init__(self, concept_names: ConceptNames, vocabularies: Vocabularies) -> None:
-        self.concept_names = concept_names
+    def __init__(
+        self, scored_concepts: ScoredConcepts, vocabularies: Vocabularies
+    ) -> None:
+        self.scored_concepts = scored_concepts
         self.vocabularies = vocabularies
 
     def scores(self, example: Example) -> Scores:
         """Build the scoring of the one child an example describes."""
-        return Scores(Inputs(one_child(example["inputs"]), self.concept_names))
+        return Scores(Inputs(one_child(example["inputs"]), self.scored_concepts))
 
     def u_score(self, example: Example) -> None:
         grades = UScore(Inputs(one_child(example["inputs"]), {})).grades()
@@ -72,7 +74,7 @@ class ExampleRunner:
         t = sub_score(inputs["T"], inputs.get("T_marked", False))
         tc = sub_score(inputs["TC"], inputs.get("TC_marked", False))
 
-        grade = Scores(Inputs(one_child({}), self.concept_names)).grades(t, tc)
+        grade = Scores(Inputs(one_child({}), self.scored_concepts)).grades(t, tc)
 
         assert grade.iloc[0] == example["expected"]["M"]
 
@@ -147,11 +149,11 @@ class TestWorkedExamples:
     @pytest.mark.parametrize("example", RUN, ids=lambda example: example["id"])
     def test_every_example_scores_as_expected(
         self,
-        concept_names: ConceptNames,
+        scored_concepts: ScoredConcepts,
         published_vocabularies: Vocabularies,
         example: Example,
     ) -> None:
-        runner = ExampleRunner(concept_names, published_vocabularies)
+        runner = ExampleRunner(scored_concepts, published_vocabularies)
 
         RUNNERS[example["part"]](runner, example)
 
@@ -188,7 +190,7 @@ class TestScoreTable:
 
 class TestRouting:
     def test_every_child_of_a_dataset_is_routed_under_its_own_index(
-        self, concept_names: ConceptNames
+        self, scored_concepts: ScoredConcepts
     ) -> None:
         data = pandas.DataFrame(
             {"P12": ["[Drilling]", None, "[Probing (clustered)]", "[Other]"]},
@@ -196,7 +198,7 @@ class TestRouting:
             dtype=object,
         )
 
-        rules = Scores(Inputs(data, concept_names)).routing
+        rules = Scores(Inputs(data, scored_concepts)).routing
 
         assert rules.index.tolist() == [12, 9, 10, 11]
         assert rules.iloc[0] == "borehole and mine"
@@ -206,7 +208,7 @@ class TestRouting:
 
 class TestPerturbationFlags:
     def test_every_child_of_a_dataset_gets_its_own_flags_under_its_own_index(
-        self, concept_names: ConceptNames
+        self, scored_concepts: ScoredConcepts
     ) -> None:
         data = pandas.DataFrame(
             {
@@ -217,7 +219,7 @@ class TestPerturbationFlags:
             dtype=object,
         )
 
-        flags = Scores(Inputs(data, concept_names)).flags()
+        flags = Scores(Inputs(data, scored_concepts)).flags()
 
         assert flags.index.tolist() == [12, 9, 10]
         assert flags.tolist() == ["S-----x", "------X", "-------"]
@@ -225,7 +227,7 @@ class TestPerturbationFlags:
 
 class TestMScore:
     def test_every_child_is_graded_under_its_own_index(
-        self, concept_names: ConceptNames
+        self, scored_concepts: ScoredConcepts
     ) -> None:
         index = pandas.Index([12, 9, 10, 11], name="row")
         t = Score(
@@ -239,7 +241,7 @@ class TestMScore:
             pandas.Series([False, False, False, False], index=index, dtype="boolean"),
         )
 
-        grade = Scores(Inputs(pandas.DataFrame(index=index), concept_names)).grades(
+        grade = Scores(Inputs(pandas.DataFrame(index=index), scored_concepts)).grades(
             t, tc
         )
 

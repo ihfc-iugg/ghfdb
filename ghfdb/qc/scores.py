@@ -3,17 +3,20 @@
 import numpy
 import pandas
 from frictionless import Schema
+from rdflib import URIRef
 
 from ghfdb.fields import Field
+from ghfdb.fields.schema import FieldConcepts
 from ghfdb.qc.borehole import BoreholeRules
 from ghfdb.qc.check import Kind
-from ghfdb.qc.criteria import term_names
 from ghfdb.qc.inputs import Inputs
 from ghfdb.qc.penalties import SCORE_DECIMALS, Band, Score
 from ghfdb.qc.probe import ProbeRules
 from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD, PROBE_SENSING, Domain
 from ghfdb.qc.uncertainty import UScore
-from ghfdb.vocabularies import Vocabularies
+from ghfdb.vocabularies import Vocabularies, concepts
+
+CORRECTION = concepts.corr_S_flag
 
 # The class of the product of the T-score and the TC-score: M1 from 0.75, M2 from 0.50,
 # M3 from 0.25 and M4 below. A product on an edge takes the better class.
@@ -82,7 +85,8 @@ class Scores:
         methods = inputs.first(inputs.concepts(EXPLORATION_METHOD))
         routing = pandas.Series(pandas.NA, index=methods.index, dtype="string")
         for domain in (PROBE_SENSING, BOREHOLE):
-            routing = routing.mask(methods.isin(domain.concepts), domain.rules)
+            members = inputs.expand(EXPLORATION_METHOD, domain.concepts)
+            routing = routing.mask(methods.isin(members), domain.rules)
         self.routing = routing
         self.probe = ProbeRules(inputs, self.scored(PROBE_SENSING, ProbeRules.reads()))
         self.borehole = BoreholeRules(
@@ -128,15 +132,16 @@ class Scores:
             The scores of the children.
 
         Raises:
-            MissingSchemeError: A concept the scheme names is not an allowed value of
-                its field.
+            MissingSchemeError: A concept the scheme names is neither an allowed value
+                of its field nor a collection of the field's scheme.
             OSError: The vocabularies are not cached and cannot be downloaded.
         """
-        names = term_names(schema, cls.concepts(), vocabularies)
-        return cls(Inputs(cls.blank(data, problems), names))
+        files = Vocabularies() if vocabularies is None else vocabularies
+        resolved = FieldConcepts.resolve(schema, cls.concepts(), files)
+        return cls(Inputs(cls.blank(data, problems), resolved))
 
     @staticmethod
-    def concepts() -> tuple[tuple[str, str], ...]:
+    def concepts() -> tuple[tuple[str, URIRef], ...]:
         """List every concept the scheme names, with its field.
 
         Returns:
@@ -144,12 +149,14 @@ class Scores:
             both sets of rules, each once.
         """
         methods = tuple(
-            (EXPLORATION_METHOD, name)
+            (EXPLORATION_METHOD, concept)
             for domain in (PROBE_SENSING, BOREHOLE)
-            for name in domain.concepts
+            for concept in domain.concepts
         )
         flags = tuple(
-            (field, name) for field in FLAGS for name in Scores.flag_characters("S")
+            (field, concept)
+            for field in FLAGS
+            for concept in Scores.flag_characters("S")
         )
         return tuple(
             dict.fromkeys(
@@ -185,7 +192,7 @@ class Scores:
         return cells
 
     @staticmethod
-    def flag_characters(letter: str) -> dict[str, str]:
+    def flag_characters(letter: str) -> dict[URIRef, str]:
         """Say how each state of a correction is written in a flag.
 
         Args:
@@ -199,11 +206,11 @@ class Scores:
             each flag is written").
         """
         return {
-            "present-corrected": letter,
-            "present-not-corrected": letter.lower(),
-            "present-not-significant": "X",
-            "not-recognized": "x",
-            "unspecified": "-",
+            CORRECTION["present-corrected"]: letter,
+            CORRECTION["present-not-corrected"]: letter.lower(),
+            CORRECTION["present-not-significant"]: "X",
+            CORRECTION["not-recognized"]: "x",
+            CORRECTION.unspecified: "-",
         }
 
     def flags(self) -> pandas.Series:

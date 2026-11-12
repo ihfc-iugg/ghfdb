@@ -17,9 +17,10 @@ from ghfdb.qc.penalties import (
     Criterion,
     Group,
 )
-from ghfdb.vocabularies import Vocabularies
+from ghfdb.vocabularies import Vocabularies, concepts
 
 NOT_DETERMINED = "not determined"
+LITERATURE = concepts.tc_location.literature
 
 
 def rows_of(markdown: str) -> list[list[str]]:
@@ -280,8 +281,8 @@ def location(penalty: float) -> Criterion[Classes]:
         Classes(
             (Field.tc_location,),
             (
-                Group(0.0, ("actual",)),
-                Group(penalty, ("other", "literature")),
+                Group(0.0, (concepts.tc_location.actual,)),
+                Group(penalty, (concepts.tc_location.other, LITERATURE)),
             ),
             unmatched_marked=False,
         ),
@@ -406,14 +407,21 @@ class TestCriterionTable:
                     Case(
                         0.1,
                         {
-                            Field.tc_saturation: ("saturatedInSitu",),
-                            Field.tc_method: ("probePulse",),
+                            Field.tc_saturation: (
+                                concepts.tc_saturation.saturatedInSitu,
+                            ),
+                            Field.tc_method: (concepts.tc_method.probePulse,),
                         },
                     ),
                     Case(
                         0.0,
-                        {Field.tc_saturation: ("recovered",)},
-                        every={Field.tc_method: ("pointSource", "lineSourceFull")},
+                        {Field.tc_saturation: (concepts.tc_saturation.recovered,)},
+                        every={
+                            Field.tc_method: (
+                                concepts.tc_method.pointSource,
+                                concepts.tc_method.lineSourceFull,
+                            )
+                        },
                     ),
                 )
             ),
@@ -444,7 +452,7 @@ class TestCriterionTable:
             Bands(
                 Field.tc_number,
                 (Band(0.0, 3), Band(-0.2)),
-                left_out_when={Field.tc_location: ("literature",)},
+                left_out_when={Field.tc_location: (LITERATURE,)},
             ),
             "Table 2, Number of conductivities",
         )

@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Any, ClassVar
 
 import numpy
+from rdflib import URIRef
 
 from ghfdb.qc.inputs import Inputs
 from ghfdb.qc.penalties import Criterion, Penalty, Score
@@ -105,7 +106,7 @@ class RuleSet:
         )
 
     @classmethod
-    def concepts(cls) -> tuple[tuple[str, str], ...]:
+    def concepts(cls) -> tuple[tuple[str, URIRef], ...]:
         """List the concepts the rules name, with their fields.
 
         Returns:
@@ -117,9 +118,9 @@ class RuleSet:
                 (
                     *(pair for criterion in criteria for pair in criterion.concepts()),
                     *(
-                        (condition.field, name)
+                        (condition.field, concept)
                         for condition in corrections
-                        for name in condition.concepts
+                        for concept in condition.concepts
                     ),
                 )
             )
@@ -135,8 +136,10 @@ class RuleSet:
         Returns:
             Whether each child has the correction.
         """
-        first = self.inputs.first(self.inputs.concepts(correction.field))
-        return first.isin(correction.concepts).to_numpy(dtype=bool)
+        field = correction.field
+        first = self.inputs.first(self.inputs.concepts(field))
+        wanted = self.inputs.expand(field, correction.concepts)
+        return first.isin(wanted).to_numpy(dtype=bool)
 
     def penalties(
         self, criteria: Sequence[Criterion[Any]]

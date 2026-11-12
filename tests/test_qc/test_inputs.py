@@ -1,17 +1,23 @@
 import pandas
 import pytest
-from conftest import column_children
+from conftest import column_children, field_concepts
 from pandas.testing import assert_series_equal
 
 from ghfdb.fields import Field
+from ghfdb.fields.schema import FieldConcepts
 from ghfdb.qc.inputs import Inputs
+from ghfdb.vocabularies import concepts
 
-NAMES: dict[str, dict[str, str]] = {
-    Field.explo_method: {
-        "[Drilling]": "drilling",
-        "[Mining]": "mining",
-        "[Probing]": "probing-onshore",
-    }
+METHOD = concepts.explo_method
+DRILLING, MINING, PROBING = (
+    str(METHOD.drilling),
+    str(METHOD.mining),
+    str(METHOD["probing-onshore"]),
+)
+NAMES: dict[str, FieldConcepts] = {
+    Field.explo_method: field_concepts(
+        {"[Drilling]": DRILLING, "[Mining]": MINING, "[Probing]": PROBING}
+    )
 }
 
 
@@ -56,12 +62,12 @@ class TestNumbers:
 
 
 class TestConcepts:
-    def test_a_term_becomes_the_local_name_of_its_concept(self) -> None:
+    def test_a_term_becomes_the_uri_of_its_concept(self) -> None:
         data = column_children(P12=["[Drilling]", "[Probing]", "[Mining]"])
 
         concepts = Inputs(data, NAMES).concepts(Field.explo_method)
 
-        assert concepts.tolist() == ["drilling", "probing-onshore", "mining"]
+        assert concepts.tolist() == [DRILLING, PROBING, MINING]
 
     def test_a_term_the_field_does_not_allow_is_empty(self) -> None:
         data = column_children(P12=["[Present and corrected]", "nonsense", "", None])
@@ -79,7 +85,7 @@ class TestConcepts:
         concepts = Inputs(data, NAMES).concepts(Field.explo_method)
 
         assert concepts.index.tolist() == [9, 10, 10]
-        assert concepts.tolist() == ["drilling", "mining", "drilling"]
+        assert concepts.tolist() == [DRILLING, MINING, DRILLING]
 
     def test_an_empty_list_is_one_empty_value(self) -> None:
         data = column_children(P12=[[], "[Drilling]"])
@@ -112,6 +118,32 @@ class TestConcepts:
             Inputs(data, NAMES).concepts(Field.tc_location)
 
 
+class TestExpand:
+    def test_a_collection_becomes_the_uris_of_its_members_and_a_concept_stays(
+        self,
+    ) -> None:
+        resolved: dict[str, FieldConcepts] = {
+            Field.explo_method: FieldConcepts(
+                {METHOD.drilling: "[Drilling]", METHOD.mining: "[Mining]"},
+                {METHOD.boreholes: (METHOD.drilling, METHOD.mining)},
+            )
+        }
+        inputs = Inputs(column_children(P12=["[Drilling]"]), resolved)
+
+        expanded = inputs.expand(
+            Field.explo_method, [METHOD.boreholes, METHOD["probing-onshore"]]
+        )
+
+        assert expanded == (DRILLING, MINING, PROBING)
+        assert all(type(uri) is str for uri in expanded)
+
+    def test_a_field_without_declared_concepts_is_refused(self) -> None:
+        with pytest.raises(KeyError, match="C42"):
+            Inputs(column_children(P12=["[Drilling]"]), NAMES).expand(
+                Field.tc_location, [METHOD.drilling]
+            )
+
+
 class TestPerChild:
     def test_the_first_value_of_each_child_is_the_one_kept(self) -> None:
         data = column_children(P12=[["[Mining]", "[Drilling]"], None, "[Drilling]"])
@@ -120,9 +152,9 @@ class TestPerChild:
         first = inputs.first(inputs.concepts(Field.explo_method))
 
         assert first.index.tolist() == data.index.tolist()
-        assert first.iloc[0] == "mining"
+        assert first.iloc[0] == MINING
         assert pandas.isna(first.iloc[1])
-        assert first.iloc[2] == "drilling"
+        assert first.iloc[2] == DRILLING
 
     def test_any_and_all_summarise_the_values_of_each_child(self) -> None:
         data = column_children(C1=[["1", "5"], ["5", "6"], None])

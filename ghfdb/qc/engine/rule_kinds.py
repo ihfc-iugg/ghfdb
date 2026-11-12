@@ -69,15 +69,15 @@ class Domain:
         concepts: The exploration methods in the domain.
         description: What a child of the domain is, as the end of "the exploration
             method is ...".
-        rules: The name of the set of quality-scheme rules that score a child of the
-            domain.
+        scoring: The name of the scoring that scores a child of the domain, as the
+            ``rules`` column of the scores gives it.
     """
 
     code: str
     field: str
     concepts: tuple[URIRef, ...]
     description: str
-    rules: str
+    scoring: str
 
     @property
     def condition(self) -> Condition:

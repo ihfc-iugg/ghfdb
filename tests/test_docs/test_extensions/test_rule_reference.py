@@ -9,7 +9,8 @@ from rdflib import URIRef
 
 from ghfdb.fields.schema import FieldConcepts
 from ghfdb.qc.engine.rule_kinds import Rule
-from ghfdb.qc.rules import BOREHOLE, PROBE_SENSING, RULES
+from ghfdb.qc.rules import RULES
+from ghfdb.qc.scheme.domains import BOREHOLE, PROBE_SENSING
 from ghfdb.vocabularies import Vocabularies
 
 MISSING = "—"
@@ -177,8 +178,9 @@ class TestDomainTable:
         grouped: dict[str, set[str]] = {}
         for method, domain in rows:
             grouped.setdefault(domain, set()).add(method)
-        borehole = {f"`{terms[name]}`" for name in BOREHOLE.concepts}
-        probing = {f"`{terms[name]}`" for name in PROBE_SENSING.concepts}
+        methods = reference.concepts[BOREHOLE.field]
+        borehole = {f"`{term}`" for term in methods.terms_for(BOREHOLE.concepts)}
+        probing = {f"`{term}`" for term in methods.terms_for(PROBE_SENSING.concepts)}
         assert len(borehole) == 5
         assert len(probing) == 3
         assert sorted(map(frozenset, grouped.values()), key=len) == sorted(

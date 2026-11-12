@@ -3,12 +3,12 @@ import pytest
 from conftest import ScoredConcepts, one_child
 
 from ghfdb.fields import Field
-from ghfdb.qc import probe
-from ghfdb.qc.criteria import CRITERIA
 from ghfdb.qc.engine.inputs import Inputs
 from ghfdb.qc.engine.tables import Band, Bands, Criterion
-from ghfdb.qc.probe import ProbeSensing
+from ghfdb.qc.scheme import CRITERIA, probe
+from ghfdb.qc.scheme.probe import ProbeSensing
 from ghfdb.qc.scores import Scores
+from ghfdb.vocabularies import concepts
 
 PROBE = "[Probing (offshore, ocean)]"
 BEST_CONDUCTIVITY = {
@@ -24,6 +24,24 @@ BEST_CONDUCTIVITY = {
 
 def rules_of(scored_concepts: ScoredConcepts, data: pandas.DataFrame) -> ProbeSensing:
     return Scores(Inputs(data, scored_concepts)).probe
+
+
+class TestLaboratoryMethods:
+    def test_the_laboratory_methods_are_the_collection_the_vocabulary_publishes(
+        self, scored_concepts: ScoredConcepts
+    ) -> None:
+        methods = scored_concepts[Field.tc_method]
+        method = concepts.tc_method
+
+        assert probe.LABORATORY_METHODS == (method.laboratory,)
+        assert set(methods.expand(probe.LABORATORY_METHODS)) == {
+            method.pointSource,
+            method.lineSourceFull,
+            method.lineSourceHalf,
+            method.planeSourceFull,
+            method.planeSourceHalf,
+            method.laboratoryOther,
+        }
 
 
 class TestWaterDepth:

@@ -1,17 +1,61 @@
-"""The U-score: the grade of the uncertainty of a heat-flow value."""
+"""The grades of the quality scheme: the U-score, the M-score classes and the flags."""
 
 from dataclasses import dataclass
 
 import pandas
+from rdflib import URIRef
 
 from ghfdb.fields import Field
 from ghfdb.qc.engine.inputs import Inputs
 from ghfdb.qc.engine.tables import Band
+from ghfdb.vocabularies import concepts
 
+CORRECTION = concepts.corr_S_flag
+
+# The class of the product of the T-score and the TC-score: M1 from 0.75, M2 from 0.50,
+# M3 from 0.25 and M4 below. A product on an edge takes the better class.
+PRODUCT_CLASSES = (
+    Band(1, 0.75, inclusive=True),
+    Band(2, 0.50, inclusive=True),
+    Band(3, 0.25, inclusive=True),
+    Band(4),
+)
+# The correction field of each perturbation flag, in the order the flags are written.
+FLAGS = {
+    Field.corr_S_flag: "S",
+    Field.corr_E_flag: "E",
+    Field.corr_TOPO_flag: "T",
+    Field.corr_PAL_flag: "P",
+    Field.corr_SUR_flag: "V",
+    Field.corr_CONV_flag: "C",
+    Field.corr_HR_flag: "R",
+}
 # The coefficient of variation is rounded to this many places, before it is graded.
 COEFFICIENT_DECIMALS = 6
 # The class of a coefficient, in percent: U4 above 25, U3 above 15, U2 from 5, else U1.
 COEFFICIENT_CLASSES = (Band(4, 25), Band(3, 15), Band(2, 5, inclusive=True), Band(1))
+
+
+def flag_characters(letter: str) -> dict[URIRef, str]:
+    """Say how each state of a correction is written in a flag.
+
+    Args:
+        letter: The flag's letter.
+
+    Returns:
+        The character of each correction concept: the upper-case letter for present
+        and corrected, the lower-case letter for present and not corrected, ``X``
+        for present and not significant, ``x`` for not recognised and ``-`` for
+        unspecified (docs/reference/quality-scheme/perturbation-flags.md, "How
+        each flag is written").
+    """
+    return {
+        CORRECTION["present-corrected"]: letter,
+        CORRECTION["present-not-corrected"]: letter.lower(),
+        CORRECTION["present-not-significant"]: "X",
+        CORRECTION["not-recognized"]: "x",
+        CORRECTION.unspecified: "-",
+    }
 
 
 @dataclass(frozen=True)

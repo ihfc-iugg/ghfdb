@@ -15,7 +15,8 @@ from ghfdb.fields import load_schema
 from ghfdb.fields.schema import FieldConcepts
 from ghfdb.qc.check import Kind
 from ghfdb.qc.engine.rule_kinds import Domain, Rule
-from ghfdb.qc.rules import BOREHOLE, PROBE_SENSING, RULES
+from ghfdb.qc.rules import RULES
+from ghfdb.qc.scheme.domains import BOREHOLE, PROBE_SENSING
 from ghfdb.vocabularies import Vocabularies
 
 TEMPLATES = Path(__file__).parent / "templates"

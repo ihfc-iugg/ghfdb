@@ -22,45 +22,18 @@ from ghfdb.fields import Field
 from ghfdb.qc.engine.rule_kinds import (
     AllowedWhen,
     Condition,
-    Domain,
     Example,
     RequiredWhen,
     Rule,
 )
+from ghfdb.qc.scheme.domains import BOREHOLE, PROBE_SENSING
 from ghfdb.vocabularies import concepts
 
-EXPLORATION_METHOD = Field.explo_method
 METHOD = concepts.explo_method
 LOCATION = concepts.tc_location
 SOURCE = concepts.tc_source
 TEMPERATURE = concepts.T_method_top
 CONDUCTIVITY = concepts.tc_method
-
-BOREHOLE = Domain(
-    "B",
-    EXPLORATION_METHOD,
-    (
-        METHOD.drilling,
-        METHOD["drilling-clustering"],
-        METHOD.mining,
-        METHOD.tunneling,
-        METHOD.indirect,
-    ),
-    "a borehole and mine method",
-    "borehole and mine",
-)
-PROBE_SENSING = Domain(
-    "S",
-    EXPLORATION_METHOD,
-    (
-        METHOD["probing-onshore"],
-        METHOD["probing-offshore"],
-        METHOD["probing-clustering"],
-    ),
-    "a probe-sensing method",
-    "probe sensing",
-)
-
 
 CF_1 = RequiredWhen(
     identifier="CF-1",

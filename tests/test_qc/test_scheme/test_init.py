@@ -9,10 +9,10 @@ from rdflib import Graph, URIRef
 
 from ghfdb.fields import allowed_values
 from ghfdb.fields.schema import FieldConcepts
-from ghfdb.qc.borehole import BoreholeAndMine
-from ghfdb.qc.criteria import CRITERIA
-from ghfdb.qc.probe import ProbeSensing
-from ghfdb.qc.rules import EXPLORATION_METHOD
+from ghfdb.qc.scheme import CRITERIA
+from ghfdb.qc.scheme.borehole import BoreholeAndMine
+from ghfdb.qc.scheme.domains import EXPLORATION_METHOD
+from ghfdb.qc.scheme.probe import ProbeSensing
 from ghfdb.qc.scores import Scores
 from ghfdb.vocabularies import MissingSchemeError, Vocabularies, concepts, local_name
 
@@ -114,12 +114,12 @@ class TestSchemeConcepts:
     def test_a_concept_the_vocabulary_no_longer_has_fails_naming_field_and_concept(
         self, schema: Schema, published_vocabularies: Vocabularies
     ) -> None:
-        withdrawn = Withdrawing(published_vocabularies, "drilling")
+        withdrawn = Withdrawing(published_vocabularies, "actual")
 
         with pytest.raises(MissingSchemeError) as raised:
             FieldConcepts.resolve(schema, Scores.concepts(), withdrawn)
 
-        assert re.search(rf"{EXPLORATION_METHOD}.*drilling", str(raised.value))
+        assert re.search(r"C42.*actual", str(raised.value))
 
     def test_a_concept_the_field_does_not_allow_fails_naming_it(
         self, schema: Schema, published_vocabularies: Vocabularies

@@ -1,8 +1,8 @@
-"""The borehole and mine rules.
+"""The borehole and mine criteria.
 
 They give the T-score of a gradient and the TC-score of a conductivity. The criteria are
-declared here as tables (see ``penalties``). Only what a table cannot say is code: which
-of the three cases a gradient is, and the interval depth gate.
+declared here as tables (see ``ghfdb.qc.engine.tables``). Only what a table cannot say
+is code: which of the three cases a gradient is, and the interval depth gate.
 """
 
 import numpy
@@ -22,7 +22,7 @@ from ghfdb.qc.engine.tables import (
     Penalty,
     Score,
 )
-from ghfdb.qc.probe import (
+from ghfdb.qc.scheme.groups import (
     AMBIENT_OR_UNSPECIFIED,
     DRY_UNSPECIFIED_OR_OTHER,
     FULL_IN_SITU,

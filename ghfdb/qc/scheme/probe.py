@@ -1,8 +1,8 @@
-"""The probe-sensing rules.
+"""The probe-sensing criteria.
 
 They give the T-score of a gradient and the TC-score of a conductivity. The criteria are
-declared here as tables (see ``penalties``), and the two corrections that waive a
-criterion are declared beside them in ``ProbeSensing``.
+declared here as tables (see ``ghfdb.qc.engine.tables``), and the two corrections that
+waive a criterion are declared beside them in ``ProbeSensing``.
 """
 
 from ghfdb.fields import Field
@@ -19,6 +19,12 @@ from ghfdb.qc.engine.tables import (
     Group,
     Score,
 )
+from ghfdb.qc.scheme.groups import (
+    AMBIENT_OR_UNSPECIFIED,
+    DRY_UNSPECIFIED_OR_OTHER,
+    FULL_IN_SITU,
+    PARTIAL_IN_SITU,
+)
 from ghfdb.vocabularies import concepts
 
 CORR_SUR_FLAG = concepts.corr_SUR_flag
@@ -29,33 +35,6 @@ TC_PT_CONDITIONS = concepts.tc_pT_conditions
 TC_SATURATION = concepts.tc_saturation
 TC_SOURCE = concepts.tc_source
 
-# Saturation and pT conditions that the borehole conductivity criteria name too.
-DRY_UNSPECIFIED_OR_OTHER = (
-    TC_SATURATION.dryMeasured,
-    TC_SATURATION.unspecified,
-    TC_SATURATION.other,
-)
-FULL_IN_SITU = (TC_PT_CONDITIONS.replicatedPT, TC_PT_CONDITIONS.correctedPT)
-PARTIAL_IN_SITU = (
-    TC_PT_CONDITIONS.replicatedP,
-    TC_PT_CONDITIONS.correctedP,
-    TC_PT_CONDITIONS.replicatedT,
-    TC_PT_CONDITIONS.correctedT,
-)
-AMBIENT_OR_UNSPECIFIED = (
-    TC_PT_CONDITIONS.recordedAmbient,
-    TC_PT_CONDITIONS.unrecordedAmbient,
-    TC_PT_CONDITIONS.unspecified,
-)
-
-LABORATORY_METHODS = (
-    TC_METHOD.pointSource,
-    TC_METHOD.lineSourceFull,
-    TC_METHOD.lineSourceHalf,
-    TC_METHOD.planeSourceFull,
-    TC_METHOD.planeSourceHalf,
-    TC_METHOD.laboratoryOther,
-)
 ESTIMATED_FROM_LITERATURE = (
     TC_METHOD.lithology,
     TC_METHOD.wellLogDeterministic,
@@ -67,6 +46,7 @@ ESTIMATED_FROM_OTHER = (
     TC_METHOD.chlorineContent,
     TC_METHOD.unspecified,
 )
+LABORATORY_METHODS = (TC_METHOD.laboratory,)
 
 PENETRATION = Criterion(
     "probe-t.penetration",

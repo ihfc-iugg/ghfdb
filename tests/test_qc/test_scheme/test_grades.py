@@ -1,7 +1,7 @@
 import pandas
 
 from ghfdb.qc.engine.inputs import Inputs
-from ghfdb.qc.uncertainty import UScore
+from ghfdb.qc.scheme.grades import UScore
 
 
 class TestUScore:

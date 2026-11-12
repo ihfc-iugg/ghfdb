@@ -3,10 +3,10 @@ import pytest
 from conftest import ScoredConcepts, one_child
 
 from ghfdb.fields import Field
-from ghfdb.qc import borehole
-from ghfdb.qc.borehole import BoreholeAndMine
 from ghfdb.qc.engine.inputs import Inputs
 from ghfdb.qc.engine.tables import Band, Bands, Criterion
+from ghfdb.qc.scheme import borehole
+from ghfdb.qc.scheme.borehole import BoreholeAndMine
 from ghfdb.qc.scores import Scores
 
 DRILLING = "[Drilling]"

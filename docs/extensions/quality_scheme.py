@@ -17,8 +17,6 @@ from sphinx.application import Sphinx
 from extensions.field_reference import FieldReference
 from ghfdb.fields import Field, load_schema
 from ghfdb.fields.schema import FieldConcepts
-from ghfdb.qc import borehole, probe
-from ghfdb.qc.criteria import CRITERIA
 from ghfdb.qc.engine.tables import (
     SCORE_DECIMALS,
     Bands,
@@ -27,6 +25,7 @@ from ghfdb.qc.engine.tables import (
     Criterion,
     Table,
 )
+from ghfdb.qc.scheme import CRITERIA, borehole, probe
 from ghfdb.vocabularies import Vocabularies
 
 TEMPLATES = Path(__file__).parent / "templates"

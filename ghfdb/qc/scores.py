@@ -5,38 +5,17 @@ import pandas
 from frictionless import Schema
 from rdflib import URIRef
 
-from ghfdb.fields import Field
 from ghfdb.fields.schema import FieldConcepts
-from ghfdb.qc.borehole import BoreholeAndMine
 from ghfdb.qc.check import Kind
 from ghfdb.qc.engine.inputs import Inputs
 from ghfdb.qc.engine.rule_kinds import Domain
 from ghfdb.qc.engine.tables import SCORE_DECIMALS, Band, Score
-from ghfdb.qc.probe import ProbeSensing
-from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD, PROBE_SENSING
-from ghfdb.qc.uncertainty import UScore
-from ghfdb.vocabularies import Vocabularies, concepts
+from ghfdb.qc.scheme.borehole import BoreholeAndMine
+from ghfdb.qc.scheme.domains import BOREHOLE, EXPLORATION_METHOD, PROBE_SENSING
+from ghfdb.qc.scheme.grades import FLAGS, PRODUCT_CLASSES, UScore, flag_characters
+from ghfdb.qc.scheme.probe import ProbeSensing
+from ghfdb.vocabularies import Vocabularies
 
-CORRECTION = concepts.corr_S_flag
-
-# The class of the product of the T-score and the TC-score: M1 from 0.75, M2 from 0.50,
-# M3 from 0.25 and M4 below. A product on an edge takes the better class.
-PRODUCT_CLASSES = (
-    Band(1, 0.75, inclusive=True),
-    Band(2, 0.50, inclusive=True),
-    Band(3, 0.25, inclusive=True),
-    Band(4),
-)
-# The correction field of each perturbation flag, in the order the flags are written.
-FLAGS = {
-    Field.corr_S_flag: "S",
-    Field.corr_E_flag: "E",
-    Field.corr_TOPO_flag: "T",
-    Field.corr_PAL_flag: "P",
-    Field.corr_SUR_flag: "V",
-    Field.corr_CONV_flag: "C",
-    Field.corr_HR_flag: "R",
-}
 # The problems that name a cell whose value is scored as empty.
 BLANKING = (
     Kind.MISSING,
@@ -66,19 +45,19 @@ SCORE_COLUMNS = (
 class Scores:
     """Routing, perturbation flags and grades of the children of a dataset.
 
-    The exploration method routes each child to a set of rules once, and both sets of
-    rules are given the children they score.
+    The exploration method routes each child to the scoring of a domain once, and both
+    scorings are given the children they score.
 
     Args:
         inputs: The scored fields of the children.
 
     Attributes:
         inputs: The scored fields of the children.
-        routing: The name of the set of rules that scores each child, in the order of
+        routing: The name of the scoring that scores each child, in the order of
             the children, ``<NA>`` where the exploration method selects none because it
             is other, unspecified or empty.
-        probe: The probe-sensing rules.
-        borehole: The borehole and mine rules.
+        probe: The scoring of the probe-sensing domain.
+        borehole: The scoring of the borehole and mine domain.
     """
 
     def __init__(self, inputs: Inputs) -> None:
@@ -87,7 +66,7 @@ class Scores:
         routing = pandas.Series(pandas.NA, index=methods.index, dtype="string")
         for domain in (PROBE_SENSING, BOREHOLE):
             members = inputs.expand(EXPLORATION_METHOD, domain.concepts)
-            routing = routing.mask(methods.isin(members), domain.rules)
+            routing = routing.mask(methods.isin(members), domain.scoring)
         self.routing = routing
         self.probe = ProbeSensing(
             inputs, self.scored(PROBE_SENSING, ProbeSensing.reads())
@@ -97,20 +76,20 @@ class Scores:
         )
 
     def scored(self, domain: Domain, reads: tuple[str, ...]) -> numpy.ndarray:
-        """Find the children that a set of rules scores.
+        """Find the children that the scoring of a domain scores.
 
-        A child that is routed to the rules, yet leaves every field they read empty, is
+        A child that is routed to the scoring, yet leaves every field it reads empty, is
         not scored: its scores are not determined
         (docs/reference/quality-scheme/m-score.md, "Not determined").
 
         Args:
-            domain: The exploration methods the rules score.
-            reads: The fields the rules read, other than the exploration method.
+            domain: The exploration methods the scoring scores.
+            reads: The fields the scoring reads, other than the exploration method.
 
         Returns:
-            Whether the rules score each child, in the order of the children.
+            Whether the scoring scores each child, in the order of the children.
         """
-        routed = self.routing.isin([domain.rules]).to_numpy(dtype=bool)
+        routed = self.routing.isin([domain.scoring]).to_numpy(dtype=bool)
         return numpy.asarray(routed & self.inputs.any_filled(reads), dtype=bool)
 
     @classmethod
@@ -149,7 +128,7 @@ class Scores:
 
         Returns:
             The concepts of the exploration methods, of the perturbation flags and of
-            both sets of rules, each once.
+            both scorings, each once.
         """
         methods = tuple(
             (EXPLORATION_METHOD, concept)
@@ -157,9 +136,7 @@ class Scores:
             for concept in domain.concepts
         )
         flags = tuple(
-            (field, concept)
-            for field in FLAGS
-            for concept in Scores.flag_characters("S")
+            (field, concept) for field in FLAGS for concept in flag_characters("S")
         )
         return tuple(
             dict.fromkeys(
@@ -199,28 +176,6 @@ class Scores:
                 cells.loc[cells.index.isin(rows), code] = None
         return cells
 
-    @staticmethod
-    def flag_characters(letter: str) -> dict[URIRef, str]:
-        """Say how each state of a correction is written in a flag.
-
-        Args:
-            letter: The flag's letter.
-
-        Returns:
-            The character of each correction concept: the upper-case letter for present
-            and corrected, the lower-case letter for present and not corrected, ``X``
-            for present and not significant, ``x`` for not recognised and ``-`` for
-            unspecified (docs/reference/quality-scheme/perturbation-flags.md, "How
-            each flag is written").
-        """
-        return {
-            CORRECTION["present-corrected"]: letter,
-            CORRECTION["present-not-corrected"]: letter.lower(),
-            CORRECTION["present-not-significant"]: "X",
-            CORRECTION["not-recognized"]: "x",
-            CORRECTION.unspecified: "-",
-        }
-
     def flags(self) -> pandas.Series:
         """Write the seven perturbation flags of each child.
 
@@ -233,7 +188,7 @@ class Scores:
         flags = pandas.Series("", index=self.inputs.index, dtype="string")
         for field, letter in FLAGS.items():
             state = self.inputs.first(self.inputs.concepts(field))
-            characters = Inputs.translate(state, self.flag_characters(letter))
+            characters = Inputs.translate(state, flag_characters(letter))
             flags = flags + characters.fillna("-")
         return flags
 
@@ -267,15 +222,15 @@ class Scores:
 
     @staticmethod
     def either(probe: Score, borehole: Score) -> Score:
-        """Take the score of the rules that score each child.
+        """Take the score of the scoring that scores each child.
 
         Args:
-            probe: The score under the probe-sensing rules.
-            borehole: The score under the borehole and mine rules.
+            probe: The score under the probe-sensing scoring.
+            borehole: The score under the borehole and mine scoring.
 
         Returns:
-            The score of the rules each child is routed to, ``<NA>`` for a child neither
-            scores.
+            The score of the scoring each child is routed to, ``<NA>`` for a child
+            neither scores.
         """
         return Score(
             probe.value.fillna(borehole.value),
@@ -286,9 +241,9 @@ class Scores:
         """Assemble the scores of every child.
 
         The quality code is the U-score, the M-score and the flags joined by points
-        (docs/reference/quality-scheme/index.md, "The quality code"). A child no rules
-        score has no T-score or TC-score and the M-score ``Mx``; an ``own`` score
-        leaves the child's corrections out ("Scores of a child and of its
+        (docs/reference/quality-scheme/index.md, "The quality code"). A child that no
+        scoring scores has no T-score or TC-score and the M-score ``Mx``; an ``own``
+        score leaves the child's corrections out ("Scores of a child and of its
         measurements").
 
         Returns:

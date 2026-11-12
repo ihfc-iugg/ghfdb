@@ -9,9 +9,9 @@ from rdflib import Graph, URIRef
 
 from ghfdb.fields import allowed_values
 from ghfdb.fields.schema import FieldConcepts
-from ghfdb.qc.borehole import BoreholeRules
+from ghfdb.qc.borehole import BoreholeAndMine
 from ghfdb.qc.criteria import CRITERIA
-from ghfdb.qc.probe import ProbeRules
+from ghfdb.qc.probe import ProbeSensing
 from ghfdb.qc.rules import EXPLORATION_METHOD
 from ghfdb.qc.scores import Scores
 from ghfdb.vocabularies import MissingSchemeError, Vocabularies, concepts, local_name
@@ -55,7 +55,7 @@ class TestCriteria:
         assert all(key == criterion.identifier for key, criterion in CRITERIA.items())
 
     def test_every_criterion_is_declared_once(self) -> None:
-        declared = [*ProbeRules.declared(), *BoreholeRules.declared()]
+        declared = [*ProbeSensing.declared(), *BoreholeAndMine.declared()]
 
         assert len(CRITERIA) == len(declared)
 

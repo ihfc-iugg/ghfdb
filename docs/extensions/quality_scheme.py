@@ -19,7 +19,7 @@ from ghfdb.fields import Field, load_schema
 from ghfdb.fields.schema import FieldConcepts
 from ghfdb.qc import borehole, probe
 from ghfdb.qc.criteria import CRITERIA
-from ghfdb.qc.penalties import (
+from ghfdb.qc.engine.tables import (
     SCORE_DECIMALS,
     Bands,
     Cases,

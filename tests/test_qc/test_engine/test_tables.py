@@ -8,8 +8,8 @@ from rdflib import URIRef
 
 from ghfdb.fields import Field
 from ghfdb.fields.schema import FieldConcepts
-from ghfdb.qc.inputs import Inputs
-from ghfdb.qc.penalties import (
+from ghfdb.qc.engine.inputs import Inputs
+from ghfdb.qc.engine.tables import (
     Band,
     Bands,
     Case,

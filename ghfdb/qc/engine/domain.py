@@ -1,6 +1,6 @@
-"""A set of rules: the criteria that score a child's gradient and conductivity.
+"""The scoring of one domain: its criteria for a gradient and a conductivity.
 
-A set of rules declares its criteria, and what is read besides them, as class
+A domain's scoring declares its criteria, and what is read besides them, as class
 attributes. The fields and concepts it reads, and the penalties of its criteria for a
 child and for a measurement on its own, follow from those declarations.
 """
@@ -12,14 +12,14 @@ from typing import Any, ClassVar
 import numpy
 from rdflib import URIRef
 
-from ghfdb.qc.inputs import Inputs
-from ghfdb.qc.penalties import Criterion, Penalty, Score
-from ghfdb.qc.rules import Condition
+from ghfdb.qc.engine.inputs import Inputs
+from ghfdb.qc.engine.rule_kinds import Condition
+from ghfdb.qc.engine.tables import Criterion, Penalty, Score
 
 
 @dataclass(frozen=True)
-class RuleScores:
-    """The scores a set of rules gives every child.
+class DomainScores:
+    """The scores the scoring of a domain gives every child.
 
     Attributes:
         t: The T-score, with the child's corrections applied.
@@ -35,8 +35,8 @@ class RuleScores:
 
 
 @dataclass(frozen=True)
-class RuleSet:
-    """The children one set of rules scores.
+class DomainScoring:
+    """The scoring of the children of one domain.
 
     A subclass lists in ``criteria`` every criterion its scores add up, and may declare:
 
@@ -49,9 +49,9 @@ class RuleSet:
 
     Attributes:
         inputs: The scored fields of the children.
-        routed: Whether the rules score each child, in the order of the children: the
-            child is routed to them and has a field they read filled.
-        criteria: The criteria of the rules.
+        routed: Whether the scoring scores each child, in the order of the children:
+            the child is routed to it and has a field it reads filled.
+        criteria: The criteria of the scoring.
         waivers: The correction that waives each criterion, by identifier.
         stand_ins: The criterion that scores a measurement on its own in place of each
             criterion, by identifier.
@@ -70,7 +70,7 @@ class RuleSet:
 
     @classmethod
     def declared(cls) -> tuple[Criterion[Any], ...]:
-        """List every criterion the rules declare, the stand-ins included.
+        """List every criterion the scoring declares, the stand-ins included.
 
         Returns:
             The criteria, then the stand-ins.
@@ -79,7 +79,7 @@ class RuleSet:
 
     @classmethod
     def corrections(cls) -> tuple[Condition, ...]:
-        """List every condition the rules read besides those of the criteria.
+        """List every condition the scoring reads besides those of the criteria.
 
         Returns:
             The conditions of the waivers, then the other conditions.
@@ -88,7 +88,7 @@ class RuleSet:
 
     @classmethod
     def reads(cls) -> tuple[str, ...]:
-        """List the fields the rules read.
+        """List the fields the scoring reads.
 
         Returns:
             The fields of the criteria, of the conditions and the extra fields, each
@@ -107,7 +107,7 @@ class RuleSet:
 
     @classmethod
     def concepts(cls) -> tuple[tuple[str, URIRef], ...]:
-        """List the concepts the rules name, with their fields.
+        """List the concepts the scoring names, with their fields.
 
         Returns:
             The concepts of the criteria and of the conditions, each once.
@@ -150,7 +150,7 @@ class RuleSet:
         penalty, and a stand-in replaces it in the measurement's.
 
         Args:
-            criteria: The criteria to score, which the rules declare.
+            criteria: The criteria to score, which the scoring declares.
 
         Returns:
             The penalty of each criterion with the child's corrections applied, and the

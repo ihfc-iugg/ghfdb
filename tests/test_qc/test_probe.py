@@ -5,9 +5,9 @@ from conftest import ScoredConcepts, one_child
 from ghfdb.fields import Field
 from ghfdb.qc import probe
 from ghfdb.qc.criteria import CRITERIA
-from ghfdb.qc.inputs import Inputs
-from ghfdb.qc.penalties import Band, Bands, Criterion
-from ghfdb.qc.probe import ProbeRules
+from ghfdb.qc.engine.inputs import Inputs
+from ghfdb.qc.engine.tables import Band, Bands, Criterion
+from ghfdb.qc.probe import ProbeSensing
 from ghfdb.qc.scores import Scores
 
 PROBE = "[Probing (offshore, ocean)]"
@@ -22,7 +22,7 @@ BEST_CONDUCTIVITY = {
 }
 
 
-def rules_of(scored_concepts: ScoredConcepts, data: pandas.DataFrame) -> ProbeRules:
+def rules_of(scored_concepts: ScoredConcepts, data: pandas.DataFrame) -> ProbeSensing:
     return Scores(Inputs(data, scored_concepts)).probe
 
 

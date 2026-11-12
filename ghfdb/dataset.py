@@ -8,7 +8,8 @@ from frictionless import Schema
 
 from ghfdb.fields import load_schema
 from ghfdb.qc.check import DatasetCheck
-from ghfdb.qc.rules import RULES, Rule
+from ghfdb.qc.engine.rule_kinds import Rule
+from ghfdb.qc.rules import RULES
 from ghfdb.qc.scores import Scores
 from ghfdb.qc.workbook import UploadWorkbook
 from ghfdb.vocabularies import Vocabularies

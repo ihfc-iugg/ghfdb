@@ -1,6 +1,6 @@
 import pandas
 
-from ghfdb.qc.inputs import Inputs
+from ghfdb.qc.engine.inputs import Inputs
 from ghfdb.qc.uncertainty import UScore
 
 

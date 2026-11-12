@@ -1,5 +1,6 @@
 """The fields the quality scheme scores, read once from a table of children."""
 
+import math
 from collections.abc import Iterable, Mapping
 
 import numpy
@@ -7,8 +8,21 @@ import pandas
 from pandas.api.types import infer_dtype
 from rdflib import URIRef
 
-from ghfdb.fields.cells import parse_numbers
 from ghfdb.fields.schema import FieldConcepts
+
+
+def parse_numbers(text: pandas.Series) -> pandas.Series:
+    """Read cells as numbers, the way the check and the scoring both read them.
+
+    Args:
+        text: The cells as text. Spaces around a number are ignored.
+
+    Returns:
+        The numbers as floats under the index of the cells, NaN where a cell is empty,
+        is not a number or is infinite.
+    """
+    numbers = pandas.to_numeric(text.str.strip(), errors="coerce").astype("float64")
+    return numbers.where(numbers.abs() != math.inf)
 
 
 class Inputs:

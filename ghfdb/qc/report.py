@@ -13,7 +13,7 @@ from jinja2 import Environment, PackageLoader
 from markupsafe import Markup
 
 from ghfdb import __version__
-from ghfdb.qc.penalties import SCORE_DECIMALS
+from ghfdb.qc.engine.tables import SCORE_DECIMALS
 from ghfdb.qc.rules import RULES
 from ghfdb.qc.workbook import CheckError
 from ghfdb.vocabularies import Vocabularies

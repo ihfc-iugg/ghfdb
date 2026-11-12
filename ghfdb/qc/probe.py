@@ -2,11 +2,13 @@
 
 They give the T-score of a gradient and the TC-score of a conductivity. The criteria are
 declared here as tables (see ``penalties``), and the two corrections that waive a
-criterion are declared beside them in ``ProbeRules``.
+criterion are declared beside them in ``ProbeSensing``.
 """
 
 from ghfdb.fields import Field
-from ghfdb.qc.penalties import (
+from ghfdb.qc.engine.domain import DomainScores, DomainScoring
+from ghfdb.qc.engine.rule_kinds import Condition
+from ghfdb.qc.engine.tables import (
     Band,
     Bands,
     Case,
@@ -17,8 +19,6 @@ from ghfdb.qc.penalties import (
     Group,
     Score,
 )
-from ghfdb.qc.rules import Condition
-from ghfdb.qc.ruleset import RuleScores, RuleSet
 from ghfdb.vocabularies import concepts
 
 CORR_SUR_FLAG = concepts.corr_SUR_flag
@@ -210,7 +210,7 @@ T_CRITERIA = (PENETRATION, RECORDINGS, WATER_DEPTH, TILT)
 TC_CRITERIA = (LOCATION, SATURATION, NUMBER, CONDITIONS)
 
 
-class ProbeRules(RuleSet):
+class ProbeSensing(DomainScoring):
     """Score the children explored by probing: the T-score and the TC-score.
 
     A field that holds several values is scored value by value and the poorest counts
@@ -225,7 +225,7 @@ class ProbeRules(RuleSet):
         TILT.identifier: TILT_IS_CORRECTED,
     }
 
-    def scores(self) -> RuleScores:
+    def scores(self) -> DomainScores:
         """Score every child, each criterion once.
 
         The conductivity reads nothing from the child, so the own TC-score is the
@@ -238,7 +238,7 @@ class ProbeRules(RuleSet):
         """
         t, own_t = self.penalties(T_CRITERIA)
         tc, own_tc = self.penalties(TC_CRITERIA)
-        return RuleScores(
+        return DomainScores(
             t=Score.total(t, self.routed),
             tc=Score.total(tc, self.routed),
             own_t=Score.total(own_t, self.routed),

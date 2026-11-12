@@ -7,9 +7,9 @@ from enum import StrEnum
 import pandas
 from frictionless import Field, Schema
 
-from ghfdb.fields.cells import parse_numbers
 from ghfdb.fields.schema import FieldConcepts
-from ghfdb.qc.rules import Condition, Rule
+from ghfdb.qc.engine.inputs import parse_numbers
+from ghfdb.qc.engine.rule_kinds import Condition, Rule
 from ghfdb.vocabularies import MissingSchemeError, Vocabularies
 
 PROBLEM_COLUMNS = [

@@ -5,8 +5,8 @@ from dataclasses import dataclass
 import pandas
 
 from ghfdb.fields import Field
-from ghfdb.qc.inputs import Inputs
-from ghfdb.qc.penalties import Band
+from ghfdb.qc.engine.inputs import Inputs
+from ghfdb.qc.engine.tables import Band
 
 # The coefficient of variation is rounded to this many places, before it is graded.
 COEFFICIENT_DECIMALS = 6

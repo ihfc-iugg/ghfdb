@@ -7,12 +7,13 @@ from rdflib import URIRef
 
 from ghfdb.fields import Field
 from ghfdb.fields.schema import FieldConcepts
-from ghfdb.qc.borehole import BoreholeRules
+from ghfdb.qc.borehole import BoreholeAndMine
 from ghfdb.qc.check import Kind
-from ghfdb.qc.inputs import Inputs
-from ghfdb.qc.penalties import SCORE_DECIMALS, Band, Score
-from ghfdb.qc.probe import ProbeRules
-from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD, PROBE_SENSING, Domain
+from ghfdb.qc.engine.inputs import Inputs
+from ghfdb.qc.engine.rule_kinds import Domain
+from ghfdb.qc.engine.tables import SCORE_DECIMALS, Band, Score
+from ghfdb.qc.probe import ProbeSensing
+from ghfdb.qc.rules import BOREHOLE, EXPLORATION_METHOD, PROBE_SENSING
 from ghfdb.qc.uncertainty import UScore
 from ghfdb.vocabularies import Vocabularies, concepts
 
@@ -88,9 +89,11 @@ class Scores:
             members = inputs.expand(EXPLORATION_METHOD, domain.concepts)
             routing = routing.mask(methods.isin(members), domain.rules)
         self.routing = routing
-        self.probe = ProbeRules(inputs, self.scored(PROBE_SENSING, ProbeRules.reads()))
-        self.borehole = BoreholeRules(
-            inputs, self.scored(BOREHOLE, BoreholeRules.reads())
+        self.probe = ProbeSensing(
+            inputs, self.scored(PROBE_SENSING, ProbeSensing.reads())
+        )
+        self.borehole = BoreholeAndMine(
+            inputs, self.scored(BOREHOLE, BoreholeAndMine.reads())
         )
 
     def scored(self, domain: Domain, reads: tuple[str, ...]) -> numpy.ndarray:
@@ -160,7 +163,12 @@ class Scores:
         )
         return tuple(
             dict.fromkeys(
-                (*methods, *flags, *ProbeRules.concepts(), *BoreholeRules.concepts())
+                (
+                    *methods,
+                    *flags,
+                    *ProbeSensing.concepts(),
+                    *BoreholeAndMine.concepts(),
+                )
             )
         )
 

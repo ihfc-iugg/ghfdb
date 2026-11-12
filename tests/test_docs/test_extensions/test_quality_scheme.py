@@ -8,7 +8,7 @@ from extensions.quality_scheme import SchemeReference, ScoreRange
 from frictionless import Schema
 
 from ghfdb.fields import Field
-from ghfdb.qc.penalties import (
+from ghfdb.qc.engine.tables import (
     Band,
     Bands,
     Case,

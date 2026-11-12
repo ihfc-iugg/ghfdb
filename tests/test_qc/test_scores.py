@@ -6,8 +6,8 @@ import pytest
 from conftest import Example, ScoredConcepts, examples_of, one_child
 
 from ghfdb.dataset import Dataset
-from ghfdb.qc.inputs import Inputs
-from ghfdb.qc.penalties import Score
+from ghfdb.qc.engine.inputs import Inputs
+from ghfdb.qc.engine.tables import Score
 from ghfdb.qc.scores import Scores
 from ghfdb.qc.uncertainty import UScore
 from ghfdb.vocabularies import Vocabularies

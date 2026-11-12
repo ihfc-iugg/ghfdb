@@ -22,8 +22,9 @@ from openpyxl.worksheet.worksheet import Worksheet
 from ghfdb.cli import main
 from ghfdb.dataset import Dataset
 from ghfdb.qc.check import Kind
+from ghfdb.qc.engine.rule_kinds import Condition
 from ghfdb.qc.report import NO, YES
-from ghfdb.qc.rules import CF_3, RULES, Condition
+from ghfdb.qc.rules import CF_3, RULES
 from ghfdb.qc.workbook import UploadWorkbook
 from ghfdb.template import FIRST_DATA_ROW
 from ghfdb.vocabularies import Vocabularies

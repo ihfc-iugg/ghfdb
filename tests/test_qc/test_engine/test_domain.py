@@ -6,10 +6,10 @@ from rdflib import URIRef
 
 from ghfdb.fields import Field
 from ghfdb.fields.schema import FieldConcepts
-from ghfdb.qc.inputs import Inputs
-from ghfdb.qc.penalties import Classes, Criterion, Group
-from ghfdb.qc.rules import Condition
-from ghfdb.qc.ruleset import RuleSet
+from ghfdb.qc.engine.domain import DomainScoring
+from ghfdb.qc.engine.inputs import Inputs
+from ghfdb.qc.engine.rule_kinds import Condition
+from ghfdb.qc.engine.tables import Classes, Criterion, Group
 
 RED, GREEN = URIRef("c:red"), URIRef("c:green")
 SMALL, LARGE = URIRef("c:small"), URIRef("c:large")
@@ -41,7 +41,7 @@ CORRECTED = Condition(Field.corr_T_flag, (TILTED,))
 SURFACE = Condition(Field.explo_method, (SURFACE_METHOD,))
 
 
-class Rules(RuleSet):
+class Rules(DomainScoring):
     criteria = (LOCATION, METHOD)
     waivers = {LOCATION.identifier: CORRECTED}
     stand_ins = {METHOD.identifier: ALONE}
@@ -53,7 +53,7 @@ def children(**columns: list[Any]) -> pandas.DataFrame:
     return column_children(**columns)
 
 
-class TestRuleSet:
+class TestDomainScoring:
     def test_reads_every_field_once_that_a_criterion_a_waiver_or_the_rules_read(
         self,
     ) -> None:

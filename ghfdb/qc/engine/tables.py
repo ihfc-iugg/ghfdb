@@ -22,7 +22,7 @@ import pandas
 from rdflib import URIRef
 
 from ghfdb.fields import Field
-from ghfdb.qc.inputs import Inputs
+from ghfdb.qc.engine.inputs import Inputs
 
 SCORE_DECIMALS = 3
 Conditions = Mapping[Field, Sequence[URIRef]]

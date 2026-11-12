@@ -9,7 +9,9 @@ import numpy
 import pandas
 
 from ghfdb.fields import Field
-from ghfdb.qc.penalties import (
+from ghfdb.qc.engine.domain import DomainScores, DomainScoring
+from ghfdb.qc.engine.rule_kinds import Condition
+from ghfdb.qc.engine.tables import (
     Band,
     Bands,
     Case,
@@ -26,8 +28,6 @@ from ghfdb.qc.probe import (
     FULL_IN_SITU,
     PARTIAL_IN_SITU,
 )
-from ghfdb.qc.rules import Condition
-from ghfdb.qc.ruleset import RuleScores, RuleSet
 from ghfdb.vocabularies import concepts
 
 CORR_IS_FLAG = concepts.corr_IS_flag
@@ -258,7 +258,7 @@ T_CRITERIA = (CONTINUOUS_LOG, SINGLE_POINTS, SURFACE_PLUS_ONE_POINT)
 TC_CRITERIA = (LOCATION, SOURCE, NUMBER, SATURATION, CONDITIONS_AGREEING)
 
 
-class BoreholeRules(RuleSet):
+class BoreholeAndMine(DomainScoring):
     """Score the children explored by drilling, mining or indirect methods.
 
     A field that holds several values is scored value by value and the poorest counts
@@ -362,7 +362,7 @@ class BoreholeRules(RuleSet):
             scored.value.mask(closed, GATE_SCORE), scored.marked.mask(closed, True)
         )
 
-    def scores(self) -> RuleScores:
+    def scores(self) -> DomainScores:
         """Score every child, each criterion once.
 
         The gradient reads nothing from the child, so the own T-score is the T-score.
@@ -377,4 +377,4 @@ class BoreholeRules(RuleSet):
         """
         t = Score.total([self.temperature_methods()], self.routed)
         tc, own_tc = self.penalties(TC_CRITERIA)
-        return RuleScores(t=t, tc=self.gated(tc), own_t=t, own_tc=self.gated(own_tc))
+        return DomainScores(t=t, tc=self.gated(tc), own_t=t, own_tc=self.gated(own_tc))

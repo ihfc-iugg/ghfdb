@@ -8,7 +8,8 @@ from frictionless import Schema
 from rdflib import URIRef
 
 from ghfdb.fields.schema import FieldConcepts
-from ghfdb.qc.rules import BOREHOLE, PROBE_SENSING, RULES, Rule
+from ghfdb.qc.engine.rule_kinds import Rule
+from ghfdb.qc.rules import BOREHOLE, PROBE_SENSING, RULES
 from ghfdb.vocabularies import Vocabularies
 
 MISSING = "—"

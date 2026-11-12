@@ -12,7 +12,8 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from sphinx.application import Sphinx
 
 from ghfdb.fields import allowed_values, load_schema
-from ghfdb.qc.rules import RULES, Rule
+from ghfdb.qc.engine.rule_kinds import Rule
+from ghfdb.qc.rules import RULES
 from ghfdb.template import VOCABULARIES
 from ghfdb.vocabularies import AllowedValue, Vocabularies
 

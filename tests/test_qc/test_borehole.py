@@ -4,9 +4,9 @@ from conftest import ScoredConcepts, one_child
 
 from ghfdb.fields import Field
 from ghfdb.qc import borehole
-from ghfdb.qc.borehole import BoreholeRules
-from ghfdb.qc.inputs import Inputs
-from ghfdb.qc.penalties import Band, Bands, Criterion
+from ghfdb.qc.borehole import BoreholeAndMine
+from ghfdb.qc.engine.inputs import Inputs
+from ghfdb.qc.engine.tables import Band, Bands, Criterion
 from ghfdb.qc.scores import Scores
 
 DRILLING = "[Drilling]"
@@ -30,7 +30,9 @@ CONDUCTIVITY = {
 }
 
 
-def rules_of(scored_concepts: ScoredConcepts, data: pandas.DataFrame) -> BoreholeRules:
+def rules_of(
+    scored_concepts: ScoredConcepts, data: pandas.DataFrame
+) -> BoreholeAndMine:
     return Scores(Inputs(data, scored_concepts)).borehole
 
 

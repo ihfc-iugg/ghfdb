@@ -35,8 +35,8 @@ the schema generates.
 
 `ghfdb.fields.cells` holds the two readings that the check and the scoring share, so that both
 read a cell the same way. `parse_numbers` reads text cells as numbers, empty where a cell is
-empty, is not a number or is infinite. `concept_terms` maps the concept URI of each allowed value
-of a field to its term.
+empty, is not a number or is infinite. `terms_by_name` maps the local name of each allowed value
+of a field to its term, and refuses a field in which two allowed values share a local name.
 
 ```{eval-rst}
 .. automodule:: ghfdb.fields.cells
@@ -220,12 +220,16 @@ the fields it does not name contain. The pages render each table from its attrib
 criterion gives a `Penalty`, the penalty and the mark of each child, and a T-score or TC-score
 is a `Score`, rounded to `SCORE_DECIMALS` places.
 
-Concept URIs come from `ghfdb.qc.concepts`. `Scores.concepts` collects the concepts the
-declarations name, and `ghfdb.qc.criteria.term_uris` resolves them to the term each field
-accepts in the vocabularies as published, raising `MissingSchemeError` naming the field and the
-concept when one is no longer published. `ghfdb.qc.inputs.Inputs` reads a scored field of a table
-of children the first time it is asked: numbers as numbers, terms as concept URIs, and a value
-that is neither as empty. A cell holding a Python list holds several values. The term lookup
+A declaration names a concept by its local name, the last segment of its URI, written as a
+string under the field whose vocabulary holds it: `"probePulse"` under `Field.tc_method`. The
+field already says which vocabulary the name belongs to, so a name is never qualified. A group
+that two criteria share is a tuple of names in the module that owns it, and one used once is
+written where it is used. `Scores.concepts` collects the concepts the declarations name, and
+`ghfdb.qc.criteria.term_names` resolves them to the term each field accepts in the vocabularies
+as published, raising `MissingSchemeError` naming the field and the name when the field has no
+such value, for instance when a name is misspelt or the vocabulary renames the concept.
+`ghfdb.qc.inputs.Inputs` reads a scored field of a table of children the first time it is
+asked: numbers as numbers, terms as concept names, and a value that is neither as empty. A cell holding a Python list holds several values. The term lookup
 and the number parser that `ghfdb.qc.check` uses are in `ghfdb.fields.cells`, and the scoring
 uses the same ones.
 
@@ -256,7 +260,7 @@ To add a criterion:
 1. Write its `Criterion` in `ghfdb.qc.probe` or `ghfdb.qc.borehole`, with an identifier of the
    form `<rules>-<t or tc>.<name>` that is never reused, a title, the paper's table and row as
    `source`, and a `Bands`, `Classes` or `Cases` table over the `Field` members it reads. Name a
-   concept by its constant in `ghfdb.qc.concepts`, adding the constant when it is new.
+   concept by its local name, as a string under the field it belongs to.
 2. Add it to that module's `T_CRITERIA` or `TC_CRITERIA`. The rules score every criterion of the
    list they score from, and the fields the rules read and the concepts the scheme names are
    collected from the lists, so nothing else lists them. Two things are declared beside the

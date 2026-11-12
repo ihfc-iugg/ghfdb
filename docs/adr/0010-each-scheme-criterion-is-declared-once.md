@@ -43,6 +43,16 @@ The scheme pages render each criterion's penalty table from its declaration, thr
 scoring and carries no number. The concepts that the scoring resolves to vocabulary terms, and
 refuses when the vocabulary no longer holds one, are read from the declarations.
 
+A concept is named by its local name, the last segment of its URI, as a string under the field
+whose vocabulary holds it, in the criteria and in the cross-field rules alike. Every table,
+condition and example already names its field, and the field says which vocabulary a name belongs
+to, so a name is never qualified and there is no module of constants for the concepts. Within a
+field a local name identifies one concept, and a field in which two allowed values share a local
+name is refused when the vocabularies are loaded. A group of concepts that more than one
+criterion names is a tuple of names in the module that owns it. The lookup that resolves each
+declared name against the vocabularies as published, and refuses one the field does not allow
+with the field and the name in the message, is what guards the declarations.
+
 Python source names a field by its published column name, through the generated `Field`, and the
 data stays keyed by field code. A dataset therefore keeps one column per field code
 ([ADR 0005](0005-a-dataset-holds-one-pandas-dataframe.md)), and a correction of a column name
@@ -59,6 +69,10 @@ changes one line of the generated names and no worked example.
   laboratory method, which `Cases` states as a row that needs every value of a field.
 * The concept lists cannot drift from what the scoring reads, because the lists are read from the
   declarations.
+* A reader sees the vocabulary entry a rule means where the rule is written, and renaming a
+  concept in a vocabulary is one change to each declaration that names it. A misspelt name is no
+  longer a lint error. It fails when the vocabularies are loaded, in every test that loads them
+  and in every check of a dataset.
 * A criterion that is not a table of one of the three kinds, such as the coefficient classes of
   the U-score and the product classes of the M-score, is not declared this way, and its page
   table stays hand-written.

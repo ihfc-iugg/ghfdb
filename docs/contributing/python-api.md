@@ -36,7 +36,8 @@ the schema generates.
 `ghfdb.fields.cells` holds the two readings that the check and the scoring share, so that both
 read a cell the same way. `parse_numbers` reads text cells as numbers, empty where a cell is
 empty, is not a number or is infinite. `terms_by_name` maps the local name of each allowed value
-of a field to its term, and refuses a field in which two allowed values share a local name.
+of a field to its term, and refuses a field in which two allowed values share a local name. `local_name` in
+`ghfdb.fields.vocabularies` gives the local name of a concept URI, the last segment of its path.
 
 ```{eval-rst}
 .. automodule:: ghfdb.fields.cells

@@ -50,6 +50,12 @@ All notable changes to this project are recorded here. The format follows
 
 - The field reference pages no longer have a Source column in each field's table. The field
   schema still records the source of every fact.
+- A cross-field rule names a vocabulary concept by its local name, the last segment of its URI,
+  within the vocabulary of the field it sits under, such as `drilling` for the exploration method
+  field. This replaces the full URI in `Condition`, `Domain` and `Example`, in the
+  `(field code, concept)` pairs `Rule.concepts()` returns, and in `DatasetCheck.terms`. A rule
+  written with URIs is refused when the check is built, naming the rule, the field and the
+  name. A field in which two allowed values share a local name is refused too.
 
 ## [v0.1.0] - 2026-11-10
 

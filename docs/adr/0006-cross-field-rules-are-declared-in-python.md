@@ -1,6 +1,7 @@
 # ADR 0006 — Cross-field rules are declared in Python, each kind checking itself
 
-**Status:** accepted
+**Status:** accepted. [ADR 0010](0010-each-scheme-criterion-is-declared-once.md) changes how a rule
+names a concept; the rest stands.
 
 ## Decision
 
@@ -11,7 +12,8 @@ statement, source, reasoning and worked example. Each kind of rule is a subclass
 which draws the rule for the documentation. `RULES` is a tuple of every rule the check applies.
 The check, the rule reference in the documentation and the tests all import it.
 
-A rule names vocabulary concepts by their URIs, and they are turned into terms from the
+A rule names a vocabulary concept by its local name, the last segment of its URI, within the
+vocabulary of the field the rule sets a condition on. The names are turned into terms from the
 vocabularies as published, so no term is written in the code.
 
 ## Why
@@ -20,7 +22,7 @@ The field schema is a JSON file because it is a Frictionless Table Schema, a pub
 other tools read (ADR 0004). Cross-field rules have no such format, and nothing outside this
 package reads them. Kept in Python, every rule is checked by the type checker and the linters. A
 rule without a source or a worked example is refused before any test runs, and a misspelt concept
-name is a lint error. One set of objects drives the check, the documentation and the tests, so the
+name is refused when the check is built, naming the rule, the field and the name. One set of objects drives the check, the documentation and the tests, so the
 three cannot disagree, which the constitution requires of rules (Article X).
 
 A method on each kind of rule, rather than a branch on the kind inside the check, means a rule that

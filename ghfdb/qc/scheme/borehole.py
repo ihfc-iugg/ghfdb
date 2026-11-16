@@ -91,14 +91,7 @@ SINGLE_POINTS = Criterion(
             ),
             Group(
                 -0.3,
-                (
-                    T_METHOD["log-perturbed"],
-                    T_METHOD["DTS-perturbed"],
-                    T_METHOD.BHT,
-                    T_METHOD["HT-FT-perturbed"],
-                    T_METHOD["RTD-perturbed"],
-                    T_METHOD["thermal-blanket"],
-                ),
+                (T_METHOD.perturbed, T_METHOD["thermal-blanket"]),
             ),
             Group(-0.5, ESTIMATED_TEMPERATURE),
         ),

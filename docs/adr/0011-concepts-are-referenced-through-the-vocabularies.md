@@ -19,8 +19,8 @@ problems came of that:
 3. A group that the vocabulary publishes as a collection was copied into the code. The laboratory
    conductivity methods were a tuple of six names, beside a `laboratory` collection that the
    vocabulary already publishes with those six members, and the exploration-method domains, the
-   estimated temperature methods and the ambient conditions were copies of the members of
-   collections the vocabulary publishes. A copy drifts when the vocabulary changes.
+   estimated and perturbed temperature methods, the well-log conductivity methods and the ambient
+   conditions were copies of the members of collections the vocabulary publishes. A copy drifts when the vocabulary changes.
 
 The modules also reached into one another. The borehole criteria imported groups of concepts from
 the probe criteria, the scores imported the domains from the module of the cross-field rules, and
@@ -40,9 +40,10 @@ A group of concepts names a collection that a vocabulary publishes when every me
 collection belongs to the group, and lists beside it the concepts the collection lacks. The
 laboratory conductivity methods are `concepts.tc_method.laboratory`. The borehole and mine domain is
 the collection `concepts.explo_method.excavation` and the concept `concepts.explo_method.indirect`,
-and the probe-sensing domain is the collection `concepts.explo_method["probe-sensing"]`. The other
-groups of the scheme stay lists of concepts, because no collection of the vocabularies is wholly
-within them.
+and the probe-sensing domain is the collection `concepts.explo_method["probe-sensing"]`. The
+estimated and the perturbed temperature methods, the well-log conductivity methods and the ambient
+pT conditions are named the same way. The other groups of the scheme stay lists of concepts,
+because no collection of the vocabularies is wholly within them.
 
 One resolver, `ghfdb.fields.schema.FieldConcepts.resolve`, takes the fields, the references the
 declarations name and the vocabularies, and gives for each field the term of every concept it

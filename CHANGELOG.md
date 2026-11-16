@@ -62,9 +62,9 @@ All notable changes to this project are recorded here. The format follows
   rule, the field and the reference. The same references name the concepts of the quality scheme,
   and the two domains and the laboratory conductivity methods are the collections the
   vocabularies publish.
-- The scoring reads the borehole and mine methods, the estimated temperature methods and the
-  ambient pT conditions from the vocabulary's collections, beside the few concepts those
-  collections lack.
+- The scoring reads the borehole and mine methods, the estimated and the perturbed temperature
+  methods, the well-log conductivity methods and the ambient pT conditions from the vocabulary's
+  collections, beside the few concepts those collections lack.
 - The modules of the Python API moved. `Vocabularies`, `AllowedValue`, `MissingSchemeError`,
   `caching_session` and `local_name` are now in `ghfdb.vocabularies` and are no longer exported
   by `ghfdb.fields`. The generator of `ghfdb/fields/names.py` is the script

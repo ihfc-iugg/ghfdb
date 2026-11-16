@@ -35,11 +35,7 @@ TC_PT_CONDITIONS = concepts.tc_pT_conditions
 TC_SATURATION = concepts.tc_saturation
 TC_SOURCE = concepts.tc_source
 
-ESTIMATED_FROM_LITERATURE = (
-    TC_METHOD.lithology,
-    TC_METHOD["well-log-deterministic"],
-    TC_METHOD["well-log-empirical"],
-)
+ESTIMATED_FROM_LITERATURE = (TC_METHOD.lithology, TC_METHOD["well-log"])
 ESTIMATED_FROM_OTHER = (
     TC_METHOD["water-content"],
     TC_METHOD["mineral-composition"],

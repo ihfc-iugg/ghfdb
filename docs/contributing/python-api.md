@@ -70,8 +70,9 @@ the concept schemes say they are part of.
 
 ### Naming a concept in code
 
-`concepts` has one namespace for each field that draws on a vocabulary, named by the field's
-published column name: the namespace of the field's concept scheme. A concept is an attribute
+`concepts` is the one instance of `Concepts`. It has one namespace for each field that draws on
+a vocabulary, named by the field's published column name: the namespace of the field's concept
+scheme. A concept is an attribute
 of it, or an item when its local name is not a Python name, and is an `rdflib.URIRef`:
 
 ```python
@@ -268,8 +269,9 @@ of scores.
 `ghfdb.qc.scheme` declares the quality scheme, and the declarations come first in each of its
 modules:
 
-* `ghfdb.qc.scheme.domains` holds the two domains, `BOREHOLE` and `PROBE_SENSING`. Each is the
-  collection of exploration methods that the vocabulary publishes.
+* `ghfdb.qc.scheme.domains` holds the two domains, `BOREHOLE` and `PROBE_SENSING`. Each names a
+  collection of exploration methods that the vocabulary publishes, and the borehole and mine
+  domain adds the indirect methods, which its collection lacks.
 * `ghfdb.qc.scheme.probe` and `ghfdb.qc.scheme.borehole` hold the criteria of the two domains.
   Each criterion is a `Criterion`: the identifier the worked examples use, such as
   `probe-t.penetration`, a title, the paper's table and row it comes from, and the table that gives
@@ -277,14 +279,16 @@ modules:
   scoring of its domain.
 * `ghfdb.qc.scheme.groups` holds the groups of concepts that both domains name.
 * `ghfdb.qc.scheme.grades` holds the U-score, the classes of the M-score and the perturbation
-  flags.
+  flags. `flag_characters(letter)` gives the character each state of a correction is written as
+  in the flag with that letter.
 * `ghfdb.qc.scheme.CRITERIA` lists every criterion by its identifier, and the pages of the scheme
   render each criterion's penalty table from its declaration.
 
 A declaration names a concept as a reference, `concepts.tc_method["probe-pulse"]`, under the field
 whose vocabulary holds it: `Field.tc_method`. A group that two criteria share is a tuple of
 references in `ghfdb.qc.scheme.groups`, and one used once is written where it is used. A group
-that the vocabulary publishes as a collection is the collection. `Scores.concepts` collects the
+names a collection the vocabulary publishes when every member of the collection belongs to the
+group, and lists beside it the concepts the collection lacks. `Scores.concepts` collects the
 concepts the declarations name, and `FieldConcepts.resolve` resolves them to the term each field
 accepts in the vocabularies as published, raising `MissingSchemeError` naming the field and the
 reference when the field has no such value, for instance when the vocabulary renames the concept.

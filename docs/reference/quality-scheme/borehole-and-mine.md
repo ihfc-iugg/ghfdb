@@ -197,3 +197,5 @@ examples named `X1` to `X5` and `B1` to `B9`.
 
 * <https://github.com/ihfc-iugg/ghfdb/issues/43>: whether an empty number of temperature recordings sets the mark for a borehole
   gradient.
+* <https://github.com/ihfc-iugg/ghfdb/issues/60>: whether a gradient measured with `[DTSpert]` and more than three
+  recordings is a continuous log, as the vocabulary's collection of continuous logs has it.

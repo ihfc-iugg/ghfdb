@@ -203,3 +203,5 @@ the questions are settled.
 * <https://github.com/ihfc-iugg/ghfdb/issues/42>: how a conductivity measured with the continuous heating probe scores.
 * <https://github.com/ihfc-iugg/ghfdb/issues/43>: whether an empty number of temperature recordings sets the mark for a borehole
   gradient.
+* <https://github.com/ihfc-iugg/ghfdb/issues/60>: whether a gradient measured with `[DTSpert]` and more than three
+  recordings is a continuous log, as the vocabulary's collection of continuous logs has it.

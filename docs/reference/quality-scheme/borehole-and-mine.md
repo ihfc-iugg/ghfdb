@@ -85,8 +85,7 @@ group, and the poorest matching group decides.
   without the mark. See {ref}`DEP-12 <dep-12>`.
 * **A method that fits no group.** A method listed in none of the groups of its case takes the
   case's largest penalty with the mark. `[DTSeq]` is listed only for the continuous log, so with
-  three recordings or fewer it fits no group of multiple single points. `[DST]` and `[cDST]` are
-  in the vocabulary and in none of the groups, which is under discussion (<https://github.com/ihfc-iugg/ghfdb/issues/38>). Source:
+  three recordings or fewer it fits no group of multiple single points. Source:
   {{ decision(16) }}.
 * **Spellings.** The toolbox's lists spell three methods in ways the vocabulary does not. They
   are read as the methods they name, `[HT-FTeq]` and `[HT-FTpert]`: {{ decision(15) }}.
@@ -227,7 +226,6 @@ examples named `X1` to `X5` and `B1` to `B9`.
 
 ## Under discussion
 
-* <https://github.com/ihfc-iugg/ghfdb/issues/38>: how the temperature methods `[DST]` and `[cDST]` score for a borehole gradient.
 * <https://github.com/ihfc-iugg/ghfdb/issues/39>: whether a borehole conductivity's saturation and pT conditions are scored
   together or apart.
 * <https://github.com/ihfc-iugg/ghfdb/issues/43>: whether an empty number of temperature recordings sets the mark for a borehole

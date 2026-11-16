@@ -260,7 +260,7 @@ template writes their terms separated by semicolons, and says so of no other voc
 
 **Chosen:** a vocabulary field links to the permanent identifier of its scheme (such as
 `https://w3id.org/ihfc-iugg/vocabularies/conductivity-methods`) and of its collection (such as
-`https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/insitu`), written by hand. The
+`https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/in-situ`), written by hand. The
 identifiers are permanent by promise, so a hand-written one does not go stale, and the scheme's
 file is at the identifier with `.ttl` added.
 

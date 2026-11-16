@@ -164,7 +164,6 @@ decisions {{ decision(2) }} and {{ decision(3) }}). The worked examples call tho
 These questions are open with the data assessment team. Until they are settled, the scheme is
 written as the GHFDB portal applies it today.
 
-* <https://github.com/ihfc-iugg/ghfdb/issues/38>: how the temperature methods `[DST]` and `[cDST]` score for a borehole gradient.
 * <https://github.com/ihfc-iugg/ghfdb/issues/39>: whether a borehole conductivity's saturation and pT conditions are scored
   together or apart.
 * <https://github.com/ihfc-iugg/ghfdb/issues/40>: which child's perturbation flags a parent takes when two children tie.

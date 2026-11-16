@@ -190,12 +190,13 @@ A Frictionless Table Schema (research.md, "Frictionless Table Schema shape"):
   `fuchs-2023-appendix-a` (D-5).
 - **The vocabulary binding is written by hand as permanent identifiers**: `scheme` (such as
   `https://w3id.org/ihfc-iugg/vocabularies/conductivity-methods`) and `collection` (such as
-  `https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/insitu`, or `null`). A scheme or
+  `https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/in-situ`, or `null`). A scheme or
   collection its published file does not define stops the load (FR-016). No release, version or
   DOI is stated (FR-007).
 - **Allowed values of a vocabulary field** are the concepts of the scheme, or of the collection
-  where the field links to one (C11: `…/heat-flow-corrections/insitu`, C12: `…/temperature`,
-  C13–C19: `…/generic`), sorted by term ignoring case (D-21). The term is `[<notation>]` where
+  where the field links to one (C11–C19: one collection of `…/heat-flow-corrections` per flag,
+  such as `…/heat-flow-corrections/in-situ`, and C31, C32: `…/temperature-method/top` and
+  `…/temperature-method/bottom`), sorted by term ignoring case (D-21). The term is `[<notation>]` where
   `termForm` is `notation` and the concept has one, otherwise `[<English preferred label>]`
   (D-20).
 - Fields are in the order of the template's columns: P1–P13, C1–C38, C50–C53, C39–C49, A1–A8.

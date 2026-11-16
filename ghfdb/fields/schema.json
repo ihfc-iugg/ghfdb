@@ -1126,7 +1126,7 @@
       "constraints": {},
       "vocabulary": {
         "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
-        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/insitu",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/in-situ",
         "termForm": "label"
       },
       "separator": null,
@@ -1174,7 +1174,7 @@
       "constraints": {},
       "vocabulary": {
         "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
-        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/temperature",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/instrumental",
         "termForm": "label"
       },
       "separator": null,
@@ -1222,7 +1222,7 @@
       "constraints": {},
       "vocabulary": {
         "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
-        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/generic",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/sedimentation",
         "termForm": "label"
       },
       "separator": null,
@@ -1270,7 +1270,7 @@
       "constraints": {},
       "vocabulary": {
         "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
-        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/generic",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/erosion",
         "termForm": "label"
       },
       "separator": null,
@@ -1318,7 +1318,7 @@
       "constraints": {},
       "vocabulary": {
         "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
-        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/generic",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/topography",
         "termForm": "label"
       },
       "separator": null,
@@ -1366,7 +1366,7 @@
       "constraints": {},
       "vocabulary": {
         "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
-        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/generic",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/paleoclimate",
         "termForm": "label"
       },
       "separator": null,
@@ -1414,7 +1414,7 @@
       "constraints": {},
       "vocabulary": {
         "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
-        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/generic",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/transient-surface-temperature",
         "termForm": "label"
       },
       "separator": null,
@@ -1462,7 +1462,7 @@
       "constraints": {},
       "vocabulary": {
         "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
-        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/generic",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/convection",
         "termForm": "label"
       },
       "separator": null,
@@ -1510,7 +1510,7 @@
       "constraints": {},
       "vocabulary": {
         "scheme": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections",
-        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/generic",
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/heat-refraction",
         "termForm": "label"
       },
       "separator": null,
@@ -2077,7 +2077,7 @@
       "constraints": {},
       "vocabulary": {
         "scheme": "https://w3id.org/ihfc-iugg/vocabularies/temperature-method",
-        "collection": null,
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/temperature-method/top",
         "termForm": "notation"
       },
       "separator": null,
@@ -2124,7 +2124,7 @@
       "constraints": {},
       "vocabulary": {
         "scheme": "https://w3id.org/ihfc-iugg/vocabularies/temperature-method",
-        "collection": null,
+        "collection": "https://w3id.org/ihfc-iugg/vocabularies/temperature-method/bottom",
         "termForm": "notation"
       },
       "separator": null,

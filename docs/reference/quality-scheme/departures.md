@@ -180,8 +180,7 @@ The {ref}`questions still open <departures-under-discussion>` are listed at the 
   as the vocabulary's `[HT-FTeq]` and `[HT-FTpert]`.
 * **Why.** The toolbox's lists decide, and the portal keeps the gaps in them as they are.
 * **Source.** {{ decision(1) }}, {{ decision(15) }} and {{ decision(16) }}. Stated at
-  [Borehole and mine rules](borehole-and-mine.md). The treatment of `[DST]` and `[cDST]` is
-  under discussion (<https://github.com/ihfc-iugg/ghfdb/issues/38>).
+  [Borehole and mine rules](borehole-and-mine.md).
 
 (dep-14)=
 ## DEP-14 A borehole conductivity with no interval depth carries the mark
@@ -240,8 +239,6 @@ These places where the paper is ambiguous or contradicts itself, or where the po
 description and its code disagree, are open with the data assessment team. The scheme is written
 as the portal applies it today, and the departures above stand until they are settled.
 
-* <https://github.com/ihfc-iugg/ghfdb/issues/38>: how the temperature methods `[DST]` and `[cDST]` score for a borehole gradient.
-  The portal's description lists them, and its code does not.
 * <https://github.com/ihfc-iugg/ghfdb/issues/39>: whether a borehole conductivity's saturation and pT conditions are scored
   together or apart. The paper's text and its Table 3 describe them differently.
 * <https://github.com/ihfc-iugg/ghfdb/issues/40>: which child's perturbation flags a parent takes when two children tie.

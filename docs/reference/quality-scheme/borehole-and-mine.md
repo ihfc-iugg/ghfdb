@@ -80,9 +80,7 @@ group, and the poorest matching group decides.
 * **A method that fits no group.** A method listed in none of the groups of its case takes the
   case's largest penalty with the mark: see {ref}`DEP-14 <dep-14>`. `[DTSeq]` and `[cDTS]` are
   listed only for the continuous log, so with three recordings or fewer they fit no group of
-  multiple single points. `[DST]` is in the vocabulary and in none of the groups, which is
-  under discussion (<https://github.com/ihfc-iugg/ghfdb/issues/38>). `[cDST]` is one of the
-  equilibrium or corrected methods of the surface plus one point case.
+  multiple single points.
 
 Source: corrected Table 3. The groups of methods are the table's, written as the vocabulary
 writes each method.
@@ -197,6 +195,5 @@ examples named `X1` to `X5` and `B1` to `B9`.
 
 ## Under discussion
 
-* <https://github.com/ihfc-iugg/ghfdb/issues/38>: how the temperature method `[DST]` scores for a borehole gradient. `[cDST]` is settled by the corrected Table 3.
 * <https://github.com/ihfc-iugg/ghfdb/issues/43>: whether an empty number of temperature recordings sets the mark for a borehole
   gradient.

@@ -191,7 +191,6 @@ decisions {{ decision(2) }} and {{ decision(3) }}). The worked examples call tho
 These questions are open with the data assessment team. Until they are settled, the scheme is
 written as these pages state it.
 
-* <https://github.com/ihfc-iugg/ghfdb/issues/38>: how the temperature method `[DST]` scores for a borehole gradient.
 * <https://github.com/ihfc-iugg/ghfdb/issues/40>: which child's perturbation flags a parent takes when two children tie.
 * <https://github.com/ihfc-iugg/ghfdb/issues/42>: how a conductivity measured with the continuous heating probe scores.
 * <https://github.com/ihfc-iugg/ghfdb/issues/43>: whether an empty number of temperature recordings sets the mark for a borehole

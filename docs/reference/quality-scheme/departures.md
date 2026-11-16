@@ -199,9 +199,6 @@ These places where the paper is ambiguous or contradicts itself are open with th
 assessment team. The scheme is written as the departures above state it, and they stand until
 the questions are settled.
 
-* <https://github.com/ihfc-iugg/ghfdb/issues/38>: how the temperature method `[DST]` scores for a borehole gradient.
-  The corrected Table 3 lists `[cDST]`, which is settled, and replaces `[DST]` by `[HT-FT]`, and the
-  vocabulary still publishes `[DST]`.
 * <https://github.com/ihfc-iugg/ghfdb/issues/40>: which child's perturbation flags a parent takes when two children tie.
 * <https://github.com/ihfc-iugg/ghfdb/issues/42>: how a conductivity measured with the continuous heating probe scores.
 * <https://github.com/ihfc-iugg/ghfdb/issues/43>: whether an empty number of temperature recordings sets the mark for a borehole

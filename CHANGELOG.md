@@ -24,9 +24,8 @@ All notable changes to this project are recorded here. The format follows
   continuous log. With three recordings or fewer, a gradient measured by `[cDTS]` therefore fits
   no group and takes the largest penalty of the multiple single points, -0.5, with the
   missing-information mark.
-- For a surface temperature plus one point, `[cDST]` at the bottom is now scored as an
-  equilibrium or corrected method, -0.3, as the corrected Table 3 lists it. `[DST]` is still in
-  no group.
+- The worked example of a surface temperature with a corrected drill-stem test at the bottom is
+  removed, because the vocabulary no longer has that method.
 - In the probe-sensing thermal conductivity, the laboratory rows of the saturation criterion
   hold only when every value of the thermal conductivity method is a laboratory method, as the
   corrected Table 2 requires ("`{tc_method}` is all with `[Lab - ...]`"). A child that lists a
@@ -63,6 +62,9 @@ All notable changes to this project are recorded here. The format follows
   rule, the field and the reference. The same references name the concepts of the quality scheme,
   and the two domains and the laboratory conductivity methods are the collections the
   vocabularies publish.
+- The scoring reads the borehole and mine methods, the estimated temperature methods and the
+  ambient pT conditions from the vocabulary's collections, beside the few concepts those
+  collections lack.
 - The modules of the Python API moved. `Vocabularies`, `AllowedValue`, `MissingSchemeError`,
   `caching_session` and `local_name` are now in `ghfdb.vocabularies` and are no longer exported
   by `ghfdb.fields`. The generator of `ghfdb/fields/names.py` is the script

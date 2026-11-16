@@ -8,19 +8,19 @@ declarations of ADR 0010 live.
 
 The cross-field rules and the criteria of the quality scheme name vocabulary values. Until now a
 declaration named a concept by its local name, the last segment of its URI, as a string under the
-field whose vocabulary holds it, such as `"pointSource"` under the conductivity method. Three
+field whose vocabulary holds it, such as `"point-source"` under the conductivity method. Three
 problems came of that:
 
-1. A string is not a reference. Nothing but the lookup at run time showed that `"pointSource"` was
+1. A string is not a reference. Nothing but the lookup at run time showed that `"point-source"` was
    a concept at all, and an editor could not follow it to the vocabulary.
 2. The names were turned into the terms a field accepts in four places: the check, the scoring,
    the documentation and the reader of the scored fields. Each had its own lookup and its own
    message when a name was wrong.
 3. A group that the vocabulary publishes as a collection was copied into the code. The laboratory
    conductivity methods were a tuple of six names, beside a `laboratory` collection that the
-   vocabulary already publishes with those six members, and the two exploration-method domains
-   were copies of the collections `borehole-and-mine` and `probe-sensing`. A copy drifts when the
-   vocabulary changes.
+   vocabulary already publishes with those six members, and the exploration-method domains, the
+   estimated temperature methods and the ambient conditions were copies of the members of
+   collections the vocabulary publishes. A copy drifts when the vocabulary changes.
 
 The modules also reached into one another. The borehole criteria imported groups of concepts from
 the probe criteria, the scores imported the domains from the module of the cross-field rules, and
@@ -32,16 +32,17 @@ the probe criteria, the scores imported the domains from the module of the cross
 A concept is referenced as an `rdflib.URIRef` through `ghfdb.vocabularies.concepts`. For every field
 that has a vocabulary, `concepts.<column name>` is the `rdflib.Namespace` of the field's concept
 scheme, built from the packaged field schema alone and never from the network, so
-`concepts.tc_method.pointSource` and `concepts.tc_source["insitu-probe"]` are the concepts' URIs. A
+`concepts.tc_method["point-source"]` and `concepts.tc_source["in-situ-probe"]` are the concepts' URIs. A
 column name the schema lacks, or a field without a vocabulary, raises `AttributeError` naming it.
 There is no concept class of our own: the `URIRef` of `rdflib` is the reference.
 
-A group of concepts that a vocabulary publishes as a collection is referenced as that collection.
-The laboratory conductivity methods are `concepts.tc_method.laboratory`, and the two domains of the
-scheme are `concepts.explo_method["borehole-and-mine"]` and
-`concepts.explo_method["probe-sensing"]`. A group is replaced by a collection only when the
-collection has exactly the same members. The other groups of the scheme, which the vocabularies do
-not publish, stay lists of references.
+A group of concepts names a collection that a vocabulary publishes when every member of the
+collection belongs to the group, and lists beside it the concepts the collection lacks. The
+laboratory conductivity methods are `concepts.tc_method.laboratory`. The borehole and mine domain is
+the collection `concepts.explo_method.excavation` and the concept `concepts.explo_method.indirect`,
+and the probe-sensing domain is the collection `concepts.explo_method["probe-sensing"]`. The other
+groups of the scheme stay lists of concepts, because no collection of the vocabularies is wholly
+within them.
 
 One resolver, `ghfdb.fields.schema.FieldConcepts.resolve`, takes the fields, the references the
 declarations name and the vocabularies, and gives for each field the term of every concept it

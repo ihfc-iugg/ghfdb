@@ -37,13 +37,13 @@ TC_SOURCE = concepts.tc_source
 
 ESTIMATED_FROM_LITERATURE = (
     TC_METHOD.lithology,
-    TC_METHOD.wellLogDeterministic,
-    TC_METHOD.wellLogEmpirical,
+    TC_METHOD["well-log-deterministic"],
+    TC_METHOD["well-log-empirical"],
 )
 ESTIMATED_FROM_OTHER = (
-    TC_METHOD.waterContent,
-    TC_METHOD.mineralComposition,
-    TC_METHOD.chlorineContent,
+    TC_METHOD["water-content"],
+    TC_METHOD["mineral-composition"],
+    TC_METHOD["chlorine-content"],
     TC_METHOD.unspecified,
 )
 LABORATORY_METHODS = (TC_METHOD.laboratory,)
@@ -84,7 +84,7 @@ TILT = Criterion(
 BOTTOM_WATER_CORRECTED = Condition(
     Field.corr_SUR_flag, (CORR_SUR_FLAG["present-corrected"],)
 )
-TILT_IS_CORRECTED = Condition(Field.corr_T_flag, (CORR_T_FLAG.tiltCorrected,))
+TILT_IS_CORRECTED = Condition(Field.corr_T_flag, (CORR_T_FLAG["tilt-corrected"],))
 
 LOCATION = Criterion(
     "probe-tc.location",
@@ -108,9 +108,9 @@ SATURATION = Criterion(
             Case(
                 0.1,
                 {
-                    Field.tc_saturation: (TC_SATURATION.saturatedInSitu,),
-                    Field.tc_method: (TC_METHOD.probePulse,),
-                    Field.tc_source: (TC_SOURCE["insitu-probe"],),
+                    Field.tc_saturation: (TC_SATURATION["saturated-in-situ"],),
+                    Field.tc_method: (TC_METHOD["probe-pulse"],),
+                    Field.tc_source: (TC_SOURCE["in-situ-probe"],),
                 },
             ),
             Case(
@@ -118,10 +118,10 @@ SATURATION = Criterion(
                 {
                     Field.tc_saturation: (
                         TC_SATURATION.recovered,
-                        TC_SATURATION.saturatedMeasured,
+                        TC_SATURATION["saturated-measured"],
                     ),
-                    Field.tc_method: (TC_METHOD.probePulse,),
-                    Field.tc_source: (TC_SOURCE["insitu-probe"],),
+                    Field.tc_method: (TC_METHOD["probe-pulse"],),
+                    Field.tc_source: (TC_SOURCE["in-situ-probe"],),
                 },
             ),
             Case(
@@ -129,14 +129,14 @@ SATURATION = Criterion(
                 {
                     Field.tc_saturation: (
                         TC_SATURATION.recovered,
-                        TC_SATURATION.saturatedMeasured,
+                        TC_SATURATION["saturated-measured"],
                     )
                 },
                 every={Field.tc_method: LABORATORY_METHODS},
             ),
             Case(
                 -0.1,
-                {Field.tc_saturation: (TC_SATURATION.saturatedCalculated,)},
+                {Field.tc_saturation: (TC_SATURATION["saturated-calculated"],)},
                 every={Field.tc_method: LABORATORY_METHODS},
             ),
             Case(
@@ -174,8 +174,8 @@ CONDITIONS = Criterion(
             Case(
                 0.1,
                 {
-                    Field.tc_pT_conditions: (TC_PT_CONDITIONS.actualInSitu,),
-                    Field.tc_method: (TC_METHOD.probePulse,),
+                    Field.tc_pT_conditions: (TC_PT_CONDITIONS["actual-in-situ"],),
+                    Field.tc_method: (TC_METHOD["probe-pulse"],),
                 },
             ),
             Case(0.0, {Field.tc_pT_conditions: FULL_IN_SITU}),

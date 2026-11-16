@@ -35,12 +35,12 @@ class TestLaboratoryMethods:
 
         assert probe.LABORATORY_METHODS == (method.laboratory,)
         assert set(methods.expand(probe.LABORATORY_METHODS)) == {
-            method.pointSource,
-            method.lineSourceFull,
-            method.lineSourceHalf,
-            method.planeSourceFull,
-            method.planeSourceHalf,
-            method.laboratoryOther,
+            method["point-source"],
+            method["line-source-full"],
+            method["line-source-half"],
+            method["plane-source-full"],
+            method["plane-source-half"],
+            method["laboratory-other"],
         }
 
 

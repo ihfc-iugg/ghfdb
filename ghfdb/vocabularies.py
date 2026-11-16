@@ -269,8 +269,8 @@ class Concepts:
     """The concepts of the vocabularies, named in code.
 
     A field that draws on a vocabulary is a namespace of its concept scheme, so a
-    concept is ``concepts.tc_method.pointSource``, or, when its local name is not a
-    Python name, ``concepts.tc_source["insitu-probe"]``. Each is the concept's
+    concept is ``concepts.tc_method.lithology``, or, when its local name is not a
+    Python name, ``concepts.tc_source["in-situ-probe"]``. Each is the concept's
     ``URIRef``. The namespaces are built from the packaged field schema, never from
     the web.
 

@@ -451,17 +451,17 @@ def packaged_vocabulary_fields() -> list[dict[str, Any]]:
 
 class TestConcepts:
     def test_names_a_concept_by_attribute_of_its_fields_namespace(self) -> None:
-        assert concepts.tc_method.pointSource == URIRef(
-            f"{CONDUCTIVITY_METHODS}/pointSource"
+        assert concepts.tc_method.lithology == URIRef(
+            f"{CONDUCTIVITY_METHODS}/lithology"
         )
 
     def test_names_a_hyphenated_concept_by_item_of_its_fields_namespace(self) -> None:
-        assert concepts.tc_source["insitu-probe"] == URIRef(
-            f"{CONDUCTIVITY_SOURCES}/insitu-probe"
+        assert concepts.tc_source["in-situ-probe"] == URIRef(
+            f"{CONDUCTIVITY_SOURCES}/in-situ-probe"
         )
 
     def test_a_concept_is_an_rdflib_uri_reference(self) -> None:
-        assert isinstance(concepts.tc_method.pointSource, URIRef)
+        assert isinstance(concepts.tc_method.lithology, URIRef)
 
     def test_a_field_is_named_by_item_as_well_as_by_attribute(self) -> None:
         assert concepts["tc_method"] == concepts.tc_method
@@ -504,7 +504,7 @@ class TestConcepts:
             "socket.socket.connect = refuse\n"
             "socket.getaddrinfo = refuse\n"
             "from ghfdb.vocabularies import concepts\n"
-            "print(concepts.tc_method.pointSource)\n"
+            "print(concepts.tc_method.lithology)\n"
         )
 
         run = subprocess.run(
@@ -514,4 +514,4 @@ class TestConcepts:
             check=True,
         )
 
-        assert run.stdout.strip() == f"{CONDUCTIVITY_METHODS}/pointSource"
+        assert run.stdout.strip() == f"{CONDUCTIVITY_METHODS}/lithology"

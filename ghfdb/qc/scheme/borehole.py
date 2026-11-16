@@ -42,14 +42,7 @@ CONTINUOUS_LOG_RECORDINGS = 3
 # The TC-score of a conductivity that reports neither end of its interval.
 GATE_SCORE = 0.1
 
-ESTIMATED_TEMPERATURE = (
-    T_METHOD.CPD,
-    T_METHOD.XEN,
-    T_METHOD.GTM,
-    T_METHOD.BSR,
-    T_METHOD.unspecified,
-    T_METHOD.other,
-)
+ESTIMATED_TEMPERATURE = (T_METHOD.estimated, T_METHOD.unspecified, T_METHOD.other)
 TEMPERATURE_METHODS = (Field.T_method_top, Field.T_method_bottom)
 INTERVAL_DEPTHS = (Field.q_top, Field.q_bottom)
 
@@ -59,8 +52,16 @@ CONTINUOUS_LOG = Criterion(
     Classes(
         TEMPERATURE_METHODS,
         (
-            Group(0.1, (T_METHOD.LOGeq, T_METHOD.cLOG, T_METHOD.DTSeq, T_METHOD.cDTS)),
-            Group(-0.1, (T_METHOD.LOGpert,)),
+            Group(
+                0.1,
+                (
+                    T_METHOD["log-equilibrium"],
+                    T_METHOD["log-corrected"],
+                    T_METHOD["DTS-equilibrium"],
+                    T_METHOD["DTS-corrected"],
+                ),
+            ),
+            Group(-0.1, (T_METHOD["log-perturbed"],)),
         ),
         skip_empty=True,
     ),
@@ -75,15 +76,15 @@ SINGLE_POINTS = Criterion(
             Group(
                 -0.1,
                 (
-                    T_METHOD.LOGeq,
-                    T_METHOD.cLOG,
-                    T_METHOD.cBHT,
-                    T_METHOD["HT-FT"],
-                    T_METHOD["cHT-FT"],
-                    T_METHOD.RTDeq,
-                    T_METHOD.cRTD,
-                    T_METHOD["ODTT-PC"],
-                    T_METHOD["ODTT-TP"],
+                    T_METHOD["log-equilibrium"],
+                    T_METHOD["log-corrected"],
+                    T_METHOD["BHT-corrected"],
+                    T_METHOD["HT-FT-equilibrium"],
+                    T_METHOD["HT-FT-corrected"],
+                    T_METHOD["RTD-equilibrium"],
+                    T_METHOD["RTD-corrected"],
+                    T_METHOD["ODTT-piston-corer"],
+                    T_METHOD["ODTT-thermistor-probe"],
                     T_METHOD.EGRT,
                     T_METHOD.GRT,
                 ),
@@ -91,12 +92,12 @@ SINGLE_POINTS = Criterion(
             Group(
                 -0.3,
                 (
-                    T_METHOD.LOGpert,
-                    T_METHOD.DTSpert,
+                    T_METHOD["log-perturbed"],
+                    T_METHOD["DTS-perturbed"],
                     T_METHOD.BHT,
-                    T_METHOD["HT-FTpert"],
-                    T_METHOD.RTDpert,
-                    T_METHOD.BLK,
+                    T_METHOD["HT-FT-perturbed"],
+                    T_METHOD["RTD-perturbed"],
+                    T_METHOD["thermal-blanket"],
                 ),
             ),
             Group(-0.5, ESTIMATED_TEMPERATURE),
@@ -114,25 +115,27 @@ SURFACE_PLUS_ONE_POINT = Criterion(
             Group(
                 -0.3,
                 (
-                    T_METHOD.cBHT,
-                    T_METHOD.cDST,
-                    T_METHOD.RTDeq,
-                    T_METHOD.cRTD,
-                    T_METHOD["ODTT-PC"],
-                    T_METHOD["ODTT-TP"],
-                    T_METHOD["cHT-FT"],
+                    T_METHOD["BHT-corrected"],
+                    T_METHOD["RTD-equilibrium"],
+                    T_METHOD["RTD-corrected"],
+                    T_METHOD["ODTT-piston-corer"],
+                    T_METHOD["ODTT-thermistor-probe"],
+                    T_METHOD["HT-FT-corrected"],
                     T_METHOD.EGRT,
                     T_METHOD.GRT,
                 ),
             ),
-            Group(-0.5, (T_METHOD.BHT, T_METHOD["HT-FTpert"], T_METHOD.RTDpert)),
+            Group(
+                -0.5,
+                (T_METHOD.BHT, T_METHOD["HT-FT-perturbed"], T_METHOD["RTD-perturbed"]),
+            ),
             Group(-0.6, ESTIMATED_TEMPERATURE),
         ),
         skip_empty=True,
     ),
     "Table 3, Source type and number of T points",
 )
-TOP_METHOD_IS_SURFACE = Condition(Field.T_method_top, (T_METHOD.SUR,))
+TOP_METHOD_IS_SURFACE = Condition(Field.T_method_top, (T_METHOD.surface,))
 
 LOCATION = Criterion(
     "borehole-tc.location",
@@ -153,7 +156,7 @@ SOURCE = Criterion(
     Classes(
         (Field.tc_source,),
         (
-            Group(0.1, (TC_SOURCE["insitu-probe"], TC_SOURCE["core-log"])),
+            Group(0.1, (TC_SOURCE["in-situ-probe"], TC_SOURCE["core-log"])),
             Group(0.0, (TC_SOURCE["core-samples"],)),
             Group(
                 -0.1,
@@ -193,9 +196,15 @@ SATURATION = Criterion(
         (Field.tc_saturation,),
         (
             Group(
-                0.0, (TC_SATURATION.saturatedInSitu, TC_SATURATION.saturatedMeasured)
+                0.0,
+                (
+                    TC_SATURATION["saturated-in-situ"],
+                    TC_SATURATION["saturated-measured"],
+                ),
             ),
-            Group(-0.1, (TC_SATURATION.saturatedCalculated, TC_SATURATION.recovered)),
+            Group(
+                -0.1, (TC_SATURATION["saturated-calculated"], TC_SATURATION.recovered)
+            ),
             Group(-0.2, DRY_UNSPECIFIED_OR_OTHER),
         ),
     ),
@@ -207,7 +216,7 @@ CONDITIONS = Criterion(
     Classes(
         (Field.tc_pT_conditions,),
         (
-            Group(0.0, (TC_PT_CONDITIONS.actualInSitu, *FULL_IN_SITU)),
+            Group(0.0, (TC_PT_CONDITIONS["actual-in-situ"], *FULL_IN_SITU)),
             Group(-0.1, PARTIAL_IN_SITU),
             Group(-0.2, AMBIENT_OR_UNSPECIFIED),
         ),
@@ -223,10 +232,10 @@ CONDITIONS_AGREEING = Criterion(
                 0.0,
                 {
                     Field.tc_pT_conditions: (
-                        TC_PT_CONDITIONS.actualInSitu,
+                        TC_PT_CONDITIONS["actual-in-situ"],
                         *FULL_IN_SITU,
                     ),
-                    Field.corr_IS_flag: (CORR_IS_FLAG.consideredPT,),
+                    Field.corr_IS_flag: (CORR_IS_FLAG["considered-pT"],),
                 },
             ),
             Case(
@@ -234,8 +243,8 @@ CONDITIONS_AGREEING = Criterion(
                 {
                     Field.tc_pT_conditions: PARTIAL_IN_SITU,
                     Field.corr_IS_flag: (
-                        CORR_IS_FLAG.consideredP,
-                        CORR_IS_FLAG.consideredT,
+                        CORR_IS_FLAG["considered-p"],
+                        CORR_IS_FLAG["considered-T"],
                     ),
                 },
             ),
@@ -244,7 +253,7 @@ CONDITIONS_AGREEING = Criterion(
                 {
                     Field.tc_pT_conditions: AMBIENT_OR_UNSPECIFIED,
                     Field.corr_IS_flag: (
-                        CORR_IS_FLAG.notConsidered,
+                        CORR_IS_FLAG["not-considered"],
                         CORR_IS_FLAG.unspecified,
                     ),
                 },

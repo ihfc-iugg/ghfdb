@@ -51,9 +51,9 @@ def flag_characters(letter: str) -> dict[URIRef, str]:
     """
     return {
         CORRECTION["present-corrected"]: letter,
-        CORRECTION["present-not-corrected"]: letter.lower(),
-        CORRECTION["present-not-significant"]: "X",
-        CORRECTION["not-recognized"]: "x",
+        CORRECTION["present-uncorrected"]: letter.lower(),
+        CORRECTION["present-insignificant"]: "X",
+        CORRECTION["unrecognized"]: "x",
         CORRECTION.unspecified: "-",
     }
 

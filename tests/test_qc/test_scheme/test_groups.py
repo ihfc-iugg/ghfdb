@@ -37,13 +37,22 @@ class TestGroups:
             schema, [(code, concept) for concept in group], published_vocabularies
         )
 
-        assert set(group) <= set(resolved[code].terms)
+        assert set(resolved[code].expand(group)) <= set(resolved[code].terms)
 
     def test_the_groups_of_pressure_and_temperature_conditions_share_no_concept(
-        self,
+        self, schema: Schema, published_vocabularies: Vocabularies
     ) -> None:
         groups = [FULL_IN_SITU, PARTIAL_IN_SITU, AMBIENT_OR_UNSPECIFIED]
+        resolved = FieldConcepts.resolve(
+            schema,
+            [
+                (PRESSURE_AND_TEMPERATURE, concept)
+                for group in groups
+                for concept in group
+            ],
+            published_vocabularies,
+        )[PRESSURE_AND_TEMPERATURE]
 
-        concepts = [concept for group in groups for concept in group]
+        concepts = [concept for group in groups for concept in resolved.expand(group)]
 
         assert len(concepts) == len(set(concepts))

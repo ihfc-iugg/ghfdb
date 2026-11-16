@@ -46,8 +46,8 @@ class TestDomains:
             METHOD["probing-clustering"],
         }
 
-    def test_a_domain_is_named_by_the_collection_the_vocabulary_publishes(self) -> None:
-        assert BOREHOLE.concepts == (METHOD["borehole-and-mine"],)
+    def test_a_domain_is_named_by_its_collection_and_the_methods_it_lacks(self) -> None:
+        assert BOREHOLE.concepts == (METHOD.excavation, METHOD.indirect)
         assert PROBE_SENSING.concepts == (METHOD["probe-sensing"],)
 
     def test_each_domain_is_scored_by_the_scoring_the_scores_name(self) -> None:

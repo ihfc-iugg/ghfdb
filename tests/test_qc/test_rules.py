@@ -312,7 +312,7 @@ class TestRuleProblems:
         self, children: Children, term: Terms, method: str
     ) -> None:
         egrt = term(method, TEMPERATURE.EGRT)
-        other = term("C43", CONDUCTIVITY.pointSource)
+        other = term("C43", CONDUCTIVITY["point-source"])
         frame = children({method: egrt, "C43": other})
 
         problems = DatasetCheck(frame, self.schema, RULES, self.vocabularies).problems()
@@ -327,11 +327,11 @@ class TestRuleProblems:
     @pytest.mark.parametrize(
         ("top", "bottom", "conductivity"),
         [
-            (TEMPERATURE.EGRT, TEMPERATURE.EGRT, CONDUCTIVITY.probePulse),
-            (TEMPERATURE.EGRT, None, CONDUCTIVITY.probePulse),
-            (None, TEMPERATURE.EGRT, CONDUCTIVITY.probePulse),
-            (TEMPERATURE.other, TEMPERATURE.other, CONDUCTIVITY.pointSource),
-            (None, None, CONDUCTIVITY.pointSource),
+            (TEMPERATURE.EGRT, TEMPERATURE.EGRT, CONDUCTIVITY["probe-pulse"]),
+            (TEMPERATURE.EGRT, None, CONDUCTIVITY["probe-pulse"]),
+            (None, TEMPERATURE.EGRT, CONDUCTIVITY["probe-pulse"]),
+            (TEMPERATURE.other, TEMPERATURE.other, CONDUCTIVITY["point-source"]),
+            (None, None, CONDUCTIVITY["point-source"]),
         ],
         ids=["both", "top", "bottom", "neither", "empty"],
     )
@@ -362,7 +362,7 @@ class TestRuleProblems:
             {
                 "C31": other_top,
                 "C32": egrt,
-                "C43": term("C43", CONDUCTIVITY.pointSource),
+                "C43": term("C43", CONDUCTIVITY["point-source"]),
             }
         )
 

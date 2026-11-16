@@ -113,12 +113,12 @@ CF_4 = AllowedWhen(
     example=Example(
         {
             Field.T_method_top: TEMPERATURE.EGRT,
-            Field.tc_method: CONDUCTIVITY.pointSource,
+            Field.tc_method: CONDUCTIVITY["point-source"],
         },
         (Field.tc_method,),
     ),
     when=Condition(Field.T_method_top, (TEMPERATURE.EGRT,)),
-    then=Condition(Field.tc_method, (CONDUCTIVITY.probePulse,)),
+    then=Condition(Field.tc_method, (CONDUCTIVITY["probe-pulse"],)),
     alternatives=(Condition(Field.T_method_bottom, (TEMPERATURE.EGRT,)),),
 )
 

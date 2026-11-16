@@ -1,6 +1,7 @@
 """The two domains of the quality scheme: which exploration methods each one scores.
 
-A domain is one of the collections of exploration methods that the vocabulary publishes.
+A domain is a collection of exploration methods that the vocabulary publishes, with the
+methods the collection lacks.
 """
 
 from ghfdb.fields import Field
@@ -12,7 +13,7 @@ EXPLORATION_METHOD = Field.explo_method
 BOREHOLE = Domain(
     "B",
     EXPLORATION_METHOD,
-    (concepts.explo_method["borehole-and-mine"],),
+    (concepts.explo_method.excavation, concepts.explo_method.indirect),
     "a borehole and mine method",
     "borehole and mine",
 )

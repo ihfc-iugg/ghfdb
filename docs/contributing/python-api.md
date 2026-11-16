@@ -77,8 +77,8 @@ of it, or an item when its local name is not a Python name, and is an `rdflib.UR
 ```python
 from ghfdb.vocabularies import concepts
 
-concepts.tc_method.pointSource  # .../conductivity-methods/pointSource
-concepts.tc_source["insitu-probe"]  # .../conductivity-sources/insitu-probe
+concepts.tc_method["point-source"]  # .../conductivity-methods/point-source
+concepts.tc_source["in-situ-probe"]  # .../conductivity-sources/in-situ-probe
 concepts.tc_method.laboratory  # a collection of the same scheme
 ```
 
@@ -281,7 +281,7 @@ modules:
 * `ghfdb.qc.scheme.CRITERIA` lists every criterion by its identifier, and the pages of the scheme
   render each criterion's penalty table from its declaration.
 
-A declaration names a concept as a reference, `concepts.tc_method.probePulse`, under the field
+A declaration names a concept as a reference, `concepts.tc_method["probe-pulse"]`, under the field
 whose vocabulary holds it: `Field.tc_method`. A group that two criteria share is a tuple of
 references in `ghfdb.qc.scheme.groups`, and one used once is written where it is used. A group
 that the vocabulary publishes as a collection is the collection. `Scores.concepts` collects the

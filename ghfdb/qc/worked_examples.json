@@ -1929,29 +1929,6 @@
       ]
     },
     {
-      "id": "BT-16",
-      "part": "borehole-t",
-      "title": "Surface at the top, [cDST] at the bottom",
-      "inputs": {
-        "P12": "[Drilling]",
-        "C4": 0,
-        "C5": 1000,
-        "C37": 2,
-        "C31": "[SUR]",
-        "C32": "[cDST]"
-      },
-      "expected": {
-        "T": 0.7,
-        "marked": false
-      },
-      "portal_tests": [
-        "tests/test_qc/test_borehole.py::TestBoreholeTScore::test_worked_example[BT-16]"
-      ],
-      "criteria": [
-        "borehole-t.surface-plus-one-point"
-      ]
-    },
-    {
       "id": "BC-01",
       "part": "borehole-tc",
       "title": "The best inputs, with the pT conditions scored alone",

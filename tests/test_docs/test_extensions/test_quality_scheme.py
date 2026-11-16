@@ -408,9 +408,9 @@ class TestCriterionTable:
                         0.1,
                         {
                             Field.tc_saturation: (
-                                concepts.tc_saturation.saturatedInSitu,
+                                concepts.tc_saturation["saturated-in-situ"],
                             ),
-                            Field.tc_method: (concepts.tc_method.probePulse,),
+                            Field.tc_method: (concepts.tc_method["probe-pulse"],),
                         },
                     ),
                     Case(
@@ -418,8 +418,8 @@ class TestCriterionTable:
                         {Field.tc_saturation: (concepts.tc_saturation.recovered,)},
                         every={
                             Field.tc_method: (
-                                concepts.tc_method.pointSource,
-                                concepts.tc_method.lineSourceFull,
+                                concepts.tc_method["point-source"],
+                                concepts.tc_method["line-source-full"],
                             )
                         },
                     ),

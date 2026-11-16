@@ -13,7 +13,7 @@ The field schema, `ghfdb/fields/schema.json`, is written by hand and holds no vo
   `https://w3id.org/ihfc-iugg/vocabularies/exploration-methods`. Where the field takes only some
   of the scheme's concepts, it also links to the identifier of the `skos:Collection` or
   `skos:OrderedCollection` that narrows the choice, such as
-  `https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/insitu`. It also says whether a
+  `https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/in-situ`. It also says whether a
   term is written as the concept's label or its notation. It holds no list of values and no `enum`.
 - The schema declares no release, version or DOI. Data assessors do not choose which version of
   the vocabularies they use: the terms are those currently published at the identifiers.

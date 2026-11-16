@@ -10,6 +10,20 @@ All notable changes to this project are recorded here. The format follows
 
 - The field reference pages no longer have a Source column in each field's table. The field
   schema still records the source of every fact.
+- Allowed values that changed with the vocabularies:
+  - `C3` `q_method`: `[Numerical inversion]` is now `[Other numerical computations]`.
+  - `C21` `probe_type`: `[Outrigger probe (Ewing) without corer]` is new.
+  - `C31` `T_method_top` and `C32` `T_method_bottom`: `[DST]` and `[cDST]` are no longer
+    allowed, and `C32` no longer allows `[SUR]`.
+
+### Fixed
+
+- The field definitions load from the finalised IHFC Controlled Vocabularies again. Version 0.1.0
+  linked the correction flags to three collections the vocabularies no longer publish, so loading
+  the field definitions failed. Each correction flag (`C11`–`C19`) now links to its own
+  collection, such as `https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/in-situ`,
+  and `C31` and `C32` link to the collections `temperature-method/top` and
+  `temperature-method/bottom`.
 
 ## [v0.1.0] - 2026-11-10
 

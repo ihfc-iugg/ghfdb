@@ -208,7 +208,7 @@ confirm every identifier the field schema holds is defined in them.
 - **FR-006**: Every vocabulary field MUST link to the permanent identifier of its concept scheme
   (such as `https://w3id.org/ihfc-iugg/vocabularies/exploration-methods`) and, where the
   vocabularies narrow the choice, to the identifier of its collection or ordered collection (such
-  as `https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/insitu`). Each allowed value
+  as `https://w3id.org/ihfc-iugg/vocabularies/heat-flow-corrections/in-situ`). Each allowed value
   MUST carry its concept's URI, label and notation. *(US1, US2)*
 - **FR-007**: The field schema MUST NOT state a release, version or DOI of the vocabularies.
   Data assessors do not choose which version they use. *(US2, US3)*

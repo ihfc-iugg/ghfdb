@@ -22,13 +22,15 @@ class TestPackage:
 class TestFieldsPublicSurface:
     def test_exports_the_public_names(self) -> None:
         from ghfdb.fields import (  # noqa: F401
+            allowed_values,
+            field_for_column,
+            load_schema,
+        )
+        from ghfdb.vocabularies import (  # noqa: F401
             AllowedValue,
             MissingSchemeError,
             Vocabularies,
-            allowed_values,
             caching_session,
-            field_for_column,
-            load_schema,
         )
 
 

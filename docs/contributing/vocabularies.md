@@ -17,7 +17,7 @@ the first time a field needs it and keeps it in a cache directory outside the re
 - the `vocabularies` directory in the user cache directory for `ghfdb`, which
   [platformdirs](https://platformdirs.readthedocs.io) finds for the operating system
   (`~/.cache/ghfdb/vocabularies` on Linux)
-- or the directory you pass to `ghfdb.fields.caching_session()`
+- or the directory you pass to `ghfdb.vocabularies.caching_session()`
 
 The downloads go through a caching HTTP session (`requests-cache`). The server's `ETag`,
 `Last-Modified` and `Cache-Control` headers decide freshness, and no fixed expiry hides a change:

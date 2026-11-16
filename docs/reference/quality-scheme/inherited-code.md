@@ -41,8 +41,8 @@ because the paper's single-child case does not depend on the mark: {{ decision(9
 The paper says that the poorest ranking is inherited and does not say how the flags are chosen,
 or how a grade with the mark ranks against one without it. Both are {{ decision(9) }}.
 
-When two children tie on both scores the scheme as the portal applies it takes the child it
-holds first, so that recalculating gives the same flags every time. What the scheme should say
+When two children tie on both scores the portal takes the child it holds first, so that
+recalculating gives the same flags every time. What the scheme should say
 is under discussion (<https://github.com/ihfc-iugg/ghfdb/issues/40>).
 
 For example, a parent with two relevant children coded `U1.M4.S------` and `U3.M1x.-E-----`

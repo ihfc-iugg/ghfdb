@@ -19,6 +19,8 @@ dependencies = [
   "fastexcel>=0.21",
   "frictionless>=5",
   "jinja2>=3.1",
+  "markupsafe>=3",
+  "numpy>=2",
   "openpyxl>=3.1",
   "pandas[pyarrow]>=3.0",
   "platformdirs>=4",
@@ -62,17 +64,17 @@ packages = ["ghfdb"]
 
 # Without an explicit list, hatchling puts the whole working tree in the sdist.
 [tool.hatch.build.targets.sdist]
-include = ["/ghfdb", "/tests", "/README.md", "/LICENSE", "/CHANGELOG.md"]
+include = ["/ghfdb", "/scripts", "/tests", "/README.md", "/LICENSE", "/CHANGELOG.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["docs", "tests"]
+pythonpath = ["docs", "scripts", "tests"]
 addopts = "--import-mode=importlib"
 markers = ["slow: takes seconds, not milliseconds; runs by default"]
 
 [tool.mypy]
 strict = true
-files = ["ghfdb", "tests", "docs"]
+files = ["ghfdb", "tests", "docs", "scripts"]
 
 # XlsxWriter ships no type hints and no stubs package exists.
 [[tool.mypy.overrides]]

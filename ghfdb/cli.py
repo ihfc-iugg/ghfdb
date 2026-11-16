@@ -7,10 +7,11 @@ from pathlib import Path
 import pandas
 
 from ghfdb.dataset import Dataset
-from ghfdb.fields import MissingSchemeError, Vocabularies, load_schema
+from ghfdb.fields import load_schema
 from ghfdb.qc.report import Report
 from ghfdb.qc.rules import RULES
 from ghfdb.qc.workbook import CheckError, UploadWorkbook
+from ghfdb.vocabularies import MissingSchemeError, Vocabularies
 
 DOWNLOAD_ADVICE = (
     "The vocabularies must be downloaded once, with a network connection, "
@@ -43,8 +44,9 @@ def check(path: Path) -> int:
     problems = pandas.concat(
         [workbook.column_problems(), dataset.check(schema, RULES, vocabularies)]
     )
+    scores = dataset.scores(problems, vocabularies, schema)
     children = len(dataset.data)
-    report = Report(path, problems, children, vocabularies).write()
+    report = Report(path, problems, children, vocabularies, scores).write()
     affected = problems["row"].dropna().nunique()
     print(
         f"{children} children, {len(problems)} problems in {affected} of them, "

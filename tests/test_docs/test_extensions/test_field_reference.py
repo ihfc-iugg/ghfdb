@@ -6,8 +6,9 @@ import pytest
 from extensions.field_reference import FieldReference, copy_schema
 from frictionless import Field, Schema
 
-from ghfdb.fields import AllowedValue, Vocabularies, allowed_values
+from ghfdb.fields import allowed_values
 from ghfdb.template import VOCABULARIES
+from ghfdb.vocabularies import AllowedValue, Vocabularies
 
 GITHUB_DECISIONS = "https://github.com/ihfc-iugg/ghfdb/blob/main/specs/001-field-reference/decisions.md"
 

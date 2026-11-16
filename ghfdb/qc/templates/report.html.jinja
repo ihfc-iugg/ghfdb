@@ -35,5 +35,19 @@ thead th { background: #eee; position: sticky; top: 0; }
 {% endfor %}
 </tbody>
 </table>
+<h2>Preview scores</h2>
+{% if not scores %}
+<p id="no-scores">No child to score.</p>
+{% endif %}
+<table id="scores">
+<thead>
+<tr>{% for heading, link in score_headings %}<th scope="col">{% if link %}<a href="{{ link }}">{{ heading }}</a>{% else %}{{ heading }}{% endif %}</th>{% endfor %}</tr>
+</thead>
+<tbody>
+{% for row in scores %}
+<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+{% endfor %}
+</tbody>
+</table>
 </body>
 </html>

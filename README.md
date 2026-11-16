@@ -20,7 +20,7 @@ and scores each heat-flow determination with the GHFDB quality scheme: the uncer
 score, the methodological score and the perturbation flags of Fuchs et al. (2023),
 [doi:10.1016/j.tecto.2023.229976](https://doi.org/10.1016/j.tecto.2023.229976).
 
-The package is in early development. It checks a workbook; it does not yet score one.
+The package is in early development. It checks a workbook and gives each child a preview of its quality scores.
 
 ## Checking a workbook
 

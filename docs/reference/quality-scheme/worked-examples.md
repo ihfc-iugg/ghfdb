@@ -6,15 +6,16 @@ tables below are built from one file, so this page cannot disagree with it. The 
 [`ghfdb/qc/worked_examples.json`](https://github.com/ihfc-iugg/ghfdb/blob/main/ghfdb/qc/worked_examples.json)
 in the package, and it is the single source of every example.
 
-Every example is one that the GHFDB portal's own test suite asserts, with the same inputs and the
-same expected scores, so the scheme and the portal agree by construction. The last column names
-the portal tests behind each example and links the file that holds them.
+Each example names the tests that assert it, in the last column, and links the file that holds
+them. The tests of the GHFDB portal assert the examples that the portal also holds, with the same
+inputs and the same expected scores. The examples for the rules that the corrigendum of Fuchs et
+al. (2023) added are asserted by this package's tests alone.
 
 ## How to read the tables
 
 * **Inputs** are given by field code. A field that is not listed is empty. A field with several
   values lists them separated by commas. The legend below names each field code.
-* **Expected** gives only the values the portal's test asserts. A T-score or TC-score that reads
+* **Expected** gives only the values the example asserts. A T-score or TC-score that reads
   *not determined* is empty, and is never 0.
 * **no mark** and **missing-information mark** say whether the score or the M-score carries the
   mark. The M-score of a child carries it as an `x`.

@@ -8,7 +8,7 @@ are defined in `CONTEXT.md`.
 ## Stack & commands
 
 - **Stack:** Python 3.12+, uv-managed, built with hatchling. pytest, pre-commit, mypy and deptry for
-  development; Sphinx with MyST and the furo theme for the documentation, in the `docs` group.
+  development; Sphinx with MyST and the sphinx-daisyui theme for the documentation, in the `docs` group.
 - **Install:** `uv sync`
 - **Test:** `uv run pytest`
 - **Test with coverage, as CI runs it:** `uv run pytest --cov=ghfdb` (Codecov applies the floors in `codecov.yml`)

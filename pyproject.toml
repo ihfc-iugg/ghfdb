@@ -50,7 +50,13 @@ dev = [
   "responses>=0.25",
   "xlsxwriter>=3.2",
 ]
-docs = ["sphinx>=8", "myst-parser>=4", "furo>=2025.1", "sphinxcontrib-mermaid>=1", "validators>=0.34"]
+docs = [
+    "sphinx>=8",
+    "myst-parser>=4",
+    "sphinxcontrib-mermaid>=1",
+    "validators>=0.34",
+    "sphinx-daisyui>=0.2.0",
+]
 
 [tool.uv]
 default-groups = ["dev", "docs"]

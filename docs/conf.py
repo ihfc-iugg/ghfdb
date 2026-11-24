@@ -30,7 +30,7 @@ source_suffix = {".md": "markdown"}
 # neither is part of the site.
 exclude_patterns = ["_build", "agents", "ROADMAP.md"]
 
-html_theme = "furo"
+html_theme = "daisyui"
 html_title = "ghfdb"
 html_static_path = ["_static"]
 
